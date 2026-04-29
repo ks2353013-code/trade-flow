@@ -11,14 +11,14 @@ app.use(express.json());
 
 const SECRET = "tradeflow_secret_key_123";
 
-// IMPORTANT: paste your MongoDB Atlas connection URL here
-const MONGO_URL = "mongodb://ks2353013_db_user:Krish1808@ac-y7hjs08-shard-00-00.n4jxd4z.mongodb.net:27017,ac-y7hjs08-shard-00-01.n4jxd4z.mongodb.net:27017,ac-y7hjs08-shard-00-02.n4jxd4z.mongodb.net:27017/tradeflow?ssl=true&replicaSet=atlas-t5wg8t-shard-0&authSource=admin&retryWrites=true&w=majority&appName=Cluster0";
+// PASTE YOUR WORKING MONGODB URL HERE
+const MONGO_URL = "PASTE_YOUR_MONGODB_URL_HERE";
+
 mongoose
   .connect(MONGO_URL)
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.log("MongoDB error:", err.message));
 
-// MODELS
 const User = mongoose.model("User", {
   email: String,
   password: String
@@ -41,7 +41,6 @@ const Task = mongoose.model("Task", {
   task: String
 });
 
-// AUTH
 app.post("/signup", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -93,7 +92,6 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// AUTH MIDDLEWARE
 function auth(req, res, next) {
   const token = req.headers.authorization;
 
@@ -110,7 +108,6 @@ function auth(req, res, next) {
   }
 }
 
-// SUPPLIERS
 app.get("/suppliers", auth, async (req, res) => {
   const suppliers = await Supplier.find({ user: req.user });
   res.json(suppliers);
@@ -126,7 +123,6 @@ app.post("/suppliers", auth, async (req, res) => {
   res.json({ success: true });
 });
 
-// LEADS
 app.get("/leads", auth, async (req, res) => {
   const leads = await Lead.find({ user: req.user });
   res.json(leads);
@@ -156,7 +152,6 @@ app.put("/leads/:index", auth, async (req, res) => {
   res.json({ success: true });
 });
 
-// TASKS
 app.get("/tasks", auth, async (req, res) => {
   const tasks = await Task.find({ user: req.user });
   res.json(tasks);
@@ -171,7 +166,6 @@ app.post("/tasks", auth, async (req, res) => {
   res.json({ success: true });
 });
 
-// FAKE AI MESSAGE
 app.post("/generate-message", auth, (req, res) => {
   const name = req.body.name || "Supplier";
 
@@ -187,7 +181,22 @@ TradeFlow Team`;
   res.json({ message });
 });
 
-// SERVER
+app.post("/lead-search", auth, (req, res) => {
+  const query = req.body.query || "";
+
+  const encoded = encodeURIComponent(query);
+
+  const results = {
+    google: `https://www.google.com/search?q=${encoded}`,
+    indiamart: `https://dir.indiamart.com/search.mp?ss=${encoded}`,
+    tradeindia: `https://www.tradeindia.com/search.html?search_text=${encoded}`,
+    alibaba: `https://www.alibaba.com/trade/search?SearchText=${encoded}`,
+    linkedin: `https://www.linkedin.com/search/results/companies/?keywords=${encoded}`
+  };
+
+  res.json(results);
+});
+
 app.listen(process.env.PORT || 5000, () => {
-  console.log("Backend running on http://localhost:5000");
+  console.log("Backend running");
 });

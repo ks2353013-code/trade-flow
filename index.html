@@ -7,7 +7,6 @@
 
 <body class="bg-gray-100">
 
-<!-- LOGIN SCREEN -->
 <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-700 via-purple-700 to-pink-600">
   <div class="bg-white p-8 rounded-2xl shadow-2xl w-96">
     <h1 class="text-3xl font-bold text-center text-purple-700 mb-2">TradeFlow AI</h1>
@@ -21,15 +20,14 @@
   </div>
 </div>
 
-<!-- APP SCREEN -->
 <div id="appScreen" class="hidden">
   <div class="flex h-screen">
 
-    <!-- SIDEBAR -->
     <div class="w-64 bg-gray-900 text-white p-6">
       <h1 class="text-2xl font-bold mb-8">TradeFlow AI</h1>
 
       <button onclick="showPage('dashboardPage')" class="block w-full text-left p-2 rounded hover:bg-gray-700">Dashboard</button>
+      <button onclick="showPage('leadFinderPage')" class="block w-full text-left p-2 rounded hover:bg-gray-700">Lead Finder</button>
       <button onclick="showPage('suppliersPage')" class="block w-full text-left p-2 rounded hover:bg-gray-700">Suppliers</button>
       <button onclick="showPage('crmPage')" class="block w-full text-left p-2 rounded hover:bg-gray-700">CRM</button>
       <button onclick="showPage('tasksPage')" class="block w-full text-left p-2 rounded hover:bg-gray-700">Tasks</button>
@@ -37,10 +35,8 @@
       <button onclick="logout()" class="mt-10 bg-red-600 w-full p-2 rounded">Logout</button>
     </div>
 
-    <!-- MAIN -->
     <div class="flex-1 p-8 overflow-y-auto">
 
-      <!-- DASHBOARD -->
       <div id="dashboardPage" class="page">
         <h2 class="text-3xl font-bold mb-6">Dashboard</h2>
 
@@ -62,7 +58,17 @@
         </div>
       </div>
 
-      <!-- SUPPLIERS -->
+      <div id="leadFinderPage" class="page hidden">
+        <h2 class="text-3xl font-bold mb-6">Lead Finder</h2>
+
+        <div class="bg-white p-6 rounded-xl shadow mb-6">
+          <input id="leadQuery" placeholder="e.g. rice exporters india, textile buyers dubai" class="border p-3 rounded w-2/3 mr-2">
+          <button onclick="searchLeads()" class="bg-blue-600 text-white px-5 py-3 rounded">Search Leads</button>
+        </div>
+
+        <div id="leadResults" class="space-y-4"></div>
+      </div>
+
       <div id="suppliersPage" class="page hidden">
         <h2 class="text-3xl font-bold mb-6">Suppliers</h2>
 
@@ -75,7 +81,6 @@
         <div id="supplierList" class="space-y-3"></div>
       </div>
 
-      <!-- CRM -->
       <div id="crmPage" class="page hidden">
         <h2 class="text-3xl font-bold mb-6">CRM Pipeline</h2>
 
@@ -102,7 +107,6 @@
         </div>
       </div>
 
-      <!-- TASKS -->
       <div id="tasksPage" class="page hidden">
         <h2 class="text-3xl font-bold mb-6">Tasks</h2>
 
@@ -132,7 +136,6 @@ function authHeaders() {
   };
 }
 
-// AUTH
 async function signup() {
   const email = document.getElementById("emailInput").value;
   const password = document.getElementById("passwordInput").value;
@@ -179,7 +182,6 @@ function logout() {
   location.reload();
 }
 
-// NAVIGATION
 function showPage(pageId) {
   document.querySelectorAll(".page").forEach(page => page.classList.add("hidden"));
   document.getElementById(pageId).classList.remove("hidden");
@@ -189,7 +191,34 @@ function showPage(pageId) {
   if (pageId === "tasksPage") loadTasks();
 }
 
-// SUPPLIERS
+async function searchLeads() {
+  const query = document.getElementById("leadQuery").value;
+
+  const res = await fetch(`${API}/lead-search`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ query })
+  });
+
+  const data = await res.json();
+
+  document.getElementById("leadResults").innerHTML = `
+    <div class="bg-white p-6 rounded-xl shadow">
+      <h3 class="font-bold text-xl mb-4">Search Platforms</h3>
+
+      <a href="${data.google}" target="_blank" class="block text-blue-600 mb-2">🔍 Google Search</a>
+      <a href="${data.indiamart}" target="_blank" class="block text-blue-600 mb-2">🏭 IndiaMART</a>
+      <a href="${data.tradeindia}" target="_blank" class="block text-blue-600 mb-2">📦 TradeIndia</a>
+      <a href="${data.alibaba}" target="_blank" class="block text-blue-600 mb-2">🌍 Alibaba</a>
+      <a href="${data.linkedin}" target="_blank" class="block text-blue-600 mb-2">💼 LinkedIn Companies</a>
+
+      <p class="text-gray-600 mt-4">
+        Open these links, collect supplier/buyer details, then add them to CRM.
+      </p>
+    </div>
+  `;
+}
+
 async function addSupplier() {
   const name = document.getElementById("supplierNameInput").value;
   const price = document.getElementById("supplierPriceInput").value;
@@ -227,7 +256,6 @@ async function loadSuppliers() {
   document.getElementById("supplierCount").innerText = data.length;
 }
 
-// LEADS
 async function addLead() {
   const name = document.getElementById("leadNameInput").value;
 
@@ -297,7 +325,6 @@ async function generateMessage(name) {
   alert(data.message);
 }
 
-// TASKS
 async function addTask() {
   const task = document.getElementById("taskInput").value;
 
@@ -333,7 +360,6 @@ async function loadTasks() {
   document.getElementById("taskCount").innerText = data.length;
 }
 
-// DASHBOARD
 async function loadDashboard() {
   await loadSuppliers();
   await loadLeads();
