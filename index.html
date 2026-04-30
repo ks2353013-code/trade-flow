@@ -5,7 +5,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100">
+<body class="bg-gray-100 flex flex-col min-h-screen">
 
 <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-700 via-purple-700 to-pink-600">
   <div class="bg-white p-8 rounded-2xl shadow-2xl w-96">
@@ -20,8 +20,8 @@
   </div>
 </div>
 
-<div id="appScreen" class="hidden">
-  <div class="flex h-screen">
+<div id="appScreen" class="hidden flex-1">
+  <div class="flex h-full">
 
     <div class="w-72 bg-gray-900 text-white p-6 overflow-y-auto">
       <h1 class="text-2xl font-bold mb-8">TradeFlow Agent</h1>
@@ -42,12 +42,23 @@
 
       <div id="dashboardPage" class="page">
         <h2 class="text-3xl font-bold mb-6">Dashboard</h2>
-
         <div class="grid grid-cols-4 gap-6">
-          <div class="bg-white p-6 rounded-xl shadow"><p>Suppliers</p><h3 id="supplierCount" class="text-3xl font-bold">0</h3></div>
-          <div class="bg-white p-6 rounded-xl shadow"><p>Leads</p><h3 id="leadCount" class="text-3xl font-bold">0</h3></div>
-          <div class="bg-white p-6 rounded-xl shadow"><p>Tasks</p><h3 id="taskCount" class="text-3xl font-bold">0</h3></div>
-          <div class="bg-white p-6 rounded-xl shadow"><p>Deals</p><h3 id="dealCount" class="text-3xl font-bold">0</h3></div>
+          <div class="bg-white p-6 rounded-xl shadow">
+            <p class="text-gray-500">Suppliers</p>
+            <h3 id="supplierCount" class="text-3xl font-bold">0</h3>
+          </div>
+          <div class="bg-white p-6 rounded-xl shadow">
+            <p class="text-gray-500">Leads</p>
+            <h3 id="leadCount" class="text-3xl font-bold">0</h3>
+          </div>
+          <div class="bg-white p-6 rounded-xl shadow">
+            <p class="text-gray-500">Tasks</p>
+            <h3 id="taskCount" class="text-3xl font-bold">0</h3>
+          </div>
+          <div class="bg-white p-6 rounded-xl shadow">
+            <p class="text-gray-500">Deals</p>
+            <h3 id="dealCount" class="text-3xl font-bold">0</h3>
+          </div>
         </div>
       </div>
 
@@ -89,12 +100,12 @@
         <h2 class="text-3xl font-bold mb-6">Mediator Deal Workspace</h2>
 
         <div class="bg-white p-6 rounded-xl shadow mb-6">
-          <input id="dealSupplier" placeholder="Supplier" class="border p-3 rounded mr-2">
-          <input id="dealBuyer" placeholder="Buyer" class="border p-3 rounded mr-2">
-          <input id="dealProduct" placeholder="Product" class="border p-3 rounded mr-2">
-          <input id="dealSupplierPrice" placeholder="Supplier Price" type="number" class="border p-3 rounded mr-2">
-          <input id="dealBuyerPrice" placeholder="Buyer Price" type="number" class="border p-3 rounded mr-2">
-          <input id="dealQuantity" placeholder="Quantity" type="number" class="border p-3 rounded mr-2">
+          <input id="dealSupplier" placeholder="Supplier" class="border p-3 rounded mr-2 mb-2">
+          <input id="dealBuyer" placeholder="Buyer" class="border p-3 rounded mr-2 mb-2">
+          <input id="dealProduct" placeholder="Product" class="border p-3 rounded mr-2 mb-2">
+          <input id="dealSupplierPrice" placeholder="Supplier Price" type="number" class="border p-3 rounded mr-2 mb-2">
+          <input id="dealBuyerPrice" placeholder="Buyer Price" type="number" class="border p-3 rounded mr-2 mb-2">
+          <input id="dealQuantity" placeholder="Quantity" type="number" class="border p-3 rounded mr-2 mb-2">
           <button onclick="addDeal()" class="bg-green-600 text-white px-5 py-3 rounded">Create Deal</button>
         </div>
 
@@ -103,38 +114,52 @@
 
       <div id="suppliersPage" class="page hidden">
         <h2 class="text-3xl font-bold mb-6">Suppliers</h2>
+
         <div class="bg-white p-6 rounded-xl shadow mb-6">
-          <input id="supplierNameInput" placeholder="Supplier" class="border p-3 rounded mr-2">
-          <input id="supplierPriceInput" placeholder="Price" class="border p-3 rounded mr-2">
-          <input id="supplierPhoneInput" placeholder="Phone" class="border p-3 rounded mr-2">
-          <input id="supplierProductInput" placeholder="Product" class="border p-3 rounded mr-2">
+          <input id="supplierNameInput" placeholder="Supplier" class="border p-3 rounded mr-2 mb-2">
+          <input id="supplierPriceInput" placeholder="Price" class="border p-3 rounded mr-2 mb-2">
+          <input id="supplierPhoneInput" placeholder="Phone" class="border p-3 rounded mr-2 mb-2">
+          <input id="supplierProductInput" placeholder="Product" class="border p-3 rounded mr-2 mb-2">
           <button onclick="addSupplier()" class="bg-green-600 text-white px-5 py-3 rounded">Add Supplier</button>
         </div>
+
         <div id="supplierList" class="space-y-3"></div>
       </div>
 
       <div id="crmPage" class="page hidden">
         <h2 class="text-3xl font-bold mb-6">CRM</h2>
+
         <div class="bg-white p-6 rounded-xl shadow mb-6">
-          <input id="leadNameInput" placeholder="Lead" class="border p-3 rounded mr-2">
-          <input id="leadPhoneInput" placeholder="Phone" class="border p-3 rounded mr-2">
-          <input id="leadProductInput" placeholder="Product" class="border p-3 rounded mr-2">
+          <input id="leadNameInput" placeholder="Lead" class="border p-3 rounded mr-2 mb-2">
+          <input id="leadPhoneInput" placeholder="Phone" class="border p-3 rounded mr-2 mb-2">
+          <input id="leadProductInput" placeholder="Product" class="border p-3 rounded mr-2 mb-2">
           <button onclick="addLead()" class="bg-blue-600 text-white px-5 py-3 rounded">Add Lead</button>
         </div>
 
         <div class="grid grid-cols-3 gap-6">
-          <div class="bg-white p-5 rounded-xl shadow"><h3 class="font-bold">New</h3><div id="newLeads"></div></div>
-          <div class="bg-white p-5 rounded-xl shadow"><h3 class="font-bold">Negotiation</h3><div id="negLeads"></div></div>
-          <div class="bg-white p-5 rounded-xl shadow"><h3 class="font-bold">Closed</h3><div id="closedLeads"></div></div>
+          <div class="bg-white p-5 rounded-xl shadow">
+            <h3 class="font-bold mb-3">New</h3>
+            <div id="newLeads"></div>
+          </div>
+          <div class="bg-white p-5 rounded-xl shadow">
+            <h3 class="font-bold mb-3">Negotiation</h3>
+            <div id="negLeads"></div>
+          </div>
+          <div class="bg-white p-5 rounded-xl shadow">
+            <h3 class="font-bold mb-3">Closed</h3>
+            <div id="closedLeads"></div>
+          </div>
         </div>
       </div>
 
       <div id="tasksPage" class="page hidden">
         <h2 class="text-3xl font-bold mb-6">Tasks</h2>
+
         <div class="bg-white p-6 rounded-xl shadow mb-6">
           <input id="taskInput" placeholder="Task" class="border p-3 rounded mr-2">
           <button onclick="addTask()" class="bg-purple-600 text-white px-5 py-3 rounded">Add Task</button>
         </div>
+
         <div id="taskList" class="space-y-3"></div>
       </div>
 
@@ -142,8 +167,13 @@
   </div>
 </div>
 
+<footer class="text-center text-sm text-gray-500 py-4">
+  © 2026 TradeFlow AI™. All rights reserved. Unauthorized copying, reproduction, resale, or distribution is prohibited.
+</footer>
+
 <script>
 const API = "https://trade-flow-lc1k.onrender.com";
+let researchCache = [];
 
 function getToken() {
   return localStorage.getItem("tradeflow_token");
@@ -210,7 +240,7 @@ function showPage(id) {
 }
 
 async function runAgent() {
-  agentResults.innerHTML = "Agent working...";
+  agentResults.innerHTML = `<div class="bg-white p-4 rounded-xl shadow">Agent working...</div>`;
 
   const res = await fetch(`${API}/agent-command`, {
     method: "POST",
@@ -227,7 +257,7 @@ async function runAgent() {
 
   agentResults.innerHTML = `
     <div class="bg-white p-5 rounded-xl shadow">
-      <h3 class="font-bold text-xl">Agent Completed</h3>
+      <h3 class="font-bold text-xl mb-2">Agent Completed</h3>
       <p>Product: ${data.product}</p>
       <p>Supplier Country: ${data.supplierCountry}</p>
       <p>Buyer Country: ${data.buyerCountry}</p>
@@ -241,7 +271,7 @@ async function runAgent() {
 }
 
 async function researchLeads() {
-  researchResults.innerHTML = "Researching...";
+  researchResults.innerHTML = `<div class="bg-white p-4 rounded-xl shadow">Researching...</div>`;
 
   const res = await fetch(`${API}/research-leads`, {
     method: "POST",
@@ -255,6 +285,12 @@ async function researchLeads() {
   });
 
   const data = await res.json();
+
+  if (data.error) {
+    researchResults.innerHTML = `<div class="bg-red-100 p-4 rounded">${data.error}</div>`;
+    return;
+  }
+
   renderResearch(data);
 }
 
@@ -268,6 +304,7 @@ async function loadResearch() {
 }
 
 function renderResearch(data) {
+  researchCache = data;
   researchResults.innerHTML = "";
 
   if (!data.length) {
@@ -275,23 +312,25 @@ function renderResearch(data) {
     return;
   }
 
-  data.forEach(lead => {
+  data.forEach((lead, index) => {
     researchResults.innerHTML += `
       <div class="bg-white p-5 rounded-xl shadow">
         <h3 class="font-bold text-lg">${lead.name}</h3>
         <p>Type: ${lead.type}</p>
-        <p>Product: ${lead.product}</p>
-        <p>Country: ${lead.country}</p>
+        <p>Product: ${lead.product || ""}</p>
+        <p>Country: ${lead.country || ""}</p>
         <p>Score: ${lead.score}/100</p>
-        <p>${lead.snippet || ""}</p>
+        <p class="text-gray-600">${lead.snippet || ""}</p>
         <a href="${lead.website}" target="_blank" class="text-blue-600">Open Source</a>
-        <button onclick='addResearchToCRM(${JSON.stringify(lead)})' class="ml-3 bg-green-600 text-white px-3 py-1 rounded">Add to CRM</button>
+        <button onclick="addResearchToCRM(${index})" class="ml-3 bg-green-600 text-white px-3 py-1 rounded">Add to CRM</button>
       </div>
     `;
   });
 }
 
-async function addResearchToCRM(lead) {
+async function addResearchToCRM(index) {
+  const lead = researchCache[index];
+
   await fetch(`${API}/add-research-to-crm`, {
     method: "POST",
     headers: authHeaders(),
@@ -300,10 +339,11 @@ async function addResearchToCRM(lead) {
 
   alert("Added to CRM");
   loadLeads();
+  loadDashboard();
 }
 
 async function runMatchmaker() {
-  matchResults.innerHTML = "Matching...";
+  matchResults.innerHTML = `<div class="bg-white p-4 rounded-xl shadow">Matching...</div>`;
 
   const res = await fetch(`${API}/matchmake`, {
     method: "POST",
@@ -326,10 +366,14 @@ async function runMatchmaker() {
         <p><b>Supplier:</b> ${match.supplier.name}</p>
         <p><b>Buyer:</b> ${match.buyer.name}</p>
         <p>${match.reason}</p>
-        <button onclick="prefillDeal('${match.supplier.name}', '${match.buyer.name}', '${match.supplier.product}')" class="bg-green-600 text-white px-3 py-1 rounded">Create Deal</button>
+        <button onclick="prefillDeal('${safe(match.supplier.name)}', '${safe(match.buyer.name)}', '${safe(match.supplier.product || match.buyer.product || "")}')" class="bg-green-600 text-white px-3 py-1 rounded">Create Deal</button>
       </div>
     `;
   });
+}
+
+function safe(value) {
+  return String(value || "").replace(/'/g, "\\'");
 }
 
 function prefillDeal(supplier, buyer, product) {
@@ -378,6 +422,9 @@ async function loadDeals() {
         <h3 class="font-bold">${d.product}</h3>
         <p>Supplier: ${d.supplierName}</p>
         <p>Buyer: ${d.buyerName}</p>
+        <p>Supplier Price: ₹${d.supplierPrice}</p>
+        <p>Buyer Price: ₹${d.buyerPrice}</p>
+        <p>Quantity: ${d.quantity}</p>
         <p>Margin: ₹${d.margin}</p>
         <p>Total Profit: ₹${d.totalProfit}</p>
       </div>
@@ -424,6 +471,7 @@ async function loadSuppliers() {
       <div class="bg-white p-4 rounded-xl shadow">
         <b>${s.name}</b> — ₹${s.price}<br>
         Product: ${s.product || ""}<br>
+        Phone: ${s.phone || ""}<br>
         ${phone ? `<a class="text-green-600" target="_blank" href="https://wa.me/${phone}?text=${msg}">WhatsApp</a>` : ""}
       </div>
     `;
@@ -474,8 +522,9 @@ async function loadLeads() {
       <div class="bg-gray-100 p-3 rounded mb-3">
         <b>${lead.name}</b><br>
         Product: ${lead.product || ""}<br>
+        Phone: ${lead.phone || ""}<br>
         <button onclick="moveLead(${i}, '${lead.stage}')" class="text-blue-600">Move ➜</button>
-        <button onclick="generateMessage('${lead.name}', '${lead.product || ""}')" class="ml-3 text-purple-600">AI Message</button>
+        <button onclick="generateMessage('${safe(lead.name)}', '${safe(lead.product || "")}')" class="ml-3 text-purple-600">AI Message</button>
         ${phone ? `<a class="ml-3 text-green-600" target="_blank" href="https://wa.me/${phone}?text=${msg}">WhatsApp</a>` : ""}
       </div>
     `;
