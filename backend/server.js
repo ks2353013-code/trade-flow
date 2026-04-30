@@ -12,7 +12,7 @@ app.use(express.json());
 const SECRET = "tradeflow_secret_key_123";
 
 // PASTE YOUR WORKING MONGODB URL HERE
-const MONGO_URL = "PASTE_YOUR_MONGODB_URL_HERE";
+const MONGO_URL = "mongodb+srv://ks2353013_db_user:Krish1808@cluster0.n4jxd4z.mongodb.net/?appName=Cluster0";
 
 mongoose
   .connect(MONGO_URL)
