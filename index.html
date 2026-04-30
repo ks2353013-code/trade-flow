@@ -87,6 +87,7 @@
         <div class="grid grid-cols-2 gap-6">
           <div class="bg-white p-6 rounded-xl shadow">
             <h3 class="font-bold mb-4">Select Contact</h3>
+            <p class="text-sm text-gray-500 mb-3">Add phone/email in CRM or Suppliers first, then select the contact here.</p>
             <div id="outreachContacts" class="space-y-3"></div>
           </div>
 
@@ -103,11 +104,11 @@
 
             <button onclick="buildOutreachMessage()" class="bg-purple-600 text-white px-5 py-3 rounded mb-3">Generate Message</button>
 
-            <textarea id="outreachMessage" class="border p-3 rounded w-full h-48 mb-3"></textarea>
+            <textarea id="outreachMessage" class="border p-3 rounded w-full h-48 mb-3" placeholder="Generated message will appear here"></textarea>
 
             <div class="flex gap-3">
-              <a id="whatsappOutreachLink" href="#" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded">Open WhatsApp</a>
-              <a id="emailOutreachLink" href="#" class="bg-blue-600 text-white px-4 py-2 rounded">Open Email</a>
+              <button onclick="openWhatsApp()" class="bg-green-600 text-white px-4 py-2 rounded">Open WhatsApp</button>
+              <button onclick="openEmail()" class="bg-blue-600 text-white px-4 py-2 rounded">Open Email</button>
             </div>
           </div>
         </div>
@@ -132,7 +133,7 @@
         <div class="bg-white p-6 rounded-xl shadow mb-6">
           <input id="supplierNameInput" placeholder="Supplier" class="border p-3 rounded mr-2 mb-2">
           <input id="supplierPriceInput" placeholder="Price" class="border p-3 rounded mr-2 mb-2">
-          <input id="supplierPhoneInput" placeholder="Phone" class="border p-3 rounded mr-2 mb-2">
+          <input id="supplierPhoneInput" placeholder="Phone with country code" class="border p-3 rounded mr-2 mb-2">
           <input id="supplierEmailInput" placeholder="Email" class="border p-3 rounded mr-2 mb-2">
           <input id="supplierProductInput" placeholder="Product" class="border p-3 rounded mr-2 mb-2">
           <button onclick="addSupplier()" class="bg-green-600 text-white px-5 py-3 rounded">Add Supplier</button>
@@ -144,7 +145,7 @@
         <h2 class="text-3xl font-bold mb-6">CRM</h2>
         <div class="bg-white p-6 rounded-xl shadow mb-6">
           <input id="leadNameInput" placeholder="Lead" class="border p-3 rounded mr-2 mb-2">
-          <input id="leadPhoneInput" placeholder="Phone" class="border p-3 rounded mr-2 mb-2">
+          <input id="leadPhoneInput" placeholder="Phone with country code" class="border p-3 rounded mr-2 mb-2">
           <input id="leadEmailInput" placeholder="Email" class="border p-3 rounded mr-2 mb-2">
           <input id="leadProductInput" placeholder="Product" class="border p-3 rounded mr-2 mb-2">
           <button onclick="addLead()" class="bg-blue-600 text-white px-5 py-3 rounded">Add Lead</button>
@@ -176,6 +177,7 @@
 
 <script>
 const API = "https://trade-flow-lc1k.onrender.com";
+
 let researchCache = [];
 let outreachLeads = [];
 let outreachSuppliers = [];
@@ -190,6 +192,10 @@ function authHeaders() {
     "Content-Type": "application/json",
     "Authorization": getToken()
   };
+}
+
+function safe(value) {
+  return String(value || "").replace(/'/g, "\\'");
 }
 
 async function signup() {
@@ -244,10 +250,6 @@ function showPage(id) {
   if (id === "crmPage") loadLeads();
   if (id === "tasksPage") loadTasks();
   if (id === "outreachPage") loadOutreachPanel();
-}
-
-function safe(value) {
-  return String(value || "").replace(/'/g, "\\'");
 }
 
 async function runAgent() {
@@ -315,24 +317,24 @@ async function loadResearch() {
 }
 
 function renderResearch(data) {
-  researchCache = data;
+  researchCache = Array.isArray(data) ? data : [];
   researchResults.innerHTML = "";
 
-  if (!data.length) {
+  if (!researchCache.length) {
     researchResults.innerHTML = `<div class="bg-white p-4 rounded-xl shadow">No research leads yet.</div>`;
     return;
   }
 
-  data.forEach((lead, index) => {
+  researchCache.forEach((lead, index) => {
     researchResults.innerHTML += `
       <div class="bg-white p-5 rounded-xl shadow">
         <h3 class="font-bold text-lg">${lead.name}</h3>
-        <p>Type: ${lead.type}</p>
+        <p>Type: ${lead.type || ""}</p>
         <p>Product: ${lead.product || ""}</p>
         <p>Country: ${lead.country || ""}</p>
-        <p>Score: ${lead.score}/100</p>
+        <p>Score: ${lead.score || 0}/100</p>
         <p class="text-gray-600">${lead.snippet || ""}</p>
-        <a href="${lead.website}" target="_blank" class="text-blue-600">Open Source</a>
+        ${lead.website ? `<a href="${lead.website}" target="_blank" class="text-blue-600">Open Source</a>` : ""}
         <button onclick="addResearchToCRM(${index})" class="ml-3 bg-green-600 text-white px-3 py-1 rounded">Add to CRM</button>
       </div>
     `;
@@ -365,7 +367,7 @@ async function runMatchmaker() {
   const data = await res.json();
   matchResults.innerHTML = "";
 
-  if (!data.length) {
+  if (!Array.isArray(data) || !data.length) {
     matchResults.innerHTML = `<div class="bg-white p-4 rounded-xl shadow">Research suppliers and buyers first.</div>`;
     return;
   }
@@ -423,22 +425,24 @@ async function loadDeals() {
   const data = await res.json();
   dealList.innerHTML = "";
 
-  data.forEach(d => {
-    dealList.innerHTML += `
-      <div class="bg-white p-5 rounded-xl shadow">
-        <h3 class="font-bold">${d.product}</h3>
-        <p>Supplier: ${d.supplierName}</p>
-        <p>Buyer: ${d.buyerName}</p>
-        <p>Supplier Price: ₹${d.supplierPrice}</p>
-        <p>Buyer Price: ₹${d.buyerPrice}</p>
-        <p>Quantity: ${d.quantity}</p>
-        <p>Margin: ₹${d.margin}</p>
-        <p>Total Profit: ₹${d.totalProfit}</p>
-      </div>
-    `;
-  });
+  if (Array.isArray(data)) {
+    data.forEach(d => {
+      dealList.innerHTML += `
+        <div class="bg-white p-5 rounded-xl shadow">
+          <h3 class="font-bold">${d.product}</h3>
+          <p>Supplier: ${d.supplierName}</p>
+          <p>Buyer: ${d.buyerName}</p>
+          <p>Supplier Price: ₹${d.supplierPrice}</p>
+          <p>Buyer Price: ₹${d.buyerPrice}</p>
+          <p>Quantity: ${d.quantity}</p>
+          <p>Margin: ₹${d.margin}</p>
+          <p>Total Profit: ₹${d.totalProfit}</p>
+        </div>
+      `;
+    });
 
-  dealCount.innerText = data.length;
+    dealCount.innerText = data.length;
+  }
 }
 
 async function addSupplier() {
@@ -472,22 +476,24 @@ async function loadSuppliers() {
   const data = await res.json();
   supplierList.innerHTML = "";
 
-  data.forEach(s => {
-    const phone = (s.phone || "").replace(/\D/g, "");
-    const msg = encodeURIComponent(`Hello ${s.name}, I am Krishna from TradeFlow. I want to discuss ${s.product || "export/import"} opportunities.`);
+  if (Array.isArray(data)) {
+    data.forEach(s => {
+      const phone = (s.phone || "").replace(/\D/g, "");
+      const msg = encodeURIComponent(`Hello ${s.name}, I am Krishna from TradeFlow. I want to discuss ${s.product || "export/import"} opportunities.`);
 
-    supplierList.innerHTML += `
-      <div class="bg-white p-4 rounded-xl shadow">
-        <b>${s.name}</b> — ₹${s.price}<br>
-        Product: ${s.product || ""}<br>
-        Phone: ${s.phone || ""}<br>
-        Email: ${s.email || ""}<br>
-        ${phone ? `<a class="text-green-600" target="_blank" href="https://wa.me/${phone}?text=${msg}">WhatsApp</a>` : ""}
-      </div>
-    `;
-  });
+      supplierList.innerHTML += `
+        <div class="bg-white p-4 rounded-xl shadow">
+          <b>${s.name}</b> — ₹${s.price || ""}<br>
+          Product: ${s.product || ""}<br>
+          Phone: ${s.phone || ""}<br>
+          Email: ${s.email || ""}<br>
+          ${phone ? `<a class="text-green-600" target="_blank" href="https://wa.me/${phone}?text=${msg}">WhatsApp</a>` : ""}
+        </div>
+      `;
+    });
 
-  supplierCount.innerText = data.length;
+    supplierCount.innerText = data.length;
+  }
 }
 
 async function addLead() {
@@ -522,28 +528,30 @@ async function loadLeads() {
   negLeads.innerHTML = "";
   closedLeads.innerHTML = "";
 
-  data.forEach((lead, i) => {
-    let target = newLeads;
-    if (lead.stage === "neg") target = negLeads;
-    if (lead.stage === "closed") target = closedLeads;
+  if (Array.isArray(data)) {
+    data.forEach((lead, i) => {
+      let target = newLeads;
+      if (lead.stage === "neg") target = negLeads;
+      if (lead.stage === "closed") target = closedLeads;
 
-    const phone = (lead.phone || "").replace(/\D/g, "");
-    const msg = encodeURIComponent(`Hello ${lead.name}, I am Krishna from TradeFlow. I help connect buyers and suppliers for ${lead.product || "export/import products"}.`);
+      const phone = (lead.phone || "").replace(/\D/g, "");
+      const msg = encodeURIComponent(`Hello ${lead.name}, I am Krishna from TradeFlow. I help connect buyers and suppliers for ${lead.product || "export/import products"}.`);
 
-    target.innerHTML += `
-      <div class="bg-gray-100 p-3 rounded mb-3">
-        <b>${lead.name}</b><br>
-        Product: ${lead.product || ""}<br>
-        Phone: ${lead.phone || ""}<br>
-        Email: ${lead.email || ""}<br>
-        <button onclick="moveLead(${i}, '${lead.stage}')" class="text-blue-600">Move ➜</button>
-        <button onclick="generateMessage('${safe(lead.name)}', '${safe(lead.product || "")}')" class="ml-3 text-purple-600">AI Message</button>
-        ${phone ? `<a class="ml-3 text-green-600" target="_blank" href="https://wa.me/${phone}?text=${msg}">WhatsApp</a>` : ""}
-      </div>
-    `;
-  });
+      target.innerHTML += `
+        <div class="bg-gray-100 p-3 rounded mb-3">
+          <b>${lead.name}</b><br>
+          Product: ${lead.product || ""}<br>
+          Phone: ${lead.phone || ""}<br>
+          Email: ${lead.email || ""}<br>
+          <button onclick="moveLead(${i}, '${lead.stage}')" class="text-blue-600">Move ➜</button>
+          <button onclick="generateMessage('${safe(lead.name)}', '${safe(lead.product || "")}')" class="ml-3 text-purple-600">AI Message</button>
+          ${phone ? `<a class="ml-3 text-green-600" target="_blank" href="https://wa.me/${phone}?text=${msg}">WhatsApp</a>` : ""}
+        </div>
+      `;
+    });
 
-  leadCount.innerText = data.length;
+    leadCount.innerText = data.length;
+  }
 }
 
 async function moveLead(index, stage) {
@@ -589,22 +597,24 @@ async function loadTasks() {
   const data = await res.json();
   taskList.innerHTML = "";
 
-  data.forEach(t => {
-    taskList.innerHTML += `<div class="bg-white p-4 rounded-xl shadow">${t.task}</div>`;
-  });
+  if (Array.isArray(data)) {
+    data.forEach(t => {
+      taskList.innerHTML += `<div class="bg-white p-4 rounded-xl shadow">${t.task}</div>`;
+    });
 
-  taskCount.innerText = data.length;
+    taskCount.innerText = data.length;
+  }
 }
 
 async function loadOutreachPanel() {
-  await loadLeads();
-  await loadSuppliers();
-
   const leadRes = await fetch(`${API}/leads`, { headers: { Authorization: getToken() } });
   const supplierRes = await fetch(`${API}/suppliers`, { headers: { Authorization: getToken() } });
 
   outreachLeads = await leadRes.json();
   outreachSuppliers = await supplierRes.json();
+
+  if (!Array.isArray(outreachLeads)) outreachLeads = [];
+  if (!Array.isArray(outreachSuppliers)) outreachSuppliers = [];
 
   outreachContacts.innerHTML = "";
 
@@ -613,6 +623,8 @@ async function loadOutreachPanel() {
       <div class="bg-gray-100 p-3 rounded">
         <b>${lead.name}</b> <span class="text-xs">(Lead)</span><br>
         ${lead.product || ""}<br>
+        Phone: ${lead.phone || "Not added"}<br>
+        Email: ${lead.email || "Not added"}<br>
         <button onclick="selectOutreach('lead', ${index})" class="text-blue-600">Select</button>
       </div>
     `;
@@ -623,19 +635,23 @@ async function loadOutreachPanel() {
       <div class="bg-gray-100 p-3 rounded">
         <b>${supplier.name}</b> <span class="text-xs">(Supplier)</span><br>
         ${supplier.product || ""}<br>
+        Phone: ${supplier.phone || "Not added"}<br>
+        Email: ${supplier.email || "Not added"}<br>
         <button onclick="selectOutreach('supplier', ${index})" class="text-blue-600">Select</button>
       </div>
     `;
   });
+
+  selectedOutreach = null;
+  selectedContactLabel.innerText = "No contact selected.";
+  outreachMessage.value = "";
 }
 
 function selectOutreach(type, index) {
   selectedOutreach = type === "lead" ? outreachLeads[index] : outreachSuppliers[index];
-  selectedOutreach.type = type;
+  selectedOutreach.outreachType = type;
   selectedContactLabel.innerText = `Selected: ${selectedOutreach.name} (${type})`;
   outreachMessage.value = "";
-  whatsappOutreachLink.href = "#";
-  emailOutreachLink.href = "#";
 }
 
 async function buildOutreachMessage() {
@@ -650,28 +666,59 @@ async function buildOutreachMessage() {
     body: JSON.stringify({
       name: selectedOutreach.name,
       product: selectedOutreach.product,
-      type: selectedOutreach.type,
+      type: selectedOutreach.outreachType,
       template: outreachTemplate.value
     })
   });
 
   const data = await res.json();
-  outreachMessage.value = data.message;
+  outreachMessage.value = data.message || "";
+}
+
+function openWhatsApp() {
+  if (!selectedOutreach) {
+    alert("Select a contact first");
+    return;
+  }
 
   const phone = (selectedOutreach.phone || "").replace(/\D/g, "");
-  const encodedMsg = encodeURIComponent(data.message);
 
-  if (phone) {
-    whatsappOutreachLink.href = `https://wa.me/${phone}?text=${encodedMsg}`;
-  } else {
-    whatsappOutreachLink.href = "#";
+  if (!phone) {
+    alert("No WhatsApp number added for this contact");
+    return;
   }
 
-  if (selectedOutreach.email) {
-    emailOutreachLink.href = `mailto:${selectedOutreach.email}?subject=Business Inquiry&body=${encodedMsg}`;
-  } else {
-    emailOutreachLink.href = "#";
+  if (!outreachMessage.value.trim()) {
+    alert("Generate message first");
+    return;
   }
+
+  const msg = encodeURIComponent(outreachMessage.value);
+  window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
+}
+
+function openEmail() {
+  if (!selectedOutreach) {
+    alert("Select a contact first");
+    return;
+  }
+
+  const email = selectedOutreach.email || "";
+
+  if (!email) {
+    alert("No email added for this contact");
+    return;
+  }
+
+  if (!outreachMessage.value.trim()) {
+    alert("Generate message first");
+    return;
+  }
+
+  const subject = encodeURIComponent("Business Inquiry");
+  const body = encodeURIComponent(outreachMessage.value);
+
+  window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 }
 
 async function loadDashboard() {
