@@ -108,7 +108,7 @@
 
             <div class="flex gap-3">
               <button onclick="openWhatsApp()" class="bg-green-600 text-white px-4 py-2 rounded">Open WhatsApp</button>
-              <button onclick="openEmail()" class="bg-blue-600 text-white px-4 py-2 rounded">Open Email</button>
+              <button onclick="openEmail()" class="bg-blue-600 text-white px-4 py-2 rounded">Open Gmail</button>
             </div>
           </div>
         </div>
@@ -195,7 +195,7 @@ function authHeaders() {
 }
 
 function safe(value) {
-  return String(value || "").replace(/'/g, "\\'");
+  return String(value || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
 }
 
 async function signup() {
@@ -718,7 +718,10 @@ function openEmail() {
   const subject = encodeURIComponent("Business Inquiry");
   const body = encodeURIComponent(outreachMessage.value);
 
-  window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+  window.open(
+    `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${subject}&body=${body}`,
+    "_blank"
+  );
 }
 
 async function loadDashboard() {
