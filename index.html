@@ -23,11 +23,13 @@
 <div id="appScreen" class="hidden">
   <div class="flex h-screen">
 
-    <div class="w-64 bg-gray-900 text-white p-6">
+    <div class="w-64 bg-gray-900 text-white p-6 overflow-y-auto">
       <h1 class="text-2xl font-bold mb-8">TradeFlow AI</h1>
 
       <button onclick="showPage('dashboardPage')" class="block w-full text-left p-2 rounded hover:bg-gray-700">Dashboard</button>
-      <button onclick="showPage('leadFinderPage')" class="block w-full text-left p-2 rounded hover:bg-gray-700">Lead Finder</button>
+      <button onclick="showPage('leadFinderPage')" class="block w-full text-left p-2 rounded hover:bg-gray-700">Lead Research</button>
+      <button onclick="showPage('matchmakerPage')" class="block w-full text-left p-2 rounded hover:bg-gray-700">Matchmaker</button>
+      <button onclick="showPage('dealsPage')" class="block w-full text-left p-2 rounded hover:bg-gray-700">Deals Workspace</button>
       <button onclick="showPage('suppliersPage')" class="block w-full text-left p-2 rounded hover:bg-gray-700">Suppliers</button>
       <button onclick="showPage('crmPage')" class="block w-full text-left p-2 rounded hover:bg-gray-700">CRM</button>
       <button onclick="showPage('tasksPage')" class="block w-full text-left p-2 rounded hover:bg-gray-700">Tasks</button>
@@ -40,7 +42,7 @@
       <div id="dashboardPage" class="page">
         <h2 class="text-3xl font-bold mb-6">Dashboard</h2>
 
-        <div class="grid grid-cols-3 gap-6">
+        <div class="grid grid-cols-4 gap-6">
           <div class="bg-white p-6 rounded-xl shadow">
             <p class="text-gray-500">Suppliers</p>
             <h3 id="supplierCount" class="text-3xl font-bold">0</h3>
@@ -55,18 +57,59 @@
             <p class="text-gray-500">Tasks</p>
             <h3 id="taskCount" class="text-3xl font-bold">0</h3>
           </div>
+
+          <div class="bg-white p-6 rounded-xl shadow">
+            <p class="text-gray-500">Deals</p>
+            <h3 id="dealCount" class="text-3xl font-bold">0</h3>
+          </div>
         </div>
       </div>
 
       <div id="leadFinderPage" class="page hidden">
-        <h2 class="text-3xl font-bold mb-6">Lead Finder</h2>
+        <h2 class="text-3xl font-bold mb-6">Lead Research Engine</h2>
 
         <div class="bg-white p-6 rounded-xl shadow mb-6">
-          <input id="leadQuery" placeholder="e.g. rice exporters india, textile buyers dubai" class="border p-3 rounded w-2/3 mr-2">
-          <button onclick="searchLeads()" class="bg-blue-600 text-white px-5 py-3 rounded">Search Leads</button>
+          <input id="researchQuery" placeholder="e.g. rice exporters india" class="border p-3 rounded mr-2 w-64">
+          <select id="researchType" class="border p-3 rounded mr-2">
+            <option value="supplier">Supplier</option>
+            <option value="buyer">Buyer</option>
+          </select>
+          <input id="researchProduct" placeholder="Product e.g. rice" class="border p-3 rounded mr-2">
+          <input id="researchCountry" placeholder="Country e.g. India" class="border p-3 rounded mr-2">
+
+          <button onclick="researchLeads()" class="bg-blue-600 text-white px-5 py-3 rounded">Research</button>
         </div>
 
-        <div id="leadResults" class="space-y-4"></div>
+        <div id="researchResults" class="space-y-4"></div>
+      </div>
+
+      <div id="matchmakerPage" class="page hidden">
+        <h2 class="text-3xl font-bold mb-6">Supplier–Buyer Matchmaker</h2>
+
+        <div class="bg-white p-6 rounded-xl shadow mb-6">
+          <input id="matchProduct" placeholder="Product e.g. rice" class="border p-3 rounded mr-2">
+          <input id="matchCountry" placeholder="Country e.g. India" class="border p-3 rounded mr-2">
+          <button onclick="runMatchmaker()" class="bg-purple-600 text-white px-5 py-3 rounded">Find Matches</button>
+        </div>
+
+        <div id="matchResults" class="space-y-4"></div>
+      </div>
+
+      <div id="dealsPage" class="page hidden">
+        <h2 class="text-3xl font-bold mb-6">Mediator Deal Workspace</h2>
+
+        <div class="bg-white p-6 rounded-xl shadow mb-6">
+          <input id="dealSupplier" placeholder="Supplier name" class="border p-3 rounded mr-2">
+          <input id="dealBuyer" placeholder="Buyer name" class="border p-3 rounded mr-2">
+          <input id="dealProduct" placeholder="Product" class="border p-3 rounded mr-2">
+          <input id="dealSupplierPrice" placeholder="Supplier price" type="number" class="border p-3 rounded mr-2">
+          <input id="dealBuyerPrice" placeholder="Buyer price" type="number" class="border p-3 rounded mr-2">
+          <input id="dealQuantity" placeholder="Quantity" type="number" class="border p-3 rounded mr-2">
+          <input id="dealNotes" placeholder="Notes" class="border p-3 rounded mr-2">
+          <button onclick="addDeal()" class="bg-green-600 text-white px-5 py-3 rounded">Create Deal</button>
+        </div>
+
+        <div id="dealList" class="space-y-4"></div>
       </div>
 
       <div id="suppliersPage" class="page hidden">
@@ -75,6 +118,7 @@
         <div class="bg-white p-6 rounded-xl shadow mb-6">
           <input id="supplierNameInput" placeholder="Supplier name" class="border p-3 rounded mr-2">
           <input id="supplierPriceInput" placeholder="Price" class="border p-3 rounded mr-2">
+          <input id="supplierPhoneInput" placeholder="Phone with country code" class="border p-3 rounded mr-2">
           <button onclick="addSupplier()" class="bg-green-600 text-white px-5 py-3 rounded">Add Supplier</button>
         </div>
 
@@ -86,6 +130,8 @@
 
         <div class="bg-white p-6 rounded-xl shadow mb-6">
           <input id="leadNameInput" placeholder="Lead name" class="border p-3 rounded mr-2">
+          <input id="leadPhoneInput" placeholder="WhatsApp number with country code" class="border p-3 rounded mr-2">
+          <input id="leadProductInput" placeholder="Product / category" class="border p-3 rounded mr-2">
           <button onclick="addLead()" class="bg-blue-600 text-white px-5 py-3 rounded">Add Lead</button>
         </div>
 
@@ -147,12 +193,8 @@ async function signup() {
   });
 
   const data = await res.json();
-
-  if (data.error) {
-    alert(data.error);
-  } else {
-    alert("Account created. Now login.");
-  }
+  if (data.error) alert(data.error);
+  else alert("Account created. Now login.");
 }
 
 async function login() {
@@ -189,48 +231,200 @@ function showPage(pageId) {
   if (pageId === "suppliersPage") loadSuppliers();
   if (pageId === "crmPage") loadLeads();
   if (pageId === "tasksPage") loadTasks();
+  if (pageId === "leadFinderPage") loadResearchLeads();
+  if (pageId === "dealsPage") loadDeals();
 }
 
-async function searchLeads() {
-  const query = document.getElementById("leadQuery").value;
+async function researchLeads() {
+  const query = document.getElementById("researchQuery").value;
+  const type = document.getElementById("researchType").value;
+  const product = document.getElementById("researchProduct").value;
+  const country = document.getElementById("researchCountry").value;
 
-  const res = await fetch(`${API}/lead-search`, {
+  document.getElementById("researchResults").innerHTML = "Researching...";
+
+  const res = await fetch(`${API}/research-leads`, {
     method: "POST",
     headers: authHeaders(),
-    body: JSON.stringify({ query })
+    body: JSON.stringify({ query, type, product, country })
   });
 
   const data = await res.json();
 
-  document.getElementById("leadResults").innerHTML = `
-    <div class="bg-white p-6 rounded-xl shadow">
-      <h3 class="font-bold text-xl mb-4">Search Platforms</h3>
+  if (data.error) {
+    document.getElementById("researchResults").innerHTML = `<div class="bg-red-100 p-4 rounded">${data.error}</div>`;
+    return;
+  }
 
-      <a href="${data.google}" target="_blank" class="block text-blue-600 mb-2">🔍 Google Search</a>
-      <a href="${data.indiamart}" target="_blank" class="block text-blue-600 mb-2">🏭 IndiaMART</a>
-      <a href="${data.tradeindia}" target="_blank" class="block text-blue-600 mb-2">📦 TradeIndia</a>
-      <a href="${data.alibaba}" target="_blank" class="block text-blue-600 mb-2">🌍 Alibaba</a>
-      <a href="${data.linkedin}" target="_blank" class="block text-blue-600 mb-2">💼 LinkedIn Companies</a>
+  renderResearchLeads(data);
+}
 
-      <p class="text-gray-600 mt-4">
-        Open these links, collect supplier/buyer details, then add them to CRM.
-      </p>
-    </div>
-  `;
+async function loadResearchLeads() {
+  const res = await fetch(`${API}/research-leads`, {
+    headers: { "Authorization": getToken() }
+  });
+
+  const data = await res.json();
+  renderResearchLeads(data);
+}
+
+function renderResearchLeads(data) {
+  const box = document.getElementById("researchResults");
+  box.innerHTML = "";
+
+  if (!data.length) {
+    box.innerHTML = `<div class="bg-white p-4 rounded-xl shadow">No research leads yet.</div>`;
+    return;
+  }
+
+  data.forEach(lead => {
+    box.innerHTML += `
+      <div class="bg-white p-5 rounded-xl shadow">
+        <h3 class="font-bold text-lg">${lead.name}</h3>
+        <p>Type: ${lead.type}</p>
+        <p>Product: ${lead.product || "Not specified"}</p>
+        <p>Country: ${lead.country || "Not specified"}</p>
+        <p>Score: ${lead.score}/100</p>
+        <p class="text-gray-600">${lead.snippet || ""}</p>
+        <a href="${lead.website}" target="_blank" class="text-blue-600">Open Source</a>
+        <button onclick='addResearchToCRM(${JSON.stringify(lead)})' class="ml-3 bg-green-600 text-white px-3 py-1 rounded">Add to CRM</button>
+      </div>
+    `;
+  });
+}
+
+async function addResearchToCRM(lead) {
+  await fetch(`${API}/add-research-to-crm`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify(lead)
+  });
+
+  alert("Added to CRM");
+  loadLeads();
+  loadDashboard();
+}
+
+async function runMatchmaker() {
+  const product = document.getElementById("matchProduct").value;
+  const country = document.getElementById("matchCountry").value;
+
+  document.getElementById("matchResults").innerHTML = "Matching...";
+
+  const res = await fetch(`${API}/matchmake`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ product, country })
+  });
+
+  const data = await res.json();
+
+  const box = document.getElementById("matchResults");
+  box.innerHTML = "";
+
+  if (!data.length) {
+    box.innerHTML = `<div class="bg-white p-4 rounded-xl shadow">No matches yet. Research both suppliers and buyers first.</div>`;
+    return;
+  }
+
+  data.forEach(match => {
+    box.innerHTML += `
+      <div class="bg-white p-5 rounded-xl shadow">
+        <h3 class="font-bold text-lg">Match Score: ${match.score}/100</h3>
+        <p><b>Supplier:</b> ${match.supplier.name}</p>
+        <p><b>Buyer:</b> ${match.buyer.name}</p>
+        <p>${match.reason}</p>
+        <button onclick="prefillDeal('${match.supplier.name}', '${match.buyer.name}', '${match.supplier.product || match.buyer.product || ""}')" class="bg-green-600 text-white px-3 py-1 rounded">Create Deal</button>
+      </div>
+    `;
+  });
+}
+
+function prefillDeal(supplier, buyer, product) {
+  showPage("dealsPage");
+  document.getElementById("dealSupplier").value = supplier;
+  document.getElementById("dealBuyer").value = buyer;
+  document.getElementById("dealProduct").value = product;
+}
+
+async function addDeal() {
+  const supplierName = document.getElementById("dealSupplier").value;
+  const buyerName = document.getElementById("dealBuyer").value;
+  const product = document.getElementById("dealProduct").value;
+  const supplierPrice = document.getElementById("dealSupplierPrice").value;
+  const buyerPrice = document.getElementById("dealBuyerPrice").value;
+  const quantity = document.getElementById("dealQuantity").value;
+  const notes = document.getElementById("dealNotes").value;
+
+  await fetch(`${API}/deals`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({
+      supplierName,
+      buyerName,
+      product,
+      supplierPrice,
+      buyerPrice,
+      quantity,
+      notes
+    })
+  });
+
+  document.getElementById("dealSupplier").value = "";
+  document.getElementById("dealBuyer").value = "";
+  document.getElementById("dealProduct").value = "";
+  document.getElementById("dealSupplierPrice").value = "";
+  document.getElementById("dealBuyerPrice").value = "";
+  document.getElementById("dealQuantity").value = "";
+  document.getElementById("dealNotes").value = "";
+
+  loadDeals();
+  loadDashboard();
+}
+
+async function loadDeals() {
+  const res = await fetch(`${API}/deals`, {
+    headers: { "Authorization": getToken() }
+  });
+
+  const data = await res.json();
+  const box = document.getElementById("dealList");
+  box.innerHTML = "";
+
+  data.forEach(deal => {
+    box.innerHTML += `
+      <div class="bg-white p-5 rounded-xl shadow">
+        <h3 class="font-bold text-lg">${deal.product}</h3>
+        <p><b>Supplier:</b> ${deal.supplierName}</p>
+        <p><b>Buyer:</b> ${deal.buyerName}</p>
+        <p><b>Supplier Price:</b> ₹${deal.supplierPrice}</p>
+        <p><b>Buyer Price:</b> ₹${deal.buyerPrice}</p>
+        <p><b>Quantity:</b> ${deal.quantity}</p>
+        <p><b>Margin:</b> ₹${deal.margin}</p>
+        <p><b>Total Profit:</b> ₹${deal.totalProfit}</p>
+        <p><b>Status:</b> ${deal.status}</p>
+        <p><b>Notes:</b> ${deal.notes || ""}</p>
+      </div>
+    `;
+  });
+
+  document.getElementById("dealCount").innerText = data.length;
 }
 
 async function addSupplier() {
   const name = document.getElementById("supplierNameInput").value;
   const price = document.getElementById("supplierPriceInput").value;
+  const phone = document.getElementById("supplierPhoneInput").value;
 
   await fetch(`${API}/suppliers`, {
     method: "POST",
     headers: authHeaders(),
-    body: JSON.stringify({ name, price })
+    body: JSON.stringify({ name, price, phone })
   });
 
   document.getElementById("supplierNameInput").value = "";
   document.getElementById("supplierPriceInput").value = "";
+  document.getElementById("supplierPhoneInput").value = "";
 
   loadSuppliers();
   loadDashboard();
@@ -246,9 +440,14 @@ async function loadSuppliers() {
   box.innerHTML = "";
 
   data.forEach(s => {
+    const message = encodeURIComponent(`Hello ${s.name}, I am Krishna from TradeFlow. I would like to discuss export/import business opportunities with you.`);
+    const phone = (s.phone || "").replace(/\D/g, "");
+
     box.innerHTML += `
       <div class="bg-white p-4 rounded-xl shadow">
-        <b>${s.name}</b> — ₹${s.price}
+        <b>${s.name}</b> — ₹${s.price}<br>
+        Phone: ${s.phone || "Not added"}<br>
+        ${phone ? `<a href="https://wa.me/${phone}?text=${message}" target="_blank" class="text-green-600">WhatsApp Message</a>` : ""}
       </div>
     `;
   });
@@ -258,14 +457,18 @@ async function loadSuppliers() {
 
 async function addLead() {
   const name = document.getElementById("leadNameInput").value;
+  const phone = document.getElementById("leadPhoneInput").value;
+  const product = document.getElementById("leadProductInput").value;
 
   await fetch(`${API}/leads`, {
     method: "POST",
     headers: authHeaders(),
-    body: JSON.stringify({ name })
+    body: JSON.stringify({ name, phone, product })
   });
 
   document.getElementById("leadNameInput").value = "";
+  document.getElementById("leadPhoneInput").value = "";
+  document.getElementById("leadProductInput").value = "";
 
   loadLeads();
   loadDashboard();
@@ -287,11 +490,18 @@ async function loadLeads() {
     if (lead.stage === "neg") target = "negLeads";
     if (lead.stage === "closed") target = "closedLeads";
 
+    const phone = (lead.phone || "").replace(/\D/g, "");
+    const product = lead.product || "export/import products";
+    const msg = encodeURIComponent(`Hello ${lead.name}, I am Krishna from TradeFlow. I help connect verified suppliers and buyers for ${product}. I would like to explore a business opportunity with you.`);
+
     document.getElementById(target).innerHTML += `
       <div class="bg-gray-100 p-3 rounded mb-3">
         <b>${lead.name}</b><br>
+        Product: ${product}<br>
+        Phone: ${lead.phone || "Not added"}<br>
         <button onclick="moveLead(${index}, '${lead.stage}')" class="text-blue-600">Move ➜</button>
-        <button onclick="generateMessage('${lead.name}')" class="ml-3 text-purple-600">AI Message 🤖</button>
+        <button onclick="generateMessage('${lead.name}', '${product}')" class="ml-3 text-purple-600">AI Message 🤖</button>
+        ${phone ? `<a href="https://wa.me/${phone}?text=${msg}" target="_blank" class="ml-3 text-green-600">WhatsApp</a>` : ""}
       </div>
     `;
   });
@@ -314,11 +524,11 @@ async function moveLead(index, stage) {
   loadLeads();
 }
 
-async function generateMessage(name) {
+async function generateMessage(name, product) {
   const res = await fetch(`${API}/generate-message`, {
     method: "POST",
     headers: authHeaders(),
-    body: JSON.stringify({ name })
+    body: JSON.stringify({ name, product })
   });
 
   const data = await res.json();
@@ -364,6 +574,7 @@ async function loadDashboard() {
   await loadSuppliers();
   await loadLeads();
   await loadTasks();
+  await loadDeals();
 }
 
 function loadAll() {
