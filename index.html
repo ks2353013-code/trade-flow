@@ -30,6 +30,7 @@
       <button onclick="showPage('agentPage')" class="block w-full text-left p-2 rounded hover:bg-gray-700">AI Agent</button>
       <button onclick="showPage('researchPage')" class="block w-full text-left p-2 rounded hover:bg-gray-700">Lead Research</button>
       <button onclick="showPage('matchmakerPage')" class="block w-full text-left p-2 rounded hover:bg-gray-700">Matchmaker</button>
+      <button onclick="showPage('outreachPage')" class="block w-full text-left p-2 rounded hover:bg-gray-700">Smart Outreach</button>
       <button onclick="showPage('dealsPage')" class="block w-full text-left p-2 rounded hover:bg-gray-700">Deals</button>
       <button onclick="showPage('suppliersPage')" class="block w-full text-left p-2 rounded hover:bg-gray-700">Suppliers</button>
       <button onclick="showPage('crmPage')" class="block w-full text-left p-2 rounded hover:bg-gray-700">CRM</button>
@@ -43,39 +44,24 @@
       <div id="dashboardPage" class="page">
         <h2 class="text-3xl font-bold mb-6">Dashboard</h2>
         <div class="grid grid-cols-4 gap-6">
-          <div class="bg-white p-6 rounded-xl shadow">
-            <p class="text-gray-500">Suppliers</p>
-            <h3 id="supplierCount" class="text-3xl font-bold">0</h3>
-          </div>
-          <div class="bg-white p-6 rounded-xl shadow">
-            <p class="text-gray-500">Leads</p>
-            <h3 id="leadCount" class="text-3xl font-bold">0</h3>
-          </div>
-          <div class="bg-white p-6 rounded-xl shadow">
-            <p class="text-gray-500">Tasks</p>
-            <h3 id="taskCount" class="text-3xl font-bold">0</h3>
-          </div>
-          <div class="bg-white p-6 rounded-xl shadow">
-            <p class="text-gray-500">Deals</p>
-            <h3 id="dealCount" class="text-3xl font-bold">0</h3>
-          </div>
+          <div class="bg-white p-6 rounded-xl shadow"><p class="text-gray-500">Suppliers</p><h3 id="supplierCount" class="text-3xl font-bold">0</h3></div>
+          <div class="bg-white p-6 rounded-xl shadow"><p class="text-gray-500">Leads</p><h3 id="leadCount" class="text-3xl font-bold">0</h3></div>
+          <div class="bg-white p-6 rounded-xl shadow"><p class="text-gray-500">Tasks</p><h3 id="taskCount" class="text-3xl font-bold">0</h3></div>
+          <div class="bg-white p-6 rounded-xl shadow"><p class="text-gray-500">Deals</p><h3 id="dealCount" class="text-3xl font-bold">0</h3></div>
         </div>
       </div>
 
       <div id="agentPage" class="page hidden">
         <h2 class="text-3xl font-bold mb-6">AI Agent Command Center</h2>
-
         <div class="bg-white p-6 rounded-xl shadow mb-6">
           <textarea id="agentCommand" class="border p-3 rounded w-full h-32" placeholder="Example: Find basmati rice suppliers in India and rice buyers in Dubai"></textarea>
           <button onclick="runAgent()" class="bg-purple-600 text-white px-5 py-3 rounded mt-3">Run Agent</button>
         </div>
-
         <div id="agentResults" class="space-y-4"></div>
       </div>
 
       <div id="researchPage" class="page hidden">
         <h2 class="text-3xl font-bold mb-6">Lead Research</h2>
-
         <div class="bg-white p-6 rounded-xl shadow mb-6">
           <input id="researchQuery" placeholder="rice exporters india" class="border p-3 rounded mr-2">
           <select id="researchType" class="border p-3 rounded mr-2">
@@ -86,7 +72,6 @@
           <input id="researchCountry" placeholder="Country" class="border p-3 rounded mr-2">
           <button onclick="researchLeads()" class="bg-blue-600 text-white px-5 py-3 rounded">Research</button>
         </div>
-
         <div id="researchResults" class="space-y-4"></div>
       </div>
 
@@ -96,9 +81,40 @@
         <div id="matchResults" class="space-y-4"></div>
       </div>
 
+      <div id="outreachPage" class="page hidden">
+        <h2 class="text-3xl font-bold mb-6">Smart Outreach Panel</h2>
+
+        <div class="grid grid-cols-2 gap-6">
+          <div class="bg-white p-6 rounded-xl shadow">
+            <h3 class="font-bold mb-4">Select Contact</h3>
+            <div id="outreachContacts" class="space-y-3"></div>
+          </div>
+
+          <div class="bg-white p-6 rounded-xl shadow">
+            <h3 class="font-bold mb-4">Message Builder</h3>
+
+            <p id="selectedContactLabel" class="mb-3 text-gray-600">No contact selected.</p>
+
+            <select id="outreachTemplate" class="border p-3 rounded w-full mb-3">
+              <option value="intro">Supplier Intro</option>
+              <option value="buyer">Buyer Sourcing</option>
+              <option value="followup">Follow-up</option>
+            </select>
+
+            <button onclick="buildOutreachMessage()" class="bg-purple-600 text-white px-5 py-3 rounded mb-3">Generate Message</button>
+
+            <textarea id="outreachMessage" class="border p-3 rounded w-full h-48 mb-3"></textarea>
+
+            <div class="flex gap-3">
+              <a id="whatsappOutreachLink" href="#" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded">Open WhatsApp</a>
+              <a id="emailOutreachLink" href="#" class="bg-blue-600 text-white px-4 py-2 rounded">Open Email</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div id="dealsPage" class="page hidden">
         <h2 class="text-3xl font-bold mb-6">Mediator Deal Workspace</h2>
-
         <div class="bg-white p-6 rounded-xl shadow mb-6">
           <input id="dealSupplier" placeholder="Supplier" class="border p-3 rounded mr-2 mb-2">
           <input id="dealBuyer" placeholder="Buyer" class="border p-3 rounded mr-2 mb-2">
@@ -108,58 +124,45 @@
           <input id="dealQuantity" placeholder="Quantity" type="number" class="border p-3 rounded mr-2 mb-2">
           <button onclick="addDeal()" class="bg-green-600 text-white px-5 py-3 rounded">Create Deal</button>
         </div>
-
         <div id="dealList" class="space-y-4"></div>
       </div>
 
       <div id="suppliersPage" class="page hidden">
         <h2 class="text-3xl font-bold mb-6">Suppliers</h2>
-
         <div class="bg-white p-6 rounded-xl shadow mb-6">
           <input id="supplierNameInput" placeholder="Supplier" class="border p-3 rounded mr-2 mb-2">
           <input id="supplierPriceInput" placeholder="Price" class="border p-3 rounded mr-2 mb-2">
           <input id="supplierPhoneInput" placeholder="Phone" class="border p-3 rounded mr-2 mb-2">
+          <input id="supplierEmailInput" placeholder="Email" class="border p-3 rounded mr-2 mb-2">
           <input id="supplierProductInput" placeholder="Product" class="border p-3 rounded mr-2 mb-2">
           <button onclick="addSupplier()" class="bg-green-600 text-white px-5 py-3 rounded">Add Supplier</button>
         </div>
-
         <div id="supplierList" class="space-y-3"></div>
       </div>
 
       <div id="crmPage" class="page hidden">
         <h2 class="text-3xl font-bold mb-6">CRM</h2>
-
         <div class="bg-white p-6 rounded-xl shadow mb-6">
           <input id="leadNameInput" placeholder="Lead" class="border p-3 rounded mr-2 mb-2">
           <input id="leadPhoneInput" placeholder="Phone" class="border p-3 rounded mr-2 mb-2">
+          <input id="leadEmailInput" placeholder="Email" class="border p-3 rounded mr-2 mb-2">
           <input id="leadProductInput" placeholder="Product" class="border p-3 rounded mr-2 mb-2">
           <button onclick="addLead()" class="bg-blue-600 text-white px-5 py-3 rounded">Add Lead</button>
         </div>
 
         <div class="grid grid-cols-3 gap-6">
-          <div class="bg-white p-5 rounded-xl shadow">
-            <h3 class="font-bold mb-3">New</h3>
-            <div id="newLeads"></div>
-          </div>
-          <div class="bg-white p-5 rounded-xl shadow">
-            <h3 class="font-bold mb-3">Negotiation</h3>
-            <div id="negLeads"></div>
-          </div>
-          <div class="bg-white p-5 rounded-xl shadow">
-            <h3 class="font-bold mb-3">Closed</h3>
-            <div id="closedLeads"></div>
-          </div>
+          <div class="bg-white p-5 rounded-xl shadow"><h3 class="font-bold mb-3">New</h3><div id="newLeads"></div></div>
+          <div class="bg-white p-5 rounded-xl shadow"><h3 class="font-bold mb-3">Negotiation</h3><div id="negLeads"></div></div>
+          <div class="bg-white p-5 rounded-xl shadow"><h3 class="font-bold mb-3">Closed</h3><div id="closedLeads"></div></div>
         </div>
       </div>
 
       <div id="tasksPage" class="page hidden">
         <h2 class="text-3xl font-bold mb-6">Tasks</h2>
-
         <div class="bg-white p-6 rounded-xl shadow mb-6">
           <input id="taskInput" placeholder="Task" class="border p-3 rounded mr-2">
           <button onclick="addTask()" class="bg-purple-600 text-white px-5 py-3 rounded">Add Task</button>
         </div>
-
         <div id="taskList" class="space-y-3"></div>
       </div>
 
@@ -174,6 +177,9 @@
 <script>
 const API = "https://trade-flow-lc1k.onrender.com";
 let researchCache = [];
+let outreachLeads = [];
+let outreachSuppliers = [];
+let selectedOutreach = null;
 
 function getToken() {
   return localStorage.getItem("tradeflow_token");
@@ -237,6 +243,11 @@ function showPage(id) {
   if (id === "suppliersPage") loadSuppliers();
   if (id === "crmPage") loadLeads();
   if (id === "tasksPage") loadTasks();
+  if (id === "outreachPage") loadOutreachPanel();
+}
+
+function safe(value) {
+  return String(value || "").replace(/'/g, "\\'");
 }
 
 async function runAgent() {
@@ -372,10 +383,6 @@ async function runMatchmaker() {
   });
 }
 
-function safe(value) {
-  return String(value || "").replace(/'/g, "\\'");
-}
-
 function prefillDeal(supplier, buyer, product) {
   showPage("dealsPage");
   dealSupplier.value = supplier;
@@ -442,6 +449,7 @@ async function addSupplier() {
       name: supplierNameInput.value,
       price: supplierPriceInput.value,
       phone: supplierPhoneInput.value,
+      email: supplierEmailInput.value,
       product: supplierProductInput.value
     })
   });
@@ -449,6 +457,7 @@ async function addSupplier() {
   supplierNameInput.value = "";
   supplierPriceInput.value = "";
   supplierPhoneInput.value = "";
+  supplierEmailInput.value = "";
   supplierProductInput.value = "";
 
   loadSuppliers();
@@ -472,6 +481,7 @@ async function loadSuppliers() {
         <b>${s.name}</b> — ₹${s.price}<br>
         Product: ${s.product || ""}<br>
         Phone: ${s.phone || ""}<br>
+        Email: ${s.email || ""}<br>
         ${phone ? `<a class="text-green-600" target="_blank" href="https://wa.me/${phone}?text=${msg}">WhatsApp</a>` : ""}
       </div>
     `;
@@ -487,12 +497,14 @@ async function addLead() {
     body: JSON.stringify({
       name: leadNameInput.value,
       phone: leadPhoneInput.value,
+      email: leadEmailInput.value,
       product: leadProductInput.value
     })
   });
 
   leadNameInput.value = "";
   leadPhoneInput.value = "";
+  leadEmailInput.value = "";
   leadProductInput.value = "";
 
   loadLeads();
@@ -523,6 +535,7 @@ async function loadLeads() {
         <b>${lead.name}</b><br>
         Product: ${lead.product || ""}<br>
         Phone: ${lead.phone || ""}<br>
+        Email: ${lead.email || ""}<br>
         <button onclick="moveLead(${i}, '${lead.stage}')" class="text-blue-600">Move ➜</button>
         <button onclick="generateMessage('${safe(lead.name)}', '${safe(lead.product || "")}')" class="ml-3 text-purple-600">AI Message</button>
         ${phone ? `<a class="ml-3 text-green-600" target="_blank" href="https://wa.me/${phone}?text=${msg}">WhatsApp</a>` : ""}
@@ -581,6 +594,84 @@ async function loadTasks() {
   });
 
   taskCount.innerText = data.length;
+}
+
+async function loadOutreachPanel() {
+  await loadLeads();
+  await loadSuppliers();
+
+  const leadRes = await fetch(`${API}/leads`, { headers: { Authorization: getToken() } });
+  const supplierRes = await fetch(`${API}/suppliers`, { headers: { Authorization: getToken() } });
+
+  outreachLeads = await leadRes.json();
+  outreachSuppliers = await supplierRes.json();
+
+  outreachContacts.innerHTML = "";
+
+  outreachLeads.forEach((lead, index) => {
+    outreachContacts.innerHTML += `
+      <div class="bg-gray-100 p-3 rounded">
+        <b>${lead.name}</b> <span class="text-xs">(Lead)</span><br>
+        ${lead.product || ""}<br>
+        <button onclick="selectOutreach('lead', ${index})" class="text-blue-600">Select</button>
+      </div>
+    `;
+  });
+
+  outreachSuppliers.forEach((supplier, index) => {
+    outreachContacts.innerHTML += `
+      <div class="bg-gray-100 p-3 rounded">
+        <b>${supplier.name}</b> <span class="text-xs">(Supplier)</span><br>
+        ${supplier.product || ""}<br>
+        <button onclick="selectOutreach('supplier', ${index})" class="text-blue-600">Select</button>
+      </div>
+    `;
+  });
+}
+
+function selectOutreach(type, index) {
+  selectedOutreach = type === "lead" ? outreachLeads[index] : outreachSuppliers[index];
+  selectedOutreach.type = type;
+  selectedContactLabel.innerText = `Selected: ${selectedOutreach.name} (${type})`;
+  outreachMessage.value = "";
+  whatsappOutreachLink.href = "#";
+  emailOutreachLink.href = "#";
+}
+
+async function buildOutreachMessage() {
+  if (!selectedOutreach) {
+    alert("Select a contact first");
+    return;
+  }
+
+  const res = await fetch(`${API}/generate-message`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({
+      name: selectedOutreach.name,
+      product: selectedOutreach.product,
+      type: selectedOutreach.type,
+      template: outreachTemplate.value
+    })
+  });
+
+  const data = await res.json();
+  outreachMessage.value = data.message;
+
+  const phone = (selectedOutreach.phone || "").replace(/\D/g, "");
+  const encodedMsg = encodeURIComponent(data.message);
+
+  if (phone) {
+    whatsappOutreachLink.href = `https://wa.me/${phone}?text=${encodedMsg}`;
+  } else {
+    whatsappOutreachLink.href = "#";
+  }
+
+  if (selectedOutreach.email) {
+    emailOutreachLink.href = `mailto:${selectedOutreach.email}?subject=Business Inquiry&body=${encodedMsg}`;
+  } else {
+    emailOutreachLink.href = "#";
+  }
 }
 
 async function loadDashboard() {

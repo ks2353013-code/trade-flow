@@ -27,6 +27,7 @@ const Lead = mongoose.model("Lead", {
   user: String,
   name: String,
   phone: String,
+  email: String,
   product: String,
   stage: String,
   type: String,
@@ -41,6 +42,7 @@ const Supplier = mongoose.model("Supplier", {
   name: String,
   price: String,
   phone: String,
+  email: String,
   product: String,
   country: String
 });
@@ -95,52 +97,12 @@ function scoreLead(text, product, type) {
 
   if (product && lower.includes(product.toLowerCase())) score += 20;
 
-  if (
-    type === "supplier" &&
-    /supplier|manufacturer|exporter|factory|producer|wholesale|trader/.test(lower)
-  ) {
-    score += 25;
-  }
-
-  if (
-    type === "buyer" &&
-    /buyer|importer|distributor|procurement|wholesale|retailer|trader/.test(lower)
-  ) {
-    score += 25;
-  }
+  if (type === "supplier" && /supplier|manufacturer|exporter|factory|producer|wholesale|trader/.test(lower)) score += 25;
+  if (type === "buyer" && /buyer|importer|distributor|procurement|wholesale|retailer|trader/.test(lower)) score += 25;
 
   if (/contact|phone|email|website|company|export|import/.test(lower)) score += 10;
 
   return Math.min(score, 100);
-}
-
-async function searchRealWeb(query, type, product, country) {
-  if (!SERPAPI_KEY) {
-    return fakeResearch(query, type, product, country);
-  }
-
-  const searchQuery = `${query} ${type} ${product} ${country} company contact`;
-  const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(
-    searchQuery
-  )}&api_key=${SERPAPI_KEY}`;
-
-  const response = await fetch(url);
-  const data = await response.json();
-
-  if (!data.organic_results) {
-    return fakeResearch(query, type, product, country);
-  }
-
-  return data.organic_results.slice(0, 10).map((item) => ({
-    name: item.title || "Business Lead",
-    type,
-    product,
-    country,
-    website: item.link || "",
-    source: "SerpAPI Google Search",
-    snippet: item.snippet || "",
-    score: scoreLead(`${item.title} ${item.snippet}`, product, type)
-  }));
 }
 
 function fakeResearch(query, type, product, country) {
@@ -169,7 +131,56 @@ function fakeResearch(query, type, product, country) {
   }));
 }
 
-function generateOutreach(name, product, type) {
+async function searchRealWeb(query, type, product, country) {
+  if (!SERPAPI_KEY) {
+    return fakeResearch(query, type, product, country);
+  }
+
+  const searchQuery = `${query} ${type} ${product} ${country} company contact`;
+  const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(searchQuery)}&api_key=${SERPAPI_KEY}`;
+
+  const response = await fetch(url);
+  const data = await response.json();
+
+  if (!data.organic_results) {
+    return fakeResearch(query, type, product, country);
+  }
+
+  return data.organic_results.slice(0, 10).map((item) => ({
+    name: item.title || "Business Lead",
+    type,
+    product,
+    country,
+    website: item.link || "",
+    source: "SerpAPI Google Search",
+    snippet: item.snippet || "",
+    score: scoreLead(`${item.title} ${item.snippet}`, product, type)
+  }));
+}
+
+function generateOutreach(name, product, type, template) {
+  if (template === "followup") {
+    return `Hello ${name},
+
+Just following up regarding ${product || "export/import products"}.
+
+Please let me know if you are interested, and I can share the next details.
+
+Best regards,
+TradeFlow Team`;
+  }
+
+  if (template === "buyer") {
+    return `Hello ${name},
+
+I am Krishna from TradeFlow. We help buyers source verified suppliers for ${product || "export/import products"}.
+
+I wanted to check if you are currently importing or sourcing this product. I can connect you with suitable suppliers.
+
+Best regards,
+TradeFlow Team`;
+  }
+
   return `Hello ${name},
 
 I am Krishna from TradeFlow. We help connect verified suppliers and buyers for ${product || "export/import products"}.
@@ -184,7 +195,6 @@ TradeFlow Team`;
 app.post("/signup", async (req, res) => {
   try {
     const { email, password } = req.body;
-
     if (!email || !password) return res.json({ error: "Email and password required" });
 
     const exists = await User.findOne({ email });
@@ -216,7 +226,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-/* AI AGENT COMMAND CENTER */
+/* AI AGENT */
 app.post("/agent-command", auth, async (req, res) => {
   try {
     const { command } = req.body;
@@ -234,7 +244,6 @@ app.post("/agent-command", auth, async (req, res) => {
 
     if (text.includes("uae")) buyerCountry = "UAE";
     if (text.includes("dubai")) buyerCountry = "Dubai";
-    if (text.includes("india")) supplierCountry = "India";
     if (text.includes("usa")) buyerCountry = "USA";
     if (text.includes("uk")) buyerCountry = "UK";
 
@@ -246,13 +255,8 @@ app.post("/agent-command", auth, async (req, res) => {
 
     await ResearchLead.deleteMany({ user: req.user });
 
-    const savedSuppliers = await ResearchLead.insertMany(
-      suppliers.map((x) => ({ ...x, user: req.user }))
-    );
-
-    const savedBuyers = await ResearchLead.insertMany(
-      buyers.map((x) => ({ ...x, user: req.user }))
-    );
+    const savedSuppliers = await ResearchLead.insertMany(suppliers.map((x) => ({ ...x, user: req.user })));
+    const savedBuyers = await ResearchLead.insertMany(buyers.map((x) => ({ ...x, user: req.user })));
 
     const tasks = [
       `Review top ${product} suppliers from ${supplierCountry}`,
@@ -306,10 +310,7 @@ app.post("/research-leads", auth, async (req, res) => {
 
     await ResearchLead.deleteMany({ user: req.user, type: type || "supplier" });
 
-    const saved = await ResearchLead.insertMany(
-      results.map((x) => ({ ...x, user: req.user }))
-    );
-
+    const saved = await ResearchLead.insertMany(results.map((x) => ({ ...x, user: req.user })));
     res.json(saved);
   } catch (err) {
     res.json({ error: err.message });
@@ -317,8 +318,7 @@ app.post("/research-leads", auth, async (req, res) => {
 });
 
 app.get("/research-leads", auth, async (req, res) => {
-  const data = await ResearchLead.find({ user: req.user });
-  res.json(data);
+  res.json(await ResearchLead.find({ user: req.user }));
 });
 
 app.post("/add-research-to-crm", auth, async (req, res) => {
@@ -328,6 +328,7 @@ app.post("/add-research-to-crm", auth, async (req, res) => {
     user: req.user,
     name: lead.name,
     phone: "",
+    email: "",
     product: lead.product || "",
     stage: "new",
     type: lead.type || "buyer",
@@ -373,6 +374,7 @@ app.post("/suppliers", auth, async (req, res) => {
     name: req.body.name,
     price: req.body.price,
     phone: req.body.phone,
+    email: req.body.email,
     product: req.body.product,
     country: req.body.country
   });
@@ -390,6 +392,7 @@ app.post("/leads", auth, async (req, res) => {
     user: req.user,
     name: req.body.name,
     phone: req.body.phone || "",
+    email: req.body.email || "",
     product: req.body.product || "",
     stage: "new",
     type: req.body.type || "buyer",
@@ -463,7 +466,8 @@ app.post("/generate-message", auth, (req, res) => {
   const message = generateOutreach(
     req.body.name || "Supplier",
     req.body.product || "export/import products",
-    req.body.type || "supplier"
+    req.body.type || "supplier",
+    req.body.template || "intro"
   );
 
   res.json({ message });
