@@ -1,893 +1,646 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>TradeFlow AI™</title>
-<script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>TradeFlow AI™ — Export Growth OS</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      background: #f3f6fb;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .nav-btn.active {
+      background: #2563eb;
+      color: white;
+    }
+
+    .card {
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+    }
+  </style>
 </head>
 
-<body class="bg-slate-950 text-slate-900 flex flex-col min-h-screen">
+<body class="text-slate-900">
 
-<div id="loginScreen" class="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top_left,#2563eb,transparent_30%),radial-gradient(circle_at_bottom_right,#ec4899,transparent_35%),linear-gradient(135deg,#020617,#111827,#312e81)] p-6">
-  <div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+<!-- AUTH SCREEN -->
+<section id="authScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-900 p-6">
 
-    <div class="text-white">
-      <div class="inline-block bg-white/10 border border-white/20 px-4 py-2 rounded-full mb-5">
-        TradeFlow AI™ Multi-Tenant SaaS
-      </div>
-      <h1 class="text-5xl font-extrabold leading-tight mb-5">
-        One workspace for exporters, importers, teams and deal brokers.
+  <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-8">
+
+    <div class="text-center">
+      <h1 class="text-5xl font-black text-blue-900">
+        TradeFlow AI™
       </h1>
-      <p class="text-slate-200 text-lg mb-6">
-        Master owner control, company admin accounts, employee logins, lead research, matchmaker, smart outreach, and deal tracking.
+
+      <p class="text-slate-500 mt-3">
+        Export Growth Operating System for suppliers, buyers, CRM, outreach and documents.
       </p>
-      <div class="grid grid-cols-2 gap-4 text-sm">
-        <div class="bg-white/10 border border-white/20 p-4 rounded-2xl">✓ Master owner dashboard</div>
-        <div class="bg-white/10 border border-white/20 p-4 rounded-2xl">✓ Company admin login</div>
-        <div class="bg-white/10 border border-white/20 p-4 rounded-2xl">✓ Employee workspace</div>
-        <div class="bg-white/10 border border-white/20 p-4 rounded-2xl">✓ Data separated by company</div>
+
+      <div class="mt-4 inline-block bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-bold">
+        7-Day Free Trial • Money-Ready SaaS
       </div>
     </div>
 
-    <div class="bg-white/95 backdrop-blur p-8 rounded-3xl shadow-2xl">
-      <h2 class="text-3xl font-bold text-center text-indigo-700 mb-2">TradeFlow AI™</h2>
-      <p class="text-center text-slate-500 mb-6">Secure SaaS access portal</p>
+    <div class="mt-8 grid gap-4">
 
-      <div class="grid grid-cols-3 gap-2 mb-5">
-        <button onclick="setAuthTab('master')" id="masterTab" class="authTab bg-indigo-600 text-white p-2 rounded-xl">Master</button>
-        <button onclick="setAuthTab('company')" id="companyTab" class="authTab bg-slate-200 p-2 rounded-xl">Company</button>
-        <button onclick="setAuthTab('employee')" id="employeeTab" class="authTab bg-slate-200 p-2 rounded-xl">Employee</button>
-      </div>
+      <input id="authName" class="border rounded-xl px-4 py-3" placeholder="Owner Name - fill for signup, leave blank for login" />
 
-      <div id="companySignupBox" class="hidden bg-indigo-50 p-4 rounded-2xl mb-4">
-        <h3 class="font-bold mb-3">Create Company Admin Account</h3>
-        <input id="signupCompanyName" placeholder="Company name" class="border p-3 w-full mb-2 rounded-xl">
-        <input id="signupName" placeholder="Admin name" class="border p-3 w-full mb-2 rounded-xl">
-        <input id="signupEmail" placeholder="Admin email" class="border p-3 w-full mb-2 rounded-xl">
-        <input id="signupPassword" type="password" placeholder="Password" class="border p-3 w-full mb-3 rounded-xl">
-        <button onclick="signupCompany()" class="bg-green-600 text-white w-full p-3 rounded-xl">Create Company Workspace</button>
-      </div>
+      <input id="companyName" class="border rounded-xl px-4 py-3" placeholder="Company Name" />
 
-      <div class="bg-slate-50 p-4 rounded-2xl">
-        <h3 id="loginTitle" class="font-bold mb-3">Master Login</h3>
-        <input id="emailInput" placeholder="Email" class="border p-3 w-full mb-3 rounded-xl">
-        <input id="passwordInput" type="password" placeholder="Password" class="border p-3 w-full mb-4 rounded-xl">
-        <button onclick="login()" class="bg-blue-600 text-white w-full p-3 rounded-xl">Login</button>
-      </div>
+      <input id="authEmail" class="border rounded-xl px-4 py-3" placeholder="Email" />
 
-      <p class="text-xs text-center text-slate-400 mt-4">
-        © 2026 TradeFlow AI™. All rights reserved.
+      <input id="authPassword" type="password" class="border rounded-xl px-4 py-3" placeholder="Password" />
+
+      <button onclick="login()" class="bg-blue-700 hover:bg-blue-800 text-white rounded-xl py-3 font-bold">
+        Login / Create Workspace
+      </button>
+
+      <p class="text-xs text-slate-500 text-center">
+        Your company workspace is private. Data is separated by company account.
       </p>
+
     </div>
+
   </div>
-</div>
 
-<div id="appScreen" class="hidden flex-1 bg-slate-100 text-slate-900">
-  <div class="flex h-screen">
+</section>
 
-    <div class="w-72 bg-slate-950 text-white p-6 overflow-y-auto">
-      <h1 class="text-2xl font-bold mb-1">TradeFlow AI™</h1>
-      <p id="companyLabel" class="text-xs text-slate-400 mb-8">Workspace</p>
+<!-- APP SCREEN -->
+<section id="appScreen" class="hidden min-h-screen">
 
-      <div id="masterMenu" class="hidden">
-        <button onclick="showPage('masterPage')" class="block w-full text-left p-2 rounded hover:bg-slate-800">Master Dashboard</button>
-      </div>
+  <!-- SIDEBAR -->
+  <aside class="fixed left-0 top-0 w-72 h-screen bg-slate-950 text-white p-6 overflow-y-auto">
 
-      <div id="companyMenu">
-        <button onclick="showPage('dashboardPage')" class="block w-full text-left p-2 rounded hover:bg-slate-800">Dashboard</button>
-        <button onclick="showPage('agentPage')" class="block w-full text-left p-2 rounded hover:bg-slate-800">AI Agent</button>
-        <button onclick="showPage('researchPage')" class="block w-full text-left p-2 rounded hover:bg-slate-800">Lead Research</button>
-        <button onclick="showPage('matchmakerPage')" class="block w-full text-left p-2 rounded hover:bg-slate-800">Matchmaker</button>
-        <button onclick="showPage('outreachPage')" class="block w-full text-left p-2 rounded hover:bg-slate-800">Smart Outreach</button>
-        <button onclick="showPage('dealsPage')" class="block w-full text-left p-2 rounded hover:bg-slate-800">Deals</button>
-        <button onclick="showPage('suppliersPage')" class="block w-full text-left p-2 rounded hover:bg-slate-800">Suppliers</button>
-        <button onclick="showPage('crmPage')" class="block w-full text-left p-2 rounded hover:bg-slate-800">CRM</button>
-        <button onclick="showPage('tasksPage')" class="block w-full text-left p-2 rounded hover:bg-slate-800">Tasks</button>
-        <button id="teamMenuButton" onclick="showPage('teamPage')" class="block w-full text-left p-2 rounded hover:bg-slate-800">Team Admin</button>
-      </div>
+    <h2 class="text-3xl font-black">
+      TradeFlow AI™
+    </h2>
 
-      <button onclick="logout()" class="mt-10 bg-red-600 w-full p-2 rounded-xl">Logout</button>
+    <p id="userRoleText" class="text-xs text-slate-400 mt-2">
+      Workspace
+    </p>
+
+    <div class="mt-4 bg-blue-600/20 border border-blue-400/30 rounded-xl p-3">
+      <p class="text-xs text-blue-200">Current Plan</p>
+      <p id="sidePlanText" class="font-black text-white">FREE</p>
     </div>
 
-    <div class="flex-1 p-8 overflow-y-auto">
+    <nav class="mt-8 space-y-2">
 
-      <div id="masterPage" class="page hidden">
-        <h2 class="text-3xl font-bold mb-6">Master Dashboard</h2>
-        <div id="companyList" class="space-y-4"></div>
-      </div>
+      <button onclick="showPage('dashboard')" class="nav-btn active w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
+        Dashboard
+      </button>
 
-      <div id="dashboardPage" class="page">
-        <h2 class="text-3xl font-bold mb-6">Company Dashboard</h2>
-        <div class="grid grid-cols-4 gap-6">
-          <div class="bg-white p-6 rounded-2xl shadow"><p class="text-slate-500">Suppliers</p><h3 id="supplierCount" class="text-3xl font-bold">0</h3></div>
-          <div class="bg-white p-6 rounded-2xl shadow"><p class="text-slate-500">Leads</p><h3 id="leadCount" class="text-3xl font-bold">0</h3></div>
-          <div class="bg-white p-6 rounded-2xl shadow"><p class="text-slate-500">Tasks</p><h3 id="taskCount" class="text-3xl font-bold">0</h3></div>
-          <div class="bg-white p-6 rounded-2xl shadow"><p class="text-slate-500">Deals</p><h3 id="dealCount" class="text-3xl font-bold">0</h3></div>
+      <button onclick="showPage('company')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
+        Company Master
+      </button>
+
+      <button onclick="showPage('employees')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
+        Employees
+      </button>
+
+      <button onclick="showPage('crm')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
+        CRM Pipeline
+      </button>
+
+      <button onclick="showPage('suppliers')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
+        Suppliers
+      </button>
+
+      <button onclick="showPage('negotiation')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
+        Negotiation
+      </button>
+
+      <button onclick="showPage('tasks')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
+        Tasks
+      </button>
+
+      <button onclick="showPage('documents')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
+        Documents
+      </button>
+
+      <button onclick="showPage('outreach')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
+        Smart Outreach
+      </button>
+
+      <button onclick="showPage('leadfinder')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
+        AI Lead Finder
+      </button>
+
+      <button onclick="showPage('billing')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
+        Billing / Upgrade
+      </button>
+
+      <button onclick="showPage('settings')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
+        Settings
+      </button>
+
+    </nav>
+
+    <button onclick="logout()" class="mt-8 w-full bg-red-600 hover:bg-red-700 rounded-xl py-3 font-bold">
+      Logout
+    </button>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="ml-72 p-8">
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="page active">
+
+      <div class="flex justify-between items-start gap-6">
+
+        <div>
+          <h1 class="text-4xl font-black">
+            Master Dashboard
+          </h1>
+
+          <p class="text-slate-500 mt-2">
+            Company-wide export/import command center.
+          </p>
         </div>
-      </div>
 
-      <div id="teamPage" class="page hidden">
-        <h2 class="text-3xl font-bold mb-6">Team Admin</h2>
-        <div class="bg-white p-6 rounded-2xl shadow mb-6">
-          <input id="teamName" placeholder="Employee name" class="border p-3 rounded-xl mr-2 mb-2">
-          <input id="teamEmail" placeholder="Employee email" class="border p-3 rounded-xl mr-2 mb-2">
-          <input id="teamPassword" placeholder="Password" type="password" class="border p-3 rounded-xl mr-2 mb-2">
-          <select id="teamRole" class="border p-3 rounded-xl mr-2 mb-2">
-            <option value="employee">Employee</option>
-            <option value="company_admin">Company Admin</option>
-          </select>
-          <button onclick="addTeamMember()" class="bg-green-600 text-white px-5 py-3 rounded-xl">Create Login</button>
+        <div class="card p-5 min-w-64">
+          <p class="text-xs text-slate-500">Workspace Plan</p>
+          <h2 id="dashboardPlanText" class="text-2xl font-black text-blue-700">FREE</h2>
+          <p id="trialText" class="text-xs text-slate-500 mt-1">Trial active</p>
         </div>
-        <div id="teamList" class="space-y-3"></div>
+
       </div>
 
-      <div id="agentPage" class="page hidden">
-        <h2 class="text-3xl font-bold mb-6">AI Agent Command Center</h2>
-        <div class="bg-white p-6 rounded-2xl shadow mb-6">
-          <textarea id="agentCommand" class="border p-3 rounded-xl w-full h-32" placeholder="Example: Find basmati rice suppliers in India and rice buyers in Dubai"></textarea>
-          <button onclick="runAgent()" class="bg-purple-600 text-white px-5 py-3 rounded-xl mt-3">Run Agent</button>
+      <div class="grid md:grid-cols-5 gap-5 mt-8">
+
+        <div class="card p-6">
+          <p>Suppliers</p>
+          <h2 id="supplierCount" class="text-3xl font-black mt-2">0</h2>
         </div>
-        <div id="agentResults" class="space-y-4"></div>
-      </div>
 
-      <div id="researchPage" class="page hidden">
-        <h2 class="text-3xl font-bold mb-6">Multi-Source Lead Research</h2>
-        <div class="bg-white p-6 rounded-2xl shadow mb-6">
-          <input id="researchQuery" placeholder="rice exporters india" class="border p-3 rounded-xl mr-2 mb-2">
-          <select id="researchType" class="border p-3 rounded-xl mr-2 mb-2">
-            <option value="supplier">Supplier</option>
-            <option value="buyer">Buyer</option>
-          </select>
-          <input id="researchProduct" placeholder="Product" class="border p-3 rounded-xl mr-2 mb-2">
-          <input id="researchCountry" placeholder="Country" class="border p-3 rounded-xl mr-2 mb-2">
-          <button onclick="researchLeads()" class="bg-blue-600 text-white px-5 py-3 rounded-xl">Research</button>
+        <div class="card p-6">
+          <p>CRM Leads</p>
+          <h2 id="leadCount" class="text-3xl font-black mt-2">0</h2>
         </div>
-        <div id="researchResults" class="space-y-4"></div>
-      </div>
 
-      <div id="matchmakerPage" class="page hidden">
-        <h2 class="text-3xl font-bold mb-6">Supplier–Buyer Matchmaker</h2>
-        <button onclick="runMatchmaker()" class="bg-purple-600 text-white px-5 py-3 rounded-xl mb-6">Find Matches</button>
-        <div id="matchResults" class="space-y-4"></div>
-      </div>
-
-      <div id="outreachPage" class="page hidden">
-        <h2 class="text-3xl font-bold mb-6">Smart Outreach Panel</h2>
-        <div class="grid grid-cols-2 gap-6">
-          <div class="bg-white p-6 rounded-2xl shadow">
-            <h3 class="font-bold mb-4">Select Contact</h3>
-            <div id="outreachContacts" class="space-y-3"></div>
-          </div>
-          <div class="bg-white p-6 rounded-2xl shadow">
-            <h3 class="font-bold mb-4">Message Builder</h3>
-            <p id="selectedContactLabel" class="mb-3 text-slate-600">No contact selected.</p>
-            <select id="outreachTemplate" class="border p-3 rounded-xl w-full mb-3">
-              <option value="intro">Supplier Intro</option>
-              <option value="buyer">Buyer Sourcing</option>
-              <option value="followup">Follow-up</option>
-            </select>
-            <button onclick="buildOutreachMessage()" class="bg-purple-600 text-white px-5 py-3 rounded-xl mb-3">Generate Message</button>
-            <textarea id="outreachMessage" class="border p-3 rounded-xl w-full h-48 mb-3"></textarea>
-            <div class="flex gap-3">
-              <button onclick="openWhatsApp()" class="bg-green-600 text-white px-4 py-2 rounded-xl">Open WhatsApp</button>
-              <button onclick="openEmail()" class="bg-blue-600 text-white px-4 py-2 rounded-xl">Open Gmail</button>
-            </div>
-          </div>
+        <div class="card p-6">
+          <p>Tasks</p>
+          <h2 id="taskCount" class="text-3xl font-black mt-2">0</h2>
         </div>
-      </div>
 
-      <div id="dealsPage" class="page hidden">
-        <h2 class="text-3xl font-bold mb-6">Mediator Deal Workspace</h2>
-        <div class="bg-white p-6 rounded-2xl shadow mb-6">
-          <input id="dealSupplier" placeholder="Supplier" class="border p-3 rounded-xl mr-2 mb-2">
-          <input id="dealBuyer" placeholder="Buyer" class="border p-3 rounded-xl mr-2 mb-2">
-          <input id="dealProduct" placeholder="Product" class="border p-3 rounded-xl mr-2 mb-2">
-          <input id="dealSupplierPrice" placeholder="Supplier Price" type="number" class="border p-3 rounded-xl mr-2 mb-2">
-          <input id="dealBuyerPrice" placeholder="Buyer Price" type="number" class="border p-3 rounded-xl mr-2 mb-2">
-          <input id="dealQuantity" placeholder="Quantity" type="number" class="border p-3 rounded-xl mr-2 mb-2">
-          <button onclick="addDeal()" class="bg-green-600 text-white px-5 py-3 rounded-xl">Create Deal</button>
+        <div class="card p-6">
+          <p>Documents</p>
+          <h2 id="docCount" class="text-3xl font-black mt-2">0</h2>
         </div>
-        <div id="dealList" class="space-y-4"></div>
-      </div>
 
-      <div id="suppliersPage" class="page hidden">
-        <h2 class="text-3xl font-bold mb-6">Suppliers</h2>
-        <div class="bg-white p-6 rounded-2xl shadow mb-6">
-          <input id="supplierNameInput" placeholder="Supplier" class="border p-3 rounded-xl mr-2 mb-2">
-          <input id="supplierPriceInput" placeholder="Price" class="border p-3 rounded-xl mr-2 mb-2">
-          <input id="supplierPhoneInput" placeholder="Phone" class="border p-3 rounded-xl mr-2 mb-2">
-          <input id="supplierEmailInput" placeholder="Email" class="border p-3 rounded-xl mr-2 mb-2">
-          <input id="supplierProductInput" placeholder="Product" class="border p-3 rounded-xl mr-2 mb-2">
-          <button onclick="addSupplier()" class="bg-green-600 text-white px-5 py-3 rounded-xl">Add Supplier</button>
+        <div class="card p-6">
+          <p>Employees</p>
+          <h2 id="employeeCount" class="text-3xl font-black mt-2">0</h2>
         </div>
-        <div id="supplierList" class="space-y-3"></div>
+
       </div>
 
-      <div id="crmPage" class="page hidden">
-        <h2 class="text-3xl font-bold mb-6">CRM</h2>
-        <div class="bg-white p-6 rounded-2xl shadow mb-6">
-          <input id="leadNameInput" placeholder="Lead" class="border p-3 rounded-xl mr-2 mb-2">
-          <input id="leadPhoneInput" placeholder="Phone" class="border p-3 rounded-xl mr-2 mb-2">
-          <input id="leadEmailInput" placeholder="Email" class="border p-3 rounded-xl mr-2 mb-2">
-          <input id="leadProductInput" placeholder="Product" class="border p-3 rounded-xl mr-2 mb-2">
-          <button onclick="addLead()" class="bg-blue-600 text-white px-5 py-3 rounded-xl">Add Lead</button>
+      <div class="grid md:grid-cols-2 gap-6 mt-8">
+
+        <div class="card p-6">
+          <h2 class="text-2xl font-black">
+            Workspace Status
+          </h2>
+
+          <p id="workspaceSummary" class="text-slate-600 mt-3">
+            Loading workspace data...
+          </p>
         </div>
-        <div class="grid grid-cols-3 gap-6">
-          <div class="bg-white p-5 rounded-2xl shadow"><h3 class="font-bold mb-3">New</h3><div id="newLeads"></div></div>
-          <div class="bg-white p-5 rounded-2xl shadow"><h3 class="font-bold mb-3">Negotiation</h3><div id="negLeads"></div></div>
-          <div class="bg-white p-5 rounded-2xl shadow"><h3 class="font-bold mb-3">Closed</h3><div id="closedLeads"></div></div>
+
+        <div class="card p-6">
+          <h2 class="text-2xl font-black">
+            Money Engine
+          </h2>
+
+          <p class="text-slate-600 mt-3">
+            Free users are limited. Paid plans unlock more suppliers, leads, documents and outreach.
+          </p>
+
+          <button onclick="showPage('billing')" class="mt-4 bg-blue-700 text-white px-5 py-3 rounded-xl font-bold">
+            View Upgrade Plans
+          </button>
         </div>
+
       </div>
 
-      <div id="tasksPage" class="page hidden">
-        <h2 class="text-3xl font-bold mb-6">Tasks</h2>
-        <div class="bg-white p-6 rounded-2xl shadow mb-6">
-          <input id="taskInput" placeholder="Task" class="border p-3 rounded-xl mr-2">
-          <button onclick="addTask()" class="bg-purple-600 text-white px-5 py-3 rounded-xl">Add Task</button>
+    </section>
+
+    <!-- COMPANY -->
+    <section id="company" class="page">
+
+      <h1 class="text-4xl font-black">
+        Company Master
+      </h1>
+
+      <p class="text-slate-500 mt-2">
+        Manage basic company details for your export/import workspace.
+      </p>
+
+      <div class="card p-6 mt-6 grid md:grid-cols-2 gap-4">
+
+        <input id="editCompanyName" class="border rounded-xl px-4 py-3" placeholder="Company Name" />
+        <input id="editIndustry" class="border rounded-xl px-4 py-3" placeholder="Industry" />
+
+        <input id="editCountry" class="border rounded-xl px-4 py-3" placeholder="Country" />
+        <input id="editPlan" class="border rounded-xl px-4 py-3" placeholder="Plan" />
+
+        <button onclick="updateCompany()" class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-2">
+          Save Company
+        </button>
+
+      </div>
+
+    </section>
+
+    <!-- EMPLOYEES -->
+    <section id="employees" class="page">
+
+      <h1 class="text-4xl font-black">
+        Employee Management
+      </h1>
+
+      <p class="text-slate-500 mt-2">
+        Add team members under the same company workspace.
+      </p>
+
+      <div class="card p-6 mt-6 grid md:grid-cols-4 gap-3">
+
+        <input id="empName" class="border rounded-xl px-4 py-3" placeholder="Employee Name" />
+        <input id="empEmail" class="border rounded-xl px-4 py-3" placeholder="Employee Email" />
+        <input id="empPassword" class="border rounded-xl px-4 py-3" placeholder="Password" />
+
+        <select id="empRole" class="border rounded-xl px-4 py-3">
+          <option>EMPLOYEE</option>
+          <option>SALES</option>
+          <option>OPERATIONS</option>
+          <option>MANAGER</option>
+        </select>
+
+        <button onclick="addEmployee()" class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-4">
+          Add Employee
+        </button>
+
+      </div>
+
+      <div id="employeeList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
+
+    </section>
+
+    <!-- CRM -->
+    <section id="crm" class="page">
+
+      <h1 class="text-4xl font-black">
+        CRM Pipeline
+      </h1>
+
+      <p class="text-slate-500 mt-2">
+        Track buyers, deals, export enquiries and follow-ups.
+      </p>
+
+      <div class="card p-6 mt-6 grid md:grid-cols-4 gap-3">
+
+        <input id="leadName" class="border rounded-xl px-4 py-3" placeholder="Lead Name" />
+        <input id="leadStage" class="border rounded-xl px-4 py-3" placeholder="Stage" />
+        <input id="leadValue" type="number" class="border rounded-xl px-4 py-3" placeholder="Deal Value" />
+        <input id="leadSource" class="border rounded-xl px-4 py-3" placeholder="Source" />
+
+        <button onclick="addLead()" class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-4">
+          Add Lead
+        </button>
+
+      </div>
+
+      <div id="leadList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
+
+    </section>
+
+    <!-- SUPPLIERS -->
+    <section id="suppliers" class="page">
+
+      <h1 class="text-4xl font-black">
+        Supplier Management
+      </h1>
+
+      <p class="text-slate-500 mt-2">
+        Save verified suppliers, buyers and trading contacts.
+      </p>
+
+      <div class="card p-6 mt-6 grid md:grid-cols-5 gap-3">
+
+        <input id="supplierName" class="border rounded-xl px-4 py-3" placeholder="Supplier Name" />
+        <input id="supplierProduct" class="border rounded-xl px-4 py-3" placeholder="Product" />
+        <input id="supplierCountry" class="border rounded-xl px-4 py-3" placeholder="Country" />
+        <input id="supplierEmail" class="border rounded-xl px-4 py-3" placeholder="Email" />
+        <input id="supplierPhone" class="border rounded-xl px-4 py-3" placeholder="Phone" />
+
+        <button onclick="addSupplier()" class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-5">
+          Add Supplier
+        </button>
+
+      </div>
+
+      <div id="supplierList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
+
+    </section>
+
+    <!-- NEGOTIATION -->
+    <section id="negotiation" class="page">
+
+      <h1 class="text-4xl font-black">
+        Negotiation & Margin
+      </h1>
+
+      <p class="text-slate-500 mt-2">
+        Calculate trading profit and export margins.
+      </p>
+
+      <div class="card p-6 mt-6">
+
+        <input id="buyPrice" type="number" class="border rounded-xl px-4 py-3 mr-2" placeholder="Buying Price" />
+        <input id="sellPrice" type="number" class="border rounded-xl px-4 py-3 mr-2" placeholder="Selling Price" />
+
+        <button onclick="calculateMargin()" class="bg-green-700 text-white px-5 py-3 rounded-xl">
+          Calculate
+        </button>
+
+        <p id="marginResult" class="font-bold mt-4"></p>
+
+      </div>
+
+    </section>
+
+    <!-- TASKS -->
+    <section id="tasks" class="page">
+
+      <h1 class="text-4xl font-black">
+        Tasks
+      </h1>
+
+      <p class="text-slate-500 mt-2">
+        Manage export follow-ups, supplier calls and team work.
+      </p>
+
+      <div class="card p-6 mt-6 grid md:grid-cols-3 gap-3">
+
+        <input id="taskText" class="border rounded-xl px-4 py-3" placeholder="Task" />
+
+        <select id="taskPriority" class="border rounded-xl px-4 py-3">
+          <option>Low</option>
+          <option selected>Medium</option>
+          <option>High</option>
+        </select>
+
+        <button onclick="addTask()" class="bg-blue-700 text-white rounded-xl py-3 font-bold">
+          Add Task
+        </button>
+
+      </div>
+
+      <ul id="taskList" class="mt-6 space-y-3"></ul>
+
+    </section>
+
+    <!-- DOCUMENTS -->
+    <section id="documents" class="page">
+
+      <h1 class="text-4xl font-black">
+        Export / Import Documents
+      </h1>
+
+      <p class="text-slate-500 mt-2">
+        Save commercial invoices, packing lists, shipping bills and trade documents.
+      </p>
+
+      <div class="card p-6 mt-6 grid md:grid-cols-5 gap-3">
+
+        <select id="documentType" class="border rounded-xl px-4 py-3">
+          <option>Commercial Invoice</option>
+          <option>Packing List</option>
+          <option>Bill of Lading</option>
+          <option>Certificate of Origin</option>
+          <option>Shipping Bill</option>
+          <option>Insurance Certificate</option>
+        </select>
+
+        <input id="shipmentRef" class="border rounded-xl px-4 py-3" placeholder="Shipment Ref" />
+        <input id="docBuyer" class="border rounded-xl px-4 py-3" placeholder="Buyer" />
+        <input id="docSupplier" class="border rounded-xl px-4 py-3" placeholder="Supplier" />
+
+        <button onclick="addDocument()" class="bg-blue-700 text-white rounded-xl py-3 font-bold">
+          Save
+        </button>
+
+      </div>
+
+      <div id="documentList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
+
+    </section>
+
+    <!-- OUTREACH -->
+    <section id="outreach" class="page">
+
+      <h1 class="text-4xl font-black">
+        Smart Outreach
+      </h1>
+
+      <p class="text-slate-500 mt-2">
+        Contact buyers and suppliers using email or WhatsApp.
+      </p>
+
+      <div class="card p-6 mt-6">
+
+        <input id="contactEmail" class="border rounded-xl px-4 py-3 mr-2" placeholder="Email" />
+
+        <input id="contactPhone" class="border rounded-xl px-4 py-3 mr-2" placeholder="WhatsApp Number with country code" />
+
+        <textarea id="outreachMsg" class="w-full border rounded-xl px-4 py-3 mt-4" rows="5" placeholder="Message"></textarea>
+
+        <div class="mt-4 space-x-3">
+
+          <button onclick="sendEmail()" class="bg-blue-700 text-white px-5 py-3 rounded-xl">
+            Send Email
+          </button>
+
+          <button onclick="openWhatsApp()" class="bg-green-700 text-white px-5 py-3 rounded-xl">
+            Open WhatsApp
+          </button>
+
         </div>
-        <div id="taskList" class="space-y-3"></div>
+
       </div>
 
-    </div>
-  </div>
-</div>
+    </section>
 
-<footer class="text-center text-xs text-slate-400 bg-slate-950 py-4">
-  © 2026 TradeFlow AI™. All rights reserved. Unauthorized copying, reproduction, resale, reverse engineering, or distribution is prohibited.
-</footer>
+    <!-- AI LEAD FINDER -->
+    <section id="leadfinder" class="page">
 
-<script>
-const API = "https://trade-flow-lc1k.onrender.com";
+      <h1 class="text-4xl font-black">
+        AI Lead Finder
+      </h1>
 
-let currentUser = null;
-let authRole = "master";
-let researchCache = [];
-let matchCache = [];
-let outreachLeads = [];
-let outreachSuppliers = [];
-let selectedOutreach = null;
+      <p class="text-slate-500 mt-2">
+        Generate buyer/supplier leads for export products. Demo now, real data API later.
+      </p>
 
-function getToken(){ return localStorage.getItem("tradeflow_token"); }
+      <div class="card p-6 mt-6">
 
-function authHeaders(){
-  return {
-    "Content-Type": "application/json",
-    "Authorization": getToken()
-  };
-}
+        <input id="fakeLeadProduct" class="border rounded-xl px-4 py-3 mr-2" placeholder="Product e.g. rice, medicine, jaggery" />
 
-function setAuthTab(role){
-  authRole = role;
+        <button onclick="generateFakeLeads()" class="bg-purple-700 text-white px-5 py-3 rounded-xl">
+          Generate Demo Leads
+        </button>
 
-  ["masterTab","companyTab","employeeTab"].forEach(id => {
-    document.getElementById(id).className = "authTab bg-slate-200 p-2 rounded-xl";
-  });
-
-  document.getElementById(role + "Tab").className = "authTab bg-indigo-600 text-white p-2 rounded-xl";
-
-  companySignupBox.classList.toggle("hidden", role !== "company");
-
-  if(role === "master") loginTitle.innerText = "Master Login";
-  if(role === "company") loginTitle.innerText = "Company Admin Login";
-  if(role === "employee") loginTitle.innerText = "Employee Login";
-}
-
-function showLogin(){
-  loginScreen.classList.remove("hidden");
-  appScreen.classList.add("hidden");
-}
-
-function showApp(){
-  loginScreen.classList.add("hidden");
-  appScreen.classList.remove("hidden");
-}
-
-async function checkAuth(){
-  const token = getToken();
-  if(!token){ showLogin(); return; }
-
-  try{
-    const res = await fetch(`${API}/me`, { headers:{ Authorization: token } });
-
-    if(!res.ok){
-      localStorage.removeItem("tradeflow_token");
-      showLogin();
-      return;
-    }
-
-    currentUser = await res.json();
-    companyLabel.innerText = `${currentUser.companyName} • ${currentUser.role}`;
-
-    if(currentUser.role === "master"){
-      masterMenu.classList.remove("hidden");
-      companyMenu.classList.add("hidden");
-      showApp();
-      showPage("masterPage");
-      loadCompanies();
-      return;
-    }
-
-    masterMenu.classList.add("hidden");
-    companyMenu.classList.remove("hidden");
-
-    if(currentUser.role !== "company_admin"){
-      teamMenuButton.classList.add("hidden");
-    } else {
-      teamMenuButton.classList.remove("hidden");
-    }
-
-    showApp();
-    loadAll();
-  }catch{
-    localStorage.removeItem("tradeflow_token");
-    showLogin();
-  }
-}
-
-async function signupCompany(){
-  const res = await fetch(`${API}/signup-company`,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      companyName: signupCompanyName.value,
-      name: signupName.value,
-      email: signupEmail.value,
-      password: signupPassword.value
-    })
-  });
-
-  const data = await res.json();
-  alert(data.error || "Company workspace created. Now login as Company Admin.");
-}
-
-async function login(){
-  let role = authRole;
-  if(role === "company") role = "company_admin";
-
-  const res = await fetch(`${API}/login`,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      email: emailInput.value,
-      password: passwordInput.value,
-      role
-    })
-  });
-
-  const data = await res.json();
-
-  if(data.token){
-    localStorage.setItem("tradeflow_token", data.token);
-    checkAuth();
-  }else{
-    alert(data.error || "Login failed");
-  }
-}
-
-function logout(){
-  localStorage.removeItem("tradeflow_token");
-  currentUser = null;
-  showLogin();
-}
-
-function showPage(id){
-  document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
-  document.getElementById(id).classList.remove("hidden");
-
-  if(id === "masterPage") loadCompanies();
-  if(id === "teamPage") loadTeam();
-  if(id === "researchPage") loadResearch();
-  if(id === "matchmakerPage") runMatchmaker();
-  if(id === "dealsPage") loadDeals();
-  if(id === "suppliersPage") loadSuppliers();
-  if(id === "crmPage") loadLeads();
-  if(id === "tasksPage") loadTasks();
-  if(id === "outreachPage") loadOutreachPanel();
-}
-
-async function loadCompanies(){
-  const res = await fetch(`${API}/master/companies`, { headers:{ Authorization:getToken() } });
-  const data = await res.json();
-
-  companyList.innerHTML = "";
-
-  if(!Array.isArray(data)) return;
-
-  data.forEach(c => {
-    companyList.innerHTML += `
-      <div class="bg-white p-5 rounded-2xl shadow">
-        <h3 class="font-bold text-lg">${c.name}</h3>
-        <p>Status: ${c.status}</p>
-        <p>Plan: ${c.plan}</p>
-        <p>Users: ${c.users}</p>
-        <button onclick="updateCompany('${c._id}','active')" class="bg-green-600 text-white px-3 py-1 rounded-xl mt-2">Activate</button>
-        <button onclick="updateCompany('${c._id}','suspended')" class="bg-red-600 text-white px-3 py-1 rounded-xl mt-2">Suspend</button>
       </div>
-    `;
-  });
-}
 
-async function updateCompany(id,status){
-  await fetch(`${API}/master/companies/${id}`,{
-    method:"PUT",
-    headers:authHeaders(),
-    body:JSON.stringify({status})
-  });
-  loadCompanies();
-}
+      <div id="fakeLeadList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
 
-async function addTeamMember(){
-  const res = await fetch(`${API}/team`,{
-    method:"POST",
-    headers:authHeaders(),
-    body:JSON.stringify({
-      name:teamName.value,
-      email:teamEmail.value,
-      password:teamPassword.value,
-      role:teamRole.value
-    })
-  });
+    </section>
 
-  const data = await res.json();
-  alert(data.error || "Login created");
-  loadTeam();
-}
+    <!-- BILLING -->
+    <section id="billing" class="page">
 
-async function loadTeam(){
-  const res = await fetch(`${API}/team`,{headers:{Authorization:getToken()}});
-  const data = await res.json();
-  teamList.innerHTML = "";
+      <h1 class="text-4xl font-black">
+        Billing / Upgrade
+      </h1>
 
-  if(!Array.isArray(data)) return;
+      <p class="text-slate-500 mt-2">
+        Monetization layer for TradeFlow AI™. Free users have limits. Paid users unlock scale.
+      </p>
 
-  data.forEach(u => {
-    teamList.innerHTML += `
-      <div class="bg-white p-4 rounded-2xl shadow">
-        <b>${u.name}</b><br>
-        Email: ${u.email}<br>
-        Role: ${u.role}
+      <div class="grid md:grid-cols-4 gap-6 mt-8">
+
+        <div class="card p-6 border-2 border-slate-200">
+          <h2 class="text-2xl font-black">Free</h2>
+          <p class="text-3xl font-black mt-3">₹0</p>
+          <p class="text-slate-500">Trial / testing</p>
+
+          <ul class="mt-5 space-y-2 text-sm">
+            <li>10 suppliers</li>
+            <li>20 CRM leads</li>
+            <li>20 tasks</li>
+            <li>10 documents</li>
+            <li>5 outreach/day</li>
+          </ul>
+
+          <button onclick="upgradePlan('FREE')" class="mt-6 w-full bg-slate-800 text-white py-3 rounded-xl font-bold">
+            Current / Free
+          </button>
+        </div>
+
+        <div class="card p-6 border-2 border-blue-200">
+          <h2 class="text-2xl font-black">Starter</h2>
+          <p class="text-3xl font-black mt-3">₹999</p>
+          <p class="text-slate-500">per month</p>
+
+          <ul class="mt-5 space-y-2 text-sm">
+            <li>100 suppliers</li>
+            <li>250 CRM leads</li>
+            <li>200 tasks</li>
+            <li>100 documents</li>
+            <li>50 outreach/day</li>
+          </ul>
+
+          <button onclick="upgradePlan('STARTER')" class="mt-6 w-full bg-blue-700 text-white py-3 rounded-xl font-bold">
+            Upgrade Starter
+          </button>
+        </div>
+
+        <div class="card p-6 border-2 border-purple-300">
+          <h2 class="text-2xl font-black">Pro</h2>
+          <p class="text-3xl font-black mt-3">₹4,999</p>
+          <p class="text-slate-500">per month</p>
+
+          <ul class="mt-5 space-y-2 text-sm">
+            <li>1000 suppliers</li>
+            <li>2500 CRM leads</li>
+            <li>1000 tasks</li>
+            <li>1000 documents</li>
+            <li>300 outreach/day</li>
+            <li>AI growth insights</li>
+          </ul>
+
+          <button onclick="upgradePlan('PRO')" class="mt-6 w-full bg-purple-700 text-white py-3 rounded-xl font-bold">
+            Upgrade Pro
+          </button>
+        </div>
+
+        <div class="card p-6 border-2 border-amber-300">
+          <h2 class="text-2xl font-black">Enterprise</h2>
+          <p class="text-3xl font-black mt-3">₹25k+</p>
+          <p class="text-slate-500">custom</p>
+
+          <ul class="mt-5 space-y-2 text-sm">
+            <li>Unlimited usage</li>
+            <li>Team workspace</li>
+            <li>Custom automation</li>
+            <li>Priority support</li>
+            <li>Exporter onboarding</li>
+          </ul>
+
+          <button onclick="upgradePlan('ENTERPRISE')" class="mt-6 w-full bg-amber-600 text-white py-3 rounded-xl font-bold">
+            Upgrade Enterprise
+          </button>
+        </div>
+
       </div>
-    `;
-  });
-}
 
-async function runAgent(){
-  agentResults.innerHTML = `<div class="bg-white p-4 rounded-2xl shadow">Agent working...</div>`;
-
-  const res = await fetch(`${API}/agent-command`,{
-    method:"POST",
-    headers:authHeaders(),
-    body:JSON.stringify({command:agentCommand.value})
-  });
-
-  const data = await res.json();
-
-  if(data.error){
-    agentResults.innerHTML = `<div class="bg-red-100 p-4 rounded-xl">${data.error}</div>`;
-    return;
-  }
-
-  agentResults.innerHTML = `
-    <div class="bg-white p-5 rounded-2xl shadow">
-      <h3 class="font-bold text-xl">Agent Completed</h3>
-      <p>Product: ${data.product}</p>
-      <p>Suppliers found: ${data.suppliers.length}</p>
-      <p>Buyers found: ${data.buyers.length}</p>
-      <p>Tasks created: ${data.tasks.length}</p>
-    </div>
-  `;
-
-  loadDashboard();
-}
-
-async function researchLeads(){
-  researchResults.innerHTML = `<div class="bg-white p-4 rounded-2xl shadow">Researching...</div>`;
-
-  const res = await fetch(`${API}/research-leads`,{
-    method:"POST",
-    headers:authHeaders(),
-    body:JSON.stringify({
-      query:researchQuery.value,
-      type:researchType.value,
-      product:researchProduct.value,
-      country:researchCountry.value
-    })
-  });
-
-  const data = await res.json();
-  renderResearch(data);
-}
-
-async function loadResearch(){
-  const res = await fetch(`${API}/research-leads`,{headers:{Authorization:getToken()}});
-  const data = await res.json();
-  renderResearch(data);
-}
-
-function renderResearch(data){
-  researchCache = Array.isArray(data) ? data : [];
-  researchResults.innerHTML = "";
-
-  if(!researchCache.length){
-    researchResults.innerHTML = `<div class="bg-white p-4 rounded-2xl shadow">No research leads yet.</div>`;
-    return;
-  }
-
-  researchCache.forEach((lead,index)=>{
-    researchResults.innerHTML += `
-      <div class="bg-white p-5 rounded-2xl shadow">
-        <h3 class="font-bold text-lg">${lead.name}</h3>
-        <p>Type: ${lead.type || ""}</p>
-        <p>Product: ${lead.product || ""}</p>
-        <p>Country: ${lead.country || ""}</p>
-        <p>Source: ${lead.source || "Unknown"}</p>
-        <p>Score: ${lead.score || 0}/100</p>
-        <p class="text-slate-600">${lead.snippet || ""}</p>
-        ${lead.website ? `<a href="${lead.website}" target="_blank" class="text-blue-600">Open Source</a>` : ""}
-        <button onclick="addResearchToCRM(${index})" class="ml-3 bg-green-600 text-white px-3 py-1 rounded-xl">Add to CRM</button>
+      <div class="card p-6 mt-8">
+        <h2 class="text-2xl font-black">Payment Status</h2>
+        <p class="text-slate-600 mt-2">
+          This version uses demo upgrade logic. Next step: connect Razorpay payment checkout.
+        </p>
       </div>
-    `;
-  });
-}
 
-async function addResearchToCRM(index){
-  await fetch(`${API}/add-research-to-crm`,{
-    method:"POST",
-    headers:authHeaders(),
-    body:JSON.stringify(researchCache[index])
-  });
+    </section>
 
-  alert("Added to CRM");
-  loadDashboard();
-}
+    <!-- SETTINGS -->
+    <section id="settings" class="page">
 
-async function runMatchmaker(){
-  matchResults.innerHTML = `<div class="bg-white p-4 rounded-2xl shadow">Matching...</div>`;
+      <h1 class="text-4xl font-black">
+        Settings
+      </h1>
 
-  const res = await fetch(`${API}/matchmake`,{
-    method:"POST",
-    headers:authHeaders(),
-    body:JSON.stringify({})
-  });
+      <div class="card p-6 mt-6">
 
-  const data = await res.json();
-  matchCache = Array.isArray(data) ? data : [];
-  matchResults.innerHTML = "";
+        <p><b>Backend:</b> <span id="apiText"></span></p>
+        <p class="mt-2"><b>Mode:</b> Money-ready SaaS Workspace</p>
+        <p class="mt-2"><b>Database:</b> MongoDB Atlas</p>
+        <p class="mt-2"><b>Server:</b> Node.js + Express</p>
+        <p class="mt-2"><b>Auth:</b> JWT Protected Company Workspace</p>
 
-  if(!matchCache.length){
-    matchResults.innerHTML = `<div class="bg-white p-4 rounded-2xl shadow">Research suppliers and buyers first.</div>`;
-    return;
-  }
-
-  matchCache.forEach((m,index)=>{
-    matchResults.innerHTML += `
-      <div class="bg-white p-5 rounded-2xl shadow">
-        <h3 class="font-bold">Score: ${m.score}/100</h3>
-        <p><b>Supplier:</b> ${m.supplier.name}</p>
-        <p><b>Buyer:</b> ${m.buyer.name}</p>
-        <p>${m.reason}</p>
-        <button onclick="prefillDeal(${index})" class="bg-green-600 text-white px-3 py-1 rounded-xl">Create Deal</button>
       </div>
-    `;
-  });
-}
 
-function prefillDeal(index){
-  const m = matchCache[index];
-  showPage("dealsPage");
-  dealSupplier.value = m.supplier.name;
-  dealBuyer.value = m.buyer.name;
-  dealProduct.value = m.supplier.product || m.buyer.product || "";
-}
+    </section>
 
-async function addDeal(){
-  await fetch(`${API}/deals`,{
-    method:"POST",
-    headers:authHeaders(),
-    body:JSON.stringify({
-      supplierName:dealSupplier.value,
-      buyerName:dealBuyer.value,
-      product:dealProduct.value,
-      supplierPrice:Number(dealSupplierPrice.value),
-      buyerPrice:Number(dealBuyerPrice.value),
-      quantity:Number(dealQuantity.value)
-    })
-  });
+    <!-- FOOTER -->
+    <footer class="mt-16 text-center text-slate-500">
 
-  dealSupplier.value="";
-  dealBuyer.value="";
-  dealProduct.value="";
-  dealSupplierPrice.value="";
-  dealBuyerPrice.value="";
-  dealQuantity.value="";
+      © 2026 TradeFlow AI™ — Export Growth Operating System for suppliers, buyers, CRM, documents, teams and outreach.
 
-  loadDeals();
-  loadDashboard();
-}
+    </footer>
 
-async function loadDeals(){
-  const res = await fetch(`${API}/deals`,{headers:{Authorization:getToken()}});
-  const data = await res.json();
-  dealList.innerHTML = "";
+  </main>
 
-  if(!Array.isArray(data)) return;
+</section>
 
-  data.forEach(d=>{
-    dealList.innerHTML += `
-      <div class="bg-white p-5 rounded-2xl shadow">
-        <h3 class="font-bold">${d.product}</h3>
-        <p>Supplier: ${d.supplierName}</p>
-        <p>Buyer: ${d.buyerName}</p>
-        <p>Margin: ₹${d.margin}</p>
-        <p>Total Profit: ₹${d.totalProfit}</p>
-      </div>
-    `;
-  });
-
-  dealCount.innerText = data.length;
-}
-
-async function addSupplier(){
-  await fetch(`${API}/suppliers`,{
-    method:"POST",
-    headers:authHeaders(),
-    body:JSON.stringify({
-      name:supplierNameInput.value,
-      price:supplierPriceInput.value,
-      phone:supplierPhoneInput.value,
-      email:supplierEmailInput.value,
-      product:supplierProductInput.value
-    })
-  });
-
-  supplierNameInput.value="";
-  supplierPriceInput.value="";
-  supplierPhoneInput.value="";
-  supplierEmailInput.value="";
-  supplierProductInput.value="";
-
-  loadSuppliers();
-  loadDashboard();
-}
-
-async function loadSuppliers(){
-  const res = await fetch(`${API}/suppliers`,{headers:{Authorization:getToken()}});
-  const data = await res.json();
-  supplierList.innerHTML = "";
-
-  if(!Array.isArray(data)) return;
-
-  data.forEach(s=>{
-    const phone = (s.phone || "").replace(/\D/g,"");
-    const msg = encodeURIComponent(`Hello ${s.name}, I am Krishna from TradeFlow AI™. I want to discuss ${s.product || "export/import"} opportunities.`);
-
-    supplierList.innerHTML += `
-      <div class="bg-white p-4 rounded-2xl shadow">
-        <b>${s.name}</b><br>
-        Product: ${s.product || ""}<br>
-        Phone: ${s.phone || ""}<br>
-        Email: ${s.email || ""}<br>
-        ${phone ? `<a class="text-green-600" target="_blank" href="https://wa.me/${phone}?text=${msg}">WhatsApp</a>` : ""}
-      </div>
-    `;
-  });
-
-  supplierCount.innerText = data.length;
-}
-
-async function addLead(){
-  await fetch(`${API}/leads`,{
-    method:"POST",
-    headers:authHeaders(),
-    body:JSON.stringify({
-      name:leadNameInput.value,
-      phone:leadPhoneInput.value,
-      email:leadEmailInput.value,
-      product:leadProductInput.value
-    })
-  });
-
-  leadNameInput.value="";
-  leadPhoneInput.value="";
-  leadEmailInput.value="";
-  leadProductInput.value="";
-
-  loadLeads();
-  loadDashboard();
-}
-
-async function loadLeads(){
-  const res = await fetch(`${API}/leads`,{headers:{Authorization:getToken()}});
-  const data = await res.json();
-
-  newLeads.innerHTML="";
-  negLeads.innerHTML="";
-  closedLeads.innerHTML="";
-
-  if(!Array.isArray(data)) return;
-
-  data.forEach((lead)=>{
-    let target = newLeads;
-    if(lead.stage === "neg") target = negLeads;
-    if(lead.stage === "closed") target = closedLeads;
-
-    const phone = (lead.phone || "").replace(/\D/g,"");
-    const msg = encodeURIComponent(`Hello ${lead.name}, I am Krishna from TradeFlow AI™. I help connect buyers and suppliers for ${lead.product || "export/import products"}.`);
-
-    target.innerHTML += `
-      <div class="bg-slate-100 p-3 rounded-xl mb-3">
-        <b>${lead.name}</b><br>
-        Product: ${lead.product || ""}<br>
-        Phone: ${lead.phone || ""}<br>
-        Email: ${lead.email || ""}<br>
-        <button onclick="moveLead('${lead._id}','${lead.stage}')" class="text-blue-600">Move ➜</button>
-        <button onclick="generateMessage('${lead.name}','${lead.product || ""}')" class="ml-3 text-purple-600">AI Message</button>
-        ${phone ? `<a class="ml-3 text-green-600" target="_blank" href="https://wa.me/${phone}?text=${msg}">WhatsApp</a>` : ""}
-      </div>
-    `;
-  });
-
-  leadCount.innerText = data.length;
-}
-
-async function moveLead(id,stage){
-  const newStage = stage === "new" ? "neg" : "closed";
-
-  await fetch(`${API}/leads/${id}`,{
-    method:"PUT",
-    headers:authHeaders(),
-    body:JSON.stringify({stage:newStage})
-  });
-
-  loadLeads();
-}
-
-async function generateMessage(name,product){
-  const res = await fetch(`${API}/generate-message`,{
-    method:"POST",
-    headers:authHeaders(),
-    body:JSON.stringify({name,product})
-  });
-
-  const data = await res.json();
-  alert(data.message);
-}
-
-async function addTask(){
-  await fetch(`${API}/tasks`,{
-    method:"POST",
-    headers:authHeaders(),
-    body:JSON.stringify({task:taskInput.value})
-  });
-
-  taskInput.value="";
-  loadTasks();
-  loadDashboard();
-}
-
-async function loadTasks(){
-  const res = await fetch(`${API}/tasks`,{headers:{Authorization:getToken()}});
-  const data = await res.json();
-  taskList.innerHTML = "";
-
-  if(!Array.isArray(data)) return;
-
-  data.forEach(t=>{
-    taskList.innerHTML += `<div class="bg-white p-4 rounded-2xl shadow">${t.task}</div>`;
-  });
-
-  taskCount.innerText = data.length;
-}
-
-async function loadOutreachPanel(){
-  const leadRes = await fetch(`${API}/leads`,{headers:{Authorization:getToken()}});
-  const supplierRes = await fetch(`${API}/suppliers`,{headers:{Authorization:getToken()}});
-
-  outreachLeads = await leadRes.json();
-  outreachSuppliers = await supplierRes.json();
-
-  if(!Array.isArray(outreachLeads)) outreachLeads = [];
-  if(!Array.isArray(outreachSuppliers)) outreachSuppliers = [];
-
-  outreachContacts.innerHTML = "";
-
-  outreachLeads.forEach((lead,index)=>{
-    outreachContacts.innerHTML += `
-      <div class="bg-slate-100 p-3 rounded-xl">
-        <b>${lead.name}</b> <span class="text-xs">(Lead)</span><br>
-        ${lead.product || ""}<br>
-        Phone: ${lead.phone || "Not added"}<br>
-        Email: ${lead.email || "Not added"}<br>
-        <button onclick="selectOutreach('lead',${index})" class="text-blue-600">Select</button>
-      </div>
-    `;
-  });
-
-  outreachSuppliers.forEach((supplier,index)=>{
-    outreachContacts.innerHTML += `
-      <div class="bg-slate-100 p-3 rounded-xl">
-        <b>${supplier.name}</b> <span class="text-xs">(Supplier)</span><br>
-        ${supplier.product || ""}<br>
-        Phone: ${supplier.phone || "Not added"}<br>
-        Email: ${supplier.email || "Not added"}<br>
-        <button onclick="selectOutreach('supplier',${index})" class="text-blue-600">Select</button>
-      </div>
-    `;
-  });
-
-  selectedOutreach = null;
-  selectedContactLabel.innerText = "No contact selected.";
-  outreachMessage.value = "";
-}
-
-function selectOutreach(type,index){
-  selectedOutreach = type === "lead" ? outreachLeads[index] : outreachSuppliers[index];
-  selectedOutreach.outreachType = type;
-  selectedContactLabel.innerText = `Selected: ${selectedOutreach.name} (${type})`;
-  outreachMessage.value = "";
-}
-
-async function buildOutreachMessage(){
-  if(!selectedOutreach){
-    alert("Select a contact first");
-    return;
-  }
-
-  const res = await fetch(`${API}/generate-message`,{
-    method:"POST",
-    headers:authHeaders(),
-    body:JSON.stringify({
-      name:selectedOutreach.name,
-      product:selectedOutreach.product,
-      type:selectedOutreach.outreachType,
-      template:outreachTemplate.value
-    })
-  });
-
-  const data = await res.json();
-  outreachMessage.value = data.message || "";
-}
-
-function openWhatsApp(){
-  if(!selectedOutreach){ alert("Select a contact first"); return; }
-
-  const phone = (selectedOutreach.phone || "").replace(/\D/g,"");
-
-  if(!phone){ alert("No WhatsApp number added for this contact"); return; }
-  if(!outreachMessage.value.trim()){ alert("Generate message first"); return; }
-
-  const msg = encodeURIComponent(outreachMessage.value);
-  window.open(`https://wa.me/${phone}?text=${msg}`,"_blank");
-}
-
-function openEmail(){
-  if(!selectedOutreach){ alert("Select a contact first"); return; }
-
-  const email = selectedOutreach.email || "";
-
-  if(!email){ alert("No email added for this contact"); return; }
-  if(!outreachMessage.value.trim()){ alert("Generate message first"); return; }
-
-  const subject = encodeURIComponent("Business Inquiry");
-  const body = encodeURIComponent(outreachMessage.value);
-
-  window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${subject}&body=${body}`,"_blank");
-}
-
-async function loadDashboard(){
-  await loadSuppliers();
-  await loadLeads();
-  await loadTasks();
-  await loadDeals();
-}
-
-function loadAll(){
-  showPage("dashboardPage");
-  loadDashboard();
-}
-
-setAuthTab("master");
-checkAuth();
-</script>
+<script src="./app.js"></script>
 
 </body>
-</html>
+</html>s

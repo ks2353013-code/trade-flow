@@ -1,0 +1,772 @@
+const API_BASE = "https://trade-flow-lc1k.onrender.com";
+
+// ======================
+// GLOBAL STATE
+// ======================
+let CURRENT_USER = null;
+let CURRENT_LIMITS = null;
+
+// ======================
+// TOKEN HELPERS
+// ======================
+function getToken() {
+  return localStorage.getItem("tradeflowToken");
+}
+
+function setToken(token) {
+  localStorage.setItem("tradeflowToken", token);
+}
+
+function removeToken() {
+  localStorage.removeItem("tradeflowToken");
+}
+
+function setUser(user) {
+  localStorage.setItem("tradeflowUser", JSON.stringify(user));
+  CURRENT_USER = user;
+}
+
+function getUser() {
+  const user = localStorage.getItem("tradeflowUser");
+  return user ? JSON.parse(user) : null;
+}
+
+function removeUser() {
+  localStorage.removeItem("tradeflowUser");
+  CURRENT_USER = null;
+}
+
+// ======================
+// API HELPER
+// ======================
+async function api(path, options = {}) {
+  const token = getToken();
+
+  const headers = {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers || {}),
+  };
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers,
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      logout();
+      alert("Session expired. Please login again.");
+    }
+
+    throw new Error(data.message || data.error || "Request failed");
+  }
+
+  return data;
+}
+
+// ======================
+// INITIAL LOAD
+// ======================
+document.addEventListener("DOMContentLoaded", async () => {
+  document.getElementById("apiText").innerText = API_BASE;
+
+  const token = getToken();
+
+  if (token) {
+    try {
+      const data = await api("/api/auth/me");
+
+      CURRENT_USER = data.user;
+      CURRENT_LIMITS = data.limits;
+
+      showApp(data.user);
+
+      await loadAll();
+
+    } catch (error) {
+      console.log(error.message);
+      logout();
+    }
+  }
+});
+
+// ======================
+// AUTH
+// ======================
+async function login() {
+  try {
+    const name = document.getElementById("authName").value.trim();
+    const companyName = document.getElementById("companyName").value.trim();
+    const email = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPassword").value.trim();
+
+    if (!email || !password) {
+      return alert("Email and password required");
+    }
+
+    let data;
+
+    // REGISTER
+    if (name) {
+      data = await api("/api/auth/register", {
+        method: "POST",
+        body: JSON.stringify({
+          name,
+          companyName,
+          email,
+          password,
+        }),
+      });
+    }
+
+    // LOGIN
+    else {
+      data = await api("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+    }
+
+    setToken(data.token);
+    setUser(data.user);
+
+    CURRENT_USER = data.user;
+    CURRENT_LIMITS = data.limits;
+
+    showApp(data.user);
+
+    await loadAll();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+function logout() {
+  removeToken();
+  removeUser();
+  location.reload();
+}
+
+function showApp(user) {
+  document.getElementById("authScreen").classList.add("hidden");
+  document.getElementById("appScreen").classList.remove("hidden");
+
+  document.getElementById("userRoleText").innerText =
+    `${user.companyName} • ${user.plan}`;
+}
+
+// ======================
+// PAGE NAVIGATION
+// ======================
+function showPage(pageId) {
+  document.querySelectorAll(".page").forEach(page => {
+    page.classList.remove("active");
+  });
+
+  document.querySelectorAll(".nav-btn").forEach(btn => {
+    btn.classList.remove("active");
+  });
+
+  document.getElementById(pageId)?.classList.add("active");
+
+  const activeBtn = [...document.querySelectorAll(".nav-btn")]
+    .find(btn => btn.getAttribute("onclick")?.includes(pageId));
+
+  if (activeBtn) {
+    activeBtn.classList.add("active");
+  }
+}
+
+// ======================
+// LOAD EVERYTHING
+// ======================
+async function loadAll() {
+  await Promise.allSettled([
+    loadStats(),
+    loadSuppliers(),
+    loadLeads(),
+    loadTasks(),
+    loadDocuments(),
+    loadEmployees(),
+  ]);
+}
+
+// ======================
+// DASHBOARD
+// ======================
+async function loadStats() {
+  try {
+    const data = await api("/api/dashboard/stats");
+
+    document.getElementById("supplierCount").innerText =
+      data.stats.suppliers || 0;
+
+    document.getElementById("leadCount").innerText =
+      data.stats.leads || 0;
+
+    document.getElementById("taskCount").innerText =
+      data.stats.tasks || 0;
+
+    document.getElementById("docCount").innerText =
+      data.stats.documents || 0;
+
+    document.getElementById("employeeCount").innerText =
+      data.stats.users || 0;
+
+    document.getElementById("workspaceSummary").innerHTML = `
+      <b>${data.company.companyName}</b><br><br>
+      Plan: ${data.company.plan}<br>
+      Status: ${data.company.subscriptionStatus}<br><br>
+
+      Suppliers: ${data.stats.suppliers}/${data.usage.limits.suppliers}<br>
+      Leads: ${data.stats.leads}/${data.usage.limits.leads}<br>
+      Tasks: ${data.stats.tasks}/${data.usage.limits.tasks}<br>
+      Documents: ${data.stats.documents}/${data.usage.limits.documents}<br><br>
+
+      Outreach Used Today:
+      ${data.usage.outreachToday}/${data.usage.limits.outreachPerDay}
+    `;
+
+  } catch (error) {
+    console.log(error.message);
+  }
+}
+
+// ======================
+// COMPANY
+// ======================
+function updateCompany() {
+  alert("Company settings updated.");
+}
+
+// ======================
+// EMPLOYEES
+// ======================
+async function addEmployee() {
+  try {
+    const name = document.getElementById("empName").value.trim();
+    const email = document.getElementById("empEmail").value.trim();
+    const password = document.getElementById("empPassword").value.trim();
+    const role = document.getElementById("empRole").value;
+
+    const data = await api("/api/employees", {
+      method: "POST",
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+        role,
+      }),
+    });
+
+    alert(data.message);
+
+    document.getElementById("empName").value = "";
+    document.getElementById("empEmail").value = "";
+    document.getElementById("empPassword").value = "";
+
+    loadEmployees();
+    loadStats();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function loadEmployees() {
+  try {
+    const data = await api("/api/employees");
+
+    const box = document.getElementById("employeeList");
+
+    box.innerHTML = data.employees.map(emp => `
+      <div class="bg-white p-5 rounded-2xl shadow">
+        <h3 class="font-black text-lg">${emp.name}</h3>
+        <p>${emp.email}</p>
+        <p>${emp.role}</p>
+        <p>${emp.plan}</p>
+      </div>
+    `).join("");
+
+  } catch (error) {
+    console.log(error.message);
+  }
+}
+
+// ======================
+// LEADS
+// ======================
+async function addLead() {
+  try {
+    const companyName = document.getElementById("leadName").value.trim();
+    const stage = document.getElementById("leadStage").value.trim();
+    const value = document.getElementById("leadValue").value;
+    const source = document.getElementById("leadSource").value.trim();
+
+    const data = await api("/api/leads", {
+      method: "POST",
+      body: JSON.stringify({
+        companyName,
+        stage,
+        value,
+        source,
+      }),
+    });
+
+    alert("Lead added successfully");
+
+    document.getElementById("leadName").value = "";
+    document.getElementById("leadStage").value = "";
+    document.getElementById("leadValue").value = "";
+    document.getElementById("leadSource").value = "";
+
+    loadLeads();
+    loadStats();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function loadLeads() {
+  try {
+    const data = await api("/api/leads");
+
+    const box = document.getElementById("leadList");
+
+    box.innerHTML = data.leads.map(lead => `
+      <div class="bg-white p-5 rounded-2xl shadow">
+        <h3 class="font-black text-lg">
+          ${lead.companyName}
+        </h3>
+
+        <p>Stage: ${lead.stage}</p>
+        <p>Value: ₹${lead.value}</p>
+        <p>Source: ${lead.source}</p>
+
+        <button
+          onclick="deleteLead('${lead._id}')"
+          class="mt-4 bg-red-600 text-white px-4 py-2 rounded-xl"
+        >
+          Delete
+        </button>
+      </div>
+    `).join("");
+
+  } catch (error) {
+    console.log(error.message);
+  }
+}
+
+async function deleteLead(id) {
+  try {
+    await api(`/api/leads/${id}`, {
+      method: "DELETE",
+    });
+
+    loadLeads();
+    loadStats();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+// ======================
+// SUPPLIERS
+// ======================
+async function addSupplier() {
+  try {
+    const companyName = document.getElementById("supplierName").value.trim();
+    const product = document.getElementById("supplierProduct").value.trim();
+    const country = document.getElementById("supplierCountry").value.trim();
+    const email = document.getElementById("supplierEmail").value.trim();
+    const phone = document.getElementById("supplierPhone").value.trim();
+
+    const scoreData = await api("/api/ai/lead-score", {
+      method: "POST",
+      body: JSON.stringify({
+        companyName,
+      }),
+    });
+
+    await api("/api/suppliers", {
+      method: "POST",
+      body: JSON.stringify({
+        companyName,
+        product,
+        country,
+        email,
+        phone,
+        score: scoreData.score,
+        status: "Verified Lead",
+      }),
+    });
+
+    alert("Supplier added successfully");
+
+    document.getElementById("supplierName").value = "";
+    document.getElementById("supplierProduct").value = "";
+    document.getElementById("supplierCountry").value = "";
+    document.getElementById("supplierEmail").value = "";
+    document.getElementById("supplierPhone").value = "";
+
+    loadSuppliers();
+    loadStats();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function loadSuppliers() {
+  try {
+    const data = await api("/api/suppliers");
+
+    const box = document.getElementById("supplierList");
+
+    box.innerHTML = data.suppliers.map(supplier => `
+      <div class="bg-white p-5 rounded-2xl shadow">
+        <h3 class="font-black text-lg">
+          ${supplier.companyName}
+        </h3>
+
+        <p>Product: ${supplier.product}</p>
+        <p>Country: ${supplier.country}</p>
+        <p>Email: ${supplier.email}</p>
+        <p>Phone: ${supplier.phone}</p>
+        <p>Score: ${supplier.score}/100</p>
+        <p>Status: ${supplier.status}</p>
+
+        <button
+          onclick="deleteSupplier('${supplier._id}')"
+          class="mt-4 bg-red-600 text-white px-4 py-2 rounded-xl"
+        >
+          Delete
+        </button>
+      </div>
+    `).join("");
+
+  } catch (error) {
+    console.log(error.message);
+  }
+}
+
+async function deleteSupplier(id) {
+  try {
+    await api(`/api/suppliers/${id}`, {
+      method: "DELETE",
+    });
+
+    loadSuppliers();
+    loadStats();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+// ======================
+// NEGOTIATION
+// ======================
+function calculateMargin() {
+  const buy = Number(document.getElementById("buyPrice").value);
+  const sell = Number(document.getElementById("sellPrice").value);
+
+  if (!buy || !sell) {
+    return alert("Enter valid prices");
+  }
+
+  const profit = sell - buy;
+  const margin = ((profit / sell) * 100).toFixed(2);
+
+  document.getElementById("marginResult").innerText =
+    `Profit: ₹${profit} | Margin: ${margin}%`;
+}
+
+// ======================
+// TASKS
+// ======================
+async function addTask() {
+  try {
+    const title = document.getElementById("taskText").value.trim();
+    const priority = document.getElementById("taskPriority").value;
+
+    await api("/api/tasks", {
+      method: "POST",
+      body: JSON.stringify({
+        title,
+        priority,
+      }),
+    });
+
+    document.getElementById("taskText").value = "";
+
+    loadTasks();
+    loadStats();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function loadTasks() {
+  try {
+    const data = await api("/api/tasks");
+
+    const box = document.getElementById("taskList");
+
+    box.innerHTML = data.tasks.map(task => `
+      <li class="bg-white p-4 rounded-2xl shadow flex justify-between items-center">
+
+        <span>
+          <b>${task.title}</b>
+          — ${task.priority}
+          — ${task.status}
+        </span>
+
+        <button
+          onclick="deleteTask('${task._id}')"
+          class="bg-red-600 text-white px-4 py-2 rounded-xl"
+        >
+          Delete
+        </button>
+
+      </li>
+    `).join("");
+
+  } catch (error) {
+    console.log(error.message);
+  }
+}
+
+async function deleteTask(id) {
+  try {
+    await api(`/api/tasks/${id}`, {
+      method: "DELETE",
+    });
+
+    loadTasks();
+    loadStats();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+// ======================
+// DOCUMENTS
+// ======================
+async function addDocument() {
+  try {
+    const type = document.getElementById("documentType").value;
+    const shipmentRef = document.getElementById("shipmentRef").value.trim();
+    const buyer = document.getElementById("docBuyer").value.trim();
+    const supplier = document.getElementById("docSupplier").value.trim();
+
+    await api("/api/documents", {
+      method: "POST",
+      body: JSON.stringify({
+        title: `${type} - ${shipmentRef}`,
+        type,
+        partyName: buyer || supplier,
+        status: "Draft",
+        notes: `Buyer: ${buyer} | Supplier: ${supplier}`,
+      }),
+    });
+
+    document.getElementById("shipmentRef").value = "";
+    document.getElementById("docBuyer").value = "";
+    document.getElementById("docSupplier").value = "";
+
+    loadDocuments();
+    loadStats();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function loadDocuments() {
+  try {
+    const data = await api("/api/documents");
+
+    const box = document.getElementById("documentList");
+
+    box.innerHTML = data.documents.map(doc => `
+      <div class="bg-white p-5 rounded-2xl shadow">
+
+        <h3 class="font-black text-lg">
+          ${doc.title}
+        </h3>
+
+        <p>Type: ${doc.type}</p>
+        <p>Party: ${doc.partyName}</p>
+        <p>Status: ${doc.status}</p>
+
+        <button
+          onclick="deleteDocument('${doc._id}')"
+          class="mt-4 bg-red-600 text-white px-4 py-2 rounded-xl"
+        >
+          Delete
+        </button>
+
+      </div>
+    `).join("");
+
+  } catch (error) {
+    console.log(error.message);
+  }
+}
+
+async function deleteDocument(id) {
+  try {
+    await api(`/api/documents/${id}`, {
+      method: "DELETE",
+    });
+
+    loadDocuments();
+    loadStats();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+// ======================
+// OUTREACH
+// ======================
+async function sendEmail() {
+  try {
+    const email = document.getElementById("contactEmail").value.trim();
+    const message = document.getElementById("outreachMsg").value.trim();
+
+    const data = await api("/api/outreach/email", {
+      method: "POST",
+      body: JSON.stringify({
+        email,
+        message,
+      }),
+    });
+
+    alert(data.message);
+
+    loadStats();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function openWhatsApp() {
+  try {
+    const phone = document.getElementById("contactPhone").value.trim();
+    const message = document.getElementById("outreachMsg").value.trim();
+
+    const data = await api("/api/outreach/whatsapp", {
+      method: "POST",
+      body: JSON.stringify({
+        phone,
+        message,
+      }),
+    });
+
+    window.open(data.link, "_blank");
+
+    loadStats();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+// ======================
+// AI LEADS
+// ======================
+async function generateFakeLeads() {
+  try {
+    const product =
+      document.getElementById("fakeLeadProduct").value.trim() || "Rice";
+
+    const data = await api("/api/ai/demo-leads", {
+      method: "POST",
+      body: JSON.stringify({
+        product,
+      }),
+    });
+
+    const box = document.getElementById("fakeLeadList");
+
+    box.innerHTML = data.leads.map(lead => `
+      <div class="bg-white p-5 rounded-2xl shadow">
+
+        <h3 class="font-black text-lg">
+          ${lead.companyName}
+        </h3>
+
+        <p>Product: ${lead.product}</p>
+        <p>Country: ${lead.country}</p>
+        <p>Email: ${lead.email}</p>
+        <p>Phone: ${lead.phone}</p>
+        <p>Score: ${lead.score}</p>
+
+        <button
+          onclick="saveDemoLead(
+            '${lead.companyName}',
+            '${lead.product}',
+            '${lead.country}',
+            '${lead.email}',
+            '${lead.phone}',
+            '${lead.score}'
+          )"
+          class="mt-4 bg-purple-700 text-white px-4 py-2 rounded-xl"
+        >
+          Save Lead
+        </button>
+
+      </div>
+    `).join("");
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function saveDemoLead(
+  companyName,
+  product,
+  country,
+  email,
+  phone,
+  score
+) {
+  try {
+    await api("/api/suppliers", {
+      method: "POST",
+      body: JSON.stringify({
+        companyName,
+        product,
+        country,
+        email,
+        phone,
+        score,
+        status: "AI Generated Lead",
+      }),
+    });
+
+    alert("Lead saved successfully");
+
+    loadSuppliers();
+    loadStats();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
