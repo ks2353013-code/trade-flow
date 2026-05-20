@@ -2,43 +2,39 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <title>TradeFlow AI™ — Export Growth OS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TradeFlow AI™</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
-    body {
-      background: #f3f6fb;
-      font-family: Arial, Helvetica, sans-serif;
+    body{
+      background:#f3f6fb;
+      font-family:Arial, sans-serif;
     }
 
-    .page {
-      display: none;
+    .page{
+      display:none;
     }
 
-    .page.active {
-      display: block;
+    .page.active{
+      display:block;
     }
 
-    .nav-btn.active {
-      background: #2563eb;
-      color: white;
-    }
-
-    .card {
-      background: white;
-      border-radius: 1rem;
-      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+    .nav-btn.active{
+      background:#2563eb;
+      color:white;
     }
   </style>
 </head>
 
 <body class="text-slate-900">
 
-<!-- AUTH SCREEN -->
-<section id="authScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-900 p-6">
+<!-- ===================== -->
+<!-- AUTH -->
+<!-- ===================== -->
+<section id="authScreen"
+class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-900 p-6">
 
   <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-8">
 
@@ -48,31 +44,43 @@
       </h1>
 
       <p class="text-slate-500 mt-3">
-        Export Growth Operating System for suppliers, buyers, CRM, outreach and documents.
+        Multi-Tenant Export SaaS
       </p>
-
-      <div class="mt-4 inline-block bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-bold">
-        7-Day Free Trial • Money-Ready SaaS
-      </div>
     </div>
 
     <div class="mt-8 grid gap-4">
 
-      <input id="authName" class="border rounded-xl px-4 py-3" placeholder="Owner Name - fill for signup, leave blank for login" />
+      <input
+        id="authName"
+        class="border rounded-xl px-4 py-3"
+        placeholder="Owner Name (Only for Signup)"
+      />
 
-      <input id="companyName" class="border rounded-xl px-4 py-3" placeholder="Company Name" />
+      <input
+        id="companyName"
+        class="border rounded-xl px-4 py-3"
+        placeholder="Company Name"
+      />
 
-      <input id="authEmail" class="border rounded-xl px-4 py-3" placeholder="Email" />
+      <input
+        id="authEmail"
+        class="border rounded-xl px-4 py-3"
+        placeholder="Email"
+      />
 
-      <input id="authPassword" type="password" class="border rounded-xl px-4 py-3" placeholder="Password" />
+      <input
+        id="authPassword"
+        type="password"
+        class="border rounded-xl px-4 py-3"
+        placeholder="Password"
+      />
 
-      <button onclick="login()" class="bg-blue-700 hover:bg-blue-800 text-white rounded-xl py-3 font-bold">
+      <button
+        onclick="login()"
+        class="bg-blue-700 hover:bg-blue-800 text-white rounded-xl py-3 font-bold"
+      >
         Login / Create Workspace
       </button>
-
-      <p class="text-xs text-slate-500 text-center">
-        Your company workspace is private. Data is separated by company account.
-      </p>
 
     </div>
 
@@ -80,7 +88,9 @@
 
 </section>
 
-<!-- APP SCREEN -->
+<!-- ===================== -->
+<!-- APP -->
+<!-- ===================== -->
 <section id="appScreen" class="hidden min-h-screen">
 
   <!-- SIDEBAR -->
@@ -94,35 +104,18 @@
       Workspace
     </p>
 
-    <div class="mt-4 bg-blue-600/20 border border-blue-400/30 rounded-xl p-3">
-      <p class="text-xs text-blue-200">Current Plan</p>
-      <p id="sidePlanText" class="font-black text-white">FREE</p>
-    </div>
-
     <nav class="mt-8 space-y-2">
 
-      <button onclick="showPage('dashboard')" class="nav-btn active w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
+      <button onclick="showPage('dashboard')" class="nav-btn active w-full text-left px-4 py-3 rounded-xl">
         Dashboard
-      </button>
-
-      <button onclick="showPage('company')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
-        Company Master
-      </button>
-
-      <button onclick="showPage('employees')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
-        Employees
-      </button>
-
-      <button onclick="showPage('crm')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
-        CRM Pipeline
       </button>
 
       <button onclick="showPage('suppliers')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
         Suppliers
       </button>
 
-      <button onclick="showPage('negotiation')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
-        Negotiation
+      <button onclick="showPage('crm')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
+        CRM
       </button>
 
       <button onclick="showPage('tasks')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
@@ -134,24 +127,23 @@
       </button>
 
       <button onclick="showPage('outreach')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
-        Smart Outreach
+        Outreach
       </button>
 
       <button onclick="showPage('leadfinder')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
-        AI Lead Finder
+        AI Leads
       </button>
 
       <button onclick="showPage('billing')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
-        Billing / Upgrade
-      </button>
-
-      <button onclick="showPage('settings')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
-        Settings
+        Billing
       </button>
 
     </nav>
 
-    <button onclick="logout()" class="mt-8 w-full bg-red-600 hover:bg-red-700 rounded-xl py-3 font-bold">
+    <button
+      onclick="logout()"
+      class="absolute bottom-6 left-6 right-6 bg-red-600 hover:bg-red-700 rounded-xl py-3 font-bold"
+    >
       Logout
     </button>
 
@@ -163,171 +155,43 @@
     <!-- DASHBOARD -->
     <section id="dashboard" class="page active">
 
-      <div class="flex justify-between items-start gap-6">
+      <h1 class="text-4xl font-black">
+        Master Dashboard
+      </h1>
 
-        <div>
-          <h1 class="text-4xl font-black">
-            Master Dashboard
-          </h1>
+      <div class="grid md:grid-cols-4 gap-5 mt-8">
 
-          <p class="text-slate-500 mt-2">
-            Company-wide export/import command center.
-          </p>
-        </div>
-
-        <div class="card p-5 min-w-64">
-          <p class="text-xs text-slate-500">Workspace Plan</p>
-          <h2 id="dashboardPlanText" class="text-2xl font-black text-blue-700">FREE</h2>
-          <p id="trialText" class="text-xs text-slate-500 mt-1">Trial active</p>
-        </div>
-
-      </div>
-
-      <div class="grid md:grid-cols-5 gap-5 mt-8">
-
-        <div class="card p-6">
+        <div class="bg-white p-6 rounded-2xl shadow">
           <p>Suppliers</p>
           <h2 id="supplierCount" class="text-3xl font-black mt-2">0</h2>
         </div>
 
-        <div class="card p-6">
+        <div class="bg-white p-6 rounded-2xl shadow">
           <p>CRM Leads</p>
           <h2 id="leadCount" class="text-3xl font-black mt-2">0</h2>
         </div>
 
-        <div class="card p-6">
+        <div class="bg-white p-6 rounded-2xl shadow">
           <p>Tasks</p>
           <h2 id="taskCount" class="text-3xl font-black mt-2">0</h2>
         </div>
 
-        <div class="card p-6">
+        <div class="bg-white p-6 rounded-2xl shadow">
           <p>Documents</p>
           <h2 id="docCount" class="text-3xl font-black mt-2">0</h2>
         </div>
 
-        <div class="card p-6">
-          <p>Employees</p>
-          <h2 id="employeeCount" class="text-3xl font-black mt-2">0</h2>
-        </div>
-
       </div>
 
-      <div class="grid md:grid-cols-2 gap-6 mt-8">
+      <div class="bg-white p-6 rounded-2xl shadow mt-8">
 
-        <div class="card p-6">
-          <h2 class="text-2xl font-black">
-            Workspace Status
-          </h2>
+        <h2 class="text-2xl font-black">
+          Workspace Summary
+        </h2>
 
-          <p id="workspaceSummary" class="text-slate-600 mt-3">
-            Loading workspace data...
-          </p>
-        </div>
-
-        <div class="card p-6">
-          <h2 class="text-2xl font-black">
-            Money Engine
-          </h2>
-
-          <p class="text-slate-600 mt-3">
-            Free users are limited. Paid plans unlock more suppliers, leads, documents and outreach.
-          </p>
-
-          <button onclick="showPage('billing')" class="mt-4 bg-blue-700 text-white px-5 py-3 rounded-xl font-bold">
-            View Upgrade Plans
-          </button>
-        </div>
+        <div id="workspaceSummary" class="mt-4 text-slate-700"></div>
 
       </div>
-
-    </section>
-
-    <!-- COMPANY -->
-    <section id="company" class="page">
-
-      <h1 class="text-4xl font-black">
-        Company Master
-      </h1>
-
-      <p class="text-slate-500 mt-2">
-        Manage basic company details for your export/import workspace.
-      </p>
-
-      <div class="card p-6 mt-6 grid md:grid-cols-2 gap-4">
-
-        <input id="editCompanyName" class="border rounded-xl px-4 py-3" placeholder="Company Name" />
-        <input id="editIndustry" class="border rounded-xl px-4 py-3" placeholder="Industry" />
-
-        <input id="editCountry" class="border rounded-xl px-4 py-3" placeholder="Country" />
-        <input id="editPlan" class="border rounded-xl px-4 py-3" placeholder="Plan" />
-
-        <button onclick="updateCompany()" class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-2">
-          Save Company
-        </button>
-
-      </div>
-
-    </section>
-
-    <!-- EMPLOYEES -->
-    <section id="employees" class="page">
-
-      <h1 class="text-4xl font-black">
-        Employee Management
-      </h1>
-
-      <p class="text-slate-500 mt-2">
-        Add team members under the same company workspace.
-      </p>
-
-      <div class="card p-6 mt-6 grid md:grid-cols-4 gap-3">
-
-        <input id="empName" class="border rounded-xl px-4 py-3" placeholder="Employee Name" />
-        <input id="empEmail" class="border rounded-xl px-4 py-3" placeholder="Employee Email" />
-        <input id="empPassword" class="border rounded-xl px-4 py-3" placeholder="Password" />
-
-        <select id="empRole" class="border rounded-xl px-4 py-3">
-          <option>EMPLOYEE</option>
-          <option>SALES</option>
-          <option>OPERATIONS</option>
-          <option>MANAGER</option>
-        </select>
-
-        <button onclick="addEmployee()" class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-4">
-          Add Employee
-        </button>
-
-      </div>
-
-      <div id="employeeList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
-
-    </section>
-
-    <!-- CRM -->
-    <section id="crm" class="page">
-
-      <h1 class="text-4xl font-black">
-        CRM Pipeline
-      </h1>
-
-      <p class="text-slate-500 mt-2">
-        Track buyers, deals, export enquiries and follow-ups.
-      </p>
-
-      <div class="card p-6 mt-6 grid md:grid-cols-4 gap-3">
-
-        <input id="leadName" class="border rounded-xl px-4 py-3" placeholder="Lead Name" />
-        <input id="leadStage" class="border rounded-xl px-4 py-3" placeholder="Stage" />
-        <input id="leadValue" type="number" class="border rounded-xl px-4 py-3" placeholder="Deal Value" />
-        <input id="leadSource" class="border rounded-xl px-4 py-3" placeholder="Source" />
-
-        <button onclick="addLead()" class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-4">
-          Add Lead
-        </button>
-
-      </div>
-
-      <div id="leadList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
 
     </section>
 
@@ -335,22 +199,21 @@
     <section id="suppliers" class="page">
 
       <h1 class="text-4xl font-black">
-        Supplier Management
+        Suppliers
       </h1>
 
-      <p class="text-slate-500 mt-2">
-        Save verified suppliers, buyers and trading contacts.
-      </p>
+      <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-5 gap-3">
 
-      <div class="card p-6 mt-6 grid md:grid-cols-5 gap-3">
+        <input id="supplierName" class="border rounded-xl px-4 py-3" placeholder="Company Name"/>
+        <input id="supplierProduct" class="border rounded-xl px-4 py-3" placeholder="Product"/>
+        <input id="supplierCountry" class="border rounded-xl px-4 py-3" placeholder="Country"/>
+        <input id="supplierEmail" class="border rounded-xl px-4 py-3" placeholder="Email"/>
+        <input id="supplierPhone" class="border rounded-xl px-4 py-3" placeholder="Phone"/>
 
-        <input id="supplierName" class="border rounded-xl px-4 py-3" placeholder="Supplier Name" />
-        <input id="supplierProduct" class="border rounded-xl px-4 py-3" placeholder="Product" />
-        <input id="supplierCountry" class="border rounded-xl px-4 py-3" placeholder="Country" />
-        <input id="supplierEmail" class="border rounded-xl px-4 py-3" placeholder="Email" />
-        <input id="supplierPhone" class="border rounded-xl px-4 py-3" placeholder="Phone" />
-
-        <button onclick="addSupplier()" class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-5">
+        <button
+          onclick="addSupplier()"
+          class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-5"
+        >
           Add Supplier
         </button>
 
@@ -360,29 +223,30 @@
 
     </section>
 
-    <!-- NEGOTIATION -->
-    <section id="negotiation" class="page">
+    <!-- CRM -->
+    <section id="crm" class="page">
 
       <h1 class="text-4xl font-black">
-        Negotiation & Margin
+        CRM Leads
       </h1>
 
-      <p class="text-slate-500 mt-2">
-        Calculate trading profit and export margins.
-      </p>
+      <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-4 gap-3">
 
-      <div class="card p-6 mt-6">
+        <input id="leadName" class="border rounded-xl px-4 py-3" placeholder="Lead Name"/>
+        <input id="leadStage" class="border rounded-xl px-4 py-3" placeholder="Stage"/>
+        <input id="leadValue" type="number" class="border rounded-xl px-4 py-3" placeholder="Deal Value"/>
+        <input id="leadSource" class="border rounded-xl px-4 py-3" placeholder="Source"/>
 
-        <input id="buyPrice" type="number" class="border rounded-xl px-4 py-3 mr-2" placeholder="Buying Price" />
-        <input id="sellPrice" type="number" class="border rounded-xl px-4 py-3 mr-2" placeholder="Selling Price" />
-
-        <button onclick="calculateMargin()" class="bg-green-700 text-white px-5 py-3 rounded-xl">
-          Calculate
+        <button
+          onclick="addLead()"
+          class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-4"
+        >
+          Add Lead
         </button>
 
-        <p id="marginResult" class="font-bold mt-4"></p>
-
       </div>
+
+      <div id="leadList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
 
     </section>
 
@@ -393,21 +257,20 @@
         Tasks
       </h1>
 
-      <p class="text-slate-500 mt-2">
-        Manage export follow-ups, supplier calls and team work.
-      </p>
+      <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-3 gap-3">
 
-      <div class="card p-6 mt-6 grid md:grid-cols-3 gap-3">
-
-        <input id="taskText" class="border rounded-xl px-4 py-3" placeholder="Task" />
+        <input id="taskText" class="border rounded-xl px-4 py-3" placeholder="Task"/>
 
         <select id="taskPriority" class="border rounded-xl px-4 py-3">
           <option>Low</option>
-          <option selected>Medium</option>
+          <option>Medium</option>
           <option>High</option>
         </select>
 
-        <button onclick="addTask()" class="bg-blue-700 text-white rounded-xl py-3 font-bold">
+        <button
+          onclick="addTask()"
+          class="bg-blue-700 text-white rounded-xl py-3 font-bold"
+        >
           Add Task
         </button>
 
@@ -421,30 +284,21 @@
     <section id="documents" class="page">
 
       <h1 class="text-4xl font-black">
-        Export / Import Documents
+        Documents
       </h1>
 
-      <p class="text-slate-500 mt-2">
-        Save commercial invoices, packing lists, shipping bills and trade documents.
-      </p>
+      <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-5 gap-3">
 
-      <div class="card p-6 mt-6 grid md:grid-cols-5 gap-3">
+        <input id="documentTitle" class="border rounded-xl px-4 py-3" placeholder="Document Title"/>
+        <input id="documentType" class="border rounded-xl px-4 py-3" placeholder="Type"/>
+        <input id="documentParty" class="border rounded-xl px-4 py-3" placeholder="Party"/>
+        <input id="documentAmount" class="border rounded-xl px-4 py-3" placeholder="Amount"/>
 
-        <select id="documentType" class="border rounded-xl px-4 py-3">
-          <option>Commercial Invoice</option>
-          <option>Packing List</option>
-          <option>Bill of Lading</option>
-          <option>Certificate of Origin</option>
-          <option>Shipping Bill</option>
-          <option>Insurance Certificate</option>
-        </select>
-
-        <input id="shipmentRef" class="border rounded-xl px-4 py-3" placeholder="Shipment Ref" />
-        <input id="docBuyer" class="border rounded-xl px-4 py-3" placeholder="Buyer" />
-        <input id="docSupplier" class="border rounded-xl px-4 py-3" placeholder="Supplier" />
-
-        <button onclick="addDocument()" class="bg-blue-700 text-white rounded-xl py-3 font-bold">
-          Save
+        <button
+          onclick="addDocument()"
+          class="bg-blue-700 text-white rounded-xl py-3 font-bold"
+        >
+          Add Document
         </button>
 
       </div>
@@ -457,28 +311,39 @@
     <section id="outreach" class="page">
 
       <h1 class="text-4xl font-black">
-        Smart Outreach
+        Outreach
       </h1>
 
-      <p class="text-slate-500 mt-2">
-        Contact buyers and suppliers using email or WhatsApp.
-      </p>
+      <div class="bg-white p-6 rounded-2xl shadow mt-6">
 
-      <div class="card p-6 mt-6">
+        <input id="contactEmail"
+        class="border rounded-xl px-4 py-3 mr-2"
+        placeholder="Email"/>
 
-        <input id="contactEmail" class="border rounded-xl px-4 py-3 mr-2" placeholder="Email" />
+        <input id="contactPhone"
+        class="border rounded-xl px-4 py-3 mr-2"
+        placeholder="WhatsApp"/>
 
-        <input id="contactPhone" class="border rounded-xl px-4 py-3 mr-2" placeholder="WhatsApp Number with country code" />
-
-        <textarea id="outreachMsg" class="w-full border rounded-xl px-4 py-3 mt-4" rows="5" placeholder="Message"></textarea>
+        <textarea
+          id="outreachMsg"
+          class="w-full border rounded-xl px-4 py-3 mt-4"
+          rows="5"
+          placeholder="Message"
+        ></textarea>
 
         <div class="mt-4 space-x-3">
 
-          <button onclick="sendEmail()" class="bg-blue-700 text-white px-5 py-3 rounded-xl">
+          <button
+            onclick="sendEmail()"
+            class="bg-blue-700 text-white px-5 py-3 rounded-xl"
+          >
             Send Email
           </button>
 
-          <button onclick="openWhatsApp()" class="bg-green-700 text-white px-5 py-3 rounded-xl">
+          <button
+            onclick="openWhatsApp()"
+            class="bg-green-700 text-white px-5 py-3 rounded-xl"
+          >
             Open WhatsApp
           </button>
 
@@ -488,23 +353,26 @@
 
     </section>
 
-    <!-- AI LEAD FINDER -->
+    <!-- AI LEADS -->
     <section id="leadfinder" class="page">
 
       <h1 class="text-4xl font-black">
         AI Lead Finder
       </h1>
 
-      <p class="text-slate-500 mt-2">
-        Generate buyer/supplier leads for export products. Demo now, real data API later.
-      </p>
+      <div class="bg-white p-6 rounded-2xl shadow mt-6">
 
-      <div class="card p-6 mt-6">
+        <input
+          id="fakeLeadProduct"
+          class="border rounded-xl px-4 py-3 mr-2"
+          placeholder="Product"
+        />
 
-        <input id="fakeLeadProduct" class="border rounded-xl px-4 py-3 mr-2" placeholder="Product e.g. rice, medicine, jaggery" />
-
-        <button onclick="generateFakeLeads()" class="bg-purple-700 text-white px-5 py-3 rounded-xl">
-          Generate Demo Leads
+        <button
+          onclick="generateFakeLeads()"
+          class="bg-purple-700 text-white px-5 py-3 rounded-xl"
+        >
+          Generate Leads
         </button>
 
       </div>
@@ -517,130 +385,542 @@
     <section id="billing" class="page">
 
       <h1 class="text-4xl font-black">
-        Billing / Upgrade
+        Billing Plans
       </h1>
 
-      <p class="text-slate-500 mt-2">
-        Monetization layer for TradeFlow AI™. Free users have limits. Paid users unlock scale.
-      </p>
-
-      <div class="grid md:grid-cols-4 gap-6 mt-8">
-
-        <div class="card p-6 border-2 border-slate-200">
-          <h2 class="text-2xl font-black">Free</h2>
-          <p class="text-3xl font-black mt-3">₹0</p>
-          <p class="text-slate-500">Trial / testing</p>
-
-          <ul class="mt-5 space-y-2 text-sm">
-            <li>10 suppliers</li>
-            <li>20 CRM leads</li>
-            <li>20 tasks</li>
-            <li>10 documents</li>
-            <li>5 outreach/day</li>
-          </ul>
-
-          <button onclick="upgradePlan('FREE')" class="mt-6 w-full bg-slate-800 text-white py-3 rounded-xl font-bold">
-            Current / Free
-          </button>
-        </div>
-
-        <div class="card p-6 border-2 border-blue-200">
-          <h2 class="text-2xl font-black">Starter</h2>
-          <p class="text-3xl font-black mt-3">₹999</p>
-          <p class="text-slate-500">per month</p>
-
-          <ul class="mt-5 space-y-2 text-sm">
-            <li>100 suppliers</li>
-            <li>250 CRM leads</li>
-            <li>200 tasks</li>
-            <li>100 documents</li>
-            <li>50 outreach/day</li>
-          </ul>
-
-          <button onclick="upgradePlan('STARTER')" class="mt-6 w-full bg-blue-700 text-white py-3 rounded-xl font-bold">
-            Upgrade Starter
-          </button>
-        </div>
-
-        <div class="card p-6 border-2 border-purple-300">
-          <h2 class="text-2xl font-black">Pro</h2>
-          <p class="text-3xl font-black mt-3">₹4,999</p>
-          <p class="text-slate-500">per month</p>
-
-          <ul class="mt-5 space-y-2 text-sm">
-            <li>1000 suppliers</li>
-            <li>2500 CRM leads</li>
-            <li>1000 tasks</li>
-            <li>1000 documents</li>
-            <li>300 outreach/day</li>
-            <li>AI growth insights</li>
-          </ul>
-
-          <button onclick="upgradePlan('PRO')" class="mt-6 w-full bg-purple-700 text-white py-3 rounded-xl font-bold">
-            Upgrade Pro
-          </button>
-        </div>
-
-        <div class="card p-6 border-2 border-amber-300">
-          <h2 class="text-2xl font-black">Enterprise</h2>
-          <p class="text-3xl font-black mt-3">₹25k+</p>
-          <p class="text-slate-500">custom</p>
-
-          <ul class="mt-5 space-y-2 text-sm">
-            <li>Unlimited usage</li>
-            <li>Team workspace</li>
-            <li>Custom automation</li>
-            <li>Priority support</li>
-            <li>Exporter onboarding</li>
-          </ul>
-
-          <button onclick="upgradePlan('ENTERPRISE')" class="mt-6 w-full bg-amber-600 text-white py-3 rounded-xl font-bold">
-            Upgrade Enterprise
-          </button>
-        </div>
-
-      </div>
-
-      <div class="card p-6 mt-8">
-        <h2 class="text-2xl font-black">Payment Status</h2>
-        <p class="text-slate-600 mt-2">
-          This version uses demo upgrade logic. Next step: connect Razorpay payment checkout.
-        </p>
-      </div>
+      <div id="billingPlans" class="grid md:grid-cols-3 gap-6 mt-8"></div>
 
     </section>
 
-    <!-- SETTINGS -->
-    <section id="settings" class="page">
-
-      <h1 class="text-4xl font-black">
-        Settings
-      </h1>
-
-      <div class="card p-6 mt-6">
-
-        <p><b>Backend:</b> <span id="apiText"></span></p>
-        <p class="mt-2"><b>Mode:</b> Money-ready SaaS Workspace</p>
-        <p class="mt-2"><b>Database:</b> MongoDB Atlas</p>
-        <p class="mt-2"><b>Server:</b> Node.js + Express</p>
-        <p class="mt-2"><b>Auth:</b> JWT Protected Company Workspace</p>
-
-      </div>
-
-    </section>
-
-    <!-- FOOTER -->
     <footer class="mt-16 text-center text-slate-500">
-
-      © 2026 TradeFlow AI™ — Export Growth Operating System for suppliers, buyers, CRM, documents, teams and outreach.
-
+      © 2026 TradeFlow AI™
     </footer>
 
   </main>
 
 </section>
 
-<script src="./app.js"></script>
+<script>
+
+const API_BASE = "https://trade-flow-lc1k.onrender.com";
+
+function getToken(){
+  return localStorage.getItem("tradeflowToken");
+}
+
+function setToken(token){
+  localStorage.setItem("tradeflowToken", token);
+}
+
+function removeToken(){
+  localStorage.removeItem("tradeflowToken");
+}
+
+async function api(path, options = {}){
+
+  const token = getToken();
+
+  const headers = {
+    "Content-Type":"application/json",
+    ...(token ? {
+      Authorization:`Bearer ${token}`
+    } : {})
+  };
+
+  const response = await fetch(API_BASE + path,{
+    ...options,
+    headers
+  });
+
+  const data = await response.json();
+
+  if(!response.ok){
+    throw new Error(data.message || "Request failed");
+  }
+
+  return data;
+}
+
+document.addEventListener("DOMContentLoaded", async ()=>{
+
+  const token = getToken();
+
+  if(token){
+    try{
+      const data = await api("/api/auth/me");
+
+      showApp(data.user);
+
+      await loadAll();
+
+    }catch(err){
+      logout();
+    }
+  }
+
+  loadPlans();
+});
+
+async function login(){
+
+  try{
+
+    const name =
+      document.getElementById("authName").value.trim();
+
+    const companyName =
+      document.getElementById("companyName").value.trim();
+
+    const email =
+      document.getElementById("authEmail").value.trim();
+
+    const password =
+      document.getElementById("authPassword").value.trim();
+
+    let data;
+
+    if(name){
+
+      data = await api("/api/auth/register",{
+        method:"POST",
+        body:JSON.stringify({
+          name,
+          companyName,
+          email,
+          password
+        })
+      });
+
+    }else{
+
+      data = await api("/api/auth/login",{
+        method:"POST",
+        body:JSON.stringify({
+          email,
+          password
+        })
+      });
+
+    }
+
+    setToken(data.token);
+
+    showApp(data.user);
+
+    await loadAll();
+
+  }catch(err){
+    alert(err.message);
+  }
+
+}
+
+function logout(){
+  removeToken();
+  location.reload();
+}
+
+function showApp(user){
+
+  document.getElementById("authScreen")
+  .classList.add("hidden");
+
+  document.getElementById("appScreen")
+  .classList.remove("hidden");
+
+  document.getElementById("userRoleText")
+  .innerText =
+    `${user.companyName} • ${user.plan}`;
+
+}
+
+function showPage(pageId){
+
+  document.querySelectorAll(".page")
+  .forEach(page=>{
+    page.classList.remove("active");
+  });
+
+  document.querySelectorAll(".nav-btn")
+  .forEach(btn=>{
+    btn.classList.remove("active");
+  });
+
+  document.getElementById(pageId)
+  .classList.add("active");
+
+}
+
+async function loadAll(){
+
+  await Promise.all([
+    loadStats(),
+    loadSuppliers(),
+    loadLeads(),
+    loadTasks(),
+    loadDocuments()
+  ]);
+
+}
+
+async function loadStats(){
+
+  const data =
+    await api("/api/dashboard/stats");
+
+  document.getElementById("supplierCount")
+  .innerText = data.stats.suppliers;
+
+  document.getElementById("leadCount")
+  .innerText = data.stats.leads;
+
+  document.getElementById("taskCount")
+  .innerText = data.stats.tasks;
+
+  document.getElementById("docCount")
+  .innerText = data.stats.documents;
+
+  document.getElementById("workspaceSummary")
+  .innerHTML = `
+    <b>${data.company.companyName}</b><br><br>
+
+    Plan:
+    ${data.company.plan}<br><br>
+
+    Suppliers:
+    ${data.stats.suppliers}/${data.usage.limits.suppliers}<br>
+
+    Leads:
+    ${data.stats.leads}/${data.usage.limits.leads}<br>
+
+    Tasks:
+    ${data.stats.tasks}/${data.usage.limits.tasks}<br>
+
+    Documents:
+    ${data.stats.documents}/${data.usage.limits.documents}
+  `;
+
+}
+
+async function addSupplier(){
+
+  try{
+
+    const companyName =
+      document.getElementById("supplierName").value;
+
+    const product =
+      document.getElementById("supplierProduct").value;
+
+    const country =
+      document.getElementById("supplierCountry").value;
+
+    const email =
+      document.getElementById("supplierEmail").value;
+
+    const phone =
+      document.getElementById("supplierPhone").value;
+
+    await api("/api/suppliers",{
+      method:"POST",
+      body:JSON.stringify({
+        companyName,
+        product,
+        country,
+        email,
+        phone
+      })
+    });
+
+    loadSuppliers();
+    loadStats();
+
+  }catch(err){
+    alert(err.message);
+  }
+
+}
+
+async function loadSuppliers(){
+
+  const data =
+    await api("/api/suppliers");
+
+  document.getElementById("supplierList")
+  .innerHTML =
+    data.suppliers.map(s=>`
+      <div class="bg-white p-5 rounded-2xl shadow">
+
+        <h3 class="font-black text-lg">
+          ${s.companyName}
+        </h3>
+
+        <p>${s.product}</p>
+        <p>${s.country}</p>
+        <p>${s.email}</p>
+
+      </div>
+    `).join("");
+
+}
+
+async function addLead(){
+
+  try{
+
+    await api("/api/leads",{
+      method:"POST",
+      body:JSON.stringify({
+        companyName:
+          document.getElementById("leadName").value,
+
+        stage:
+          document.getElementById("leadStage").value,
+
+        value:
+          document.getElementById("leadValue").value,
+
+        source:
+          document.getElementById("leadSource").value
+      })
+    });
+
+    loadLeads();
+    loadStats();
+
+  }catch(err){
+    alert(err.message);
+  }
+
+}
+
+async function loadLeads(){
+
+  const data =
+    await api("/api/leads");
+
+  document.getElementById("leadList")
+  .innerHTML =
+    data.leads.map(l=>`
+      <div class="bg-white p-5 rounded-2xl shadow">
+
+        <h3 class="font-black text-lg">
+          ${l.companyName}
+        </h3>
+
+        <p>${l.stage}</p>
+        <p>₹${l.value}</p>
+
+      </div>
+    `).join("");
+
+}
+
+async function addTask(){
+
+  try{
+
+    await api("/api/tasks",{
+      method:"POST",
+      body:JSON.stringify({
+        title:
+          document.getElementById("taskText").value,
+
+        priority:
+          document.getElementById("taskPriority").value
+      })
+    });
+
+    loadTasks();
+    loadStats();
+
+  }catch(err){
+    alert(err.message);
+  }
+
+}
+
+async function loadTasks(){
+
+  const data =
+    await api("/api/tasks");
+
+  document.getElementById("taskList")
+  .innerHTML =
+    data.tasks.map(t=>`
+      <li class="bg-white p-4 rounded-2xl shadow">
+        ${t.title}
+      </li>
+    `).join("");
+
+}
+
+async function addDocument(){
+
+  try{
+
+    await api("/api/documents",{
+      method:"POST",
+      body:JSON.stringify({
+        title:
+          document.getElementById("documentTitle").value,
+
+        type:
+          document.getElementById("documentType").value,
+
+        partyName:
+          document.getElementById("documentParty").value,
+
+        amount:
+          document.getElementById("documentAmount").value
+      })
+    });
+
+    loadDocuments();
+    loadStats();
+
+  }catch(err){
+    alert(err.message);
+  }
+
+}
+
+async function loadDocuments(){
+
+  const data =
+    await api("/api/documents");
+
+  document.getElementById("documentList")
+  .innerHTML =
+    data.documents.map(d=>`
+      <div class="bg-white p-5 rounded-2xl shadow">
+
+        <h3 class="font-black text-lg">
+          ${d.title}
+        </h3>
+
+        <p>${d.type}</p>
+        <p>${d.partyName}</p>
+
+      </div>
+    `).join("");
+
+}
+
+async function sendEmail(){
+
+  try{
+
+    const data =
+      await api("/api/outreach/email",{
+        method:"POST",
+        body:JSON.stringify({
+          email:
+            document.getElementById("contactEmail").value,
+
+          message:
+            document.getElementById("outreachMsg").value
+        })
+      });
+
+    alert(data.message);
+
+  }catch(err){
+    alert(err.message);
+  }
+
+}
+
+async function openWhatsApp(){
+
+  try{
+
+    const data =
+      await api("/api/outreach/whatsapp",{
+        method:"POST",
+        body:JSON.stringify({
+          phone:
+            document.getElementById("contactPhone").value,
+
+          message:
+            document.getElementById("outreachMsg").value
+        })
+      });
+
+    window.open(data.link,"_blank");
+
+  }catch(err){
+    alert(err.message);
+  }
+
+}
+
+async function generateFakeLeads(){
+
+  try{
+
+    const product =
+      document.getElementById("fakeLeadProduct").value;
+
+    const data =
+      await api("/api/ai/demo-leads",{
+        method:"POST",
+        body:JSON.stringify({
+          product
+        })
+      });
+
+    document.getElementById("fakeLeadList")
+    .innerHTML =
+      data.leads.map(l=>`
+        <div class="bg-white p-5 rounded-2xl shadow">
+
+          <h3 class="font-black text-lg">
+            ${l.companyName}
+          </h3>
+
+          <p>${l.country}</p>
+          <p>${l.email}</p>
+
+        </div>
+      `).join("");
+
+  }catch(err){
+    alert(err.message);
+  }
+
+}
+
+async function loadPlans(){
+
+  const data =
+    await api("/api/billing/plans");
+
+  document.getElementById("billingPlans")
+  .innerHTML =
+    data.plans.map(plan=>`
+      <div class="bg-white p-6 rounded-2xl shadow">
+
+        <h2 class="text-2xl font-black">
+          ${plan.name}
+        </h2>
+
+        <p class="text-3xl mt-4 font-black">
+          ₹${plan.price}
+        </p>
+
+        <ul class="mt-4 space-y-2">
+          ${plan.features.map(f=>`
+            <li>• ${f}</li>
+          `).join("")}
+        </ul>
+
+      </div>
+    `).join("");
+
+}
+
+</script>
 
 </body>
-</html>s
+</html>
