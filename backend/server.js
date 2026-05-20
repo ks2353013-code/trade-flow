@@ -9,9 +9,12 @@ app.use(cors());
 app.use(express.json());
 
 const SECRET = process.env.JWT_SECRET || "tradeflow_secret_key_123";
-const MONGO_URL = process.env.MONGO_URL || "mongodb+srv://ks2353013_db_user:Krish1808@cluster0.n4jxd4z.mongodb.net/tradeflow?retryWrites=true&w=majority";
-
+const MONGO_URL = process.env.MONGO_URL;
 const SERPAPI_KEY = process.env.SERPAPI_KEY || "";
+
+if (!MONGO_URL) {
+  console.log("MongoDB error: MONGO_URL missing in Render Environment");
+}
 
 mongoose
   .connect(MONGO_URL)
@@ -81,13 +84,16 @@ const ResearchLead = mongoose.model("ResearchLead", {
 
 function auth(req, res, next) {
   const token = req.headers.authorization;
-  if (!token) return res.json({ error: "Not logged in" });
+
+  if (!token) {
+    return res.status(401).json({ error: "Not logged in" });
+  }
 
   try {
     req.user = jwt.verify(token, SECRET).email;
     next();
   } catch {
-    res.json({ error: "Invalid token" });
+    return res.status(401).json({ error: "Invalid token" });
   }
 }
 
@@ -97,10 +103,23 @@ function scoreLead(text, product, type) {
 
   if (product && lower.includes(product.toLowerCase())) score += 20;
 
-  if (type === "supplier" && /supplier|manufacturer|exporter|factory|producer|wholesale|trader/.test(lower)) score += 25;
-  if (type === "buyer" && /buyer|importer|distributor|procurement|wholesale|retailer|trader/.test(lower)) score += 25;
+  if (
+    type === "supplier" &&
+    /supplier|manufacturer|exporter|factory|producer|wholesale|trader/.test(lower)
+  ) {
+    score += 25;
+  }
 
-  if (/contact|phone|email|website|company|export|import/.test(lower)) score += 10;
+  if (
+    type === "buyer" &&
+    /buyer|importer|distributor|procurement|wholesale|retailer|trader/.test(lower)
+  ) {
+    score += 25;
+  }
+
+  if (/contact|phone|email|website|company|export|import/.test(lower)) {
+    score += 10;
+  }
 
   return Math.min(score, 100);
 }
@@ -125,7 +144,7 @@ function fakeResearch(query, type, product, country) {
     product,
     country,
     website: `https://www.${name.toLowerCase().replace(/\s/g, "")}.com`,
-    source: "TradeFlow Agent Fallback",
+    source: "TradeFlow Fallback Demo",
     snippet: `${name} appears relevant for ${product || query} as a ${type} in ${country}.`,
     score: Math.floor(65 + Math.random() * 30)
   }));
@@ -136,26 +155,75 @@ async function searchRealWeb(query, type, product, country) {
     return fakeResearch(query, type, product, country);
   }
 
-  const searchQuery = `${query} ${type} ${product} ${country} company contact`;
-  const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(searchQuery)}&api_key=${SERPAPI_KEY}`;
+  const searches = [
+    {
+      label: "Google",
+      q: `${query} ${type} ${product} ${country} company contact`
+    },
+    {
+      label: "IndiaMART",
+      q: `site:indiamart.com ${product} ${type} ${country}`
+    },
+    {
+      label: "TradeIndia",
+      q: `site:tradeindia.com ${product} ${type} ${country}`
+    },
+    {
+      label: "Alibaba",
+      q: `site:alibaba.com ${product} ${type} ${country}`
+    },
+    {
+      label: "LinkedIn",
+      q: `site:linkedin.com/company ${product} ${type} ${country}`
+    }
+  ];
 
-  const response = await fetch(url);
-  const data = await response.json();
+  let allResults = [];
 
-  if (!data.organic_results) {
+  for (const source of searches) {
+    try {
+      const url = `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(
+        source.q
+      )}&api_key=${SERPAPI_KEY}`;
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.organic_results) {
+        const mapped = data.organic_results.slice(0, 4).map((item) => ({
+          name: item.title || "Business Lead",
+          type,
+          product,
+          country,
+          website: item.link || "",
+          source: source.label,
+          snippet: item.snippet || "",
+          score: scoreLead(`${item.title} ${item.snippet}`, product, type)
+        }));
+
+        allResults = allResults.concat(mapped);
+      }
+    } catch (err) {
+      console.log(`${source.label} search error:`, err.message);
+    }
+  }
+
+  if (!allResults.length) {
     return fakeResearch(query, type, product, country);
   }
 
-  return data.organic_results.slice(0, 10).map((item) => ({
-    name: item.title || "Business Lead",
-    type,
-    product,
-    country,
-    website: item.link || "",
-    source: "SerpAPI Google Search",
-    snippet: item.snippet || "",
-    score: scoreLead(`${item.title} ${item.snippet}`, product, type)
-  }));
+  const unique = [];
+  const seen = new Set();
+
+  for (const lead of allResults) {
+    if (lead.website && !seen.has(lead.website)) {
+      seen.add(lead.website);
+      unique.push(lead);
+    }
+  }
+
+  unique.sort((a, b) => b.score - a.score);
+  return unique.slice(0, 20);
 }
 
 function generateOutreach(name, product, type, template) {
@@ -191,14 +259,26 @@ Best regards,
 TradeFlow Team`;
 }
 
-/* AUTH */
+app.get("/", (req, res) => {
+  res.json({ status: "TradeFlow backend running" });
+});
+
+app.get("/me", auth, (req, res) => {
+  res.json({ email: req.user });
+});
+
 app.post("/signup", async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) return res.json({ error: "Email and password required" });
+
+    if (!email || !password) {
+      return res.json({ error: "Email and password required" });
+    }
 
     const exists = await User.findOne({ email });
-    if (exists) return res.json({ error: "User already exists" });
+    if (exists) {
+      return res.json({ error: "User already exists" });
+    }
 
     const hashed = await bcrypt.hash(password, 10);
     await User.create({ email, password: hashed });
@@ -214,10 +294,14 @@ app.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) return res.json({ error: "User not found" });
+    if (!user) {
+      return res.json({ error: "User not found" });
+    }
 
     const valid = await bcrypt.compare(password, user.password);
-    if (!valid) return res.json({ error: "Wrong password" });
+    if (!valid) {
+      return res.json({ error: "Wrong password" });
+    }
 
     const token = jwt.sign({ email }, SECRET);
     res.json({ token });
@@ -226,7 +310,6 @@ app.post("/login", async (req, res) => {
   }
 });
 
-/* AI AGENT */
 app.post("/agent-command", auth, async (req, res) => {
   try {
     const { command } = req.body;
@@ -255,8 +338,13 @@ app.post("/agent-command", auth, async (req, res) => {
 
     await ResearchLead.deleteMany({ user: req.user });
 
-    const savedSuppliers = await ResearchLead.insertMany(suppliers.map((x) => ({ ...x, user: req.user })));
-    const savedBuyers = await ResearchLead.insertMany(buyers.map((x) => ({ ...x, user: req.user })));
+    const savedSuppliers = await ResearchLead.insertMany(
+      suppliers.map((x) => ({ ...x, user: req.user }))
+    );
+
+    const savedBuyers = await ResearchLead.insertMany(
+      buyers.map((x) => ({ ...x, user: req.user }))
+    );
 
     const tasks = [
       `Review top ${product} suppliers from ${supplierCountry}`,
@@ -296,7 +384,6 @@ app.post("/agent-command", auth, async (req, res) => {
   }
 });
 
-/* RESEARCH */
 app.post("/research-leads", auth, async (req, res) => {
   try {
     const { query, type, product, country } = req.body;
@@ -341,7 +428,6 @@ app.post("/add-research-to-crm", auth, async (req, res) => {
   res.json({ success: true });
 });
 
-/* MATCHMAKER */
 app.post("/matchmake", auth, async (req, res) => {
   const suppliers = await ResearchLead.find({ user: req.user, type: "supplier" });
   const buyers = await ResearchLead.find({ user: req.user, type: "buyer" });
@@ -363,7 +449,6 @@ app.post("/matchmake", auth, async (req, res) => {
   res.json(matches.slice(0, 10));
 });
 
-/* SUPPLIERS */
 app.get("/suppliers", auth, async (req, res) => {
   res.json(await Supplier.find({ user: req.user }));
 });
@@ -382,7 +467,6 @@ app.post("/suppliers", auth, async (req, res) => {
   res.json({ success: true });
 });
 
-/* LEADS */
 app.get("/leads", auth, async (req, res) => {
   res.json(await Lead.find({ user: req.user }));
 });
@@ -409,7 +493,9 @@ app.put("/leads/:index", auth, async (req, res) => {
   const leads = await Lead.find({ user: req.user });
   const lead = leads[req.params.index];
 
-  if (!lead) return res.json({ error: "Lead not found" });
+  if (!lead) {
+    return res.json({ error: "Lead not found" });
+  }
 
   lead.stage = req.body.stage;
   await lead.save();
@@ -417,7 +503,6 @@ app.put("/leads/:index", auth, async (req, res) => {
   res.json({ success: true });
 });
 
-/* TASKS */
 app.get("/tasks", auth, async (req, res) => {
   res.json(await Task.find({ user: req.user }));
 });
@@ -432,7 +517,6 @@ app.post("/tasks", auth, async (req, res) => {
   res.json({ success: true });
 });
 
-/* DEALS */
 app.get("/deals", auth, async (req, res) => {
   res.json(await Deal.find({ user: req.user }));
 });
@@ -461,7 +545,6 @@ app.post("/deals", auth, async (req, res) => {
   res.json({ success: true });
 });
 
-/* OUTREACH */
 app.post("/generate-message", auth, (req, res) => {
   const message = generateOutreach(
     req.body.name || "Supplier",
