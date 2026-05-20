@@ -3,458 +3,277 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TradeFlow AI™</title>
-
+  <title>TradeFlow AI™ Master SaaS</title>
   <script src="https://cdn.tailwindcss.com"></script>
-
   <style>
-    body{
-      background:#f3f6fb;
-      font-family:Arial, sans-serif;
-    }
-
-    .page{
-      display:none;
-    }
-
-    .page.active{
-      display:block;
-    }
-
-    .nav-btn.active{
-      background:#2563eb;
-      color:white;
-    }
+    body{background:#f3f6fb;font-family:Arial,sans-serif}
+    .page{display:none}
+    .page.active{display:block}
+    .nav-btn.active{background:#2563eb;color:white}
   </style>
 </head>
 
 <body class="text-slate-900">
 
-<!-- ===================== -->
-<!-- AUTH -->
-<!-- ===================== -->
-<section id="authScreen"
-class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-900 p-6">
-
+<section id="authScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-900 p-6">
   <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-8">
-
-    <div class="text-center">
-      <h1 class="text-5xl font-black text-blue-900">
-        TradeFlow AI™
-      </h1>
-
-      <p class="text-slate-500 mt-3">
-        Multi-Tenant Export SaaS
-      </p>
-    </div>
+    <h1 class="text-5xl font-black text-center text-blue-900">TradeFlow AI™</h1>
+    <p class="text-center text-slate-500 mt-3">Master Multi-Tenant Export SaaS</p>
 
     <div class="mt-8 grid gap-4">
-
-      <input
-        id="authName"
-        class="border rounded-xl px-4 py-3"
-        placeholder="Owner Name (Only for Signup)"
-      />
-
-      <input
-        id="companyName"
-        class="border rounded-xl px-4 py-3"
-        placeholder="Company Name"
-      />
-
-      <input
-        id="authEmail"
-        class="border rounded-xl px-4 py-3"
-        placeholder="Email"
-      />
-
-      <input
-        id="authPassword"
-        type="password"
-        class="border rounded-xl px-4 py-3"
-        placeholder="Password"
-      />
-
-      <button
-        onclick="login()"
-        class="bg-blue-700 hover:bg-blue-800 text-white rounded-xl py-3 font-bold"
-      >
+      <input id="authName" class="border rounded-xl px-4 py-3" placeholder="Owner / Employee Name (for signup only)" />
+      <input id="companyName" class="border rounded-xl px-4 py-3" placeholder="Company Name (for owner signup)" />
+      <input id="authEmail" class="border rounded-xl px-4 py-3" placeholder="Email" />
+      <input id="authPassword" type="password" class="border rounded-xl px-4 py-3" placeholder="Password" />
+      <button onclick="login()" class="bg-blue-700 hover:bg-blue-800 text-white rounded-xl py-3 font-bold">
         Login / Create Workspace
       </button>
-
+      <p class="text-xs text-slate-500 text-center">
+        For login: leave name blank. For signup: enter name + company.
+      </p>
     </div>
-
   </div>
-
 </section>
 
-<!-- ===================== -->
-<!-- APP -->
-<!-- ===================== -->
 <section id="appScreen" class="hidden min-h-screen">
-
-  <!-- SIDEBAR -->
   <aside class="fixed left-0 top-0 w-72 h-screen bg-slate-950 text-white p-6 overflow-y-auto">
-
-    <h2 class="text-3xl font-black">
-      TradeFlow AI™
-    </h2>
-
-    <p id="userRoleText" class="text-xs text-slate-400 mt-2">
-      Workspace
-    </p>
+    <h2 class="text-3xl font-black">TradeFlow AI™</h2>
+    <p id="userRoleText" class="text-xs text-slate-400 mt-2">Workspace</p>
 
     <nav class="mt-8 space-y-2">
-
-      <button onclick="showPage('dashboard')" class="nav-btn active w-full text-left px-4 py-3 rounded-xl">
-        Dashboard
-      </button>
-
-      <button onclick="showPage('suppliers')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
-        Suppliers
-      </button>
-
-      <button onclick="showPage('crm')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
-        CRM
-      </button>
-
-      <button onclick="showPage('tasks')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
-        Tasks
-      </button>
-
-      <button onclick="showPage('documents')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
-        Documents
-      </button>
-
-      <button onclick="showPage('outreach')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
-        Outreach
-      </button>
-
-      <button onclick="showPage('leadfinder')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
-        AI Leads
-      </button>
-
-      <button onclick="showPage('billing')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
-        Billing
-      </button>
-
+      <button onclick="showPage('dashboard')" class="nav-btn active w-full text-left px-4 py-3 rounded-xl">Dashboard</button>
+      <button onclick="showPage('company')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Company Master</button>
+      <button onclick="showPage('employees')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Employees / Multi Login</button>
+      <button onclick="showPage('suppliers')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Suppliers</button>
+      <button onclick="showPage('crm')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">CRM Pipeline</button>
+      <button onclick="showPage('negotiation')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Negotiation</button>
+      <button onclick="showPage('tasks')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Tasks</button>
+      <button onclick="showPage('documents')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Documents</button>
+      <button onclick="showPage('outreach')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Smart Outreach</button>
+      <button onclick="showPage('leadfinder')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">AI Lead Finder</button>
+      <button onclick="showPage('billing')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Billing / Plans</button>
+      <button onclick="showPage('settings')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Settings</button>
     </nav>
 
-    <button
-      onclick="logout()"
-      class="absolute bottom-6 left-6 right-6 bg-red-600 hover:bg-red-700 rounded-xl py-3 font-bold"
-    >
+    <button onclick="logout()" class="mt-8 w-full bg-red-600 hover:bg-red-700 rounded-xl py-3 font-bold">
       Logout
     </button>
-
   </aside>
 
-  <!-- MAIN -->
   <main class="ml-72 p-8">
 
-    <!-- DASHBOARD -->
     <section id="dashboard" class="page active">
+      <h1 class="text-4xl font-black">Master Dashboard</h1>
+      <p class="text-slate-500 mt-2">Company-wide export/import command center.</p>
 
-      <h1 class="text-4xl font-black">
-        Master Dashboard
-      </h1>
-
-      <div class="grid md:grid-cols-4 gap-5 mt-8">
-
-        <div class="bg-white p-6 rounded-2xl shadow">
-          <p>Suppliers</p>
-          <h2 id="supplierCount" class="text-3xl font-black mt-2">0</h2>
-        </div>
-
-        <div class="bg-white p-6 rounded-2xl shadow">
-          <p>CRM Leads</p>
-          <h2 id="leadCount" class="text-3xl font-black mt-2">0</h2>
-        </div>
-
-        <div class="bg-white p-6 rounded-2xl shadow">
-          <p>Tasks</p>
-          <h2 id="taskCount" class="text-3xl font-black mt-2">0</h2>
-        </div>
-
-        <div class="bg-white p-6 rounded-2xl shadow">
-          <p>Documents</p>
-          <h2 id="docCount" class="text-3xl font-black mt-2">0</h2>
-        </div>
-
+      <div class="grid md:grid-cols-5 gap-5 mt-8">
+        <div class="bg-white p-6 rounded-2xl shadow"><p>Suppliers</p><h2 id="supplierCount" class="text-3xl font-black mt-2">0</h2></div>
+        <div class="bg-white p-6 rounded-2xl shadow"><p>CRM Leads</p><h2 id="leadCount" class="text-3xl font-black mt-2">0</h2></div>
+        <div class="bg-white p-6 rounded-2xl shadow"><p>Tasks</p><h2 id="taskCount" class="text-3xl font-black mt-2">0</h2></div>
+        <div class="bg-white p-6 rounded-2xl shadow"><p>Documents</p><h2 id="docCount" class="text-3xl font-black mt-2">0</h2></div>
+        <div class="bg-white p-6 rounded-2xl shadow"><p>Employees</p><h2 id="employeeCount" class="text-3xl font-black mt-2">0</h2></div>
       </div>
 
-      <div class="bg-white p-6 rounded-2xl shadow mt-8">
+      <div class="grid md:grid-cols-2 gap-6 mt-8">
+        <div class="bg-white p-6 rounded-2xl shadow">
+          <h2 class="text-2xl font-black">Workspace Summary</h2>
+          <div id="workspaceSummary" class="mt-4 text-slate-700">Loading...</div>
+        </div>
 
-        <h2 class="text-2xl font-black">
-          Workspace Summary
-        </h2>
-
-        <div id="workspaceSummary" class="mt-4 text-slate-700"></div>
-
+        <div class="bg-white p-6 rounded-2xl shadow">
+          <h2 class="text-2xl font-black">AI Growth Notes</h2>
+          <p class="mt-4 text-slate-600">
+            Use Suppliers + CRM + Outreach daily. Upgrade plans unlock more records, more outreach and more team capacity.
+          </p>
+        </div>
       </div>
-
     </section>
 
-    <!-- SUPPLIERS -->
-    <section id="suppliers" class="page">
+    <section id="company" class="page">
+      <h1 class="text-4xl font-black">Company Master</h1>
+      <p class="text-slate-500 mt-2">Manage company profile locally. Backend workspace is tied to your registered company.</p>
 
-      <h1 class="text-4xl font-black">
-        Suppliers
-      </h1>
-
-      <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-5 gap-3">
-
-        <input id="supplierName" class="border rounded-xl px-4 py-3" placeholder="Company Name"/>
-        <input id="supplierProduct" class="border rounded-xl px-4 py-3" placeholder="Product"/>
-        <input id="supplierCountry" class="border rounded-xl px-4 py-3" placeholder="Country"/>
-        <input id="supplierEmail" class="border rounded-xl px-4 py-3" placeholder="Email"/>
-        <input id="supplierPhone" class="border rounded-xl px-4 py-3" placeholder="Phone"/>
-
-        <button
-          onclick="addSupplier()"
-          class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-5"
-        >
-          Add Supplier
-        </button>
-
+      <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-2 gap-4">
+        <input id="editCompanyName" class="border rounded-xl px-4 py-3" placeholder="Company Name" />
+        <input id="editIndustry" class="border rounded-xl px-4 py-3" placeholder="Industry" />
+        <input id="editCountry" class="border rounded-xl px-4 py-3" placeholder="Country" />
+        <input id="editPlan" class="border rounded-xl px-4 py-3" placeholder="Plan" />
+        <button onclick="updateCompany()" class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-2">Save Company</button>
       </div>
-
-      <div id="supplierList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
-
     </section>
 
-    <!-- CRM -->
-    <section id="crm" class="page">
-
-      <h1 class="text-4xl font-black">
-        CRM Leads
-      </h1>
+    <section id="employees" class="page">
+      <h1 class="text-4xl font-black">Employees / Multi Login</h1>
+      <p class="text-slate-500 mt-2">Add employees under the same company. They can login with their own email/password.</p>
 
       <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-4 gap-3">
-
-        <input id="leadName" class="border rounded-xl px-4 py-3" placeholder="Lead Name"/>
-        <input id="leadStage" class="border rounded-xl px-4 py-3" placeholder="Stage"/>
-        <input id="leadValue" type="number" class="border rounded-xl px-4 py-3" placeholder="Deal Value"/>
-        <input id="leadSource" class="border rounded-xl px-4 py-3" placeholder="Source"/>
-
-        <button
-          onclick="addLead()"
-          class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-4"
-        >
-          Add Lead
-        </button>
-
-      </div>
-
-      <div id="leadList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
-
-    </section>
-
-    <!-- TASKS -->
-    <section id="tasks" class="page">
-
-      <h1 class="text-4xl font-black">
-        Tasks
-      </h1>
-
-      <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-3 gap-3">
-
-        <input id="taskText" class="border rounded-xl px-4 py-3" placeholder="Task"/>
-
-        <select id="taskPriority" class="border rounded-xl px-4 py-3">
-          <option>Low</option>
-          <option>Medium</option>
-          <option>High</option>
+        <input id="empName" class="border rounded-xl px-4 py-3" placeholder="Employee Name" />
+        <input id="empEmail" class="border rounded-xl px-4 py-3" placeholder="Employee Email" />
+        <input id="empPassword" class="border rounded-xl px-4 py-3" placeholder="Password" />
+        <select id="empRole" class="border rounded-xl px-4 py-3">
+          <option>EMPLOYEE</option>
+          <option>SALES</option>
+          <option>OPERATIONS</option>
+          <option>MANAGER</option>
         </select>
-
-        <button
-          onclick="addTask()"
-          class="bg-blue-700 text-white rounded-xl py-3 font-bold"
-        >
-          Add Task
-        </button>
-
+        <button onclick="addEmployee()" class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-4">Add Employee Login</button>
       </div>
 
-      <ul id="taskList" class="mt-6 space-y-3"></ul>
-
+      <div id="employeeList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
     </section>
 
-    <!-- DOCUMENTS -->
-    <section id="documents" class="page">
-
-      <h1 class="text-4xl font-black">
-        Documents
-      </h1>
-
+    <section id="suppliers" class="page">
+      <h1 class="text-4xl font-black">Supplier Management</h1>
       <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-5 gap-3">
-
-        <input id="documentTitle" class="border rounded-xl px-4 py-3" placeholder="Document Title"/>
-        <input id="documentType" class="border rounded-xl px-4 py-3" placeholder="Type"/>
-        <input id="documentParty" class="border rounded-xl px-4 py-3" placeholder="Party"/>
-        <input id="documentAmount" class="border rounded-xl px-4 py-3" placeholder="Amount"/>
-
-        <button
-          onclick="addDocument()"
-          class="bg-blue-700 text-white rounded-xl py-3 font-bold"
-        >
-          Add Document
-        </button>
-
+        <input id="supplierName" class="border rounded-xl px-4 py-3" placeholder="Supplier Name" />
+        <input id="supplierProduct" class="border rounded-xl px-4 py-3" placeholder="Product" />
+        <input id="supplierCountry" class="border rounded-xl px-4 py-3" placeholder="Country" />
+        <input id="supplierEmail" class="border rounded-xl px-4 py-3" placeholder="Email" />
+        <input id="supplierPhone" class="border rounded-xl px-4 py-3" placeholder="Phone" />
+        <button onclick="addSupplier()" class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-5">Add Supplier</button>
       </div>
+      <div id="supplierList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
+    </section>
 
+    <section id="crm" class="page">
+      <h1 class="text-4xl font-black">CRM Pipeline</h1>
+      <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-4 gap-3">
+        <input id="leadName" class="border rounded-xl px-4 py-3" placeholder="Lead Name" />
+        <input id="leadStage" class="border rounded-xl px-4 py-3" placeholder="Stage" />
+        <input id="leadValue" type="number" class="border rounded-xl px-4 py-3" placeholder="Deal Value" />
+        <input id="leadSource" class="border rounded-xl px-4 py-3" placeholder="Source" />
+        <button onclick="addLead()" class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-4">Add Lead</button>
+      </div>
+      <div id="leadList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
+    </section>
+
+    <section id="negotiation" class="page">
+      <h1 class="text-4xl font-black">Negotiation & Margin</h1>
+      <div class="bg-white p-6 rounded-2xl shadow mt-6">
+        <input id="buyPrice" type="number" class="border rounded-xl px-4 py-3 mr-2" placeholder="Buying Price" />
+        <input id="sellPrice" type="number" class="border rounded-xl px-4 py-3 mr-2" placeholder="Selling Price" />
+        <button onclick="calculateMargin()" class="bg-green-700 text-white px-5 py-3 rounded-xl">Calculate</button>
+        <p id="marginResult" class="font-bold mt-4"></p>
+      </div>
+    </section>
+
+    <section id="tasks" class="page">
+      <h1 class="text-4xl font-black">Tasks</h1>
+      <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-3 gap-3">
+        <input id="taskText" class="border rounded-xl px-4 py-3" placeholder="Task" />
+        <select id="taskPriority" class="border rounded-xl px-4 py-3">
+          <option>Low</option><option selected>Medium</option><option>High</option>
+        </select>
+        <button onclick="addTask()" class="bg-blue-700 text-white rounded-xl py-3 font-bold">Add Task</button>
+      </div>
+      <ul id="taskList" class="mt-6 space-y-3"></ul>
+    </section>
+
+    <section id="documents" class="page">
+      <h1 class="text-4xl font-black">Export / Import Documents</h1>
+      <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-5 gap-3">
+        <select id="documentType" class="border rounded-xl px-4 py-3">
+          <option>Commercial Invoice</option>
+          <option>Packing List</option>
+          <option>Bill of Lading</option>
+          <option>Certificate of Origin</option>
+          <option>Shipping Bill</option>
+          <option>Insurance Certificate</option>
+        </select>
+        <input id="shipmentRef" class="border rounded-xl px-4 py-3" placeholder="Shipment Ref" />
+        <input id="docBuyer" class="border rounded-xl px-4 py-3" placeholder="Buyer" />
+        <input id="docSupplier" class="border rounded-xl px-4 py-3" placeholder="Supplier" />
+        <button onclick="addDocument()" class="bg-blue-700 text-white rounded-xl py-3 font-bold">Save</button>
+      </div>
       <div id="documentList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
-
     </section>
 
-    <!-- OUTREACH -->
     <section id="outreach" class="page">
-
-      <h1 class="text-4xl font-black">
-        Outreach
-      </h1>
-
+      <h1 class="text-4xl font-black">Smart Outreach</h1>
       <div class="bg-white p-6 rounded-2xl shadow mt-6">
-
-        <input id="contactEmail"
-        class="border rounded-xl px-4 py-3 mr-2"
-        placeholder="Email"/>
-
-        <input id="contactPhone"
-        class="border rounded-xl px-4 py-3 mr-2"
-        placeholder="WhatsApp"/>
-
-        <textarea
-          id="outreachMsg"
-          class="w-full border rounded-xl px-4 py-3 mt-4"
-          rows="5"
-          placeholder="Message"
-        ></textarea>
-
+        <input id="contactEmail" class="border rounded-xl px-4 py-3 mr-2" placeholder="Email" />
+        <input id="contactPhone" class="border rounded-xl px-4 py-3 mr-2" placeholder="WhatsApp Number" />
+        <textarea id="outreachMsg" class="w-full border rounded-xl px-4 py-3 mt-4" rows="5" placeholder="Message"></textarea>
         <div class="mt-4 space-x-3">
-
-          <button
-            onclick="sendEmail()"
-            class="bg-blue-700 text-white px-5 py-3 rounded-xl"
-          >
-            Send Email
-          </button>
-
-          <button
-            onclick="openWhatsApp()"
-            class="bg-green-700 text-white px-5 py-3 rounded-xl"
-          >
-            Open WhatsApp
-          </button>
-
+          <button onclick="sendEmail()" class="bg-blue-700 text-white px-5 py-3 rounded-xl">Send Email</button>
+          <button onclick="openWhatsApp()" class="bg-green-700 text-white px-5 py-3 rounded-xl">Open WhatsApp</button>
         </div>
-
       </div>
-
     </section>
 
-    <!-- AI LEADS -->
     <section id="leadfinder" class="page">
-
-      <h1 class="text-4xl font-black">
-        AI Lead Finder
-      </h1>
-
+      <h1 class="text-4xl font-black">AI Lead Finder</h1>
       <div class="bg-white p-6 rounded-2xl shadow mt-6">
-
-        <input
-          id="fakeLeadProduct"
-          class="border rounded-xl px-4 py-3 mr-2"
-          placeholder="Product"
-        />
-
-        <button
-          onclick="generateFakeLeads()"
-          class="bg-purple-700 text-white px-5 py-3 rounded-xl"
-        >
-          Generate Leads
-        </button>
-
+        <input id="fakeLeadProduct" class="border rounded-xl px-4 py-3 mr-2" placeholder="Product e.g. rice, medicine, jaggery" />
+        <button onclick="generateFakeLeads()" class="bg-purple-700 text-white px-5 py-3 rounded-xl">Generate Demo Leads</button>
       </div>
-
       <div id="fakeLeadList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
-
     </section>
 
-    <!-- BILLING -->
     <section id="billing" class="page">
+      <h1 class="text-4xl font-black">Billing / Plans</h1>
+      <p class="text-slate-500 mt-2">Upgrade system is ready. Razorpay can be connected next.</p>
+      <div id="billingPlans" class="grid md:grid-cols-4 gap-6 mt-8"></div>
+    </section>
 
-      <h1 class="text-4xl font-black">
-        Billing Plans
-      </h1>
-
-      <div id="billingPlans" class="grid md:grid-cols-3 gap-6 mt-8"></div>
-
+    <section id="settings" class="page">
+      <h1 class="text-4xl font-black">Settings</h1>
+      <div class="bg-white p-6 rounded-2xl shadow mt-6">
+        <p><b>Backend:</b> <span id="apiText"></span></p>
+        <p class="mt-2"><b>Mode:</b> Money-ready Multi-Tenant SaaS</p>
+        <p class="mt-2"><b>Storage:</b> MongoDB Atlas</p>
+        <p class="mt-2"><b>Auth:</b> JWT Protected</p>
+      </div>
     </section>
 
     <footer class="mt-16 text-center text-slate-500">
-      © 2026 TradeFlow AI™
+      © 2026 TradeFlow AI™ — Export / Import SaaS Workspace Platform
     </footer>
 
   </main>
-
 </section>
 
 <script>
-
 const API_BASE = "https://trade-flow-lc1k.onrender.com";
+let CURRENT_USER = null;
 
-function getToken(){
-  return localStorage.getItem("tradeflowToken");
-}
-
-function setToken(token){
-  localStorage.setItem("tradeflowToken", token);
-}
-
-function removeToken(){
-  localStorage.removeItem("tradeflowToken");
-}
+function getToken(){ return localStorage.getItem("tradeflowToken"); }
+function setToken(token){ localStorage.setItem("tradeflowToken", token); }
+function removeToken(){ localStorage.removeItem("tradeflowToken"); }
 
 async function api(path, options = {}){
-
   const token = getToken();
-
   const headers = {
-    "Content-Type":"application/json",
-    ...(token ? {
-      Authorization:`Bearer ${token}`
-    } : {})
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers || {})
   };
 
-  const response = await fetch(API_BASE + path,{
-    ...options,
-    headers
-  });
-
-  const data = await response.json();
+  const response = await fetch(API_BASE + path, { ...options, headers });
+  const data = await response.json().catch(() => ({}));
 
   if(!response.ok){
-    throw new Error(data.message || "Request failed");
+    if(response.status === 401){
+      removeToken();
+    }
+    throw new Error(data.message || data.error || "Request failed");
   }
 
   return data;
 }
 
-document.addEventListener("DOMContentLoaded", async ()=>{
+document.addEventListener("DOMContentLoaded", async () => {
+  document.getElementById("apiText").innerText = API_BASE;
 
-  const token = getToken();
-
-  if(token){
+  if(getToken()){
     try{
       const data = await api("/api/auth/me");
-
+      CURRENT_USER = data.user;
       showApp(data.user);
-
       await loadAll();
-
     }catch(err){
-      logout();
+      console.log(err.message);
+      removeToken();
     }
   }
 
@@ -462,57 +281,35 @@ document.addEventListener("DOMContentLoaded", async ()=>{
 });
 
 async function login(){
-
   try{
+    const name = document.getElementById("authName").value.trim();
+    const companyName = document.getElementById("companyName").value.trim();
+    const email = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPassword").value.trim();
 
-    const name =
-      document.getElementById("authName").value.trim();
-
-    const companyName =
-      document.getElementById("companyName").value.trim();
-
-    const email =
-      document.getElementById("authEmail").value.trim();
-
-    const password =
-      document.getElementById("authPassword").value.trim();
+    if(!email || !password) return alert("Email and password required");
 
     let data;
 
     if(name){
-
-      data = await api("/api/auth/register",{
-        method:"POST",
-        body:JSON.stringify({
-          name,
-          companyName,
-          email,
-          password
-        })
+      data = await api("/api/auth/register", {
+        method: "POST",
+        body: JSON.stringify({ name, companyName, email, password })
       });
-
     }else{
-
-      data = await api("/api/auth/login",{
-        method:"POST",
-        body:JSON.stringify({
-          email,
-          password
-        })
+      data = await api("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password })
       });
-
     }
 
     setToken(data.token);
-
+    CURRENT_USER = data.user;
     showApp(data.user);
-
     await loadAll();
-
   }catch(err){
     alert(err.message);
   }
-
 }
 
 function logout(){
@@ -521,405 +318,483 @@ function logout(){
 }
 
 function showApp(user){
-
-  document.getElementById("authScreen")
-  .classList.add("hidden");
-
-  document.getElementById("appScreen")
-  .classList.remove("hidden");
-
-  document.getElementById("userRoleText")
-  .innerText =
-    `${user.companyName} • ${user.plan}`;
-
+  document.getElementById("authScreen").classList.add("hidden");
+  document.getElementById("appScreen").classList.remove("hidden");
+  document.getElementById("userRoleText").innerText =
+    `${user.companyName || "Workspace"} • ${user.role || "USER"} • ${user.plan || "FREE"}`;
 }
 
 function showPage(pageId){
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById(pageId)?.classList.add("active");
 
-  document.querySelectorAll(".page")
-  .forEach(page=>{
-    page.classList.remove("active");
-  });
+  const btn = [...document.querySelectorAll(".nav-btn")]
+    .find(b => b.getAttribute("onclick")?.includes(pageId));
+  if(btn) btn.classList.add("active");
 
-  document.querySelectorAll(".nav-btn")
-  .forEach(btn=>{
-    btn.classList.remove("active");
-  });
-
-  document.getElementById(pageId)
-  .classList.add("active");
-
+  if(pageId === "billing") loadPlans();
 }
 
 async function loadAll(){
-
-  await Promise.all([
+  await Promise.allSettled([
     loadStats(),
+    loadEmployees(),
     loadSuppliers(),
     loadLeads(),
     loadTasks(),
-    loadDocuments()
+    loadDocuments(),
+    loadPlans()
   ]);
-
 }
 
 async function loadStats(){
+  try{
+    const data = await api("/api/dashboard/stats");
 
-  const data =
-    await api("/api/dashboard/stats");
+    document.getElementById("supplierCount").innerText = data.stats.suppliers || 0;
+    document.getElementById("leadCount").innerText = data.stats.leads || 0;
+    document.getElementById("taskCount").innerText = data.stats.tasks || 0;
+    document.getElementById("docCount").innerText = data.stats.documents || 0;
+    document.getElementById("employeeCount").innerText = data.stats.users || data.stats.employees || 0;
 
-  document.getElementById("supplierCount")
-  .innerText = data.stats.suppliers;
+    document.getElementById("workspaceSummary").innerHTML = `
+      <b>${data.company.companyName}</b><br><br>
+      Plan: <b>${data.company.plan}</b><br>
+      Status: <b>${data.company.subscriptionStatus}</b><br><br>
+      Suppliers: ${data.stats.suppliers}/${data.usage.limits.suppliers}<br>
+      Leads: ${data.stats.leads}/${data.usage.limits.leads}<br>
+      Tasks: ${data.stats.tasks}/${data.usage.limits.tasks}<br>
+      Documents: ${data.stats.documents}/${data.usage.limits.documents}<br>
+      Outreach Today: ${data.usage.outreachToday}/${data.usage.limits.outreachPerDay}
+    `;
+  }catch(err){
+    console.log(err.message);
+  }
+}
 
-  document.getElementById("leadCount")
-  .innerText = data.stats.leads;
+function updateCompany(){
+  const company = {
+    name: document.getElementById("editCompanyName").value,
+    industry: document.getElementById("editIndustry").value,
+    country: document.getElementById("editCountry").value,
+    plan: document.getElementById("editPlan").value
+  };
+  localStorage.setItem("tradeflowCompanyMaster", JSON.stringify(company));
+  alert("Company Master saved locally.");
+}
 
-  document.getElementById("taskCount")
-  .innerText = data.stats.tasks;
+async function addEmployee(){
+  try{
+    const name = document.getElementById("empName").value.trim();
+    const email = document.getElementById("empEmail").value.trim();
+    const password = document.getElementById("empPassword").value.trim();
+    const role = document.getElementById("empRole").value;
 
-  document.getElementById("docCount")
-  .innerText = data.stats.documents;
+    if(!name || !email || !password) return alert("Employee name, email and password required");
 
-  document.getElementById("workspaceSummary")
-  .innerHTML = `
-    <b>${data.company.companyName}</b><br><br>
+    const data = await api("/api/employees", {
+      method: "POST",
+      body: JSON.stringify({ name, email, password, role })
+    });
 
-    Plan:
-    ${data.company.plan}<br><br>
+    alert(data.message || "Employee added");
+    document.getElementById("empName").value = "";
+    document.getElementById("empEmail").value = "";
+    document.getElementById("empPassword").value = "";
 
-    Suppliers:
-    ${data.stats.suppliers}/${data.usage.limits.suppliers}<br>
+    loadEmployees();
+    loadStats();
+  }catch(err){
+    alert(err.message);
+  }
+}
 
-    Leads:
-    ${data.stats.leads}/${data.usage.limits.leads}<br>
+async function loadEmployees(){
+  const box = document.getElementById("employeeList");
+  if(!box) return;
 
-    Tasks:
-    ${data.stats.tasks}/${data.usage.limits.tasks}<br>
-
-    Documents:
-    ${data.stats.documents}/${data.usage.limits.documents}
-  `;
-
+  try{
+    const data = await api("/api/employees");
+    box.innerHTML = (data.employees || []).map(emp => `
+      <div class="bg-white p-5 rounded-2xl shadow">
+        <h3 class="font-black text-lg">${emp.name || "-"}</h3>
+        <p>${emp.email || "-"}</p>
+        <p>Role: ${emp.role || "EMPLOYEE"}</p>
+        <p>Plan: ${emp.plan || "FREE"}</p>
+      </div>
+    `).join("");
+  }catch(err){
+    console.log(err.message);
+  }
 }
 
 async function addSupplier(){
-
   try{
+    const companyName = document.getElementById("supplierName").value.trim();
+    const product = document.getElementById("supplierProduct").value.trim();
+    const country = document.getElementById("supplierCountry").value.trim();
+    const email = document.getElementById("supplierEmail").value.trim();
+    const phone = document.getElementById("supplierPhone").value.trim();
 
-    const companyName =
-      document.getElementById("supplierName").value;
+    if(!companyName) return alert("Supplier name required");
 
-    const product =
-      document.getElementById("supplierProduct").value;
+    const scoreData = await api("/api/ai/lead-score", {
+      method: "POST",
+      body: JSON.stringify({ companyName })
+    });
 
-    const country =
-      document.getElementById("supplierCountry").value;
-
-    const email =
-      document.getElementById("supplierEmail").value;
-
-    const phone =
-      document.getElementById("supplierPhone").value;
-
-    await api("/api/suppliers",{
-      method:"POST",
-      body:JSON.stringify({
-        companyName,
-        product,
-        country,
-        email,
-        phone
+    await api("/api/suppliers", {
+      method: "POST",
+      body: JSON.stringify({
+        companyName, product, country, email, phone,
+        score: scoreData.score,
+        status: "Verified Lead"
       })
     });
+
+    document.getElementById("supplierName").value = "";
+    document.getElementById("supplierProduct").value = "";
+    document.getElementById("supplierCountry").value = "";
+    document.getElementById("supplierEmail").value = "";
+    document.getElementById("supplierPhone").value = "";
 
     loadSuppliers();
     loadStats();
-
   }catch(err){
     alert(err.message);
   }
-
 }
 
 async function loadSuppliers(){
+  const box = document.getElementById("supplierList");
+  if(!box) return;
 
-  const data =
-    await api("/api/suppliers");
-
-  document.getElementById("supplierList")
-  .innerHTML =
-    data.suppliers.map(s=>`
+  try{
+    const data = await api("/api/suppliers");
+    box.innerHTML = (data.suppliers || []).map(s => `
       <div class="bg-white p-5 rounded-2xl shadow">
-
-        <h3 class="font-black text-lg">
-          ${s.companyName}
-        </h3>
-
-        <p>${s.product}</p>
-        <p>${s.country}</p>
-        <p>${s.email}</p>
-
+        <h3 class="font-black text-lg">${s.companyName || "Supplier"}</h3>
+        <p>Product: ${s.product || "-"}</p>
+        <p>Country: ${s.country || "-"}</p>
+        <p>Email: ${s.email || "-"}</p>
+        <p>Phone: ${s.phone || "-"}</p>
+        <p>Score: ${s.score || 70}/100</p>
+        <p>Status: ${s.status || "New Lead"}</p>
+        <button onclick="deleteSupplier('${s._id}')" class="mt-3 bg-red-600 text-white px-4 py-2 rounded-xl">Delete</button>
       </div>
     `).join("");
+  }catch(err){
+    console.log(err.message);
+  }
+}
 
+async function deleteSupplier(id){
+  try{
+    await api(`/api/suppliers/${id}`, { method: "DELETE" });
+    loadSuppliers();
+    loadStats();
+  }catch(err){
+    alert(err.message);
+  }
 }
 
 async function addLead(){
-
   try{
+    const companyName = document.getElementById("leadName").value.trim();
+    const stage = document.getElementById("leadStage").value.trim();
+    const value = Number(document.getElementById("leadValue").value || 0);
+    const source = document.getElementById("leadSource").value.trim();
 
-    await api("/api/leads",{
-      method:"POST",
-      body:JSON.stringify({
-        companyName:
-          document.getElementById("leadName").value,
+    if(!companyName) return alert("Lead name required");
 
-        stage:
-          document.getElementById("leadStage").value,
-
-        value:
-          document.getElementById("leadValue").value,
-
-        source:
-          document.getElementById("leadSource").value
-      })
+    await api("/api/leads", {
+      method: "POST",
+      body: JSON.stringify({ companyName, stage, value, source })
     });
+
+    document.getElementById("leadName").value = "";
+    document.getElementById("leadStage").value = "";
+    document.getElementById("leadValue").value = "";
+    document.getElementById("leadSource").value = "";
 
     loadLeads();
     loadStats();
-
   }catch(err){
     alert(err.message);
   }
-
 }
 
 async function loadLeads(){
+  const box = document.getElementById("leadList");
+  if(!box) return;
 
-  const data =
-    await api("/api/leads");
-
-  document.getElementById("leadList")
-  .innerHTML =
-    data.leads.map(l=>`
+  try{
+    const data = await api("/api/leads");
+    box.innerHTML = (data.leads || []).map(l => `
       <div class="bg-white p-5 rounded-2xl shadow">
-
-        <h3 class="font-black text-lg">
-          ${l.companyName}
-        </h3>
-
-        <p>${l.stage}</p>
-        <p>₹${l.value}</p>
-
+        <h3 class="font-black text-lg">${l.companyName || "Lead"}</h3>
+        <p>Stage: ${l.stage || "New"}</p>
+        <p>Value: ₹${l.value || 0}</p>
+        <p>Source: ${l.source || "-"}</p>
+        <button onclick="deleteLead('${l._id}')" class="mt-3 bg-red-600 text-white px-4 py-2 rounded-xl">Delete</button>
       </div>
     `).join("");
+  }catch(err){
+    console.log(err.message);
+  }
+}
 
+async function deleteLead(id){
+  try{
+    await api(`/api/leads/${id}`, { method: "DELETE" });
+    loadLeads();
+    loadStats();
+  }catch(err){
+    alert(err.message);
+  }
+}
+
+function calculateMargin(){
+  const buy = Number(document.getElementById("buyPrice").value || 0);
+  const sell = Number(document.getElementById("sellPrice").value || 0);
+  if(!buy || !sell) return alert("Enter both prices");
+
+  const profit = sell - buy;
+  const margin = ((profit / sell) * 100).toFixed(2);
+  document.getElementById("marginResult").innerText = `Profit: ₹${profit} | Margin: ${margin}%`;
 }
 
 async function addTask(){
-
   try{
+    const title = document.getElementById("taskText").value.trim();
+    const priority = document.getElementById("taskPriority").value;
+    if(!title) return alert("Task required");
 
-    await api("/api/tasks",{
-      method:"POST",
-      body:JSON.stringify({
-        title:
-          document.getElementById("taskText").value,
-
-        priority:
-          document.getElementById("taskPriority").value
-      })
+    await api("/api/tasks", {
+      method: "POST",
+      body: JSON.stringify({ title, priority, status: "Pending" })
     });
 
+    document.getElementById("taskText").value = "";
     loadTasks();
     loadStats();
-
   }catch(err){
     alert(err.message);
   }
-
 }
 
 async function loadTasks(){
+  const box = document.getElementById("taskList");
+  if(!box) return;
 
-  const data =
-    await api("/api/tasks");
-
-  document.getElementById("taskList")
-  .innerHTML =
-    data.tasks.map(t=>`
-      <li class="bg-white p-4 rounded-2xl shadow">
-        ${t.title}
+  try{
+    const data = await api("/api/tasks");
+    box.innerHTML = (data.tasks || []).map(t => `
+      <li class="bg-white p-4 rounded-2xl shadow flex justify-between items-center">
+        <span><b>${t.title}</b> — ${t.priority || "Medium"} — ${t.status || "Pending"}</span>
+        <button onclick="deleteTask('${t._id}')" class="bg-red-600 text-white px-4 py-2 rounded-xl">Delete</button>
       </li>
     `).join("");
+  }catch(err){
+    console.log(err.message);
+  }
+}
 
+async function deleteTask(id){
+  try{
+    await api(`/api/tasks/${id}`, { method: "DELETE" });
+    loadTasks();
+    loadStats();
+  }catch(err){
+    alert(err.message);
+  }
 }
 
 async function addDocument(){
-
   try{
+    const type = document.getElementById("documentType").value;
+    const shipmentRef = document.getElementById("shipmentRef").value.trim();
+    const buyer = document.getElementById("docBuyer").value.trim();
+    const supplier = document.getElementById("docSupplier").value.trim();
 
-    await api("/api/documents",{
-      method:"POST",
-      body:JSON.stringify({
-        title:
-          document.getElementById("documentTitle").value,
-
-        type:
-          document.getElementById("documentType").value,
-
-        partyName:
-          document.getElementById("documentParty").value,
-
-        amount:
-          document.getElementById("documentAmount").value
+    await api("/api/documents", {
+      method: "POST",
+      body: JSON.stringify({
+        title: `${type} - ${shipmentRef || "New Shipment"}`,
+        type,
+        partyName: buyer || supplier,
+        notes: `Buyer: ${buyer || "-"} | Supplier: ${supplier || "-"}`,
+        status: "Draft"
       })
     });
 
+    document.getElementById("shipmentRef").value = "";
+    document.getElementById("docBuyer").value = "";
+    document.getElementById("docSupplier").value = "";
+
     loadDocuments();
     loadStats();
-
   }catch(err){
     alert(err.message);
   }
-
 }
 
 async function loadDocuments(){
+  const box = document.getElementById("documentList");
+  if(!box) return;
 
-  const data =
-    await api("/api/documents");
-
-  document.getElementById("documentList")
-  .innerHTML =
-    data.documents.map(d=>`
+  try{
+    const data = await api("/api/documents");
+    box.innerHTML = (data.documents || []).map(d => `
       <div class="bg-white p-5 rounded-2xl shadow">
-
-        <h3 class="font-black text-lg">
-          ${d.title}
-        </h3>
-
-        <p>${d.type}</p>
-        <p>${d.partyName}</p>
-
+        <h3 class="font-black text-lg">${d.title || "Document"}</h3>
+        <p>Type: ${d.type || "-"}</p>
+        <p>Party: ${d.partyName || "-"}</p>
+        <p>Status: ${d.status || "Draft"}</p>
+        <p>${d.notes || ""}</p>
+        <button onclick="deleteDocument('${d._id}')" class="mt-3 bg-red-600 text-white px-4 py-2 rounded-xl">Delete</button>
       </div>
     `).join("");
+  }catch(err){
+    console.log(err.message);
+  }
+}
 
+async function deleteDocument(id){
+  try{
+    await api(`/api/documents/${id}`, { method: "DELETE" });
+    loadDocuments();
+    loadStats();
+  }catch(err){
+    alert(err.message);
+  }
 }
 
 async function sendEmail(){
-
   try{
+    const email = document.getElementById("contactEmail").value.trim();
+    const message = document.getElementById("outreachMsg").value.trim();
 
-    const data =
-      await api("/api/outreach/email",{
-        method:"POST",
-        body:JSON.stringify({
-          email:
-            document.getElementById("contactEmail").value,
+    if(!email || !message) return alert("Email and message required");
 
-          message:
-            document.getElementById("outreachMsg").value
-        })
-      });
+    const data = await api("/api/outreach/email", {
+      method: "POST",
+      body: JSON.stringify({ email, message })
+    });
 
-    alert(data.message);
-
+    alert(data.message || "Email outreach simulated");
+    loadStats();
   }catch(err){
     alert(err.message);
   }
-
 }
 
 async function openWhatsApp(){
-
   try{
+    const phone = document.getElementById("contactPhone").value.trim();
+    const message = document.getElementById("outreachMsg").value.trim();
 
-    const data =
-      await api("/api/outreach/whatsapp",{
-        method:"POST",
-        body:JSON.stringify({
-          phone:
-            document.getElementById("contactPhone").value,
+    if(!phone) return alert("WhatsApp number required");
 
-          message:
-            document.getElementById("outreachMsg").value
-        })
-      });
+    const data = await api("/api/outreach/whatsapp", {
+      method: "POST",
+      body: JSON.stringify({ phone, message })
+    });
 
-    window.open(data.link,"_blank");
-
+    window.open(data.link, "_blank");
+    loadStats();
   }catch(err){
     alert(err.message);
   }
-
 }
 
 async function generateFakeLeads(){
-
   try{
+    const product = document.getElementById("fakeLeadProduct").value.trim() || "Rice";
 
-    const product =
-      document.getElementById("fakeLeadProduct").value;
+    const data = await api("/api/ai/demo-leads", {
+      method: "POST",
+      body: JSON.stringify({ product })
+    });
 
-    const data =
-      await api("/api/ai/demo-leads",{
-        method:"POST",
-        body:JSON.stringify({
-          product
-        })
-      });
-
-    document.getElementById("fakeLeadList")
-    .innerHTML =
-      data.leads.map(l=>`
-        <div class="bg-white p-5 rounded-2xl shadow">
-
-          <h3 class="font-black text-lg">
-            ${l.companyName}
-          </h3>
-
-          <p>${l.country}</p>
-          <p>${l.email}</p>
-
-        </div>
-      `).join("");
-
+    document.getElementById("fakeLeadList").innerHTML = (data.leads || []).map(l => `
+      <div class="bg-white p-5 rounded-2xl shadow">
+        <h3 class="font-black text-lg">${l.companyName}</h3>
+        <p>Product: ${l.product}</p>
+        <p>Country: ${l.country}</p>
+        <p>Email: ${l.email}</p>
+        <p>Phone: ${l.phone}</p>
+        <p>Score: ${l.score}</p>
+        <button onclick="saveDemoLead('${l.companyName}', '${l.product}', '${l.country}', '${l.email}', '${l.phone}', '${l.score}')" class="mt-3 bg-purple-700 text-white px-4 py-2 rounded-xl">Save to Suppliers</button>
+      </div>
+    `).join("");
   }catch(err){
     alert(err.message);
   }
+}
 
+async function saveDemoLead(companyName, product, country, email, phone, score){
+  try{
+    await api("/api/suppliers", {
+      method: "POST",
+      body: JSON.stringify({
+        companyName, product, country, email, phone,
+        score,
+        status: "AI Generated Lead"
+      })
+    });
+
+    alert("Lead saved to suppliers");
+    loadSuppliers();
+    loadStats();
+  }catch(err){
+    alert(err.message);
+  }
 }
 
 async function loadPlans(){
+  const box = document.getElementById("billingPlans");
+  if(!box) return;
 
-  const data =
-    await api("/api/billing/plans");
-
-  document.getElementById("billingPlans")
-  .innerHTML =
-    data.plans.map(plan=>`
+  try{
+    const data = await api("/api/billing/plans");
+    box.innerHTML = (data.plans || []).map(plan => `
       <div class="bg-white p-6 rounded-2xl shadow">
-
-        <h2 class="text-2xl font-black">
-          ${plan.name}
-        </h2>
-
-        <p class="text-3xl mt-4 font-black">
-          ₹${plan.price}
-        </p>
-
+        <h2 class="text-2xl font-black">${plan.name}</h2>
+        <p class="text-3xl mt-4 font-black">₹${plan.price}</p>
+        <p class="text-slate-500">${plan.currency}/month</p>
         <ul class="mt-4 space-y-2">
-          ${plan.features.map(f=>`
-            <li>• ${f}</li>
-          `).join("")}
+          ${plan.features.map(f => `<li>• ${f}</li>`).join("")}
         </ul>
-
+        <button onclick="upgradeDemo('${plan.id}')" class="mt-5 w-full bg-blue-700 text-white py-3 rounded-xl font-bold">
+          ${plan.id === "FREE" ? "Current / Free" : "Upgrade Demo"}
+        </button>
       </div>
     `).join("");
-
+  }catch(err){
+    console.log(err.message);
+  }
 }
 
+async function upgradeDemo(plan){
+  try{
+    if(plan === "FREE") return alert("You are already on FREE plan or can downgrade later.");
+    const data = await api("/api/billing/upgrade-demo", {
+      method: "POST",
+      body: JSON.stringify({ plan })
+    });
+
+    if(data.token) setToken(data.token);
+    alert(data.message || "Plan upgraded");
+    CURRENT_USER = data.user;
+    showApp(data.user);
+    loadStats();
+    loadPlans();
+  }catch(err){
+    alert(err.message);
+  }
+}
 </script>
 
 </body>
