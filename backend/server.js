@@ -12,21 +12,37 @@ const SECRET = process.env.JWT_SECRET || "tradeflow_secret_key_123";
 const MONGO_URL = process.env.MONGO_URL;
 const SERPAPI_KEY = process.env.SERPAPI_KEY || "";
 
-if (!MONGO_URL) {
-  console.log("MongoDB error: MONGO_URL missing in Render Environment");
-}
+const MASTER_EMAIL = process.env.MASTER_EMAIL || "ks2353013@gmail.com";
+const MASTER_PASSWORD = process.env.MASTER_PASSWORD || "TradeFlowMaster123";
+
+if (!MONGO_URL) console.log("MongoDB error: MONGO_URL missing");
 
 mongoose
   .connect(MONGO_URL)
-  .then(() => console.log("MongoDB connected"))
+  .then(async () => {
+    console.log("MongoDB connected");
+    await createMasterUser();
+  })
   .catch((err) => console.log("MongoDB error:", err.message));
 
+const Company = mongoose.model("Company", {
+  name: String,
+  status: String,
+  plan: String,
+  createdAt: { type: Date, default: Date.now }
+});
+
 const User = mongoose.model("User", {
+  name: String,
   email: String,
-  password: String
+  password: String,
+  role: String,
+  companyId: String,
+  createdAt: { type: Date, default: Date.now }
 });
 
 const Lead = mongoose.model("Lead", {
+  companyId: String,
   user: String,
   name: String,
   phone: String,
@@ -41,6 +57,7 @@ const Lead = mongoose.model("Lead", {
 });
 
 const Supplier = mongoose.model("Supplier", {
+  companyId: String,
   user: String,
   name: String,
   price: String,
@@ -51,12 +68,14 @@ const Supplier = mongoose.model("Supplier", {
 });
 
 const Task = mongoose.model("Task", {
+  companyId: String,
   user: String,
   task: String,
   status: String
 });
 
 const Deal = mongoose.model("Deal", {
+  companyId: String,
   user: String,
   supplierName: String,
   buyerName: String,
@@ -71,6 +90,7 @@ const Deal = mongoose.model("Deal", {
 });
 
 const ResearchLead = mongoose.model("ResearchLead", {
+  companyId: String,
   user: String,
   name: String,
   type: String,
@@ -82,19 +102,60 @@ const ResearchLead = mongoose.model("ResearchLead", {
   score: Number
 });
 
+async function createMasterUser() {
+  const existing = await User.findOne({ email: MASTER_EMAIL });
+
+  if (!existing) {
+    const hash = await bcrypt.hash(MASTER_PASSWORD, 10);
+
+    await User.create({
+      name: "Master Owner",
+      email: MASTER_EMAIL,
+      password: hash,
+      role: "master",
+      companyId: ""
+    });
+
+    console.log("Master owner created:", MASTER_EMAIL);
+  }
+}
+
 function auth(req, res, next) {
   const token = req.headers.authorization;
 
-  if (!token) {
-    return res.status(401).json({ error: "Not logged in" });
-  }
+  if (!token) return res.status(401).json({ error: "Not logged in" });
 
   try {
-    req.user = jwt.verify(token, SECRET).email;
+    const decoded = jwt.verify(token, SECRET);
+    req.userEmail = decoded.email;
+    req.userRole = decoded.role;
+    req.companyId = decoded.companyId || "";
+    req.userName = decoded.name || "";
     next();
   } catch {
     return res.status(401).json({ error: "Invalid token" });
   }
+}
+
+function requireCompany(req, res, next) {
+  if (!req.companyId) {
+    return res.status(403).json({ error: "Company account required" });
+  }
+  next();
+}
+
+function requireCompanyAdmin(req, res, next) {
+  if (req.userRole !== "company_admin") {
+    return res.status(403).json({ error: "Company admin access required" });
+  }
+  next();
+}
+
+function requireMaster(req, res, next) {
+  if (req.userRole !== "master") {
+    return res.status(403).json({ error: "Master access required" });
+  }
+  next();
 }
 
 function scoreLead(text, product, type) {
@@ -117,9 +178,7 @@ function scoreLead(text, product, type) {
     score += 25;
   }
 
-  if (/contact|phone|email|website|company|export|import/.test(lower)) {
-    score += 10;
-  }
+  if (/contact|phone|email|website|company|export|import/.test(lower)) score += 10;
 
   return Math.min(score, 100);
 }
@@ -151,31 +210,14 @@ function fakeResearch(query, type, product, country) {
 }
 
 async function searchRealWeb(query, type, product, country) {
-  if (!SERPAPI_KEY) {
-    return fakeResearch(query, type, product, country);
-  }
+  if (!SERPAPI_KEY) return fakeResearch(query, type, product, country);
 
   const searches = [
-    {
-      label: "Google",
-      q: `${query} ${type} ${product} ${country} company contact`
-    },
-    {
-      label: "IndiaMART",
-      q: `site:indiamart.com ${product} ${type} ${country}`
-    },
-    {
-      label: "TradeIndia",
-      q: `site:tradeindia.com ${product} ${type} ${country}`
-    },
-    {
-      label: "Alibaba",
-      q: `site:alibaba.com ${product} ${type} ${country}`
-    },
-    {
-      label: "LinkedIn",
-      q: `site:linkedin.com/company ${product} ${type} ${country}`
-    }
+    { label: "Google", q: `${query} ${type} ${product} ${country} company contact` },
+    { label: "IndiaMART", q: `site:indiamart.com ${product} ${type} ${country}` },
+    { label: "TradeIndia", q: `site:tradeindia.com ${product} ${type} ${country}` },
+    { label: "Alibaba", q: `site:alibaba.com ${product} ${type} ${country}` },
+    { label: "LinkedIn", q: `site:linkedin.com/company ${product} ${type} ${country}` }
   ];
 
   let allResults = [];
@@ -208,9 +250,7 @@ async function searchRealWeb(query, type, product, country) {
     }
   }
 
-  if (!allResults.length) {
-    return fakeResearch(query, type, product, country);
-  }
+  if (!allResults.length) return fakeResearch(query, type, product, country);
 
   const unique = [];
   const seen = new Set();
@@ -241,7 +281,7 @@ TradeFlow Team`;
   if (template === "buyer") {
     return `Hello ${name},
 
-I am Krishna from TradeFlow. We help buyers source verified suppliers for ${product || "export/import products"}.
+I am Krishna from TradeFlow AI™. We help buyers source verified suppliers for ${product || "export/import products"}.
 
 I wanted to check if you are currently importing or sourcing this product. I can connect you with suitable suppliers.
 
@@ -251,7 +291,7 @@ TradeFlow Team`;
 
   return `Hello ${name},
 
-I am Krishna from TradeFlow. We help connect verified suppliers and buyers for ${product || "export/import products"}.
+I am Krishna from TradeFlow AI™. We help connect verified suppliers and buyers for ${product || "export/import products"}.
 
 I would like to explore a possible business opportunity with you. Kindly share your product details, pricing, MOQ, delivery timeline, and preferred communication method.
 
@@ -259,29 +299,54 @@ Best regards,
 TradeFlow Team`;
 }
 
+/* HEALTH */
 app.get("/", (req, res) => {
-  res.json({ status: "TradeFlow backend running" });
+  res.json({ status: "TradeFlow AI backend running" });
 });
 
-app.get("/me", auth, (req, res) => {
-  res.json({ email: req.user });
+/* AUTH */
+app.get("/me", auth, async (req, res) => {
+  let company = null;
+
+  if (req.companyId) {
+    company = await Company.findById(req.companyId);
+  }
+
+  res.json({
+    email: req.userEmail,
+    name: req.userName,
+    role: req.userRole,
+    companyId: req.companyId,
+    companyName: company ? company.name : "Master"
+  });
 });
 
-app.post("/signup", async (req, res) => {
+app.post("/signup-company", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { companyName, name, email, password } = req.body;
 
-    if (!email || !password) {
-      return res.json({ error: "Email and password required" });
+    if (!companyName || !name || !email || !password) {
+      return res.json({ error: "All fields required" });
     }
 
-    const exists = await User.findOne({ email });
-    if (exists) {
-      return res.json({ error: "User already exists" });
-    }
+    const existing = await User.findOne({ email });
+    if (existing) return res.json({ error: "User already exists" });
 
-    const hashed = await bcrypt.hash(password, 10);
-    await User.create({ email, password: hashed });
+    const company = await Company.create({
+      name: companyName,
+      status: "active",
+      plan: "trial"
+    });
+
+    const hash = await bcrypt.hash(password, 10);
+
+    await User.create({
+      name,
+      email,
+      password: hash,
+      role: "company_admin",
+      companyId: String(company._id)
+    });
 
     res.json({ success: true });
   } catch (err) {
@@ -291,26 +356,103 @@ app.post("/signup", async (req, res) => {
 
 app.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.json({ error: "User not found" });
+    if (!user) return res.json({ error: "User not found" });
+
+    if (role && user.role !== role) {
+      return res.json({ error: "Wrong login type selected" });
     }
 
     const valid = await bcrypt.compare(password, user.password);
-    if (!valid) {
-      return res.json({ error: "Wrong password" });
+    if (!valid) return res.json({ error: "Wrong password" });
+
+    if (user.companyId) {
+      const company = await Company.findById(user.companyId);
+      if (!company || company.status !== "active") {
+        return res.json({ error: "Company account is not active" });
+      }
     }
 
-    const token = jwt.sign({ email }, SECRET);
-    res.json({ token });
+    const token = jwt.sign(
+      {
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        companyId: user.companyId
+      },
+      SECRET
+    );
+
+    res.json({ token, role: user.role });
   } catch (err) {
     res.json({ error: err.message });
   }
 });
 
-app.post("/agent-command", auth, async (req, res) => {
+/* MASTER */
+app.get("/master/companies", auth, requireMaster, async (req, res) => {
+  const companies = await Company.find().sort({ createdAt: -1 });
+  const output = [];
+
+  for (const c of companies) {
+    const users = await User.countDocuments({ companyId: String(c._id) });
+    output.push({
+      _id: c._id,
+      name: c.name,
+      status: c.status,
+      plan: c.plan,
+      users,
+      createdAt: c.createdAt
+    });
+  }
+
+  res.json(output);
+});
+
+app.put("/master/companies/:id", auth, requireMaster, async (req, res) => {
+  const company = await Company.findById(req.params.id);
+  if (!company) return res.json({ error: "Company not found" });
+
+  company.status = req.body.status || company.status;
+  company.plan = req.body.plan || company.plan;
+
+  await company.save();
+  res.json({ success: true });
+});
+
+/* COMPANY TEAM */
+app.get("/team", auth, requireCompany, requireCompanyAdmin, async (req, res) => {
+  const users = await User.find({ companyId: req.companyId }).select("-password");
+  res.json(users);
+});
+
+app.post("/team", auth, requireCompany, requireCompanyAdmin, async (req, res) => {
+  const { name, email, password, role } = req.body;
+
+  if (!name || !email || !password) {
+    return res.json({ error: "Name, email and password required" });
+  }
+
+  const existing = await User.findOne({ email });
+  if (existing) return res.json({ error: "Email already used" });
+
+  const hash = await bcrypt.hash(password, 10);
+
+  await User.create({
+    name,
+    email,
+    password: hash,
+    role: role === "company_admin" ? "company_admin" : "employee",
+    companyId: req.companyId
+  });
+
+  res.json({ success: true });
+});
+
+/* AGENT */
+app.post("/agent-command", auth, requireCompany, async (req, res) => {
   try {
     const { command } = req.body;
     const text = String(command || "").toLowerCase();
@@ -330,20 +472,17 @@ app.post("/agent-command", auth, async (req, res) => {
     if (text.includes("usa")) buyerCountry = "USA";
     if (text.includes("uk")) buyerCountry = "UK";
 
-    const supplierQuery = `${product} suppliers ${supplierCountry}`;
-    const buyerQuery = `${product} buyers importers ${buyerCountry}`;
+    const suppliers = await searchRealWeb(`${product} suppliers ${supplierCountry}`, "supplier", product, supplierCountry);
+    const buyers = await searchRealWeb(`${product} buyers importers ${buyerCountry}`, "buyer", product, buyerCountry);
 
-    const suppliers = await searchRealWeb(supplierQuery, "supplier", product, supplierCountry);
-    const buyers = await searchRealWeb(buyerQuery, "buyer", product, buyerCountry);
-
-    await ResearchLead.deleteMany({ user: req.user });
+    await ResearchLead.deleteMany({ companyId: req.companyId });
 
     const savedSuppliers = await ResearchLead.insertMany(
-      suppliers.map((x) => ({ ...x, user: req.user }))
+      suppliers.map((x) => ({ ...x, companyId: req.companyId, user: req.userEmail }))
     );
 
     const savedBuyers = await ResearchLead.insertMany(
-      buyers.map((x) => ({ ...x, user: req.user }))
+      buyers.map((x) => ({ ...x, companyId: req.companyId, user: req.userEmail }))
     );
 
     const tasks = [
@@ -353,7 +492,14 @@ app.post("/agent-command", auth, async (req, res) => {
       `Create first supplier-buyer deal opportunity`
     ];
 
-    await Task.insertMany(tasks.map((task) => ({ user: req.user, task, status: "open" })));
+    await Task.insertMany(
+      tasks.map((task) => ({
+        companyId: req.companyId,
+        user: req.userEmail,
+        task,
+        status: "open"
+      }))
+    );
 
     const matches = [];
 
@@ -384,7 +530,8 @@ app.post("/agent-command", auth, async (req, res) => {
   }
 });
 
-app.post("/research-leads", auth, async (req, res) => {
+/* RESEARCH */
+app.post("/research-leads", auth, requireCompany, async (req, res) => {
   try {
     const { query, type, product, country } = req.body;
 
@@ -395,24 +542,35 @@ app.post("/research-leads", auth, async (req, res) => {
       country || ""
     );
 
-    await ResearchLead.deleteMany({ user: req.user, type: type || "supplier" });
+    await ResearchLead.deleteMany({
+      companyId: req.companyId,
+      type: type || "supplier"
+    });
 
-    const saved = await ResearchLead.insertMany(results.map((x) => ({ ...x, user: req.user })));
+    const saved = await ResearchLead.insertMany(
+      results.map((x) => ({
+        ...x,
+        companyId: req.companyId,
+        user: req.userEmail
+      }))
+    );
+
     res.json(saved);
   } catch (err) {
     res.json({ error: err.message });
   }
 });
 
-app.get("/research-leads", auth, async (req, res) => {
-  res.json(await ResearchLead.find({ user: req.user }));
+app.get("/research-leads", auth, requireCompany, async (req, res) => {
+  res.json(await ResearchLead.find({ companyId: req.companyId }));
 });
 
-app.post("/add-research-to-crm", auth, async (req, res) => {
+app.post("/add-research-to-crm", auth, requireCompany, async (req, res) => {
   const lead = req.body;
 
   await Lead.create({
-    user: req.user,
+    companyId: req.companyId,
+    user: req.userEmail,
     name: lead.name,
     phone: "",
     email: "",
@@ -428,9 +586,9 @@ app.post("/add-research-to-crm", auth, async (req, res) => {
   res.json({ success: true });
 });
 
-app.post("/matchmake", auth, async (req, res) => {
-  const suppliers = await ResearchLead.find({ user: req.user, type: "supplier" });
-  const buyers = await ResearchLead.find({ user: req.user, type: "buyer" });
+app.post("/matchmake", auth, requireCompany, async (req, res) => {
+  const suppliers = await ResearchLead.find({ companyId: req.companyId, type: "supplier" });
+  const buyers = await ResearchLead.find({ companyId: req.companyId, type: "buyer" });
 
   const matches = [];
 
@@ -449,13 +607,15 @@ app.post("/matchmake", auth, async (req, res) => {
   res.json(matches.slice(0, 10));
 });
 
-app.get("/suppliers", auth, async (req, res) => {
-  res.json(await Supplier.find({ user: req.user }));
+/* SUPPLIERS */
+app.get("/suppliers", auth, requireCompany, async (req, res) => {
+  res.json(await Supplier.find({ companyId: req.companyId }));
 });
 
-app.post("/suppliers", auth, async (req, res) => {
+app.post("/suppliers", auth, requireCompany, async (req, res) => {
   await Supplier.create({
-    user: req.user,
+    companyId: req.companyId,
+    user: req.userEmail,
     name: req.body.name,
     price: req.body.price,
     phone: req.body.phone,
@@ -467,13 +627,15 @@ app.post("/suppliers", auth, async (req, res) => {
   res.json({ success: true });
 });
 
-app.get("/leads", auth, async (req, res) => {
-  res.json(await Lead.find({ user: req.user }));
+/* LEADS */
+app.get("/leads", auth, requireCompany, async (req, res) => {
+  res.json(await Lead.find({ companyId: req.companyId }));
 });
 
-app.post("/leads", auth, async (req, res) => {
+app.post("/leads", auth, requireCompany, async (req, res) => {
   await Lead.create({
-    user: req.user,
+    companyId: req.companyId,
+    user: req.userEmail,
     name: req.body.name,
     phone: req.body.phone || "",
     email: req.body.email || "",
@@ -489,13 +651,13 @@ app.post("/leads", auth, async (req, res) => {
   res.json({ success: true });
 });
 
-app.put("/leads/:index", auth, async (req, res) => {
-  const leads = await Lead.find({ user: req.user });
-  const lead = leads[req.params.index];
+app.put("/leads/:id", auth, requireCompany, async (req, res) => {
+  const lead = await Lead.findOne({
+    _id: req.params.id,
+    companyId: req.companyId
+  });
 
-  if (!lead) {
-    return res.json({ error: "Lead not found" });
-  }
+  if (!lead) return res.json({ error: "Lead not found" });
 
   lead.stage = req.body.stage;
   await lead.save();
@@ -503,13 +665,15 @@ app.put("/leads/:index", auth, async (req, res) => {
   res.json({ success: true });
 });
 
-app.get("/tasks", auth, async (req, res) => {
-  res.json(await Task.find({ user: req.user }));
+/* TASKS */
+app.get("/tasks", auth, requireCompany, async (req, res) => {
+  res.json(await Task.find({ companyId: req.companyId }));
 });
 
-app.post("/tasks", auth, async (req, res) => {
+app.post("/tasks", auth, requireCompany, async (req, res) => {
   await Task.create({
-    user: req.user,
+    companyId: req.companyId,
+    user: req.userEmail,
     task: req.body.task,
     status: "open"
   });
@@ -517,11 +681,12 @@ app.post("/tasks", auth, async (req, res) => {
   res.json({ success: true });
 });
 
-app.get("/deals", auth, async (req, res) => {
-  res.json(await Deal.find({ user: req.user }));
+/* DEALS */
+app.get("/deals", auth, requireCompany, async (req, res) => {
+  res.json(await Deal.find({ companyId: req.companyId }));
 });
 
-app.post("/deals", auth, async (req, res) => {
+app.post("/deals", auth, requireCompany, async (req, res) => {
   const supplierPrice = Number(req.body.supplierPrice || 0);
   const buyerPrice = Number(req.body.buyerPrice || 0);
   const quantity = Number(req.body.quantity || 1);
@@ -529,7 +694,8 @@ app.post("/deals", auth, async (req, res) => {
   const totalProfit = margin * quantity;
 
   await Deal.create({
-    user: req.user,
+    companyId: req.companyId,
+    user: req.userEmail,
     supplierName: req.body.supplierName,
     buyerName: req.body.buyerName,
     product: req.body.product,
@@ -545,7 +711,8 @@ app.post("/deals", auth, async (req, res) => {
   res.json({ success: true });
 });
 
-app.post("/generate-message", auth, (req, res) => {
+/* OUTREACH */
+app.post("/generate-message", auth, requireCompany, (req, res) => {
   const message = generateOutreach(
     req.body.name || "Supplier",
     req.body.product || "export/import products",
