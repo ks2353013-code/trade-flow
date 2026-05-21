@@ -653,6 +653,7 @@
     <button class="nav-btn" onclick="showPage('analytics')">📉 Analytics Center</button>
     <button class="nav-btn" onclick="showPage('ai')">🤖 AI Command Center</button>
     <button class="nav-btn" onclick="showPage('notifications')">🔔 Notifications Center <span id="sidebarUnreadCount"></span></button>
+    <button class="nav-btn" onclick="window.location.href='master-login.html'">👑 Master Admin</button>
     <button class="nav-btn logout" onclick="logoutUser()">🚪 Logout</button>
   </aside>
 
@@ -1624,6 +1625,8 @@ const BACKEND_URL = "https://trade-flow-lc1k.onrender.com";
 
 const BACKEND_URL = "https://trade-flow-lc1k.onrender.com";
 
+const BACKEND_URL = "https://trade-flow-lc1k.onrender.com";
+
 const API_URL = `${BACKEND_URL}/suppliers`;
 const AI_URL = `${BACKEND_URL}/api/ai`;
 const DEAL_URL = `${BACKEND_URL}/api/deals`;
@@ -1654,11 +1657,23 @@ function protectDashboard() {
     throw new Error("Not logged in");
   }
 
-  document.getElementById("workspaceName").innerText =
+  const workspaceText =
     `${user.companyName || "TradeFlow Company"} • ${user.name || "User"} Workspace`;
 
-  document.getElementById("userBadge").innerText =
-    user.email || "Authenticated User";
+  document.getElementById("workspaceName").innerText = workspaceText;
+  document.getElementById("userBadge").innerText = user.email || "Authenticated User";
+
+  const adminActiveCompany = document.getElementById("adminActiveCompany");
+  const adminUserName = document.getElementById("adminUserName");
+
+  if (adminActiveCompany) {
+    adminActiveCompany.innerText =
+      localStorage.getItem("tradeflowActiveWorkspaceName") || user.companyName || "TradeFlow Company";
+  }
+
+  if (adminUserName) {
+    adminUserName.innerText = user.name || user.email || "Admin";
+  }
 }
 
 protectDashboard();
