@@ -6,46 +6,50 @@
   <title>TradeFlow Login</title>
   <script src="https://cdn.tailwindcss.com"></script>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: Inter, Arial, sans-serif;
+      font-family: 'Manrope', Arial, sans-serif;
       background:
-        radial-gradient(circle at 10% 10%, rgba(56,189,248,.28), transparent 28%),
-        radial-gradient(circle at 90% 20%, rgba(139,92,246,.30), transparent 30%),
-        radial-gradient(circle at 45% 95%, rgba(34,197,94,.14), transparent 28%),
+        linear-gradient(135deg, rgba(2,6,23,.92), rgba(15,23,42,.88)),
+        radial-gradient(circle at 12% 18%, rgba(56,189,248,.36), transparent 30%),
+        radial-gradient(circle at 88% 12%, rgba(168,85,247,.32), transparent 30%),
         #020617;
-      color: white;
-      overflow-x: hidden;
+      color: #fff;
     }
 
     .page {
       min-height: 100vh;
       display: grid;
-      grid-template-columns: 1.1fr .9fr;
+      grid-template-columns: 1.05fr .95fr;
     }
 
-    .left {
-      padding: 64px;
+    .story {
+      position: relative;
+      padding: 62px;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      position: relative;
+      overflow: hidden;
     }
 
-    .watermark {
+    .story::before {
+      content: "TradeFlow™";
       position: absolute;
-      top: 50px;
-      left: 42px;
-      font-size: 130px;
-      font-weight: 950;
-      letter-spacing: -8px;
+      top: 44px;
+      left: 44px;
+      font-size: 118px;
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
       color: rgba(255,255,255,.035);
+      letter-spacing: -5px;
       pointer-events: none;
     }
 
@@ -53,152 +57,158 @@
       width: fit-content;
       padding: 10px 16px;
       border-radius: 999px;
-      background: rgba(14,165,233,.14);
+      background: rgba(56,189,248,.12);
       border: 1px solid rgba(125,211,252,.28);
       color: #7dd3fc;
-      font-size: 13px;
       font-weight: 900;
-      margin-bottom: 22px;
-      backdrop-filter: blur(14px);
+      font-size: 13px;
+      margin-bottom: 20px;
     }
 
-    .headline {
+    .story h1 {
+      position: relative;
+      z-index: 1;
       max-width: 720px;
-      font-size: clamp(44px, 6vw, 78px);
-      line-height: .95;
       margin: 0;
-      font-weight: 950;
-      letter-spacing: -3px;
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(48px, 6vw, 82px);
+      line-height: .96;
+      letter-spacing: -2px;
+      font-weight: 900;
     }
 
-    .headline span {
-      background: linear-gradient(135deg, #38bdf8, #a78bfa, #22c55e);
+    .story h1 span {
+      background: linear-gradient(135deg, #38bdf8, #c4b5fd, #86efac);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
-    .desc {
+    .story p {
       max-width: 660px;
-      margin-top: 24px;
       color: #cbd5e1;
-      font-size: 17px;
-      line-height: 1.75;
+      line-height: 1.8;
+      font-size: 16.5px;
+      margin-top: 22px;
     }
 
-    .features {
+    .mini-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(180px, 1fr));
+      grid-template-columns: repeat(2, minmax(170px, 1fr));
       gap: 14px;
-      max-width: 680px;
-      margin-top: 32px;
+      max-width: 660px;
+      margin-top: 30px;
     }
 
-    .feature {
-      padding: 16px 17px;
+    .mini {
+      padding: 16px;
       border-radius: 18px;
-      background: rgba(15,23,42,.62);
-      border: 1px solid rgba(148,163,184,.16);
-      color: #dbeafe;
-      backdrop-filter: blur(18px);
-      box-shadow: 0 16px 45px rgba(0,0,0,.16);
+      background: rgba(15,23,42,.58);
+      border: 1px solid rgba(148,163,184,.15);
+      color: #e0f2fe;
       font-size: 14px;
+      font-weight: 800;
+      backdrop-filter: blur(18px);
     }
 
-    .right {
+    .auth-zone {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 34px;
+      padding: 32px;
     }
 
     .auth-card {
       width: 100%;
-      max-width: 450px;
-      padding: 36px;
+      max-width: 460px;
+      padding: 38px;
       border-radius: 34px;
-      background: linear-gradient(180deg, rgba(15,23,42,.88), rgba(2,6,23,.82));
-      border: 1px solid rgba(148,163,184,.20);
-      box-shadow:
-        0 35px 100px rgba(0,0,0,.50),
-        inset 0 1px 0 rgba(255,255,255,.05);
-      backdrop-filter: blur(24px);
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.13);
+      box-shadow: 0 34px 110px rgba(0,0,0,.52);
+      backdrop-filter: blur(28px);
     }
 
-    .brand {
+    .logo {
       display: flex;
       align-items: center;
       gap: 13px;
-      margin-bottom: 28px;
+      margin-bottom: 30px;
     }
 
-    .brand-icon {
-      width: 54px;
-      height: 54px;
-      border-radius: 18px;
+    .logo-mark {
+      width: 56px;
+      height: 56px;
+      border-radius: 19px;
+      background: linear-gradient(135deg, #38bdf8, #8b5cf6);
       display: grid;
       place-items: center;
-      background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+      color: white;
       font-size: 25px;
-      font-weight: 950;
-      box-shadow: 0 18px 42px rgba(14,165,233,.28);
+      font-weight: 900;
+      box-shadow: 0 18px 48px rgba(56,189,248,.24);
     }
 
-    .brand-title {
-      font-size: 26px;
-      font-weight: 950;
-      letter-spacing: -.6px;
+    .logo-title {
+      font-size: 27px;
+      font-weight: 900;
+      letter-spacing: -.8px;
     }
 
-    .brand-sub {
+    .logo-title sup {
+      font-size: 10px;
+      color: #7dd3fc;
+    }
+
+    .logo-sub {
       color: #94a3b8;
       font-size: 12px;
-      margin-top: 3px;
+      margin-top: 2px;
+      font-weight: 700;
     }
 
     .auth-card h2 {
       margin: 0;
-      font-size: 31px;
-      font-weight: 950;
-      letter-spacing: -.8px;
+      font-size: 30px;
+      font-weight: 900;
+      letter-spacing: -.7px;
     }
 
-    .auth-note {
+    .sub {
       margin-top: 8px;
-      color: #94a3b8;
+      margin-bottom: 24px;
+      color: #cbd5e1;
       line-height: 1.55;
       font-size: 14px;
     }
 
     .field {
-      margin-top: 18px;
+      margin-top: 15px;
     }
 
     .field label {
       display: block;
-      color: #cbd5e1;
-      font-size: 13px;
-      font-weight: 800;
+      color: #e2e8f0;
+      font-size: 12.5px;
+      font-weight: 900;
       margin-bottom: 8px;
+      letter-spacing: .2px;
     }
 
     input {
       width: 100%;
       padding: 15px 16px;
-      border: 1px solid rgba(148,163,184,.18);
       border-radius: 16px;
-      background: rgba(2,6,23,.72);
+      border: 1px solid rgba(148,163,184,.20);
+      background: rgba(2,6,23,.70);
       color: white;
       outline: none;
-      font-size: 15px;
-    }
-
-    input::placeholder {
-      color: #64748b;
+      font-size: 14.5px;
+      font-family: 'Manrope', Arial, sans-serif;
     }
 
     input:focus {
       border-color: rgba(56,189,248,.78);
-      box-shadow: 0 0 0 4px rgba(14,165,233,.13);
+      box-shadow: 0 0 0 4px rgba(56,189,248,.12);
     }
 
     .btn {
@@ -207,12 +217,13 @@
       padding: 15px;
       border: 0;
       border-radius: 16px;
-      background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
-      color: white;
-      font-weight: 950;
       cursor: pointer;
+      color: white;
+      background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
       font-size: 15px;
-      transition: .22s;
+      font-weight: 900;
+      font-family: 'Manrope', Arial, sans-serif;
+      transition: .22s ease;
     }
 
     .btn:hover {
@@ -222,91 +233,78 @@
 
     .switch {
       text-align: center;
-      margin-top: 22px;
+      margin-top: 21px;
       color: #cbd5e1;
       font-size: 14px;
     }
 
     .switch a {
       color: #7dd3fc;
-      font-weight: 950;
       text-decoration: none;
+      font-weight: 900;
     }
 
-    .security {
+    .legal {
       margin-top: 22px;
       padding: 14px;
       border-radius: 18px;
-      background: rgba(34,197,94,.10);
-      border: 1px solid rgba(34,197,94,.18);
-      color: #bbf7d0;
-      font-size: 13px;
-      line-height: 1.5;
+      background: rgba(15,23,42,.55);
+      border: 1px solid rgba(148,163,184,.15);
+      color: #94a3b8;
+      font-size: 12.5px;
+      line-height: 1.65;
     }
 
-    @media (max-width: 950px) {
+    @media (max-width: 940px) {
       .page {
         grid-template-columns: 1fr;
       }
 
-      .left {
-        padding: 38px 26px 8px;
+      .story {
+        padding: 36px 24px 8px;
       }
 
-      .watermark {
-        font-size: 74px;
-        top: 30px;
-        left: 20px;
+      .story::before {
+        font-size: 68px;
       }
 
-      .features {
+      .mini-grid {
         grid-template-columns: 1fr;
       }
 
-      .right {
+      .auth-zone {
         padding: 24px;
       }
     }
   </style>
+
 </head>
-
 <body>
-  <div class="page">
-    <section class="left">
-      <div class="watermark">TradeFlow</div>
-      <div class="badge">🚀 Premium Export / Import SaaS OS</div>
-
-      <h1 class="headline">
-        Run global trade with a <span>premium AI command center.</span>
-      </h1>
-
-      <p class="desc">
-        Login to manage suppliers, CRM pipeline, tasks, analytics, export PDFs,
-        WhatsApp/email outreach, employees, notifications, and multi-company workspaces.
-      </p>
-
-      <div class="features">
-        <div class="feature">🌍 Supplier Intelligence</div>
-        <div class="feature">📈 Drag & Drop CRM</div>
-        <div class="feature">🤖 AI Command Center</div>
-        <div class="feature">🔐 Protected SaaS Workspace</div>
+  <main class="page">
+    <section class="story">
+      <div class="badge">Premium Export / Import SaaS OS</div>
+      <h1>Welcome to <span>TradeFlow™</span></h1>
+      <p>A refined command center for serious exporters and importers: suppliers, CRM, documents, AI, tasks, analytics, outreach, teams, and multi-company operations.</p>
+      <div class="mini-grid">
+        <div class="mini">🌍 Supplier Intelligence</div>
+        <div class="mini">📈 Drag & Drop CRM</div>
+        <div class="mini">🤖 AI Command Center</div>
+        <div class="mini">👑 Admin Workspace</div>
       </div>
     </section>
 
-    <section class="right">
+    <section class="auth-zone">
       <div class="auth-card">
-        <div class="brand">
-          <div class="brand-icon">T</div>
+        <div class="logo">
+          <div class="logo-mark">T</div>
           <div>
-            <div class="brand-title">TradeFlow</div>
-            <div class="brand-sub">Secure workspace access</div>
+            <div class="logo-title">TradeFlow<sup>™</sup></div>
+            <div class="logo-sub">Secure SaaS Login</div>
           </div>
         </div>
 
-        <h2>Welcome back</h2>
-        <div class="auth-note">
-          Continue to your export/import operating system.
-        </div>
+        <h2>Login to workspace</h2>
+        <div class="sub">Access your protected TradeFlow dashboard.</div>
 
         <div class="field">
           <label>Email Address</label>
@@ -315,21 +313,17 @@
 
         <div class="field">
           <label>Password</label>
-          <input type="password" id="password" placeholder="Enter your password">
+          <input type="password" id="password" placeholder="Enter password">
         </div>
 
-        <button class="btn" onclick="loginUser()">Login to Workspace</button>
+        <button class="btn" onclick="loginUser()">Enter TradeFlow</button>
 
-        <div class="switch">
-          New to TradeFlow? <a href="signup.html">Create account</a>
-        </div>
+        <div class="switch">New here? <a href="signup.html">Create account</a></div>
 
-        <div class="security">
-          Secure token login • Production backend connected • Private SaaS workspace
-        </div>
+        <div class="legal">TradeFlow™ Cloud SaaS OS • © 2026 Krishna Singh. All rights reserved.</div>
       </div>
     </section>
-  </div>
+  </main>
 
 <script>
 const API_BASE = "https://trade-flow-lc1k.onrender.com";
