@@ -1229,6 +1229,7 @@ function protectDashboard() {
   const user = getUser();
 
   if (!user || !user.token) {
+    localStorage.removeItem("tradeflowUser");
     window.location.href = "login.html";
     return;
   }
@@ -1244,6 +1245,12 @@ protectDashboard();
 
 function getAuthHeaders() {
   const user = getUser();
+
+  if (!user || !user.token) {
+    return {
+      "Content-Type": "application/json"
+    };
+  }
 
   return {
     "Content-Type": "application/json",
@@ -1294,9 +1301,6 @@ function showPage(page) {
 
   if (page === "outreach") {
     fetchOutreachRecords();
-fetchEmployees();
-applyRolePreset();
-fetchNotifications();
   }
 
   if (page === "employees") {
@@ -1958,7 +1962,7 @@ async function fetchSuppliers() {
     });
 
   } catch (error) {
-    alert(`Backend not connected. Check backend URL: ${API_URL}`);
+    alert("Please login again. Your session token is missing or expired.");\n    logoutUser();
   }
 }
 

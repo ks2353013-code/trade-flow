@@ -4,9 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TradeFlow Signup</title>
-
   <script src="https://cdn.tailwindcss.com"></script>
-
   <style>
     body {
       background: linear-gradient(to right, #0f172a, #1e293b);
@@ -16,7 +14,6 @@
       align-items: center;
       font-family: Arial, sans-serif;
     }
-
     .signup-box {
       background: #111827;
       padding: 40px;
@@ -24,7 +21,6 @@
       border-radius: 20px;
       box-shadow: 0px 0px 30px rgba(56, 189, 248, 0.3);
     }
-
     h1 {
       text-align: center;
       color: #38bdf8;
@@ -32,7 +28,6 @@
       font-weight: bold;
       margin-bottom: 25px;
     }
-
     input {
       width: 100%;
       padding: 14px;
@@ -42,7 +37,6 @@
       background: #1e293b;
       color: white;
     }
-
     button {
       width: 100%;
       padding: 14px;
@@ -54,51 +48,26 @@
       font-weight: bold;
       cursor: pointer;
     }
-
-    button:hover {
-      background: #0ea5e9;
-    }
-
-    p {
-      text-align: center;
-      margin-top: 20px;
-      color: white;
-    }
-
-    a {
-      color: #38bdf8;
-      text-decoration: none;
-    }
+    button:hover { background: #0ea5e9; }
+    p { text-align: center; margin-top: 20px; color: white; }
+    a { color: #38bdf8; text-decoration: none; }
   </style>
 </head>
-
 <body>
-
   <div class="signup-box">
-
     <h1>Create Account</h1>
-
     <input type="text" id="name" placeholder="Your Name">
     <input type="text" id="companyName" placeholder="Company Name">
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
-
-    <button onclick="signupUser()">
-      Signup
-    </button>
-
-    <p>
-      Already have an account?
-      <a href="login.html">Login</a>
-    </p>
-
+    <button onclick="signupUser()">Signup</button>
+    <p>Already have an account? <a href="login.html">Login</a></p>
   </div>
 
 <script>
 const API_BASE = "https://trade-flow-lc1k.onrender.com";
 
 async function signupUser() {
-
   const name = document.getElementById("name").value.trim();
   const companyName = document.getElementById("companyName").value.trim();
   const email = document.getElementById("email").value.trim();
@@ -109,33 +78,32 @@ async function signupUser() {
     return;
   }
 
-  const res = await fetch(`${API_BASE}/api/auth/register`, {
-    method: "POST",
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, companyName, email, password })
+    });
 
-    headers: {
-      "Content-Type": "application/json",
-    },
+    const data = await res.json();
 
-    body: JSON.stringify({
-      name,
-      companyName,
-      email,
-      password,
-    }),
-  });
+    if (!res.ok) {
+      alert(data.message || "Signup failed");
+      return;
+    }
 
-  const data = await res.json();
+    if (!data.token) {
+      alert("Signup response did not include token. Check backend auth controller.");
+      return;
+    }
 
-  if (!res.ok) {
-    alert(data.message || "Signup failed");
-    return;
+    localStorage.removeItem("tradeflowUser");
+    localStorage.setItem("tradeflowUser", JSON.stringify(data));
+    window.location.href = "index.html";
+  } catch (error) {
+    alert("Backend connection failed. Open backend URL first: " + API_BASE);
   }
-
-  localStorage.setItem("tradeflowUser", JSON.stringify(data));
-
-  window.location.href = "index.html";
 }
 </script>
-
 </body>
 </html>

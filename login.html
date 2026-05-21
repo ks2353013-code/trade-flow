@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TradeFlow Login</title>
   <script src="https://cdn.tailwindcss.com"></script>
-
   <style>
     body {
       background: linear-gradient(to right, #0f172a, #1e293b);
@@ -15,7 +14,6 @@
       align-items: center;
       font-family: Arial, sans-serif;
     }
-
     .login-box {
       background: #111827;
       padding: 40px;
@@ -23,7 +21,6 @@
       border-radius: 20px;
       box-shadow: 0px 0px 30px rgba(56, 189, 248, 0.3);
     }
-
     h1 {
       text-align: center;
       color: #38bdf8;
@@ -31,7 +28,6 @@
       font-weight: bold;
       margin-bottom: 30px;
     }
-
     input {
       width: 100%;
       padding: 14px;
@@ -41,7 +37,6 @@
       background: #1e293b;
       color: white;
     }
-
     button {
       width: 100%;
       padding: 14px;
@@ -53,37 +48,18 @@
       font-weight: bold;
       cursor: pointer;
     }
-
-    button:hover {
-      background: #0ea5e9;
-    }
-
-    p {
-      text-align: center;
-      margin-top: 20px;
-      color: white;
-    }
-
-    a {
-      color: #38bdf8;
-      text-decoration: none;
-    }
+    button:hover { background: #0ea5e9; }
+    p { text-align: center; margin-top: 20px; color: white; }
+    a { color: #38bdf8; text-decoration: none; }
   </style>
 </head>
-
 <body>
   <div class="login-box">
     <h1>TradeFlow</h1>
-
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
-
     <button onclick="loginUser()">Login</button>
-
-    <p>
-      Don't have an account?
-      <a href="signup.html">Signup</a>
-    </p>
+    <p>Don't have an account? <a href="signup.html">Signup</a></p>
   </div>
 
 <script>
@@ -98,29 +74,32 @@ async function loginUser() {
     return;
   }
 
-  const res = await fetch(`${API_BASE}/api/auth/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      email,
-      password,
-    }),
-  });
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (!res.ok) {
-    alert(data.message || "Login failed");
-    return;
+    if (!res.ok) {
+      alert(data.message || "Login failed");
+      return;
+    }
+
+    if (!data.token) {
+      alert("Login response did not include token. Check backend auth controller.");
+      return;
+    }
+
+    localStorage.removeItem("tradeflowUser");
+    localStorage.setItem("tradeflowUser", JSON.stringify(data));
+    window.location.href = "index.html";
+  } catch (error) {
+    alert("Backend connection failed. Open backend URL first: " + API_BASE);
   }
-
-  localStorage.setItem("tradeflowUser", JSON.stringify(data));
-
-  window.location.href = "index.html";
 }
 </script>
-
 </body>
 </html>
