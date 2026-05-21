@@ -146,6 +146,7 @@
       <button onclick="showPage('documents')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Documents</button>
       <button onclick="showPage('outreach')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Smart Outreach</button>
       <button onclick="showPage('leadfinder')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">AI Lead Finder</button>
+      <button onclick="showPage('leadrequest')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Lead Request</button>
       <button onclick="showPage('billing')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Billing / Plans</button>
       <button onclick="showPage('settings')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Settings</button>
     </nav>
@@ -270,6 +271,53 @@
         <button onclick="generateFakeLeads()" class="bg-purple-700 text-white px-5 py-3 rounded-xl">Generate Demo Leads</button>
       </div>
       <div id="fakeLeadList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
+    </section>
+
+    <section id="leadrequest" class="page">
+      <h1 class="text-4xl font-black">Lead Request</h1>
+      <p class="text-slate-500 mt-2">Request verified importer and buyer leads for your export business.</p>
+
+      <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-2 gap-4">
+        <input id="leadRequestProduct" class="border rounded-xl px-4 py-3" placeholder="Product e.g. Rice, Medicine, Jaggery, Agri" />
+        <input id="leadRequestCountry" class="border rounded-xl px-4 py-3" placeholder="Target Country e.g. UAE, Saudi, Singapore" />
+
+        <select id="leadRequestCount" class="border rounded-xl px-4 py-3">
+          <option value="25">25 Verified Leads</option>
+          <option value="50">50 Verified Leads</option>
+          <option value="100">100 Verified Leads</option>
+          <option value="250">250 Verified Leads</option>
+        </select>
+
+        <select id="leadRequestType" class="border rounded-xl px-4 py-3">
+          <option>Company Name + Email</option>
+          <option>Company Name + WhatsApp</option>
+          <option>Company Name + Email + WhatsApp</option>
+          <option>Full Buyer Profile</option>
+        </select>
+
+        <textarea id="leadRequestNotes" rows="5" class="border rounded-xl px-4 py-3 md:col-span-2" placeholder="Extra details e.g. HS code, buyer type, certification, quantity, target market, target price"></textarea>
+
+        <button onclick="submitLeadRequest()" class="bg-purple-700 text-white py-3 rounded-xl font-bold md:col-span-2">
+          Request Verified Leads
+        </button>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-5 mt-8">
+        <div class="bg-white p-6 rounded-2xl shadow">
+          <h2 class="text-xl font-black">Verified Buyers</h2>
+          <p class="text-slate-600 mt-3">Get buyer/importer data with company details, country, product interest and contact priority.</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow">
+          <h2 class="text-xl font-black">Export Focused</h2>
+          <p class="text-slate-600 mt-3">Designed for rice, jaggery, agri products, medicine, spices, food exports and B2B trade.</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow">
+          <h2 class="text-xl font-black">Manual Delivery</h2>
+          <p class="text-slate-600 mt-3">Early-stage requests are processed manually so you can validate demand before automation.</p>
+        </div>
+      </div>
     </section>
 
     <section id="billing" class="page">
@@ -750,6 +798,47 @@ Please contact me for activation and payment process.`;
 
   window.open(whatsappLink, "_blank");
 }
+function submitLeadRequest(){
+  const product = document.getElementById("leadRequestProduct").value.trim();
+  const country = document.getElementById("leadRequestCountry").value.trim();
+  const count = document.getElementById("leadRequestCount").value;
+  const type = document.getElementById("leadRequestType").value;
+  const notes = document.getElementById("leadRequestNotes").value.trim();
+
+  if(!product || !country){
+    alert("Product and target country are required.");
+    return;
+  }
+
+  const company = CURRENT_USER?.companyName || "TradeFlow Workspace";
+  const email = CURRENT_USER?.email || "";
+  const name = CURRENT_USER?.name || "User";
+
+  const message =
+`Hello TradeFlow Team,
+
+I want verified export buyer/importer leads.
+
+Company: ${company}
+User: ${name}
+Email: ${email}
+
+Product: ${product}
+Target Country: ${country}
+Lead Count: ${count}
+Lead Type: ${type}
+
+Extra Notes:
+${notes || "-"}
+
+Please contact me regarding pricing and delivery process.`;
+
+  const whatsappNumber = "918743998759";
+  const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+  window.open(whatsappLink, "_blank");
+}
+
 async function upgradeDemo(plan){try{if(plan==="FREE")return alert("You are already on FREE plan or can downgrade later.");const data=await api("/api/billing/upgrade-demo",{method:"POST",body:JSON.stringify({plan})});if(data.token)setToken(data.token);alert(data.message||"Plan upgraded");CURRENT_USER=data.user;showApp(data.user);loadStats();loadPlans();}catch(err){alert(err.message);}}
 </script>
 
