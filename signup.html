@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TradeFlow Signup</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      background: linear-gradient(to right, #0f172a, #1e293b);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+    }
+
+    .signup-box {
+      background: #111827;
+      padding: 40px;
+      width: 420px;
+      border-radius: 20px;
+      box-shadow: 0px 0px 30px rgba(56, 189, 248, 0.3);
+    }
+
+    h1 {
+      text-align: center;
+      color: #38bdf8;
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 25px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      margin-top: 14px;
+      border: none;
+      border-radius: 10px;
+      background: #1e293b;
+      color: white;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 20px;
+      border: none;
+      border-radius: 10px;
+      background: #38bdf8;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0ea5e9;
+    }
+
+    p {
+      text-align: center;
+      margin-top: 20px;
+      color: white;
+    }
+
+    a {
+      color: #38bdf8;
+      text-decoration: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="signup-box">
+    <h1>Create Account</h1>
+
+    <input type="text" id="name" placeholder="Your Name">
+    <input type="text" id="companyName" placeholder="Company Name">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+
+    <button onclick="signupUser()">Signup</button>
+
+    <p>
+      Already have an account?
+      <a href="login.html">Login</a>
+    </p>
+  </div>
+
+<script>
+const API_BASE = "http://localhost:5000";
+
+async function signupUser() {
+  const name = document.getElementById("name").value;
+  const companyName = document.getElementById("companyName").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const res = await fetch(`${API_BASE}/api/auth/register`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name,
+      companyName,
+      email,
+      password,
+    }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.message || "Signup failed");
+    return;
+  }
+
+  localStorage.setItem("tradeflowUser", JSON.stringify(data));
+
+  alert("Signup successful");
+
+  window.location.href = "index.html";
+}
+</script>
+
+</body>
+</html>

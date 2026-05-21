@@ -3,1188 +3,2962 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TradeFlow AI™ | AI Export Intelligence SaaS</title>
+  <title>TradeFlow Cloud — Advanced SaaS Workspace</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
   <style>
-    body{font-family:Arial,sans-serif;background:#f3f6fb}
-    .page{display:none}.page.active{display:block}
-    .nav-btn.active{background:#2563eb;color:white}
-    .glass{background:rgba(255,255,255,.08);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.14)}
-    .glow{box-shadow:0 0 60px rgba(37,99,235,.35)}
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(56,189,248,.22), transparent 35%),
+        radial-gradient(circle at top right, rgba(168,85,247,.20), transparent 35%),
+        #020617;
+      color: #e5e7eb;
+    }
+
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 290px;
+      min-height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      padding: 22px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(18px);
+      border-right: 1px solid rgba(148,163,184,.18);
+      overflow-y: auto;
+    }
+
+    .brand {
+      padding: 18px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, rgba(14,165,233,.25), rgba(168,85,247,.20));
+      border: 1px solid rgba(56,189,248,.25);
+      margin-bottom: 20px;
+    }
+
+    .brand h1 {
+      font-size: 28px;
+      font-weight: 900;
+      color: #38bdf8;
+    }
+
+    .brand p {
+      font-size: 12px;
+      color: #cbd5e1;
+      margin-top: 4px;
+    }
+
+    .nav-btn {
+      width: 100%;
+      padding: 13px 14px;
+      margin-bottom: 9px;
+      border: 1px solid rgba(148,163,184,.12);
+      border-radius: 15px;
+      background: rgba(30, 41, 59, .72);
+      color: #e5e7eb;
+      text-align: left;
+      cursor: pointer;
+      transition: .25s;
+      font-size: 14px;
+    }
+
+    .nav-btn:hover {
+      transform: translateX(4px);
+      background: linear-gradient(135deg, rgba(14,165,233,.55), rgba(168,85,247,.45));
+      border-color: rgba(56,189,248,.55);
+    }
+
+    .logout {
+      background: rgba(239, 68, 68, .18);
+      border-color: rgba(239, 68, 68, .35);
+    }
+
+    .main {
+      margin-left: 290px;
+      width: calc(100% - 290px);
+      padding: 26px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+      padding: 22px;
+      border-radius: 26px;
+      background: rgba(15,23,42,.70);
+      border: 1px solid rgba(148,163,184,.18);
+      backdrop-filter: blur(18px);
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: 30px;
+      font-weight: 900;
+      color: white;
+    }
+
+    .muted {
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
+    .pill {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(56,189,248,.12);
+      border: 1px solid rgba(56,189,248,.25);
+      color: #7dd3fc;
+      font-size: 13px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .grid-4 {
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    }
+
+    .card {
+      padding: 22px;
+      border-radius: 26px;
+      background: rgba(15,23,42,.72);
+      border: 1px solid rgba(148,163,184,.16);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 18px 60px rgba(0,0,0,.22);
+      margin-bottom: 20px;
+    }
+
+    .metric {
+      min-height: 135px;
+      background: linear-gradient(135deg, rgba(30,41,59,.92), rgba(15,23,42,.75));
+    }
+
+    .metric h3 {
+      color: #94a3b8;
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+
+    .metric p {
+      font-size: 34px;
+      font-weight: 900;
+      color: white;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 8px;
+      color: #22c55e;
+      font-size: 12px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 14px;
+      margin-top: 10px;
+      border: 1px solid rgba(148,163,184,.16);
+      border-radius: 15px;
+      background: rgba(15,23,42,.9);
+      color: white;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      margin-top: 14px;
+      border: none;
+      border-radius: 15px;
+      background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+      color: white;
+      font-weight: 800;
+      cursor: pointer;
+      transition: .25s;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 35px rgba(14,165,233,.25);
+    }
+
+    .danger-btn {
+      background: linear-gradient(135deg, #ef4444, #f97316);
+      padding: 9px 13px;
+      border-radius: 12px;
+      border: none;
+      color: white;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+
+    .mini-btn {
+      padding: 9px 10px;
+      border: none;
+      border-radius: 12px;
+      background: rgba(56,189,248,.18);
+      color: #7dd3fc;
+      cursor: pointer;
+      margin-top: 8px;
+      width: 100%;
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 900;
+      margin-bottom: 8px;
+      color: white;
+    }
+
+    .supplier-card {
+      padding: 18px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, rgba(30,41,59,.95), rgba(15,23,42,.88));
+      border: 1px solid rgba(56,189,248,.18);
+      margin-bottom: 14px;
+    }
+
+    .status {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: rgba(34,197,94,.12);
+      color: #86efac;
+      font-size: 12px;
+      border: 1px solid rgba(34,197,94,.22);
+    }
+
+    .hidden { display: none; }
+
+    .kanban {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 16px;
+    }
+
+    .column {
+      padding: 16px;
+      border-radius: 22px;
+      background: rgba(30,41,59,.65);
+      border: 1px solid rgba(148,163,184,.15);
+      min-height: 260px;
+    }
+
+    .deal {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(15,23,42,.9);
+      border: 1px solid rgba(148,163,184,.12);
+    }
+
+    .ai-panel {
+      background: linear-gradient(135deg, rgba(14,165,233,.16), rgba(168,85,247,.16));
+      border: 1px solid rgba(125,211,252,.24);
+    }
+
+    .ai-output {
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+
+
+    .column.drag-over {
+      border-color: rgba(56,189,248,.75);
+      background: rgba(14,165,233,.14);
+      box-shadow: 0 0 30px rgba(14,165,233,.18);
+    }
+
+    .deal[draggable="true"] {
+      cursor: grab;
+      transition: .2s;
+    }
+
+    .deal[draggable="true"]:active {
+      cursor: grabbing;
+      transform: scale(.98);
+    }
+
+    .drag-hint {
+      color: #7dd3fc;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    footer {
+      margin-top: 30px;
+      text-align: center;
+      color: #64748b;
+      font-size: 13px;
+      padding: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .sidebar {
+        position: relative;
+        width: 100%;
+        min-height: auto;
+      }
+
+      .app {
+        display: block;
+      }
+
+      .main {
+        margin-left: 0;
+        width: 100%;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
   </style>
 </head>
 
-<body class="text-slate-900">
+<body>
+<div class="app">
 
-<!-- LANDING PAGE -->
-<section id="landingScreen" class="min-h-screen bg-slate-950 text-white overflow-hidden">
-  <div class="absolute inset-0 bg-gradient-to-br from-blue-950 via-slate-950 to-indigo-950"></div>
-  <div class="relative max-w-7xl mx-auto px-6 py-6">
-    <header class="flex items-center justify-between">
-      <div class="text-2xl font-black">TradeFlow AI™</div>
-      <div class="hidden md:flex gap-6 text-sm text-slate-300">
-        <a href="#features">Features</a>
-        <a href="#pricing">Pricing</a>
-        <a href="#platform">Platform</a>
-      </div>
-      <div class="flex gap-3">
-        <button onclick="openAuth('user')" class="bg-white text-slate-950 px-5 py-3 rounded-xl font-bold">Login / Start Free</button>
-        <button onclick="openAuth('admin')" class="border border-white/20 text-white px-5 py-3 rounded-xl font-bold">Admin Login</button>
-      </div>
-    </header>
-
-    <section class="grid lg:grid-cols-2 gap-12 items-center py-24">
-      <div>
-        <div class="inline-flex px-4 py-2 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-sm mb-6">
-          AI Export Intelligence + CRM + Buyer Outreach
-        </div>
-        <h1 class="text-5xl md:text-7xl font-black leading-tight">
-          AI Operating System for Global Trade
-        </h1>
-        <p class="text-xl text-slate-300 mt-6 leading-relaxed">
-          Manage suppliers, CRM leads, outreach, export documents, negotiation, team workspaces and AI-powered buyer discovery from one premium SaaS platform.
-        </p>
-        <div class="mt-8 flex flex-wrap gap-4">
-          <button onclick="openAuth('user')" class="bg-blue-600 hover:bg-blue-700 px-7 py-4 rounded-2xl font-black glow">Start Free Workspace</button>
-          <button onclick="scrollToPricing()" class="border border-white/20 px-7 py-4 rounded-2xl font-black">View Pricing</button>
-        </div>
-        <div class="grid grid-cols-3 gap-4 mt-10">
-          <div><h3 class="text-3xl font-black">50+</h3><p class="text-slate-400">Countries</p></div>
-          <div><h3 class="text-3xl font-black">AI</h3><p class="text-slate-400">Lead Scoring</p></div>
-          <div><h3 class="text-3xl font-black">24/7</h3><p class="text-slate-400">Cloud SaaS</p></div>
-        </div>
-      </div>
-
-      <div class="glass rounded-3xl p-6 glow">
-        <div class="bg-slate-900 rounded-2xl p-5 border border-white/10">
-          <div class="flex justify-between items-center">
-            <h2 class="text-xl font-black">Export Command Center</h2>
-            <span class="text-xs bg-green-500/20 text-green-300 px-3 py-1 rounded-full">LIVE</span>
-          </div>
-          <div class="grid grid-cols-2 gap-4 mt-6">
-            <div class="bg-white/10 p-5 rounded-2xl"><p class="text-slate-400">Verified Suppliers</p><h3 class="text-3xl font-black">1,240</h3></div>
-            <div class="bg-white/10 p-5 rounded-2xl"><p class="text-slate-400">Buyer Leads</p><h3 class="text-3xl font-black">8,900</h3></div>
-            <div class="bg-white/10 p-5 rounded-2xl"><p class="text-slate-400">Outreach</p><h3 class="text-3xl font-black">32k</h3></div>
-            <div class="bg-white/10 p-5 rounded-2xl"><p class="text-slate-400">Deals Tracked</p><h3 class="text-3xl font-black">₹4.2Cr</h3></div>
-          </div>
-          <div class="mt-6 bg-blue-600/20 border border-blue-400/20 p-5 rounded-2xl">
-            <b>AI Insight:</b> UAE and Saudi buyers show strong demand for rice, jaggery and agri products this month.
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="features" class="py-20">
-      <h2 class="text-4xl font-black text-center">Built for Export Growth</h2>
-      <p class="text-slate-400 text-center mt-3">Everything an exporter needs to find, contact and manage buyers.</p>
-      <div class="grid md:grid-cols-3 gap-6 mt-12">
-        <div class="glass p-6 rounded-3xl"><h3 class="text-xl font-black">AI Lead Finder</h3><p class="text-slate-300 mt-3">Find and score importer/buyer leads by product and country.</p></div>
-        <div class="glass p-6 rounded-3xl"><h3 class="text-xl font-black">Export CRM</h3><p class="text-slate-300 mt-3">Track leads, stages, values, follow-ups and deals.</p></div>
-        <div class="glass p-6 rounded-3xl"><h3 class="text-xl font-black">Smart Outreach</h3><p class="text-slate-300 mt-3">Email and WhatsApp outreach workflow for suppliers and buyers.</p></div>
-        <div class="glass p-6 rounded-3xl"><h3 class="text-xl font-black">Team Workspace</h3><p class="text-slate-300 mt-3">Owner and employee logins with company-level data separation.</p></div>
-        <div class="glass p-6 rounded-3xl"><h3 class="text-xl font-black">Trade Documents</h3><p class="text-slate-300 mt-3">Manage invoices, packing lists, shipment references and export records.</p></div>
-        <div class="glass p-6 rounded-3xl"><h3 class="text-xl font-black">Plan Limits</h3><p class="text-slate-300 mt-3">Free, Starter, Pro and Enterprise-ready monetization.</p></div>
-      </div>
-    </section>
-
-    <section id="platform" class="py-20">
-      <div class="bg-white text-slate-950 rounded-[2rem] p-8 md:p-12">
-        <h2 class="text-4xl font-black">From Lead Discovery to Export Execution</h2>
-        <div class="grid md:grid-cols-4 gap-6 mt-10">
-          <div><h3 class="font-black text-xl">1. Find Buyers</h3><p class="text-slate-600 mt-2">Use AI lead finder and supplier database.</p></div>
-          <div><h3 class="font-black text-xl">2. Contact</h3><p class="text-slate-600 mt-2">Send outreach through email/WhatsApp flow.</p></div>
-          <div><h3 class="font-black text-xl">3. Manage Deals</h3><p class="text-slate-600 mt-2">Track CRM, negotiation and follow-ups.</p></div>
-          <div><h3 class="font-black text-xl">4. Export</h3><p class="text-slate-600 mt-2">Handle documents, tasks and operations.</p></div>
-        </div>
-      </div>
-    </section>
-
-    <section id="pricing" class="py-20">
-      <h2 class="text-4xl font-black text-center">Pricing Built for Exporters</h2>
-      <div class="grid md:grid-cols-4 gap-6 mt-12">
-        <div class="glass p-6 rounded-3xl"><h3 class="text-2xl font-black">Free</h3><p class="text-4xl font-black mt-4">₹0</p><p class="text-slate-300 mt-3">Start workspace</p><button onclick="openAuth('user')" class="mt-6 w-full bg-white text-slate-950 py-3 rounded-xl font-bold">Start</button></div>
-        <div class="glass p-6 rounded-3xl"><h3 class="text-2xl font-black">Starter</h3><p class="text-4xl font-black mt-4">₹999</p><p class="text-slate-300 mt-3">CRM + suppliers</p><button onclick="openAuth('user')" class="mt-6 w-full bg-blue-600 py-3 rounded-xl font-bold">Start</button></div>
-        <div class="glass p-6 rounded-3xl border-blue-400"><h3 class="text-2xl font-black">Pro</h3><p class="text-4xl font-black mt-4">₹4,999</p><p class="text-slate-300 mt-3">AI leads + outreach</p><button onclick="openAuth('user')" class="mt-6 w-full bg-blue-600 py-3 rounded-xl font-bold">Upgrade</button></div>
-        <div class="glass p-6 rounded-3xl"><h3 class="text-2xl font-black">Enterprise</h3><p class="text-4xl font-black mt-4">₹25k+</p><p class="text-slate-300 mt-3">Team + automation</p><button onclick="openAuth('user')" class="mt-6 w-full bg-white text-slate-950 py-3 rounded-xl font-bold">Contact</button></div>
-      </div>
-    </section>
-
-    <footer class="py-10 border-t border-white/10 text-slate-400 flex flex-col md:flex-row justify-between gap-4">
-      <p>© 2026 TradeFlow AI™. Export Intelligence SaaS.</p>
-      <p>Secure • Cloud SaaS • AI Powered • MongoDB Atlas</p>
-    </footer>
-  </div>
-</section>
-
-<!-- AUTH SCREEN -->
-<section id="authScreen" class="hidden min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-900 p-6">
-  <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-8">
-    <button onclick="backToLanding()" class="text-sm text-blue-700 font-bold mb-4">← Back</button>
-
-    <div class="grid grid-cols-2 gap-3 mb-6">
-      <button id="userLoginTab" onclick="setAuthMode('user')" class="bg-blue-700 text-white rounded-xl py-3 font-bold">Workspace Login</button>
-      <button id="adminLoginTab" onclick="setAuthMode('admin')" class="bg-slate-200 text-slate-900 rounded-xl py-3 font-bold">Admin Login</button>
+  <aside class="sidebar">
+    <div class="brand">
+      <h1>TradeFlow</h1>
+      <p>Advanced Export / Import AI SaaS OS</p>
     </div>
 
-    <h1 id="authTitle" class="text-4xl font-black text-center text-blue-900">TradeFlow AI™</h1>
-    <p id="authSubtitle" class="text-center text-slate-500 mt-3">Login or create your export workspace</p>
-
-    <div class="mt-8 grid gap-4">
-      <input id="authName" class="border rounded-xl px-4 py-3" placeholder="Owner / Employee Name (for signup only)" />
-      <input id="companyName" class="border rounded-xl px-4 py-3" placeholder="Company Name (for owner signup)" />
-      <input id="authEmail" class="border rounded-xl px-4 py-3" placeholder="Email" />
-      <input id="authPassword" type="password" class="border rounded-xl px-4 py-3" placeholder="Password" />
-      <button id="authActionBtn" onclick="login()" class="bg-blue-700 hover:bg-blue-800 text-white rounded-xl py-3 font-bold">Login / Create Workspace</button>
-      <p id="authHelpText" class="text-xs text-slate-500 text-center">For login: leave name blank. For signup: enter name + company.</p>
-    </div>
-  </div>
-</section>
-
-<!-- APP SCREEN -->
-<section id="appScreen" class="hidden min-h-screen">
-  <aside class="fixed left-0 top-0 w-72 h-screen bg-slate-950 text-white p-6 overflow-y-auto">
-    <h2 class="text-3xl font-black">TradeFlow AI™</h2>
-    <p id="userRoleText" class="text-xs text-slate-400 mt-2">Workspace</p>
-    <nav class="mt-8 space-y-2">
-      <button onclick="showPage('dashboard')" class="nav-btn active w-full text-left px-4 py-3 rounded-xl">Dashboard</button>
-      <button onclick="showPage('company')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Company Master</button>
-      <button onclick="showPage('employees')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Employees / Multi Login</button>
-      <button onclick="showPage('suppliers')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Suppliers</button>
-      <button onclick="showPage('crm')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">CRM Pipeline</button>
-      <button onclick="showPage('negotiation')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Negotiation</button>
-      <button onclick="showPage('tasks')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Tasks</button>
-      <button onclick="showPage('documents')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Documents</button>
-      <button onclick="showPage('outreach')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Smart Outreach</button>
-      <button onclick="showPage('leadfinder')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">AI Lead Finder</button>
-      <button onclick="showPage('leadrequest')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
-        Lead Request
-      </button>
-      <button onclick="showPage('billing')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Billing / Plans</button>
-      <button onclick="showPage('settings')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Settings</button>
-      <button id="adminNavBtn" onclick="showPage('admin')" class="nav-btn hidden w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
-        Admin OS
-      </button>
-    </nav>
-    <button onclick="logout()" class="mt-8 w-full bg-red-600 hover:bg-red-700 rounded-xl py-3 font-bold">Logout</button>
+    <button class="nav-btn" onclick="showPage('dashboard')">📊 Command Dashboard</button>
+    <button class="nav-btn" onclick="showPage('master')">🏢 Master Company</button>
+    <button class="nav-btn" onclick="showPage('workspaces')">🏬 Multi-company Workspace</button>
+    <button class="nav-btn" onclick="showPage('employees')">👥 Employees & Roles</button>
+    <button class="nav-btn" onclick="showPage('suppliers')">🌍 Supplier Intelligence</button>
+    <button class="nav-btn" onclick="showPage('crm')">📈 CRM Pipeline</button>
+    <button class="nav-btn" onclick="showPage('negotiation')">💰 Negotiation Desk</button>
+    <button class="nav-btn" onclick="showPage('tasks')">✅ Task Automation</button>
+    <button class="nav-btn" onclick="showPage('marketing')">📣 Marketing & Branding</button>
+    <button class="nav-btn" onclick="showPage('documents')">📄 Export Documents</button>
+    <button class="nav-btn" onclick="showPage('outreach')">📧 Smart Outreach</button>
+    <button class="nav-btn" onclick="showPage('analytics')">📉 Analytics Center</button>
+    <button class="nav-btn" onclick="showPage('ai')">🤖 AI Command Center</button>
+    <button class="nav-btn" onclick="showPage('notifications')">🔔 Notifications Center <span id="sidebarUnreadCount"></span></button>
+    <button class="nav-btn logout" onclick="logoutUser()">🚪 Logout</button>
   </aside>
 
-  <main class="ml-72 p-8">
-    <section id="dashboard" class="page active">
-      <h1 class="text-4xl font-black">Master Dashboard</h1>
-      <p class="text-slate-500 mt-2">Company-wide export/import command center.</p>
-      <div class="grid md:grid-cols-5 gap-5 mt-8">
-        <div class="bg-white p-6 rounded-2xl shadow"><p>Suppliers</p><h2 id="supplierCount" class="text-3xl font-black mt-2">0</h2></div>
-        <div class="bg-white p-6 rounded-2xl shadow"><p>CRM Leads</p><h2 id="leadCount" class="text-3xl font-black mt-2">0</h2></div>
-        <div class="bg-white p-6 rounded-2xl shadow"><p>Tasks</p><h2 id="taskCount" class="text-3xl font-black mt-2">0</h2></div>
-        <div class="bg-white p-6 rounded-2xl shadow"><p>Documents</p><h2 id="docCount" class="text-3xl font-black mt-2">0</h2></div>
-        <div class="bg-white p-6 rounded-2xl shadow"><p>Employees</p><h2 id="employeeCount" class="text-3xl font-black mt-2">0</h2></div>
+  <main class="main">
+
+    <div class="topbar">
+      <div>
+        <div class="page-title">TradeFlow Cloud Workspace</div>
+        <div class="muted" id="workspaceName">Premium SaaS workspace loading...</div>
       </div>
-      <div class="grid md:grid-cols-2 gap-6 mt-8">
-        <div class="bg-white p-6 rounded-2xl shadow"><h2 class="text-2xl font-black">Workspace Summary</h2><div id="workspaceSummary" class="mt-4 text-slate-700">Loading...</div></div>
-        <div class="bg-white p-6 rounded-2xl shadow"><h2 class="text-2xl font-black">AI Growth Notes</h2><p class="mt-4 text-slate-600">Use Suppliers + CRM + Outreach daily. Upgrade plans unlock more records, more outreach and more team capacity.</p></div>
-      </div>
-    </section>
-
-    <section id="company" class="page">
-      <h1 class="text-4xl font-black">Company Master</h1>
-      <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-2 gap-4">
-        <input id="editCompanyName" class="border rounded-xl px-4 py-3" placeholder="Company Name" />
-        <input id="editIndustry" class="border rounded-xl px-4 py-3" placeholder="Industry" />
-        <input id="editCountry" class="border rounded-xl px-4 py-3" placeholder="Country" />
-        <input id="editPlan" class="border rounded-xl px-4 py-3" placeholder="Plan" />
-        <button onclick="updateCompany()" class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-2">Save Company</button>
-      </div>
-    </section>
-
-    <section id="employees" class="page">
-      <h1 class="text-4xl font-black">Employees / Multi Login</h1>
-      <p class="text-slate-500 mt-2">Add employees under the same company. They can login with their own email/password.</p>
-      <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-4 gap-3">
-        <input id="empName" class="border rounded-xl px-4 py-3" placeholder="Employee Name" />
-        <input id="empEmail" class="border rounded-xl px-4 py-3" placeholder="Employee Email" />
-        <input id="empPassword" class="border rounded-xl px-4 py-3" placeholder="Password" />
-        <select id="empRole" class="border rounded-xl px-4 py-3"><option>EMPLOYEE</option><option>SALES</option><option>OPERATIONS</option><option>MANAGER</option></select>
-        <button onclick="addEmployee()" class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-4">Add Employee Login</button>
-      </div>
-      <div id="employeeList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
-    </section>
-
-    <section id="suppliers" class="page">
-      <h1 class="text-4xl font-black">Supplier Management</h1>
-      <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-5 gap-3">
-        <input id="supplierName" class="border rounded-xl px-4 py-3" placeholder="Supplier Name" />
-        <input id="supplierProduct" class="border rounded-xl px-4 py-3" placeholder="Product" />
-        <input id="supplierCountry" class="border rounded-xl px-4 py-3" placeholder="Country" />
-        <input id="supplierEmail" class="border rounded-xl px-4 py-3" placeholder="Email" />
-        <input id="supplierPhone" class="border rounded-xl px-4 py-3" placeholder="Phone" />
-        <button onclick="addSupplier()" class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-5">Add Supplier</button>
-      </div>
-      <div id="supplierList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
-    </section>
-
-    <section id="crm" class="page">
-      <h1 class="text-4xl font-black">CRM Pipeline</h1>
-      <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-4 gap-3">
-        <input id="leadName" class="border rounded-xl px-4 py-3" placeholder="Lead Name" />
-        <input id="leadStage" class="border rounded-xl px-4 py-3" placeholder="Stage" />
-        <input id="leadValue" type="number" class="border rounded-xl px-4 py-3" placeholder="Deal Value" />
-        <input id="leadSource" class="border rounded-xl px-4 py-3" placeholder="Source" />
-        <button onclick="addLead()" class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-4">Add Lead</button>
-      </div>
-      <div id="leadList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
-    </section>
-
-    <section id="negotiation" class="page">
-      <h1 class="text-4xl font-black">Negotiation & Margin</h1>
-      <div class="bg-white p-6 rounded-2xl shadow mt-6">
-        <input id="buyPrice" type="number" class="border rounded-xl px-4 py-3 mr-2" placeholder="Buying Price" />
-        <input id="sellPrice" type="number" class="border rounded-xl px-4 py-3 mr-2" placeholder="Selling Price" />
-        <button onclick="calculateMargin()" class="bg-green-700 text-white px-5 py-3 rounded-xl">Calculate</button>
-        <p id="marginResult" class="font-bold mt-4"></p>
-      </div>
-    </section>
-
-    <section id="tasks" class="page">
-      <h1 class="text-4xl font-black">Tasks</h1>
-      <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-3 gap-3">
-        <input id="taskText" class="border rounded-xl px-4 py-3" placeholder="Task" />
-        <select id="taskPriority" class="border rounded-xl px-4 py-3"><option>Low</option><option selected>Medium</option><option>High</option></select>
-        <button onclick="addTask()" class="bg-blue-700 text-white rounded-xl py-3 font-bold">Add Task</button>
-      </div>
-      <ul id="taskList" class="mt-6 space-y-3"></ul>
-    </section>
-
-    <section id="documents" class="page">
-      <h1 class="text-4xl font-black">Export / Import Documents</h1>
-      <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-5 gap-3">
-        <select id="documentType" class="border rounded-xl px-4 py-3"><option>Commercial Invoice</option><option>Packing List</option><option>Bill of Lading</option><option>Certificate of Origin</option><option>Shipping Bill</option><option>Insurance Certificate</option></select>
-        <input id="shipmentRef" class="border rounded-xl px-4 py-3" placeholder="Shipment Ref" />
-        <input id="docBuyer" class="border rounded-xl px-4 py-3" placeholder="Buyer" />
-        <input id="docSupplier" class="border rounded-xl px-4 py-3" placeholder="Supplier" />
-        <button onclick="addDocument()" class="bg-blue-700 text-white rounded-xl py-3 font-bold">Save</button>
-      </div>
-      <div id="documentList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
-    </section>
-
-    <section id="outreach" class="page">
-      <h1 class="text-4xl font-black">Smart Outreach</h1>
-      <div class="bg-white p-6 rounded-2xl shadow mt-6">
-        <input id="contactEmail" class="border rounded-xl px-4 py-3 mr-2" placeholder="Email" />
-        <input id="contactPhone" class="border rounded-xl px-4 py-3 mr-2" placeholder="WhatsApp Number" />
-        <textarea id="outreachMsg" class="w-full border rounded-xl px-4 py-3 mt-4" rows="5" placeholder="Message"></textarea>
-        <div class="mt-4 space-x-3">
-          <button onclick="sendEmail()" class="bg-blue-700 text-white px-5 py-3 rounded-xl">Send Email</button>
-          <button onclick="openWhatsApp()" class="bg-green-700 text-white px-5 py-3 rounded-xl">Open WhatsApp</button>
-        </div>
-      </div>
-    </section>
-
-    <section id="leadfinder" class="page">
-      <h1 class="text-4xl font-black">AI Lead Finder</h1>
-      <div class="bg-white p-6 rounded-2xl shadow mt-6">
-        <input id="fakeLeadProduct" class="border rounded-xl px-4 py-3 mr-2" placeholder="Product e.g. rice, medicine, jaggery" />
-        <button onclick="generateFakeLeads()" class="bg-purple-700 text-white px-5 py-3 rounded-xl">Generate Demo Leads</button>
-      </div>
-      <div id="fakeLeadList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
-    </section>
-
-    
-    <section id="leadrequest" class="page">
-      <h1 class="text-4xl font-black">Lead Request</h1>
-      <p class="text-slate-500 mt-2">Request verified importer and buyer leads for your export business.</p>
-
-      <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-2 gap-4">
-        <input id="leadRequestProduct" class="border rounded-xl px-4 py-3" placeholder="Product e.g. Rice, Medicine, Jaggery" />
-        <input id="leadRequestCountry" class="border rounded-xl px-4 py-3" placeholder="Target Country e.g. UAE, Saudi" />
-
-        <select id="leadRequestCount" class="border rounded-xl px-4 py-3">
-          <option value="25">25 Leads</option>
-          <option value="50">50 Leads</option>
-          <option value="100">100 Leads</option>
-          <option value="250">250 Leads</option>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <select id="activeWorkspaceSelect" onchange="setActiveWorkspace()" style="max-width:260px;margin-top:0;">
+          <option value="">Select Workspace</option>
         </select>
+        <div class="pill" id="userBadge">Authenticated Workspace</div>
+      </div>
+    </div>
 
-        <select id="leadRequestType" class="border rounded-xl px-4 py-3">
-          <option>Email Leads</option>
-          <option>WhatsApp Leads</option>
-          <option>Full Buyer Profile</option>
-        </select>
+    <section id="dashboardPage">
+      <div class="grid grid-4">
+        <div class="card metric">
+          <h3>Total Suppliers</h3>
+          <p id="supplierCount">0</p>
+          <span>Live from MongoDB</span>
+        </div>
 
-        <textarea id="leadRequestNotes" rows="5" class="border rounded-xl px-4 py-3 md:col-span-2" placeholder="Extra details about buyer requirements"></textarea>
+        <div class="card metric">
+          <h3>CRM Deals</h3>
+          <p id="dashboardDealCount">0</p>
+          <span>Live from MongoDB</span>
+        </div>
 
-        <button onclick="submitLeadRequest()" class="bg-purple-700 text-white py-3 rounded-xl font-bold md:col-span-2">
-          Request Verified Leads
-        </button>
+        <div class="card metric">
+          <h3>Pipeline Value</h3>
+          <p id="dashboardPipelineValue">0</p>
+          <span>CRM tracked</span>
+        </div>
+
+        <div class="card metric">
+          <h3>Closed Deals</h3>
+          <p id="dashboardClosedDeals">0</p>
+          <span>Sales progress</span>
+        </div>
+
+        <div class="card metric">
+          <h3>Unread Alerts</h3>
+          <p id="dashboardUnreadNotifications">0</p>
+          <span>Notifications center</span>
+        </div>
+
+        <div class="card metric">
+          <h3>Workspaces</h3>
+          <p id="dashboardWorkspaceCount">0</p>
+          <span>Multi-company SaaS</span>
+        </div>
       </div>
 
-      <div class="grid md:grid-cols-3 gap-5 mt-8">
-        <div class="bg-white p-6 rounded-2xl shadow">
-          <h2 class="text-xl font-black">Verified Buyers</h2>
-          <p class="text-slate-600 mt-3">Get manually verified buyer/importer data with business relevance.</p>
+      <div class="grid grid-3">
+
+        <div class="card ai-panel">
+          <div class="section-title">🤖 AI Command Center</div>
+          <p class="muted">
+            All AI tools for supplier discovery, outreach, negotiation, CRM, tasks, and export documentation.
+          </p>
+          <button class="btn" onclick="showPage('ai')">Open AI Command Center</button>
         </div>
 
-        <div class="bg-white p-6 rounded-2xl shadow">
-          <h2 class="text-xl font-black">Export Focused</h2>
-          <p class="text-slate-600 mt-3">Designed for rice, agri, jaggery, medicine and food exports.</p>
+        <div class="card">
+          <div class="section-title">🔥 Today’s Priorities</div>
+          <div class="deal">Follow up with supplier leads</div>
+          <div class="deal">Review negotiation margin</div>
+          <div class="deal">Prepare quotation document</div>
         </div>
 
-        <div class="bg-white p-6 rounded-2xl shadow">
-          <h2 class="text-xl font-black">Manual Delivery</h2>
-          <p class="text-slate-600 mt-3">Early-stage requests are processed manually for higher quality.</p>
+        <div class="card">
+          <div class="section-title">⚡ Workspace Health</div>
+          <p class="muted">Backend: Connected</p>
+          <p class="muted">MongoDB: Connected</p>
+          <p class="muted">Auth: Protected</p>
+          <p class="muted">Mode: Multi-user SaaS</p>
+        </div>
+
+      </div>
+    </section>
+
+    <section id="masterPage" class="hidden">
+      <div class="card">
+        <div class="section-title">🏢 Master Company Profile</div>
+        <p class="muted">Store exporter/importer identity, compliance, and company-level settings.</p>
+        <input placeholder="Company Name">
+        <input placeholder="GST Number">
+        <input placeholder="Import Export Code / IEC">
+        <input placeholder="Business Country">
+        <input placeholder="Primary Product Category">
+        <button class="btn">Save Company Profile</button>
+      </div>
+    </section>
+
+    <section id="workspacesPage" class="hidden">
+
+      <div class="grid grid-3">
+
+        <div class="card">
+          <div class="section-title">🏬 Create Company Workspace</div>
+
+          <input id="workspaceCompanyName" placeholder="Company / Workspace Name">
+
+          <select id="workspaceBusinessType">
+            <option>Exporter</option>
+            <option>Importer</option>
+            <option selected>Both</option>
+            <option>Agency</option>
+            <option>Manufacturer</option>
+          </select>
+
+          <input id="workspaceCountry" placeholder="Country">
+          <input id="workspaceGstNumber" placeholder="GST Number">
+          <input id="workspaceIecCode" placeholder="IEC Code">
+          <input id="workspaceIndustry" placeholder="Industry / Product Category">
+
+          <select id="workspaceCurrency">
+            <option>USD</option>
+            <option>INR</option>
+            <option>AED</option>
+            <option>EUR</option>
+            <option>GBP</option>
+          </select>
+
+          <select id="workspaceStatus">
+            <option>Active</option>
+            <option>Inactive</option>
+          </select>
+
+          <button class="btn" onclick="addWorkspace()">
+            Save Workspace
+          </button>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">🧠 Multi-company Intelligence</div>
+          <div class="deal">Manage multiple export/import companies</div>
+          <div class="deal">Switch active company workspace</div>
+          <div class="deal">Store IEC, GST, country, industry</div>
+          <div class="deal">Foundation for true multi-tenant SaaS</div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📊 Workspace Summary</div>
+          <div class="deal">Total Workspaces: <b id="workspaceCount">0</b></div>
+          <div class="deal">Active Workspaces: <b id="activeWorkspaceCount">0</b></div>
+          <div class="deal">Current Workspace: <b id="currentWorkspaceName">None</b></div>
+
+          <button class="btn" onclick="fetchWorkspaces()">
+            Refresh Workspaces
+          </button>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <div class="section-title">🏢 Company Workspace Cards</div>
+        <div id="workspaceList"></div>
+      </div>
+
+    </section>
+
+
+    <section id="employeesPage" class="hidden">
+
+      <div class="grid grid-3">
+
+        <div class="card">
+          <div class="section-title">👥 Add Employee / Team Member</div>
+
+          <input id="employeeName" placeholder="Employee Name">
+          <input id="employeeEmail" placeholder="Employee Email">
+
+          <select id="employeeRole" onchange="applyRolePreset()">
+            <option>Admin</option>
+            <option>Sales Manager</option>
+            <option>Operations</option>
+            <option>Documentation</option>
+            <option>Viewer</option>
+          </select>
+
+          <select id="employeeStatus">
+            <option>Active</option>
+            <option>Inactive</option>
+          </select>
+
+          <div class="deal">
+            <b>Module Permissions</b>
+
+            <label><input type="checkbox" id="permDashboard" checked> Dashboard</label><br>
+            <label><input type="checkbox" id="permSuppliers"> Suppliers</label><br>
+            <label><input type="checkbox" id="permCrm"> CRM</label><br>
+            <label><input type="checkbox" id="permTasks"> Tasks</label><br>
+            <label><input type="checkbox" id="permAnalytics"> Analytics</label><br>
+            <label><input type="checkbox" id="permDocuments"> Documents</label><br>
+            <label><input type="checkbox" id="permOutreach"> Outreach</label><br>
+            <label><input type="checkbox" id="permAi"> AI Command Center</label>
+          </div>
+
+          <button class="btn" onclick="addEmployee()">
+            Save Employee
+          </button>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">🔐 Permission Intelligence</div>
+          <div class="deal">Admin: full workspace access</div>
+          <div class="deal">Sales: suppliers, CRM, outreach, tasks</div>
+          <div class="deal">Operations: tasks, docs, suppliers</div>
+          <div class="deal">Documentation: export docs focused</div>
+          <div class="deal">Viewer: dashboard + analytics only</div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📊 Team Summary</div>
+          <div class="deal">Total Employees: <b id="employeeCount">0</b></div>
+          <div class="deal">Active Employees: <b id="activeEmployeeCount">0</b></div>
+          <div class="deal">Admins: <b id="adminEmployeeCount">0</b></div>
+
+          <button class="btn" onclick="fetchEmployees()">
+            Refresh Team
+          </button>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <div class="section-title">👥 Employee Access Control</div>
+        <div id="employeeList"></div>
+      </div>
+
+    </section>
+
+    <section id="suppliersPage" class="hidden">
+      <div class="grid grid-3">
+
+        <div class="card">
+          <div class="section-title">🌍 Add Supplier Lead</div>
+          <input id="supplierName" placeholder="Supplier Name">
+          <input id="product" placeholder="Product">
+          <input id="country" placeholder="Country">
+          <input id="email" placeholder="Email">
+          <input id="phone" placeholder="Phone">
+          <textarea id="notes" placeholder="Notes / deal context"></textarea>
+          <button class="btn" onclick="addSupplier()">Add Supplier</button>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">Lead Intelligence</div>
+          <p class="muted">Auto-score supplier leads, mark verified leads, and prepare outreach strategy.</p>
+          <div class="deal">Verification Score: 75 default</div>
+          <div class="deal">Source: Manual Entry / AI Finder</div>
+          <div class="deal">Workspace: User-specific</div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">Supplier Filters</div>
+          <input placeholder="Search supplier">
+          <select>
+            <option>All Countries</option>
+            <option>India</option>
+            <option>UAE</option>
+            <option>USA</option>
+            <option>China</option>
+          </select>
+          <button class="btn" onclick="fetchSuppliers()">Refresh Suppliers</button>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <div class="section-title">Saved Suppliers</div>
+        <div id="supplierList"></div>
+      </div>
+    </section>
+
+    <section id="crmPage" class="hidden">
+
+      <div class="grid grid-3">
+
+        <div class="card">
+          <div class="section-title">➕ Add CRM Deal</div>
+
+          <input id="dealCompanyName" placeholder="Company / Buyer Name">
+          <input id="dealContactPerson" placeholder="Contact Person">
+          <input id="dealEmail" placeholder="Email">
+          <input id="dealPhone" placeholder="Phone">
+          <input id="dealProduct" placeholder="Product">
+          <input id="dealCountry" placeholder="Country">
+          <input id="dealValue" type="number" placeholder="Deal Value">
+
+          <select id="dealStage">
+            <option>New Lead</option>
+            <option>Contacted</option>
+            <option>Negotiation</option>
+            <option>Closed</option>
+            <option>Lost</option>
+          </select>
+
+          <select id="dealPriority">
+            <option>Low</option>
+            <option selected>Medium</option>
+            <option>High</option>
+          </select>
+
+          <textarea id="dealNotes" placeholder="Deal notes"></textarea>
+
+          <button class="btn" onclick="addDeal()">Save Deal</button>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">🧲 Drag & Drop CRM</div>
+          <div class="deal">Drag cards between stages</div>
+          <div class="deal">Stage updates save to MongoDB</div>
+          <div class="deal">User-specific CRM pipeline</div>
+          <div class="deal">Premium SaaS kanban experience</div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📊 CRM Summary</div>
+          <div class="deal">Total Deals: <b id="dealCount">0</b></div>
+          <div class="deal">Closed Deals: <b id="closedDealCount">0</b></div>
+          <div class="deal">Pipeline Value: <b id="pipelineValue">0</b></div>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <div class="section-title">📈 Drag & Drop CRM Pipeline</div>
+        <p class="muted">Drag any deal card into another stage. TradeFlow saves the new stage instantly.</p>
+
+        <div class="kanban">
+          <div class="column" data-stage="New Lead" ondragover="allowDealDrop(event)" ondragenter="highlightDropZone(event)" ondragleave="removeDropHighlight(event)" ondrop="dropDeal(event)">
+            <b>New Lead</b>
+            <div class="drag-hint">Drop new opportunities here</div>
+            <div id="newLeadDeals"></div>
+          </div>
+
+          <div class="column" data-stage="Contacted" ondragover="allowDealDrop(event)" ondragenter="highlightDropZone(event)" ondragleave="removeDropHighlight(event)" ondrop="dropDeal(event)">
+            <b>Contacted</b>
+            <div class="drag-hint">Supplier/buyer contacted</div>
+            <div id="contactedDeals"></div>
+          </div>
+
+          <div class="column" data-stage="Negotiation" ondragover="allowDealDrop(event)" ondragenter="highlightDropZone(event)" ondragleave="removeDropHighlight(event)" ondrop="dropDeal(event)">
+            <b>Negotiation</b>
+            <div class="drag-hint">Pricing and terms discussion</div>
+            <div id="negotiationDeals"></div>
+          </div>
+
+          <div class="column" data-stage="Closed" ondragover="allowDealDrop(event)" ondragenter="highlightDropZone(event)" ondragleave="removeDropHighlight(event)" ondrop="dropDeal(event)">
+            <b>Closed</b>
+            <div class="drag-hint">Successful deals</div>
+            <div id="closedDeals"></div>
+          </div>
+
+          <div class="column" data-stage="Lost" ondragover="allowDealDrop(event)" ondragenter="highlightDropZone(event)" ondragleave="removeDropHighlight(event)" ondrop="dropDeal(event)">
+            <b>Lost</b>
+            <div class="drag-hint">Not converted</div>
+            <div id="lostDeals"></div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <section id="negotiationPage" class="hidden">
+      <div class="card">
+        <div class="section-title">💰 Negotiation Desk</div>
+        <input placeholder="Supplier Name">
+        <input placeholder="Quoted Price">
+        <input placeholder="Target Price">
+        <input placeholder="Expected Margin">
+        <button class="btn">Analyze Negotiation</button>
+      </div>
+    </section>
+
+    <section id="tasksPage" class="hidden">
+
+      <div class="grid grid-3">
+
+        <div class="card">
+          <div class="section-title">➕ Create Task</div>
+
+          <input id="taskTitle" placeholder="Task Title">
+          <input id="taskRelatedTo" placeholder="Related To (CRM / Supplier / Buyer)">
+          <input id="taskDueDate" type="date">
+
+          <select id="taskPriority">
+            <option>Low</option>
+            <option selected>Medium</option>
+            <option>High</option>
+          </select>
+
+          <select id="taskStatus">
+            <option>Pending</option>
+            <option>In Progress</option>
+            <option>Completed</option>
+          </select>
+
+          <textarea id="taskNotes" placeholder="Task Notes"></textarea>
+
+          <button class="btn" onclick="addTask()">
+            Create Task
+          </button>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">🤖 AI Task Intelligence</div>
+          <div class="deal">User-specific task storage</div>
+          <div class="deal">Priority management</div>
+          <div class="deal">CRM-linked tasks</div>
+          <div class="deal">Future AI reminders</div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📊 Task Summary</div>
+          <div class="deal">Total Tasks: <b id="taskCount">0</b></div>
+          <div class="deal">Completed: <b id="completedTaskCount">0</b></div>
+          <div class="deal">Pending: <b id="pendingTaskCount">0</b></div>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <div class="section-title">✅ Workspace Tasks</div>
+        <div id="taskList"></div>
+      </div>
+
+    </section>
+
+    <section id="marketingPage" class="hidden">
+      <div class="card">
+        <div class="section-title">📣 Marketing & Branding</div>
+        <div class="grid grid-3">
+          <div class="deal">Campaign Manager</div>
+          <div class="deal">Brand Asset Storage</div>
+          <div class="deal">AI Campaign Ideas</div>
         </div>
       </div>
     </section>
 
-<section id="billing" class="page">
-  <h1 class="text-4xl font-black">Billing / Plans</h1>
-  <p class="text-slate-500 mt-2">
-    Choose a plan and request activation. Our team will contact you for manual onboarding.
-  </p>
+    <section id="documentsPage" class="hidden">
 
-  <div id="billingPlans" class="grid md:grid-cols-4 gap-6 mt-8"></div>
-</section>
+      <div class="grid grid-3">
 
-   
-<section id="admin" class="page">
+        <div class="card">
+          <div class="section-title">📄 Generate Export Invoice PDF</div>
 
-  <h1 class="text-4xl font-black">
-    TradeFlow Admin OS
-  </h1>
+          <input id="pdfCompanyName" placeholder="Exporter Company Name">
+          <input id="pdfBuyerName" placeholder="Buyer Name">
+          <input id="pdfProduct" placeholder="Product">
+          <input id="pdfQuantity" type="number" placeholder="Quantity">
+          <input id="pdfPrice" type="number" placeholder="Unit Price">
+          <input id="pdfCountry" placeholder="Destination Country">
+          <textarea id="pdfNotes" placeholder="Invoice Notes / Terms"></textarea>
 
-  <p class="text-slate-500 mt-2">
-    Control companies, users, upgrade requests, lead requests and manual plan activation.
-  </p>
-
-  <div class="grid md:grid-cols-4 gap-5 mt-8">
-    <div class="bg-white p-6 rounded-2xl shadow">
-      <p>Total Companies</p>
-      <h2 id="adminCompanyCount" class="text-3xl font-black mt-2">0</h2>
-    </div>
-
-    <div class="bg-white p-6 rounded-2xl shadow">
-      <p>Total Users</p>
-      <h2 id="adminUserCount" class="text-3xl font-black mt-2">0</h2>
-    </div>
-
-    <div class="bg-white p-6 rounded-2xl shadow">
-      <p>Upgrade Requests</p>
-      <h2 id="adminUpgradeCount" class="text-3xl font-black mt-2">0</h2>
-    </div>
-
-    <div class="bg-white p-6 rounded-2xl shadow">
-      <p>Lead Requests</p>
-      <h2 id="adminLeadRequestCount" class="text-3xl font-black mt-2">0</h2>
-    </div>
-  </div>
-
-  <div class="bg-white p-6 rounded-2xl shadow mt-8">
-    <div class="flex justify-between items-center">
-      <h2 class="text-2xl font-black">Companies / Workspaces</h2>
-      <button onclick="loadAdminData()" class="bg-slate-900 text-white px-5 py-3 rounded-xl font-bold">
-        Refresh Admin Data
-      </button>
-    </div>
-
-    <div id="adminCompanies" class="grid md:grid-cols-2 gap-5 mt-6"></div>
-  </div>
-
-  <div class="bg-white p-6 rounded-2xl shadow mt-8">
-    <h2 class="text-2xl font-black">Upgrade Requests</h2>
-    <div id="adminUpgradeRequests" class="grid md:grid-cols-2 gap-5 mt-6"></div>
-  </div>
-
-  <div class="bg-white p-6 rounded-2xl shadow mt-8">
-    <h2 class="text-2xl font-black">Lead Requests</h2>
-    <div id="adminLeadRequests" class="grid md:grid-cols-2 gap-5 mt-6"></div>
-  </div>
-
-  <div class="bg-white p-6 rounded-2xl shadow mt-8">
-    <h2 class="text-2xl font-black">All Users</h2>
-    <div id="adminUsers" class="grid md:grid-cols-3 gap-5 mt-6"></div>
-  </div>
-
-</section>
-
-<section id="settings" class="page">
-
-  <h1 class="text-4xl font-black">
-    Workspace Settings
-  </h1>
-
-  <p class="text-slate-500 mt-2">
-    Manage your workspace, subscription, AI controls and security.
-  </p>
-
-  <div class="grid md:grid-cols-2 gap-6 mt-8">
-
-    <div class="bg-white p-6 rounded-2xl shadow">
-
-      <h2 class="text-2xl font-black">
-        Workspace
-      </h2>
-
-      <div class="mt-5 space-y-4">
-
-        <input
-          id="workspaceCompany"
-          class="border rounded-xl px-4 py-3 w-full"
-          placeholder="Company Name"
-        >
-
-        <input
-          id="workspaceIndustry"
-          class="border rounded-xl px-4 py-3 w-full"
-          placeholder="Industry"
-        >
-
-        <input
-          id="workspaceEmail"
-          class="border rounded-xl px-4 py-3 w-full"
-          placeholder="Workspace Email"
-        >
-
-        <button
-          class="w-full bg-blue-700 text-white py-3 rounded-xl font-bold"
-        >
-          Save Workspace
-        </button>
-
-      </div>
-
-    </div>
-
-    <div class="bg-white p-6 rounded-2xl shadow">
-
-      <h2 class="text-2xl font-black">
-        Subscription
-      </h2>
-
-      <div class="mt-5 space-y-3">
-
-        <div class="flex justify-between">
-          <span>Current Plan</span>
-          <b>PRO</b>
+          <button class="btn" onclick="generateInvoicePDF()">
+            Download Invoice PDF
+          </button>
         </div>
 
-        <div class="flex justify-between">
-          <span>Status</span>
-          <b class="text-green-600">
-            Active
-          </b>
+        <div class="card ai-panel">
+          <div class="section-title">🤖 Document Intelligence</div>
+          <div class="deal">Commercial Invoice Generator</div>
+          <div class="deal">Company branding ready</div>
+          <div class="deal">Authenticated PDF API</div>
+          <div class="deal">Future: Packing List + Quotation + Bill of Lading</div>
         </div>
 
-        <div class="flex justify-between">
-          <span>Next Renewal</span>
-          <b>28 June 2026</b>
-        </div>
-
-        <div class="flex justify-between">
-          <span>Workspace Users</span>
-          <b>12</b>
-        </div>
-
-        <button
-          class="mt-5 w-full bg-blue-700 text-white py-3 rounded-xl font-bold"
-        >
-          Upgrade Plan
-        </button>
-
-      </div>
-
-    </div>
-
-    <div class="bg-white p-6 rounded-2xl shadow">
-
-      <h2 class="text-2xl font-black">
-        AI Controls
-      </h2>
-
-      <div class="mt-5 space-y-4">
-
-        <label class="flex justify-between items-center">
-
-          <span>
-            AI Lead Scoring
-          </span>
-
-          <input type="checkbox" checked>
-
-        </label>
-
-        <label class="flex justify-between items-center">
-
-          <span>
-            Smart Outreach
-          </span>
-
-          <input type="checkbox" checked>
-
-        </label>
-
-        <label class="flex justify-between items-center">
-
-          <span>
-            Auto Follow-up
-          </span>
-
-          <input type="checkbox" checked>
-
-        </label>
-
-        <label class="flex justify-between items-center">
-
-          <span>
-            Export Intelligence
-          </span>
-
-          <input type="checkbox" checked>
-
-        </label>
-
-      </div>
-
-    </div>
-
-    <div class="bg-white p-6 rounded-2xl shadow">
-
-      <h2 class="text-2xl font-black">
-        Security
-      </h2>
-
-      <div class="mt-5 space-y-4">
-
-        <button
-          class="w-full bg-slate-900 text-white py-3 rounded-xl"
-        >
-          Change Password
-        </button>
-
-        <button
-          class="w-full bg-slate-900 text-white py-3 rounded-xl"
-        >
-          Session Management
-        </button>
-
-        <button
-          class="w-full bg-slate-900 text-white py-3 rounded-xl"
-        >
-          Two Factor Authentication
-        </button>
-
-      </div>
-
-    </div>
-
-    <div class="bg-white p-6 rounded-2xl shadow">
-
-      <h2 class="text-2xl font-black">
-        Integrations
-      </h2>
-
-      <div class="mt-5 space-y-4">
-
-        <div class="flex justify-between">
-          <span>WhatsApp API</span>
-          <b class="text-green-600">Connected</b>
-        </div>
-
-        <div class="flex justify-between">
-          <span>Email Outreach</span>
-          <b class="text-green-600">Connected</b>
-        </div>
-
-        <div class="flex justify-between">
-          <span>Razorpay</span>
-          <b class="text-yellow-600">Pending</b>
-        </div>
-
-        <div class="flex justify-between">
-          <span>AI Engine</span>
-          <b class="text-green-600">Active</b>
+        <div class="card">
+          <div class="section-title">📦 Export Document Suite</div>
+          <button class="btn" onclick="generateInvoicePDF()">Generate Invoice</button>
+          <button class="btn" onclick="alert('Packing List PDF coming next')">Generate Packing List</button>
+          <button class="btn" onclick="alert('Quotation PDF coming next')">Generate Quotation</button>
+          <button class="btn" onclick="alert('Shipping Checklist coming next')">Generate Shipping Checklist</button>
         </div>
 
       </div>
 
-    </div>
+    </section>
 
-    <div class="bg-white p-6 rounded-2xl shadow">
+    <section id="outreachPage" class="hidden">
 
-      <h2 class="text-2xl font-black">
-        Branding
-      </h2>
+      <div class="grid grid-3">
 
-      <div class="mt-5 space-y-4">
+        <div class="card">
+          <div class="section-title">📲 WhatsApp Automation</div>
 
-        <input
-          class="border rounded-xl px-4 py-3 w-full"
-          placeholder="Company Display Name"
-        >
+          <input id="outreachContactName" placeholder="Contact / Supplier Name">
+          <input id="outreachPhone" placeholder="WhatsApp Number with country code, e.g. 919876543210">
+          <input id="outreachProduct" placeholder="Product / Deal Context">
 
-        <input
-          class="border rounded-xl px-4 py-3 w-full"
-          placeholder="Invoice Branding"
-        >
+          <textarea id="outreachMessage">Hello, we are interested in discussing export/import business opportunities with your company.</textarea>
 
-        <input
-          class="border rounded-xl px-4 py-3 w-full"
-          placeholder="Export Document Footer"
-        >
+          <select id="outreachStatus">
+            <option>Draft</option>
+            <option>Opened</option>
+            <option>Follow-up Needed</option>
+            <option>Converted</option>
+            <option>Closed</option>
+          </select>
 
-        <button
-          class="w-full bg-blue-700 text-white py-3 rounded-xl font-bold"
-        >
-          Save Branding
-        </button>
+          <textarea id="outreachNotes" placeholder="Internal notes"></textarea>
+
+          <button class="btn" onclick="saveOutreachRecord()">
+            Save WhatsApp Record
+          </button>
+
+          <button class="btn" onclick="saveAndOpenWhatsApp()">
+            Save & Open WhatsApp
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📧 Real Email Automation</div>
+
+          <input id="emailTo" placeholder="Recipient Email">
+          <input id="emailSubject" placeholder="Email Subject">
+          <textarea id="emailMessage" placeholder="Email message"></textarea>
+
+          <button class="btn" onclick="generateEmailMessage()">
+            Generate AI Email
+          </button>
+
+          <button class="btn" onclick="sendTradeFlowEmail()">
+            Send Email from TradeFlow
+          </button>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">🤖 Outreach Intelligence</div>
+
+          <input id="waAiProduct" placeholder="Product">
+          <input id="waAiBuyer" placeholder="Buyer / Supplier Type">
+
+          <button class="btn" onclick="generateWhatsAppMessage()">
+            Generate WhatsApp Message
+          </button>
+
+          <div class="deal">
+            WhatsApp outreach saved in MongoDB
+          </div>
+
+          <div class="deal">
+            Real email sending via backend Nodemailer
+          </div>
+
+          <div class="deal">
+            AI-ready sales message generation
+          </div>
+        </div>
 
       </div>
 
-    </div>
+      <div class="grid grid-3">
 
-  </div>
+        <div class="card">
+          <div class="section-title">📊 Outreach Summary</div>
 
-</section>
+          <div class="deal">
+            Total WhatsApp Records:
+            <b id="outreachCount">0</b>
+          </div>
 
-    <footer class="mt-16 text-center text-slate-500">
-      © 2026 TradeFlow AI™ — Export / Import SaaS Workspace Platform
+          <div class="deal">
+            Follow-up Needed:
+            <b id="outreachFollowupCount">0</b>
+          </div>
+
+          <div class="deal">
+            Converted:
+            <b id="outreachConvertedCount">0</b>
+          </div>
+
+          <button class="btn" onclick="fetchOutreachRecords()">
+            Refresh Outreach
+          </button>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">📨 Email Follow-up Templates</div>
+
+          <button class="mini-btn" onclick="useEmailTemplate('supplier')">
+            Supplier Inquiry Template
+          </button>
+
+          <button class="mini-btn" onclick="useEmailTemplate('buyer')">
+            Buyer Proposal Template
+          </button>
+
+          <button class="mini-btn" onclick="useEmailTemplate('followup')">
+            Follow-up Template
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">⚡ Automation Status</div>
+          <div class="deal">Email API: /api/email/send</div>
+          <div class="deal">WhatsApp API: wa.me launch</div>
+          <div class="deal">Outreach DB: MongoDB records</div>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <div class="section-title">📜 WhatsApp Outreach History</div>
+        <div id="outreachList"></div>
+      </div>
+
+    </section>
+
+    <section id="analyticsPage" class="hidden">
+
+      <div class="grid grid-4">
+
+        <div class="card metric">
+          <h3>Total Suppliers</h3>
+          <p id="analyticsTotalSuppliers">0</p>
+          <span>Live workspace leads</span>
+        </div>
+
+        <div class="card metric">
+          <h3>Total Deals</h3>
+          <p id="analyticsTotalDeals">0</p>
+          <span>CRM database</span>
+        </div>
+
+        <div class="card metric">
+          <h3>Pipeline Value</h3>
+          <p id="analyticsPipelineValue">0</p>
+          <span>Open + closed deals</span>
+        </div>
+
+        <div class="card metric">
+          <h3>Conversion Rate</h3>
+          <p id="analyticsConversionRate">0%</p>
+          <span>Closed / total deals</span>
+        </div>
+
+      </div>
+
+      <div class="grid grid-3">
+
+        <div class="card ai-panel">
+          <div class="section-title">📊 Live Analytics Engine</div>
+          <p class="muted">
+            Analytics are calculated from your MongoDB suppliers, CRM deals, and task automation data.
+          </p>
+
+          <div class="deal">
+            Closed Deal Value:
+            <b id="analyticsClosedValue">0</b>
+          </div>
+
+          <div class="deal">
+            Average Supplier Score:
+            <b id="analyticsAverageSupplierScore">0</b>
+          </div>
+
+          <div class="deal">
+            Task Completion Rate:
+            <b id="analyticsTaskCompletionRate">0%</b>
+          </div>
+
+          <button class="btn" onclick="fetchAnalytics()">
+            Refresh Analytics
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📈 Deal Stage Breakdown</div>
+
+          <div class="deal">New Leads: <b id="analyticsNewLead">0</b></div>
+          <div class="deal">Contacted: <b id="analyticsContacted">0</b></div>
+          <div class="deal">Negotiation: <b id="analyticsNegotiation">0</b></div>
+          <div class="deal">Closed: <b id="analyticsClosed">0</b></div>
+          <div class="deal">Lost: <b id="analyticsLost">0</b></div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">✅ Task Performance</div>
+
+          <div class="deal">Total Tasks: <b id="analyticsTotalTasks">0</b></div>
+          <div class="deal">Pending Tasks: <b id="analyticsPendingTasks">0</b></div>
+          <div class="deal">Completed Tasks: <b id="analyticsCompletedTasks">0</b></div>
+          <div class="deal">Action: Use AI Task Planner for follow-ups</div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <section id="aiPage" class="hidden">
+
+      <div class="card ai-panel">
+        <div class="section-title">🤖 AI Command Center</div>
+        <p class="muted">
+          One AI hub for TradeFlow: supplier discovery, outreach, negotiation, CRM advice, tasks, and export documentation.
+        </p>
+      </div>
+
+      <div class="grid grid-2">
+
+        <div class="card">
+          <div class="section-title">🌍 AI Supplier Finder</div>
+          <input type="text" id="aiProduct" placeholder="Product (Rice, Medicine, Jaggery...)">
+          <input type="text" id="aiCountry" placeholder="Country (India, UAE, USA...)">
+          <button class="btn" onclick="findAISuppliers()">Find AI Suppliers</button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📧 AI Outreach Writer</div>
+          <input id="aiOutreachProduct" placeholder="Product / Service">
+          <input id="aiOutreachBuyer" placeholder="Buyer / Supplier Type">
+          <textarea id="aiOutreachOutput" class="ai-output" placeholder="AI outreach message will appear here..."></textarea>
+          <button class="btn" onclick="generateOutreach()">Generate Outreach Message</button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📧 AI Email Writer</div>
+          <input id="aiEmailProduct" placeholder="Product / Service">
+          <input id="aiEmailReceiver" placeholder="Receiver Type (supplier / buyer)">
+          <textarea id="aiEmailOutput" class="ai-output" placeholder="AI email will appear here..."></textarea>
+          <button class="btn" onclick="generateAIEmail()">Generate Email Draft</button>
+          <button class="mini-btn" onclick="copyAIEmailToSender()">Copy to Email Sender</button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">💰 AI Negotiation Assistant</div>
+          <input id="aiQuotedPrice" placeholder="Quoted Price">
+          <input id="aiTargetPrice" placeholder="Target Price">
+          <textarea id="aiNegotiationOutput" class="ai-output" placeholder="AI negotiation advice will appear here..."></textarea>
+          <button class="btn" onclick="generateNegotiationAdvice()">Generate Negotiation Advice</button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📄 AI Export Document Helper</div>
+          <input id="aiDocProduct" placeholder="Product">
+          <input id="aiDocCountry" placeholder="Destination Country">
+          <textarea id="aiDocOutput" class="ai-output" placeholder="AI export document checklist will appear here..."></textarea>
+          <button class="btn" onclick="generateDocumentHelp()">Generate Checklist</button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📈 AI CRM Deal Advisor</div>
+          <input id="aiDealStage" placeholder="Deal Stage (New Lead / Negotiation / Closed)">
+          <input id="aiDealValue" placeholder="Deal Value">
+          <textarea id="aiCrmOutput" class="ai-output" placeholder="AI CRM advice will appear here..."></textarea>
+          <button class="btn" onclick="generateCrmAdvice()">Generate CRM Advice</button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">✅ AI Task Planner</div>
+          <input id="aiTaskGoal" placeholder="Goal (close rice buyer, follow up supplier...)">
+          <textarea id="aiTaskOutput" class="ai-output" placeholder="AI task plan will appear here..."></textarea>
+          <button class="btn" onclick="generateTaskPlan()">Generate Task Plan</button>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <div class="section-title">🌍 AI Supplier Results</div>
+        <div id="aiSupplierResults"></div>
+      </div>
+
+    </section>
+
+    <section id="notificationsPage" class="hidden">
+
+      <div class="grid grid-3">
+
+        <div class="card">
+          <div class="section-title">🔔 Create Notification</div>
+
+          <input id="notificationTitle" placeholder="Notification Title">
+
+          <textarea id="notificationMessage" placeholder="Notification message"></textarea>
+
+          <select id="notificationType">
+            <option>General</option>
+            <option>CRM</option>
+            <option>Supplier</option>
+            <option>Task</option>
+            <option>Outreach</option>
+            <option>Document</option>
+            <option>AI</option>
+            <option>System</option>
+          </select>
+
+          <select id="notificationPriority">
+            <option>Low</option>
+            <option selected>Medium</option>
+            <option>High</option>
+          </select>
+
+          <button class="btn" onclick="addNotification()">
+            Save Notification
+          </button>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">🤖 Smart Alert Intelligence</div>
+          <div class="deal">CRM follow-up reminders</div>
+          <div class="deal">Task deadline alerts</div>
+          <div class="deal">Supplier action notifications</div>
+          <div class="deal">System + AI alerts</div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📊 Notification Summary</div>
+          <div class="deal">Total Notifications: <b id="notificationCount">0</b></div>
+          <div class="deal">Unread: <b id="unreadNotificationCount">0</b></div>
+          <div class="deal">High Priority: <b id="highPriorityNotificationCount">0</b></div>
+
+          <button class="btn" onclick="fetchNotifications()">
+            Refresh Notifications
+          </button>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <div class="section-title">📜 Notification History</div>
+        <div id="notificationList"></div>
+      </div>
+
+    </section>
+
+    <footer>
+      © 2026 TradeFlow Cloud — Advanced Export / Import SaaS OS
     </footer>
 
   </main>
-</section>
+</div>
 
 <script>
-const API_BASE = "https://trade-flow-lc1k.onrender.com";
-let CURRENT_USER = null;
-let AUTH_MODE = "user";
+const API_URL = "http://localhost:5000/suppliers";
+const AI_URL = "http://localhost:5000/api/ai";
+const DEAL_URL = "http://localhost:5000/api/deals";
+const TASK_URL = "http://localhost:5000/api/tasks";
+const PDF_URL = "http://localhost:5000/api/pdf";
+const ANALYTICS_URL = "http://localhost:5000/api/analytics";
+const OUTREACH_URL = "http://localhost:5000/api/outreach";
+const EMAIL_URL = "http://localhost:5000/api/email";
+const EMPLOYEE_URL = "http://localhost:5000/api/employees";
+const NOTIFICATION_URL = "http://localhost:5000/api/notifications";
+const WORKSPACE_URL = "http://localhost:5000/api/workspaces";
 
-function openAuth(mode="user"){
-  setAuthMode(mode);
-  document.getElementById("landingScreen").classList.add("hidden");
-  document.getElementById("authScreen").classList.remove("hidden");
-}
-function setAuthMode(mode){
-  AUTH_MODE = mode;
-  const isAdmin = mode === "admin";
-  const userTab = document.getElementById("userLoginTab");
-  const adminTab = document.getElementById("adminLoginTab");
-  if(userTab && adminTab){
-    userTab.className = isAdmin ? "bg-slate-200 text-slate-900 rounded-xl py-3 font-bold" : "bg-blue-700 text-white rounded-xl py-3 font-bold";
-    adminTab.className = isAdmin ? "bg-slate-900 text-white rounded-xl py-3 font-bold" : "bg-slate-200 text-slate-900 rounded-xl py-3 font-bold";
-  }
-  const authName = document.getElementById("authName");
-  const companyName = document.getElementById("companyName");
-  const title = document.getElementById("authTitle");
-  const subtitle = document.getElementById("authSubtitle");
-  const btn = document.getElementById("authActionBtn");
-  const help = document.getElementById("authHelpText");
-  if(authName && companyName){
-    authName.style.display = isAdmin ? "none" : "block";
-    companyName.style.display = isAdmin ? "none" : "block";
-    if(isAdmin){ authName.value = ""; companyName.value = ""; }
-  }
-  if(title) title.innerText = isAdmin ? "Admin OS Login" : "TradeFlow AI™";
-  if(subtitle) subtitle.innerText = isAdmin ? "Login to manage companies, lead requests and upgrades" : "Login or create your export workspace";
-  if(btn) btn.innerText = isAdmin ? "Login as Admin" : "Login / Create Workspace";
-  if(help) help.innerText = isAdmin ? "Admin access is restricted to the approved owner email." : "For login: leave name blank. For signup: enter name + company.";
-}
-function backToLanding(){document.getElementById("authScreen").classList.add("hidden");document.getElementById("landingScreen").classList.remove("hidden");}
-function scrollToPricing(){document.getElementById("pricing").scrollIntoView({behavior:"smooth"});}
-function getToken(){return localStorage.getItem("tradeflowToken");}
-function setToken(token){localStorage.setItem("tradeflowToken",token);}
-function removeToken(){localStorage.removeItem("tradeflowToken");}
-
-async function api(path,options={}){
-  const token=getToken();
-  const headers={"Content-Type":"application/json",...(token?{Authorization:`Bearer ${token}`}:{})};
-  const response=await fetch(API_BASE+path,{...options,headers});
-  const data=await response.json().catch(()=>({}));
-  if(!response.ok){if(response.status===401)removeToken();throw new Error(data.message||data.error||"Request failed");}
-  return data;
+function getUser() {
+  const user = localStorage.getItem("tradeflowUser");
+  return user ? JSON.parse(user) : null;
 }
 
-document.addEventListener("DOMContentLoaded",async()=>{
-  const apiText=document.getElementById("apiText"); if(apiText) apiText.innerText=API_BASE;
-  if(getToken()){
-    try{const data=await api("/api/auth/me");CURRENT_USER=data.user;showApp(data.user);await loadAll();}
-    catch(err){console.log(err.message);removeToken();}
+function protectDashboard() {
+  const user = getUser();
+
+  if (!user || !user.token) {
+    window.location.href = "login.html";
+    return;
   }
-});
 
-async function login(){
-  try{
-    const name=document.getElementById("authName").value.trim();
-    const companyName=document.getElementById("companyName").value.trim();
-    const email=document.getElementById("authEmail").value.trim();
-    const password=document.getElementById("authPassword").value.trim();
-    if(!email||!password)return alert("Email and password required");
+  document.getElementById("workspaceName").innerText =
+    `${user.companyName || "TradeFlow Company"} • ${user.name || "User"} Workspace`;
 
-    let data;
+  document.getElementById("userBadge").innerText =
+    user.email || "Authenticated User";
+}
 
-    if(AUTH_MODE === "admin"){
-      data=await api("/api/auth/login",{method:"POST",body:JSON.stringify({email,password})});
+protectDashboard();
 
-      if(!data.user || !data.user.isAdmin){
-        removeToken();
-        alert("Admin access denied. Please use the approved admin email.");
-        return;
-      }
+function getAuthHeaders() {
+  const user = getUser();
 
-      setToken(data.token);
-      CURRENT_USER=data.user;
-      showApp(data.user);
-      await loadAll();
-      showPage("admin");
+  return {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${user.token}`
+  };
+}
+
+function logoutUser() {
+  localStorage.removeItem("tradeflowUser");
+  window.location.href = "login.html";
+}
+
+const pages = [
+  "dashboard",
+  "master",
+  "workspaces",
+  "employees",
+  "suppliers",
+  "crm",
+  "negotiation",
+  "tasks",
+  "marketing",
+  "documents",
+  "outreach",
+  "analytics",
+  "ai",
+  "notifications"
+];
+
+function showPage(page) {
+  pages.forEach((p) => {
+    document.getElementById(`${p}Page`).classList.add("hidden");
+  });
+
+  document.getElementById(`${page}Page`).classList.remove("hidden");
+
+  if (page === "suppliers" || page === "dashboard") {
+    fetchSuppliers();
+  }
+
+  if (page === "crm" || page === "dashboard") {
+    fetchDeals();
+  }
+
+  if (page === "analytics" || page === "dashboard") {
+    fetchAnalytics();
+  }
+
+  if (page === "outreach") {
+    fetchOutreachRecords();
+fetchEmployees();
+applyRolePreset();
+fetchNotifications();
+  }
+
+  if (page === "employees") {
+    fetchEmployees();
+  }
+
+  if (page === "notifications" || page === "dashboard") {
+    fetchNotifications();
+  }
+
+  if (page === "workspaces" || page === "dashboard") {
+    fetchWorkspaces();
+  }
+
+  if (page === "tasks") {
+    fetchTasks();
+  }
+
+  if (page === "tasks" || page === "dashboard") {
+    fetchTasks();
+  }
+}
+
+
+function getEmployeePermissionsFromForm() {
+  return {
+    dashboard: document.getElementById("permDashboard").checked,
+    suppliers: document.getElementById("permSuppliers").checked,
+    crm: document.getElementById("permCrm").checked,
+    tasks: document.getElementById("permTasks").checked,
+    analytics: document.getElementById("permAnalytics").checked,
+    documents: document.getElementById("permDocuments").checked,
+    outreach: document.getElementById("permOutreach").checked,
+    ai: document.getElementById("permAi").checked
+  };
+}
+
+function setEmployeePermissions(perms) {
+  document.getElementById("permDashboard").checked = !!perms.dashboard;
+  document.getElementById("permSuppliers").checked = !!perms.suppliers;
+  document.getElementById("permCrm").checked = !!perms.crm;
+  document.getElementById("permTasks").checked = !!perms.tasks;
+  document.getElementById("permAnalytics").checked = !!perms.analytics;
+  document.getElementById("permDocuments").checked = !!perms.documents;
+  document.getElementById("permOutreach").checked = !!perms.outreach;
+  document.getElementById("permAi").checked = !!perms.ai;
+}
+
+function applyRolePreset() {
+  const role = document.getElementById("employeeRole").value;
+
+  const presets = {
+    "Admin": {
+      dashboard: true,
+      suppliers: true,
+      crm: true,
+      tasks: true,
+      analytics: true,
+      documents: true,
+      outreach: true,
+      ai: true
+    },
+    "Sales Manager": {
+      dashboard: true,
+      suppliers: true,
+      crm: true,
+      tasks: true,
+      analytics: true,
+      documents: false,
+      outreach: true,
+      ai: true
+    },
+    "Operations": {
+      dashboard: true,
+      suppliers: true,
+      crm: false,
+      tasks: true,
+      analytics: true,
+      documents: true,
+      outreach: false,
+      ai: false
+    },
+    "Documentation": {
+      dashboard: true,
+      suppliers: false,
+      crm: false,
+      tasks: true,
+      analytics: false,
+      documents: true,
+      outreach: false,
+      ai: false
+    },
+    "Viewer": {
+      dashboard: true,
+      suppliers: false,
+      crm: false,
+      tasks: false,
+      analytics: true,
+      documents: false,
+      outreach: false,
+      ai: false
+    }
+  };
+
+  setEmployeePermissions(presets[role]);
+}
+
+async function fetchEmployees() {
+  try {
+    const res = await fetch(EMPLOYEE_URL, {
+      headers: getAuthHeaders()
+    });
+
+    if (res.status === 401) {
+      logoutUser();
       return;
     }
 
-    if(name){data=await api("/api/auth/register",{method:"POST",body:JSON.stringify({name,companyName,email,password})});}
-    else{data=await api("/api/auth/login",{method:"POST",body:JSON.stringify({email,password})});}
+    const employees = await res.json();
 
-    setToken(data.token);CURRENT_USER=data.user;showApp(data.user);await loadAll();
-  }catch(err){alert(err.message);}
-}
-
-function logout(){removeToken();location.reload();}
-function showApp(user){
-  document.getElementById("landingScreen").classList.add("hidden");
-  document.getElementById("authScreen").classList.add("hidden");
-  document.getElementById("appScreen").classList.remove("hidden");
-  document.getElementById("userRoleText").innerText=`${user.companyName||"Workspace"} • ${user.role||"USER"} • ${user.plan||"FREE"}`;
-
-  const adminBtn = document.getElementById("adminNavBtn");
-  if(adminBtn && user.isAdmin){
-    adminBtn.classList.remove("hidden");
+    renderEmployees(employees);
+  } catch (error) {
+    console.log("Employee backend not connected:", error.message);
   }
 }
-function showPage(pageId){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
-  document.getElementById(pageId)?.classList.add("active");
-  const btn=[...document.querySelectorAll(".nav-btn")].find(b=>b.getAttribute("onclick")?.includes(pageId));
-  if(btn)btn.classList.add("active");
-  if(pageId==="billing")loadPlans();
-  if(pageId==="admin")loadAdminData();
+
+function renderEmployees(employees) {
+  const list = document.getElementById("employeeList");
+
+  if (!list) return;
+
+  list.innerHTML = "";
+
+  let activeCount = 0;
+  let adminCount = 0;
+
+  employees.forEach((employee) => {
+    if (employee.status === "Active") activeCount++;
+    if (employee.role === "Admin") adminCount++;
+
+    const permissions = employee.permissions || {};
+
+    list.innerHTML += `
+      <div class="supplier-card">
+        <h2 style="font-size:20px;font-weight:900;color:white;">
+          ${employee.name}
+        </h2>
+
+        <p class="muted">Email: ${employee.email}</p>
+        <p class="muted">Role: ${employee.role}</p>
+        <p class="muted">Status: ${employee.status}</p>
+
+        <span class="status">
+          ${employee.status || "Active"}
+        </span>
+
+        <div class="deal">
+          <b>Permissions:</b><br>
+          Dashboard: ${permissions.dashboard ? "✅" : "❌"} |
+          Suppliers: ${permissions.suppliers ? "✅" : "❌"} |
+          CRM: ${permissions.crm ? "✅" : "❌"} |
+          Tasks: ${permissions.tasks ? "✅" : "❌"}<br>
+          Analytics: ${permissions.analytics ? "✅" : "❌"} |
+          Documents: ${permissions.documents ? "✅" : "❌"} |
+          Outreach: ${permissions.outreach ? "✅" : "❌"} |
+          AI: ${permissions.ai ? "✅" : "❌"}
+        </div>
+
+        <select onchange="quickUpdateEmployeeStatus('${employee._id}', this.value)">
+          <option ${employee.status === "Active" ? "selected" : ""}>Active</option>
+          <option ${employee.status === "Inactive" ? "selected" : ""}>Inactive</option>
+        </select>
+
+        <button class="danger-btn" onclick="deleteEmployee('${employee._id}')">
+          Delete Employee
+        </button>
+      </div>
+    `;
+  });
+
+  const employeeCount = document.getElementById("employeeCount");
+  const activeEmployeeCount = document.getElementById("activeEmployeeCount");
+  const adminEmployeeCount = document.getElementById("adminEmployeeCount");
+
+  if (employeeCount) employeeCount.innerText = employees.length;
+  if (activeEmployeeCount) activeEmployeeCount.innerText = activeCount;
+  if (adminEmployeeCount) adminEmployeeCount.innerText = adminCount;
 }
-async function loadAll(){await Promise.allSettled([loadStats(),loadEmployees(),loadSuppliers(),loadLeads(),loadTasks(),loadDocuments(),loadPlans()]);}
 
-async function loadStats(){
-  try{
-    const data=await api("/api/dashboard/stats");
-    document.getElementById("supplierCount").innerText=data.stats.suppliers||0;
-    document.getElementById("leadCount").innerText=data.stats.leads||0;
-    document.getElementById("taskCount").innerText=data.stats.tasks||0;
-    document.getElementById("docCount").innerText=data.stats.documents||0;
-    document.getElementById("employeeCount").innerText=data.stats.users||data.stats.employees||0;
-    document.getElementById("workspaceSummary").innerHTML=`<b>${data.company.companyName}</b><br><br>Plan: <b>${data.company.plan}</b><br>Status: <b>${data.company.subscriptionStatus}</b><br><br>Suppliers: ${data.stats.suppliers}/${data.usage.limits.suppliers}<br>Leads: ${data.stats.leads}/${data.usage.limits.leads}<br>Tasks: ${data.stats.tasks}/${data.usage.limits.tasks}<br>Documents: ${data.stats.documents}/${data.usage.limits.documents}<br>Outreach Today: ${data.usage.outreachToday}/${data.usage.limits.outreachPerDay}`;
-  }catch(err){console.log(err.message);}
+async function addEmployee() {
+  const name = document.getElementById("employeeName").value;
+  const email = document.getElementById("employeeEmail").value;
+  const role = document.getElementById("employeeRole").value;
+  const status = document.getElementById("employeeStatus").value;
+  const permissions = getEmployeePermissionsFromForm();
+
+  if (!name || !email) {
+    alert("Employee name and email are required.");
+    return;
+  }
+
+  const res = await fetch(EMPLOYEE_URL, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      name,
+      email,
+      role,
+      status,
+      permissions
+    })
+  });
+
+  if (res.status === 401) {
+    logoutUser();
+    return;
+  }
+
+  if (!res.ok) {
+    const data = await res.json();
+    alert(data.message || "Failed to save employee.");
+    return;
+  }
+
+  document.getElementById("employeeName").value = "";
+  document.getElementById("employeeEmail").value = "";
+  document.getElementById("employeeRole").value = "Viewer";
+  document.getElementById("employeeStatus").value = "Active";
+  applyRolePreset();
+
+  fetchEmployees();
 }
-function updateCompany(){localStorage.setItem("tradeflowCompanyMaster",JSON.stringify({name:editCompanyName.value,industry:editIndustry.value,country:editCountry.value,plan:editPlan.value}));alert("Company Master saved locally.");}
 
-async function addEmployee(){
-  try{
-    const name=empName.value.trim(),email=empEmail.value.trim(),password=empPassword.value.trim(),role=empRole.value;
-    if(!name||!email||!password)return alert("Employee name, email and password required");
-    const data=await api("/api/employees",{method:"POST",body:JSON.stringify({name,email,password,role})});
-    alert(data.message||"Employee added");empName.value="";empEmail.value="";empPassword.value="";loadEmployees();loadStats();
-  }catch(err){alert(err.message);}
-}
-async function loadEmployees(){
-  const box=document.getElementById("employeeList"); if(!box)return;
-  try{const data=await api("/api/employees");box.innerHTML=(data.employees||[]).map(emp=>`<div class="bg-white p-5 rounded-2xl shadow"><h3 class="font-black text-lg">${emp.name||"-"}</h3><p>${emp.email||"-"}</p><p>Role: ${emp.role||"EMPLOYEE"}</p><p>Plan: ${emp.plan||"FREE"}</p></div>`).join("");}
-  catch(err){console.log(err.message);}
+async function quickUpdateEmployeeStatus(id, status) {
+  await fetch(`${EMPLOYEE_URL}/${id}`, {
+    method: "PUT",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ status })
+  });
+
+  fetchEmployees();
 }
 
-async function addSupplier(){
-  try{
-    const companyName=supplierName.value.trim(),product=supplierProduct.value.trim(),country=supplierCountry.value.trim(),email=supplierEmail.value.trim(),phone=supplierPhone.value.trim();
-    if(!companyName)return alert("Supplier name required");
-    const scoreData=await api("/api/ai/lead-score",{method:"POST",body:JSON.stringify({companyName})});
-    await api("/api/suppliers",{method:"POST",body:JSON.stringify({companyName,product,country,email,phone,score:scoreData.score,status:"Verified Lead"})});
-    supplierName.value="";supplierProduct.value="";supplierCountry.value="";supplierEmail.value="";supplierPhone.value="";
-    loadSuppliers();loadStats();
-  }catch(err){alert(err.message);}
+async function deleteEmployee(id) {
+  await fetch(`${EMPLOYEE_URL}/${id}`, {
+    method: "DELETE",
+    headers: getAuthHeaders()
+  });
+
+  fetchEmployees();
 }
-async function loadSuppliers(){
-  const box=document.getElementById("supplierList"); if(!box)return;
-  try{const data=await api("/api/suppliers");box.innerHTML=(data.suppliers||[]).map(s=>`<div class="bg-white p-5 rounded-2xl shadow"><h3 class="font-black text-lg">${s.companyName||"Supplier"}</h3><p>Product: ${s.product||"-"}</p><p>Country: ${s.country||"-"}</p><p>Email: ${s.email||"-"}</p><p>Phone: ${s.phone||"-"}</p><p>Score: ${s.score||70}/100</p><p>Status: ${s.status||"New Lead"}</p><button onclick="deleteSupplier('${s._id}')" class="mt-3 bg-red-600 text-white px-4 py-2 rounded-xl">Delete</button></div>`).join("");}
-  catch(err){console.log(err.message);}
+
+
+
+function getActiveWorkspaceId() {
+  return localStorage.getItem("tradeflowActiveWorkspaceId") || "";
 }
-async function deleteSupplier(id){try{await api(`/api/suppliers/${id}`,{method:"DELETE"});loadSuppliers();loadStats();}catch(err){alert(err.message);}}
 
-async function addLead(){
-  try{
-    const companyName=leadName.value.trim(),stage=leadStage.value.trim(),value=Number(leadValue.value||0),source=leadSource.value.trim();
-    if(!companyName)return alert("Lead name required");
-    await api("/api/leads",{method:"POST",body:JSON.stringify({companyName,stage,value,source})});
-    leadName.value="";leadStage.value="";leadValue.value="";leadSource.value="";
-    loadLeads();loadStats();
-  }catch(err){alert(err.message);}
+function getActiveWorkspaceName() {
+  return localStorage.getItem("tradeflowActiveWorkspaceName") || "None";
 }
-async function loadLeads(){
-  const box=document.getElementById("leadList"); if(!box)return;
-  try{const data=await api("/api/leads");box.innerHTML=(data.leads||[]).map(l=>`<div class="bg-white p-5 rounded-2xl shadow"><h3 class="font-black text-lg">${l.companyName||"Lead"}</h3><p>Stage: ${l.stage||"New"}</p><p>Value: ₹${l.value||0}</p><p>Source: ${l.source||"-"}</p><button onclick="deleteLead('${l._id}')" class="mt-3 bg-red-600 text-white px-4 py-2 rounded-xl">Delete</button></div>`).join("");}
-  catch(err){console.log(err.message);}
+
+function setActiveWorkspace() {
+  const select = document.getElementById("activeWorkspaceSelect");
+  const selectedOption = select.options[select.selectedIndex];
+
+  localStorage.setItem("tradeflowActiveWorkspaceId", select.value);
+  localStorage.setItem("tradeflowActiveWorkspaceName", selectedOption.text || "None");
+
+  const currentWorkspaceName = document.getElementById("currentWorkspaceName");
+  if (currentWorkspaceName) currentWorkspaceName.innerText = selectedOption.text || "None";
+
+  document.getElementById("workspaceName").innerText =
+    `${selectedOption.text || "TradeFlow Company"} • Active Workspace`;
+
+  createSystemNotification(
+    "Workspace Switched",
+    `Active workspace changed to ${selectedOption.text}`,
+    "System",
+    "Low"
+  );
 }
-async function deleteLead(id){try{await api(`/api/leads/${id}`,{method:"DELETE"});loadLeads();loadStats();}catch(err){alert(err.message);}}
 
-function calculateMargin(){const buy=Number(buyPrice.value||0),sell=Number(sellPrice.value||0);if(!buy||!sell)return alert("Enter both prices");const profit=sell-buy,margin=((profit/sell)*100).toFixed(2);marginResult.innerText=`Profit: ₹${profit} | Margin: ${margin}%`;}
+async function fetchWorkspaces() {
+  try {
+    const res = await fetch(WORKSPACE_URL, {
+      headers: getAuthHeaders()
+    });
 
-async function addTask(){try{const title=taskText.value.trim(),priority=taskPriority.value;if(!title)return alert("Task required");await api("/api/tasks",{method:"POST",body:JSON.stringify({title,priority,status:"Pending"})});taskText.value="";loadTasks();loadStats();}catch(err){alert(err.message);}}
-async function loadTasks(){const box=document.getElementById("taskList");if(!box)return;try{const data=await api("/api/tasks");box.innerHTML=(data.tasks||[]).map(t=>`<li class="bg-white p-4 rounded-2xl shadow flex justify-between items-center"><span><b>${t.title}</b> — ${t.priority||"Medium"} — ${t.status||"Pending"}</span><button onclick="deleteTask('${t._id}')" class="bg-red-600 text-white px-4 py-2 rounded-xl">Delete</button></li>`).join("");}catch(err){console.log(err.message);}}
-async function deleteTask(id){try{await api(`/api/tasks/${id}`,{method:"DELETE"});loadTasks();loadStats();}catch(err){alert(err.message);}}
+    if (res.status === 401) {
+      logoutUser();
+      return;
+    }
 
-async function addDocument(){
-  try{
-    const type=documentType.value,shipmentRef=shipmentRef.value.trim(),buyer=docBuyer.value.trim(),supplier=docSupplier.value.trim();
-  }catch(e){}
-  try{
-    const type=document.getElementById("documentType").value;
-    const ref=document.getElementById("shipmentRef").value.trim();
-    const buyer=document.getElementById("docBuyer").value.trim();
-    const supplier=document.getElementById("docSupplier").value.trim();
-    await api("/api/documents",{method:"POST",body:JSON.stringify({title:`${type} - ${ref||"New Shipment"}`,type,partyName:buyer||supplier,notes:`Buyer: ${buyer||"-"} | Supplier: ${supplier||"-"}`,status:"Draft"})});
-    shipmentRef.value="";docBuyer.value="";docSupplier.value="";loadDocuments();loadStats();
-  }catch(err){alert(err.message);}
+    const workspaces = await res.json();
+
+    renderWorkspaces(workspaces);
+  } catch (error) {
+    console.log("Workspace backend not connected:", error.message);
+  }
 }
-async function loadDocuments(){
-  const box=document.getElementById("documentList"); if(!box)return;
-  try{const data=await api("/api/documents");box.innerHTML=(data.documents||[]).map(d=>`<div class="bg-white p-5 rounded-2xl shadow"><h3 class="font-black text-lg">${d.title||"Document"}</h3><p>Type: ${d.type||"-"}</p><p>Party: ${d.partyName||"-"}</p><p>Status: ${d.status||"Draft"}</p><p>${d.notes||""}</p><button onclick="deleteDocument('${d._id}')" class="mt-3 bg-red-600 text-white px-4 py-2 rounded-xl">Delete</button></div>`).join("");}
-  catch(err){console.log(err.message);}
+
+function renderWorkspaces(workspaces) {
+  const list = document.getElementById("workspaceList");
+  const select = document.getElementById("activeWorkspaceSelect");
+
+  let activeCount = 0;
+
+  if (list) list.innerHTML = "";
+  if (select) select.innerHTML = `<option value="">Select Workspace</option>`;
+
+  workspaces.forEach((workspace) => {
+    if (workspace.status === "Active") activeCount++;
+
+    if (select) {
+      const selected = getActiveWorkspaceId() === workspace._id ? "selected" : "";
+      select.innerHTML += `
+        <option value="${workspace._id}" ${selected}>
+          ${workspace.companyName}
+        </option>
+      `;
+    }
+
+    if (list) {
+      list.innerHTML += `
+        <div class="supplier-card">
+          <h2 style="font-size:20px;font-weight:900;color:white;">
+            ${workspace.companyName}
+          </h2>
+
+          <p class="muted">Business Type: ${workspace.businessType}</p>
+          <p class="muted">Country: ${workspace.country || "N/A"}</p>
+          <p class="muted">GST: ${workspace.gstNumber || "N/A"}</p>
+          <p class="muted">IEC: ${workspace.iecCode || "N/A"}</p>
+          <p class="muted">Industry: ${workspace.industry || "N/A"}</p>
+          <p class="muted">Currency: ${workspace.defaultCurrency || "USD"}</p>
+
+          <span class="status">
+            ${workspace.status}
+          </span>
+
+          <button class="mini-btn" onclick="activateWorkspace('${workspace._id}', '${workspace.companyName.replace(/'/g, "\\'")}')">
+            Set Active Workspace
+          </button>
+
+          <button class="danger-btn" onclick="deleteWorkspace('${workspace._id}')">
+            Delete Workspace
+          </button>
+        </div>
+      `;
+    }
+  });
+
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = value;
+  };
+
+  setText("workspaceCount", workspaces.length);
+  setText("activeWorkspaceCount", activeCount);
+  setText("dashboardWorkspaceCount", workspaces.length);
+  setText("currentWorkspaceName", getActiveWorkspaceName());
+
+  if (getActiveWorkspaceName() !== "None") {
+    const user = getUser();
+    document.getElementById("workspaceName").innerText =
+      `${getActiveWorkspaceName()} • ${user?.name || "User"} Workspace`;
+  }
 }
-async function deleteDocument(id){try{await api(`/api/documents/${id}`,{method:"DELETE"});loadDocuments();loadStats();}catch(err){alert(err.message);}}
 
-async function sendEmail(){try{const email=contactEmail.value.trim(),message=outreachMsg.value.trim();if(!email||!message)return alert("Email and message required");const data=await api("/api/outreach/email",{method:"POST",body:JSON.stringify({email,message})});alert(data.message||"Email outreach simulated");loadStats();}catch(err){alert(err.message);}}
-async function openWhatsApp(){try{const phone=contactPhone.value.trim(),message=outreachMsg.value.trim();if(!phone)return alert("WhatsApp number required");const data=await api("/api/outreach/whatsapp",{method:"POST",body:JSON.stringify({phone,message})});window.open(data.link,"_blank");loadStats();}catch(err){alert(err.message);}}
+function activateWorkspace(id, name) {
+  localStorage.setItem("tradeflowActiveWorkspaceId", id);
+  localStorage.setItem("tradeflowActiveWorkspaceName", name);
 
-async function generateFakeLeads(){
-  try{
-    const product=fakeLeadProduct.value.trim()||"Rice";
-    const data=await api("/api/ai/demo-leads",{method:"POST",body:JSON.stringify({product})});
-    fakeLeadList.innerHTML=(data.leads||[]).map(l=>`<div class="bg-white p-5 rounded-2xl shadow"><h3 class="font-black text-lg">${l.companyName}</h3><p>Product: ${l.product}</p><p>Country: ${l.country}</p><p>Email: ${l.email}</p><p>Phone: ${l.phone}</p><p>Score: ${l.score}</p><button onclick="saveDemoLead('${l.companyName}','${l.product}','${l.country}','${l.email}','${l.phone}','${l.score}')" class="mt-3 bg-purple-700 text-white px-4 py-2 rounded-xl">Save to Suppliers</button></div>`).join("");
-  }catch(err){alert(err.message);}
+  const select = document.getElementById("activeWorkspaceSelect");
+  if (select) select.value = id;
+
+  const currentWorkspaceName = document.getElementById("currentWorkspaceName");
+  if (currentWorkspaceName) currentWorkspaceName.innerText = name;
+
+  const user = getUser();
+  document.getElementById("workspaceName").innerText =
+    `${name} • ${user?.name || "User"} Workspace`;
+
+  createSystemNotification(
+    "Workspace Activated",
+    `${name} is now active`,
+    "System",
+    "Low"
+  );
 }
-async function saveDemoLead(companyName,product,country,email,phone,score){try{await api("/api/suppliers",{method:"POST",body:JSON.stringify({companyName,product,country,email,phone,score,status:"AI Generated Lead"})});alert("Lead saved to suppliers");loadSuppliers();loadStats();}catch(err){alert(err.message);}}
 
-async function loadPlans(){
-  const box = document.getElementById("billingPlans");
-  if(!box) return;
+async function addWorkspace() {
+  const companyName = document.getElementById("workspaceCompanyName").value;
+  const businessType = document.getElementById("workspaceBusinessType").value;
+  const country = document.getElementById("workspaceCountry").value;
+  const gstNumber = document.getElementById("workspaceGstNumber").value;
+  const iecCode = document.getElementById("workspaceIecCode").value;
+  const industry = document.getElementById("workspaceIndustry").value;
+  const defaultCurrency = document.getElementById("workspaceCurrency").value;
+  const status = document.getElementById("workspaceStatus").value;
 
-  try{
-    const data = await api("/api/billing/plans");
+  if (!companyName) {
+    alert("Workspace company name is required.");
+    return;
+  }
 
-    box.innerHTML = (data.plans || []).map(plan => `
-      <div class="bg-white p-6 rounded-2xl shadow border ${plan.id === "PRO" ? "border-blue-600" : "border-slate-200"}">
+  const res = await fetch(WORKSPACE_URL, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      companyName,
+      businessType,
+      country,
+      gstNumber,
+      iecCode,
+      industry,
+      defaultCurrency,
+      status
+    })
+  });
 
-        <h2 class="text-2xl font-black">${plan.name}</h2>
+  if (res.status === 401) {
+    logoutUser();
+    return;
+  }
 
-        <p class="text-3xl mt-4 font-black">
-          ₹${plan.price}
-        </p>
+  const workspace = await res.json();
 
-        <p class="text-slate-500">
-          ${plan.currency}/month
-        </p>
+  document.getElementById("workspaceCompanyName").value = "";
+  document.getElementById("workspaceCountry").value = "";
+  document.getElementById("workspaceGstNumber").value = "";
+  document.getElementById("workspaceIecCode").value = "";
+  document.getElementById("workspaceIndustry").value = "";
 
-        <ul class="mt-4 space-y-2 text-slate-700">
-          ${plan.features.map(f => `<li>• ${f}</li>`).join("")}
-        </ul>
+  activateWorkspace(workspace._id, workspace.companyName);
 
-        <button
-          onclick="requestUpgrade('${plan.id}', '${plan.name}', '${plan.price}')"
-          class="mt-5 w-full ${plan.id === "FREE" ? "bg-slate-700" : "bg-blue-700"} text-white py-3 rounded-xl font-bold"
-        >
-          ${plan.id === "FREE" ? "Continue Free" : "Request Upgrade"}
+  fetchWorkspaces();
+}
+
+async function deleteWorkspace(id) {
+  const activeId = getActiveWorkspaceId();
+
+  await fetch(`${WORKSPACE_URL}/${id}`, {
+    method: "DELETE",
+    headers: getAuthHeaders()
+  });
+
+  if (activeId === id) {
+    localStorage.removeItem("tradeflowActiveWorkspaceId");
+    localStorage.removeItem("tradeflowActiveWorkspaceName");
+  }
+
+  fetchWorkspaces();
+}
+
+async function fetchNotifications() {
+  try {
+    const res = await fetch(NOTIFICATION_URL, {
+      headers: getAuthHeaders()
+    });
+
+    if (res.status === 401) {
+      logoutUser();
+      return;
+    }
+
+    const notifications = await res.json();
+
+    renderNotifications(notifications);
+  } catch (error) {
+    console.log("Notifications backend not connected:", error.message);
+  }
+}
+
+function renderNotifications(notifications) {
+  const list = document.getElementById("notificationList");
+
+  if (list) list.innerHTML = "";
+
+  let unread = 0;
+  let highPriority = 0;
+
+  notifications.forEach((item) => {
+    if (item.status === "Unread") unread++;
+    if (item.priority === "High") highPriority++;
+
+    if (list) {
+      list.innerHTML += `
+        <div class="supplier-card">
+          <h2 style="font-size:20px;font-weight:900;color:white;">
+            ${item.title}
+          </h2>
+
+          <p class="muted">Message: ${item.message}</p>
+          <p class="muted">Type: ${item.type}</p>
+          <p class="muted">Priority: ${item.priority}</p>
+          <p class="muted">Status: ${item.status}</p>
+
+          <span class="status">
+            ${item.status} • ${item.priority}
+          </span>
+
+          <button class="mini-btn" onclick="markNotificationRead('${item._id}')">
+            Mark as Read
+          </button>
+
+          <button class="danger-btn" onclick="deleteNotification('${item._id}')">
+            Delete Notification
+          </button>
+        </div>
+      `;
+    }
+  });
+
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = value;
+  };
+
+  setText("notificationCount", notifications.length);
+  setText("unreadNotificationCount", unread);
+  setText("highPriorityNotificationCount", highPriority);
+  setText("dashboardUnreadNotifications", unread);
+
+  const sidebarUnread = document.getElementById("sidebarUnreadCount");
+  if (sidebarUnread) {
+    sidebarUnread.innerText = unread > 0 ? `(${unread})` : "";
+  }
+}
+
+async function addNotification() {
+  const title = document.getElementById("notificationTitle").value;
+  const message = document.getElementById("notificationMessage").value;
+  const type = document.getElementById("notificationType").value;
+  const priority = document.getElementById("notificationPriority").value;
+
+  if (!title || !message) {
+    alert("Notification title and message are required.");
+    return;
+  }
+
+  const res = await fetch(NOTIFICATION_URL, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      title,
+      message,
+      type,
+      priority,
+      status: "Unread"
+    })
+  });
+
+  if (res.status === 401) {
+    logoutUser();
+    return;
+  }
+
+  document.getElementById("notificationTitle").value = "";
+  document.getElementById("notificationMessage").value = "";
+  document.getElementById("notificationType").value = "General";
+  document.getElementById("notificationPriority").value = "Medium";
+
+  fetchNotifications();
+}
+
+async function markNotificationRead(id) {
+  await fetch(`${NOTIFICATION_URL}/${id}/read`, {
+    method: "PUT",
+    headers: getAuthHeaders()
+  });
+
+  fetchNotifications();
+}
+
+async function deleteNotification(id) {
+  await fetch(`${NOTIFICATION_URL}/${id}`, {
+    method: "DELETE",
+    headers: getAuthHeaders()
+  });
+
+  fetchNotifications();
+}
+
+async function createSystemNotification(title, message, type = "System", priority = "Medium") {
+  try {
+    await fetch(NOTIFICATION_URL, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        title,
+        message,
+        type,
+        priority,
+        status: "Unread"
+      })
+    });
+
+    fetchNotifications();
+fetchWorkspaces();
+  } catch (error) {
+    console.log("Auto notification skipped:", error.message);
+  }
+}
+
+async function fetchSuppliers() {
+  try {
+    const res = await fetch(API_URL, {
+      headers: getAuthHeaders()
+    });
+
+    if (res.status === 401) {
+      logoutUser();
+      return;
+    }
+
+    const suppliers = await res.json();
+
+    document.getElementById("supplierCount").innerText = suppliers.length;
+
+    const supplierList = document.getElementById("supplierList");
+
+    if (!supplierList) return;
+
+    supplierList.innerHTML = "";
+
+    if (suppliers.length === 0) {
+      supplierList.innerHTML =
+        `<p class="muted">No suppliers yet. Add your first supplier lead.</p>`;
+      return;
+    }
+
+    suppliers.forEach((supplier) => {
+      supplierList.innerHTML += `
+        <div class="supplier-card">
+          <h2 style="font-size:20px;font-weight:900;color:white;">
+            ${supplier.supplierName}
+          </h2>
+
+          <p class="muted">Product: ${supplier.product}</p>
+          <p class="muted">Country: ${supplier.country}</p>
+          <p class="muted">Email: ${supplier.email}</p>
+          <p class="muted">Phone: ${supplier.phone}</p>
+          <p class="muted">Source: ${supplier.source || "Manual Entry"}</p>
+          <p class="muted">Notes: ${supplier.notes || "No notes"}</p>
+
+          <span class="status">
+            Score ${supplier.score || 75} • ${supplier.status || "Verified Lead"}
+          </span>
+
+          <br/>
+
+          <button class="danger-btn" onclick="deleteSupplier('${supplier._id}')">
+            Delete
+          </button>
+        </div>
+      `;
+    });
+
+  } catch (error) {
+    alert("Backend not connected or server stopped.");
+  }
+}
+
+async function addSupplier() {
+  const supplierName = document.getElementById("supplierName").value;
+  const product = document.getElementById("product").value;
+  const country = document.getElementById("country").value;
+  const email = document.getElementById("email").value;
+  const phone = document.getElementById("phone").value;
+  const notes = document.getElementById("notes").value;
+
+  if (!supplierName || !product || !country || !email || !phone) {
+    alert("Please fill all supplier fields.");
+    return;
+  }
+
+  await fetch(API_URL, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      supplierName,
+      product,
+      country,
+      email,
+      phone,
+      notes,
+      source: "Manual Entry",
+      score: 75,
+      status: "Verified Lead"
+    })
+  });
+
+  document.getElementById("supplierName").value = "";
+  document.getElementById("product").value = "";
+  document.getElementById("country").value = "";
+  document.getElementById("email").value = "";
+  document.getElementById("phone").value = "";
+  document.getElementById("notes").value = "";
+
+  fetchSuppliers();
+}
+
+async function deleteSupplier(id) {
+  await fetch(`${API_URL}/${id}`, {
+    method: "DELETE",
+    headers: getAuthHeaders()
+  });
+
+  fetchSuppliers();
+}
+
+async function fetchDeals() {
+  try {
+    const res = await fetch(DEAL_URL, {
+      headers: getAuthHeaders()
+    });
+
+    if (res.status === 401) {
+      logoutUser();
+      return;
+    }
+
+    const deals = await res.json();
+
+    renderDeals(deals);
+  } catch (error) {
+    console.log("CRM backend not connected:", error.message);
+  }
+}
+
+function renderDeals(deals) {
+  const stageContainers = {
+    "New Lead": document.getElementById("newLeadDeals"),
+    "Contacted": document.getElementById("contactedDeals"),
+    "Negotiation": document.getElementById("negotiationDeals"),
+    "Closed": document.getElementById("closedDeals"),
+    "Lost": document.getElementById("lostDeals")
+  };
+
+  Object.values(stageContainers).forEach((container) => {
+    if (container) container.innerHTML = "";
+  });
+
+  let closedCount = 0;
+  let pipelineValue = 0;
+
+  deals.forEach((deal) => {
+    pipelineValue += Number(deal.value || 0);
+
+    if (deal.stage === "Closed") {
+      closedCount++;
+    }
+
+    const html = `
+      <div class="deal" draggable="true" ondragstart="dragDeal(event)" data-deal-id="${deal._id}">
+        <b>${deal.companyName}</b>
+        <p class="muted">Product: ${deal.product}</p>
+        <p class="muted">Country: ${deal.country || "N/A"}</p>
+        <p class="muted">Value: ${deal.value || 0}</p>
+        <p class="muted">Priority: ${deal.priority || "Medium"}</p>
+        <p class="muted">Contact: ${deal.contactPerson || "N/A"}</p>
+
+        <select onchange="updateDealStage('${deal._id}', this.value)">
+          <option ${deal.stage === "New Lead" ? "selected" : ""}>New Lead</option>
+          <option ${deal.stage === "Contacted" ? "selected" : ""}>Contacted</option>
+          <option ${deal.stage === "Negotiation" ? "selected" : ""}>Negotiation</option>
+          <option ${deal.stage === "Closed" ? "selected" : ""}>Closed</option>
+          <option ${deal.stage === "Lost" ? "selected" : ""}>Lost</option>
+        </select>
+
+        <button class="danger-btn" onclick="deleteDeal('${deal._id}')">
+          Delete
+        </button>
+      </div>
+    `;
+
+    if (stageContainers[deal.stage]) {
+      stageContainers[deal.stage].innerHTML += html;
+    }
+  });
+
+  const dealCountEl = document.getElementById("dealCount");
+  const closedDealCountEl = document.getElementById("closedDealCount");
+  const pipelineValueEl = document.getElementById("pipelineValue");
+
+  if (dealCountEl) dealCountEl.innerText = deals.length;
+  if (closedDealCountEl) closedDealCountEl.innerText = closedCount;
+  if (pipelineValueEl) pipelineValueEl.innerText = pipelineValue;
+
+  const dashboardDealCount = document.getElementById("dashboardDealCount");
+  const dashboardPipelineValue = document.getElementById("dashboardPipelineValue");
+  const dashboardClosedDeals = document.getElementById("dashboardClosedDeals");
+
+  if (dashboardDealCount) dashboardDealCount.innerText = deals.length;
+  if (dashboardPipelineValue) dashboardPipelineValue.innerText = pipelineValue;
+  if (dashboardClosedDeals) dashboardClosedDeals.innerText = closedCount;
+}
+
+function dragDeal(event) {
+  event.dataTransfer.setData("dealId", event.currentTarget.dataset.dealId);
+}
+
+function allowDealDrop(event) {
+  event.preventDefault();
+}
+
+function highlightDropZone(event) {
+  event.preventDefault();
+  const column = event.currentTarget;
+  column.classList.add("drag-over");
+}
+
+function removeDropHighlight(event) {
+  const column = event.currentTarget;
+  column.classList.remove("drag-over");
+}
+
+async function dropDeal(event) {
+  event.preventDefault();
+
+  const column = event.currentTarget;
+  column.classList.remove("drag-over");
+
+  const dealId = event.dataTransfer.getData("dealId");
+  const newStage = column.dataset.stage;
+
+  if (!dealId || !newStage) return;
+
+  await updateDealStage(dealId, newStage);
+}
+
+async function addDeal() {
+  const companyName = document.getElementById("dealCompanyName").value;
+  const contactPerson = document.getElementById("dealContactPerson").value;
+  const email = document.getElementById("dealEmail").value;
+  const phone = document.getElementById("dealPhone").value;
+  const product = document.getElementById("dealProduct").value;
+  const country = document.getElementById("dealCountry").value;
+  const value = document.getElementById("dealValue").value;
+  const stage = document.getElementById("dealStage").value;
+  const priority = document.getElementById("dealPriority").value;
+  const notes = document.getElementById("dealNotes").value;
+
+  if (!companyName || !product) {
+    alert("Company name and product are required.");
+    return;
+  }
+
+  await fetch(DEAL_URL, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      companyName,
+      contactPerson,
+      email,
+      phone,
+      product,
+      country,
+      value,
+      stage,
+      priority,
+      notes
+    })
+  });
+
+  document.getElementById("dealCompanyName").value = "";
+  document.getElementById("dealContactPerson").value = "";
+  document.getElementById("dealEmail").value = "";
+  document.getElementById("dealPhone").value = "";
+  document.getElementById("dealProduct").value = "";
+  document.getElementById("dealCountry").value = "";
+  document.getElementById("dealValue").value = "";
+  document.getElementById("dealNotes").value = "";
+
+  fetchDeals();
+  createSystemNotification("New CRM Deal", `Deal saved for ${companyName}`, "CRM", "Medium");
+}
+
+async function updateDealStage(id, stage) {
+  await fetch(`${DEAL_URL}/${id}`, {
+    method: "PUT",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ stage })
+  });
+
+  fetchDeals();
+}
+
+async function deleteDeal(id) {
+  await fetch(`${DEAL_URL}/${id}`, {
+    method: "DELETE",
+    headers: getAuthHeaders()
+  });
+
+  fetchDeals();
+}
+
+async function findAISuppliers() {
+  const product = document.getElementById("aiProduct").value;
+  const country = document.getElementById("aiCountry").value;
+
+  if (!product || !country) {
+    alert("Enter product and country");
+    return;
+  }
+
+  const res = await fetch(`${AI_URL}/find-suppliers`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      product,
+      country
+    })
+  });
+
+  if (res.status === 401) {
+    logoutUser();
+    return;
+  }
+
+  const leads = await res.json();
+
+  const results = document.getElementById("aiSupplierResults");
+
+  results.innerHTML = "";
+
+  if (!Array.isArray(leads) || leads.length === 0) {
+    results.innerHTML = `<p class="muted">No AI leads found.</p>`;
+    return;
+  }
+
+  leads.forEach((lead) => {
+    const encodedLead = encodeURIComponent(JSON.stringify(lead));
+
+    results.innerHTML += `
+      <div class="supplier-card">
+        <h2 style="font-size:20px;font-weight:900;color:white;">
+          ${lead.supplierName}
+        </h2>
+
+        <p class="muted">Product: ${lead.product}</p>
+        <p class="muted">Country: ${lead.country}</p>
+        <p class="muted">Email: ${lead.email}</p>
+        <p class="muted">Phone: ${lead.phone}</p>
+        <p class="muted">Source: ${lead.source}</p>
+        <p class="muted">Notes: ${lead.notes}</p>
+
+        <span class="status">
+          Score ${lead.score} • ${lead.status}
+        </span>
+
+        <button class="btn" onclick="saveAISupplier('${encodedLead}')">
+          Save to Workspace
+        </button>
+      </div>
+    `;
+  });
+}
+
+async function saveAISupplier(encodedLead) {
+  const lead = JSON.parse(decodeURIComponent(encodedLead));
+
+  const res = await fetch(`${AI_URL}/save-supplier`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(lead)
+  });
+
+  if (res.status === 401) {
+    logoutUser();
+    return;
+  }
+
+  alert("AI Supplier Saved to Workspace");
+
+  fetchSuppliers();
+  showPage("suppliers");
+}
+
+
+function generateAIEmail() {
+  const product = document.getElementById("aiEmailProduct").value || "your product";
+  const receiver = document.getElementById("aiEmailReceiver").value || "business partner";
+
+  document.getElementById("aiEmailOutput").value =
+`Subject: Business Opportunity for ${product}
+
+Hello,
+
+I hope you are doing well.
+
+We are reaching out regarding a potential export/import opportunity for ${product}. We would like to understand your requirements, pricing expectations, quantity, documentation needs, and preferred timelines.
+
+Please share the relevant details so we can proceed with a professional quotation and next steps.
+
+Regards,
+TradeFlow Team`;
+}
+
+function copyAIEmailToSender() {
+  const text = document.getElementById("aiEmailOutput").value;
+
+  if (!text) {
+    alert("Generate AI email first.");
+    return;
+  }
+
+  showPage("outreach");
+
+  document.getElementById("emailSubject").value = "Business Opportunity from TradeFlow";
+  document.getElementById("emailMessage").value = text;
+}
+
+function generateOutreach() {
+  const product = document.getElementById("aiOutreachProduct").value || "your product";
+  const buyer = document.getElementById("aiOutreachBuyer").value || "potential buyer";
+
+  document.getElementById("aiOutreachOutput").value =
+`Subject: Business Opportunity for ${product}
+
+Hello,
+
+I hope you are doing well.
+
+We are exploring serious export/import opportunities for ${product} and would like to connect with your team regarding pricing, availability, MOQ, packaging, and delivery timelines.
+
+Please share your latest catalogue, quotation, certifications, and export terms.
+
+Regards,
+TradeFlow Team`;
+}
+
+function generateNegotiationAdvice() {
+  const quoted = document.getElementById("aiQuotedPrice").value || "quoted price";
+  const target = document.getElementById("aiTargetPrice").value || "target price";
+
+  document.getElementById("aiNegotiationOutput").value =
+`Negotiation Strategy:
+
+Quoted Price: ${quoted}
+Target Price: ${target}
+
+1. Do not reject the quote directly.
+2. Ask for bulk order discount.
+3. Request better payment terms.
+4. Compare logistics and packaging cost.
+5. Offer long-term repeat business as leverage.
+6. Try closing slightly above target if quality and delivery are strong.`;
+}
+
+function generateDocumentHelp() {
+  const product = document.getElementById("aiDocProduct").value || "selected product";
+  const country = document.getElementById("aiDocCountry").value || "destination country";
+
+  document.getElementById("aiDocOutput").value =
+`Export Document Checklist for ${product} to ${country}:
+
+1. Commercial Invoice
+2. Packing List
+3. Proforma Invoice
+4. Purchase Order
+5. Certificate of Origin
+6. Shipping Bill
+7. Bill of Lading / Airway Bill
+8. Insurance Certificate
+9. Product-specific compliance certificates
+10. Buyer and supplier contract copy`;
+}
+
+function generateCrmAdvice() {
+  const stage = document.getElementById("aiDealStage").value || "current stage";
+  const value = document.getElementById("aiDealValue").value || "deal value";
+
+  document.getElementById("aiCrmOutput").value =
+`CRM Deal Advice:
+
+Stage: ${stage}
+Deal Value: ${value}
+
+1. Mark this deal priority based on value and buyer response.
+2. Schedule next follow-up within 24 hours.
+3. Prepare pricing comparison before negotiation.
+4. Keep supplier documents ready.
+5. Move deal forward only after buyer confirms quantity and payment terms.`;
+}
+
+function generateTaskPlan() {
+  const goal = document.getElementById("aiTaskGoal").value || "business goal";
+
+  document.getElementById("aiTaskOutput").value =
+`AI Task Plan for: ${goal}
+
+Today:
+1. Identify top 5 relevant leads.
+2. Send first outreach message.
+3. Save replies inside CRM.
+
+Tomorrow:
+1. Follow up with non-responders.
+2. Compare quotes.
+3. Shortlist best suppliers.
+
+This Week:
+1. Negotiate pricing.
+2. Prepare documents.
+3. Move qualified deals to pipeline.`;
+}
+
+
+async function generateInvoicePDF() {
+  const companyName = document.getElementById("pdfCompanyName").value;
+  const buyerName = document.getElementById("pdfBuyerName").value;
+  const product = document.getElementById("pdfProduct").value;
+  const quantity = document.getElementById("pdfQuantity").value;
+  const price = document.getElementById("pdfPrice").value;
+  const country = document.getElementById("pdfCountry").value;
+  const notes = document.getElementById("pdfNotes").value;
+
+  if (!companyName || !buyerName || !product) {
+    alert("Company name, buyer name, and product are required.");
+    return;
+  }
+
+  const res = await fetch(`${PDF_URL}/invoice`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      companyName,
+      buyerName,
+      product,
+      quantity,
+      price,
+      country,
+      notes
+    })
+  });
+
+  if (res.status === 401) {
+    logoutUser();
+    return;
+  }
+
+  if (!res.ok) {
+    alert("PDF generation failed. Check backend server.");
+    return;
+  }
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "tradeflow-invoice.pdf";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  window.URL.revokeObjectURL(url);
+}
+
+
+async function fetchAnalytics() {
+  try {
+    const res = await fetch(ANALYTICS_URL, {
+      headers: getAuthHeaders()
+    });
+
+    if (res.status === 401) {
+      logoutUser();
+      return;
+    }
+
+    const data = await res.json();
+
+    const setText = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.innerText = value;
+    };
+
+    setText("analyticsTotalSuppliers", data.totalSuppliers || 0);
+    setText("analyticsTotalDeals", data.totalDeals || 0);
+    setText("analyticsTotalTasks", data.totalTasks || 0);
+    setText("analyticsPipelineValue", data.pipelineValue || 0);
+    setText("analyticsClosedValue", data.closedValue || 0);
+    setText("analyticsConversionRate", `${data.conversionRate || 0}%`);
+    setText("analyticsTaskCompletionRate", `${data.taskCompletionRate || 0}%`);
+    setText("analyticsAverageSupplierScore", data.averageSupplierScore || 0);
+    setText("analyticsPendingTasks", data.pendingTasks || 0);
+    setText("analyticsCompletedTasks", data.completedTasks || 0);
+
+    setText("analyticsNewLead", data.dealStages?.newLead || 0);
+    setText("analyticsContacted", data.dealStages?.contacted || 0);
+    setText("analyticsNegotiation", data.dealStages?.negotiation || 0);
+    setText("analyticsClosed", data.dealStages?.closed || 0);
+    setText("analyticsLost", data.dealStages?.lost || 0);
+
+    setText("dashboardDealCount", data.totalDeals || 0);
+    setText("dashboardPipelineValue", data.pipelineValue || 0);
+    setText("dashboardClosedDeals", data.closedDeals || 0);
+  } catch (error) {
+    console.log("Analytics backend not connected:", error.message);
+  }
+}
+
+
+
+function generateEmailMessage() {
+  const product = document.getElementById("outreachProduct")?.value || document.getElementById("waAiProduct")?.value || "your product";
+  const buyer = document.getElementById("waAiBuyer")?.value || "your company";
+
+  document.getElementById("emailSubject").value =
+    `Business Opportunity for ${product}`;
+
+  document.getElementById("emailMessage").value =
+`Hello,
+
+I hope you are doing well.
+
+We are exploring serious export/import business opportunities regarding ${product}. We would like to discuss pricing, MOQ, availability, packaging details, certifications, and delivery timelines.
+
+Please share your latest catalogue, quotation, payment terms, and export terms.
+
+We are looking for a reliable long-term business relationship.
+
+Regards,
+${buyer}`;
+}
+
+function useEmailTemplate(type) {
+  if (type === "supplier") {
+    document.getElementById("emailSubject").value =
+      "Supplier Inquiry for Export / Import Business";
+
+    document.getElementById("emailMessage").value =
+`Hello,
+
+We are interested in sourcing products from your company for export/import business.
+
+Please share:
+1. Product catalogue
+2. MOQ
+3. Best pricing
+4. Certifications
+5. Packaging details
+6. Delivery timeline
+7. Payment terms
+
+Looking forward to your response.
+
+Regards,
+TradeFlow Team`;
+  }
+
+  if (type === "buyer") {
+    document.getElementById("emailSubject").value =
+      "Export Supply Proposal";
+
+    document.getElementById("emailMessage").value =
+`Hello,
+
+We can support your import requirements with reliable sourcing, supplier coordination, documentation, and export/import operations.
+
+Please let us know your product requirement, quantity, destination country, and preferred delivery timeline.
+
+Regards,
+TradeFlow Team`;
+  }
+
+  if (type === "followup") {
+    document.getElementById("emailSubject").value =
+      "Follow-up Regarding Business Opportunity";
+
+    document.getElementById("emailMessage").value =
+`Hello,
+
+This is a quick follow-up regarding our previous discussion.
+
+Please confirm if you are available to proceed with pricing, product details, and next steps.
+
+Looking forward to your response.
+
+Regards,
+TradeFlow Team`;
+  }
+}
+
+async function sendTradeFlowEmail() {
+  const to = document.getElementById("emailTo").value;
+  const subject = document.getElementById("emailSubject").value;
+  const message = document.getElementById("emailMessage").value;
+
+  if (!to || !subject || !message) {
+    alert("Recipient email, subject, and message are required.");
+    return;
+  }
+
+  const res = await fetch(`${EMAIL_URL}/send`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      to,
+      subject,
+      message
+    })
+  });
+
+  if (res.status === 401) {
+    logoutUser();
+    return;
+  }
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.message || "Email sending failed. Check EMAIL_USER and EMAIL_PASS in .env");
+    return;
+  }
+
+  alert("Email sent successfully from TradeFlow.");
+  createSystemNotification("Email Sent", `Email sent to ${to}`, "Outreach", "Medium");
+}
+
+async function fetchOutreachRecords() {
+  try {
+    const res = await fetch(OUTREACH_URL, {
+      headers: getAuthHeaders()
+    });
+
+    if (res.status === 401) {
+      logoutUser();
+      return;
+    }
+
+    const records = await res.json();
+
+    renderOutreachRecords(records);
+  } catch (error) {
+    console.log("Outreach backend not connected:", error.message);
+  }
+}
+
+function renderOutreachRecords(records) {
+  const list = document.getElementById("outreachList");
+
+  if (!list) return;
+
+  list.innerHTML = "";
+
+  let followups = 0;
+  let converted = 0;
+
+  records.forEach((record) => {
+    if (record.status === "Follow-up Needed") followups++;
+    if (record.status === "Converted") converted++;
+
+    const safePhone = (record.phone || "").replace(/\D/g, "");
+    const encodedMessage = encodeURIComponent(record.message || "");
+
+    list.innerHTML += `
+      <div class="supplier-card">
+        <h2 style="font-size:20px;font-weight:900;color:white;">
+          ${record.contactName}
+        </h2>
+
+        <p class="muted">Phone: ${record.phone}</p>
+        <p class="muted">Product: ${record.product || "N/A"}</p>
+        <p class="muted">Channel: ${record.channel || "WhatsApp"}</p>
+        <p class="muted">Message: ${record.message}</p>
+        <p class="muted">Notes: ${record.notes || "No notes"}</p>
+
+        <span class="status">
+          ${record.status || "Draft"}
+        </span>
+
+        <select onchange="updateOutreachStatus('${record._id}', this.value)">
+          <option ${record.status === "Draft" ? "selected" : ""}>Draft</option>
+          <option ${record.status === "Opened" ? "selected" : ""}>Opened</option>
+          <option ${record.status === "Follow-up Needed" ? "selected" : ""}>Follow-up Needed</option>
+          <option ${record.status === "Converted" ? "selected" : ""}>Converted</option>
+          <option ${record.status === "Closed" ? "selected" : ""}>Closed</option>
+        </select>
+
+        <button class="mini-btn" onclick="window.open('https://wa.me/${safePhone}?text=${encodedMessage}', '_blank')">
+          Open WhatsApp
         </button>
 
+        <button class="danger-btn" onclick="deleteOutreachRecord('${record._id}')">
+          Delete
+        </button>
       </div>
-    `).join("");
+    `;
+  });
 
-  }catch(err){
-    console.log(err.message);
-  }
+  const outreachCount = document.getElementById("outreachCount");
+  const outreachFollowupCount = document.getElementById("outreachFollowupCount");
+  const outreachConvertedCount = document.getElementById("outreachConvertedCount");
+
+  if (outreachCount) outreachCount.innerText = records.length;
+  if (outreachFollowupCount) outreachFollowupCount.innerText = followups;
+  if (outreachConvertedCount) outreachConvertedCount.innerText = converted;
 }
 
-async function requestUpgrade(planId, planName, price){
-  if(planId === "FREE"){
-    alert("You are already using the Free plan.");
-    return;
-  }
-
-  const company = CURRENT_USER?.companyName || "TradeFlow Workspace";
-  const email = CURRENT_USER?.email || "";
-  const name = CURRENT_USER?.name || "User";
+function generateWhatsAppMessage() {
+  const product = document.getElementById("waAiProduct").value || "your product";
+  const buyer = document.getElementById("waAiBuyer").value || "your company";
 
   const message =
-`Hello TradeFlow Team,
+`Hello,
 
-I want to upgrade my workspace.
+I hope you are doing well.
 
-Company: ${company}
-User: ${name}
-Email: ${email}
-Requested Plan: ${planName}
-Monthly Price: ₹${price}
+We are interested in discussing export/import business opportunities regarding ${product}. Please share your latest pricing, MOQ, availability, packaging details, certifications, and delivery timeline.
 
-Please contact me for activation and payment process.`;
+We are looking for a serious long-term business relationship.
 
-  try{
-    await api("/api/billing/request-upgrade",{
-      method:"POST",
-      body:JSON.stringify({
-        requestedPlan: planName,
-        price: Number(price || 0),
-        notes: message
-      })
-    });
-  }catch(err){
-    console.log("Upgrade request saved through WhatsApp only:", err.message);
+Regards,
+${buyer}`;
+
+  document.getElementById("outreachProduct").value = product;
+  document.getElementById("outreachMessage").value = message;
+}
+
+async function saveOutreachRecord() {
+  const contactName = document.getElementById("outreachContactName").value;
+  const phone = document.getElementById("outreachPhone").value;
+  const product = document.getElementById("outreachProduct").value;
+  const message = document.getElementById("outreachMessage").value;
+  const status = document.getElementById("outreachStatus").value;
+  const notes = document.getElementById("outreachNotes").value;
+
+  if (!contactName || !phone || !message) {
+    alert("Contact name, phone, and message are required.");
+    return null;
   }
 
-  const whatsappNumber = "918743998759";
-  const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-  window.open(whatsappLink, "_blank");
+  const res = await fetch(OUTREACH_URL, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      contactName,
+      phone,
+      product,
+      message,
+      channel: "WhatsApp",
+      status,
+      notes
+    })
+  });
+
+  if (res.status === 401) {
+    logoutUser();
+    return null;
+  }
+
+  const record = await res.json();
+
+  fetchOutreachRecords();
+fetchEmployees();
+
+  return record;
 }
 
-function adminSafeText(value){
-  return String(value || "-").replace(/[<>&]/g, "");
+async function saveAndOpenWhatsApp() {
+  const record = await saveOutreachRecord();
+
+  if (!record) return;
+
+  const phone = (record.phone || "").replace(/\D/g, "");
+  const message = encodeURIComponent(record.message || "");
+
+  await updateOutreachStatus(record._id, "Opened", false);
+
+  window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+
+  fetchOutreachRecords();
+fetchEmployees();
 }
 
-async function loadAdminData(){
-  if(!CURRENT_USER?.isAdmin){
-    alert("Admin access only.");
+async function updateOutreachStatus(id, status, refresh = true) {
+  await fetch(`${OUTREACH_URL}/${id}`, {
+    method: "PUT",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ status })
+  });
+
+  if (refresh) fetchOutreachRecords();
+fetchEmployees();
+}
+
+async function deleteOutreachRecord(id) {
+  await fetch(`${OUTREACH_URL}/${id}`, {
+    method: "DELETE",
+    headers: getAuthHeaders()
+  });
+
+  fetchOutreachRecords();
+fetchEmployees();
+}
+
+function sendEmail() {
+  const email = document.getElementById("outreachEmail").value;
+  const message = document.getElementById("outreachMessage").value;
+
+  if (!email) {
+    alert("Enter supplier email.");
     return;
   }
 
-  await Promise.allSettled([
-    loadAdminOverview(),
-    loadAdminCompanies(),
-    loadAdminUsers(),
-    loadAdminUpgradeRequests(),
-    loadAdminLeadRequests()
-  ]);
+  window.location.href =
+    `mailto:${email}?subject=Business Opportunity from TradeFlow&body=${encodeURIComponent(message)}`;
 }
 
-async function loadAdminOverview(){
-  try{
-    const data = await api("/api/admin/overview");
-    const overview = data.overview || {};
+function openWhatsApp() {
+  const phone = document.getElementById("outreachPhone").value;
+  const message = document.getElementById("outreachMessage").value;
 
-    document.getElementById("adminCompanyCount").innerText = overview.companies || 0;
-    document.getElementById("adminUserCount").innerText = overview.users || 0;
-    document.getElementById("adminUpgradeCount").innerText = overview.upgradeRequests || 0;
-    document.getElementById("adminLeadRequestCount").innerText = overview.leadRequests || 0;
-  }catch(err){
-    console.log(err.message);
-  }
-}
-
-async function loadAdminCompanies(){
-  const box = document.getElementById("adminCompanies");
-  if(!box) return;
-
-  try{
-    const data = await api("/api/admin/companies");
-
-    box.innerHTML = (data.companies || []).map(company => `
-      <div class="border rounded-2xl p-5">
-        <h3 class="font-black text-lg">${adminSafeText(company.companyName)}</h3>
-        <p class="text-slate-600 mt-1">Company ID: ${adminSafeText(company._id)}</p>
-        <p>Plan: <b>${adminSafeText(company.plan)}</b></p>
-        <p>Status: ${adminSafeText(company.subscriptionStatus)}</p>
-        <p>Users: ${company.users || 0}</p>
-
-        <div class="grid grid-cols-2 gap-2 mt-4">
-          <button onclick="adminChangePlan('${company._id}', 'STARTER')" class="bg-blue-700 text-white py-2 rounded-xl">Starter</button>
-          <button onclick="adminChangePlan('${company._id}', 'PRO')" class="bg-purple-700 text-white py-2 rounded-xl">Pro</button>
-          <button onclick="adminChangePlan('${company._id}', 'ENTERPRISE')" class="bg-slate-900 text-white py-2 rounded-xl">Enterprise</button>
-          <button onclick="adminChangePlan('${company._id}', 'FREE')" class="bg-red-600 text-white py-2 rounded-xl">Free</button>
-        </div>
-      </div>
-    `).join("");
-  }catch(err){
-    box.innerHTML = `<p class="text-red-600">${err.message}</p>`;
-  }
-}
-
-async function adminChangePlan(companyId, plan){
-  try{
-    const data = await api(`/api/admin/company/${companyId}/plan`,{
-      method:"PUT",
-      body:JSON.stringify({ plan })
-    });
-
-    alert(data.message || "Plan updated");
-    loadAdminData();
-  }catch(err){
-    alert(err.message);
-  }
-}
-
-async function loadAdminUsers(){
-  const box = document.getElementById("adminUsers");
-  if(!box) return;
-
-  try{
-    const data = await api("/api/admin/users");
-
-    box.innerHTML = (data.users || []).map(user => `
-      <div class="border rounded-2xl p-5">
-        <h3 class="font-black">${adminSafeText(user.name)}</h3>
-        <p>${adminSafeText(user.email)}</p>
-        <p>Company: ${adminSafeText(user.companyName)}</p>
-        <p>Role: ${adminSafeText(user.role)}</p>
-        <p>Plan: ${adminSafeText(user.plan)}</p>
-      </div>
-    `).join("");
-  }catch(err){
-    box.innerHTML = `<p class="text-red-600">${err.message}</p>`;
-  }
-}
-
-async function loadAdminUpgradeRequests(){
-  const box = document.getElementById("adminUpgradeRequests");
-  if(!box) return;
-
-  try{
-    const data = await api("/api/admin/upgrade-requests");
-
-    box.innerHTML = (data.requests || []).map(req => `
-      <div class="border rounded-2xl p-5">
-        <h3 class="font-black text-lg">${adminSafeText(req.companyName)}</h3>
-        <p>User: ${adminSafeText(req.userName)}</p>
-        <p>Email: ${adminSafeText(req.email)}</p>
-        <p>Plan: <b>${adminSafeText(req.requestedPlan)}</b></p>
-        <p>Price: ₹${req.price || 0}</p>
-        <p>Status: <b>${adminSafeText(req.status)}</b></p>
-
-        <div class="grid grid-cols-2 gap-2 mt-4">
-          <button onclick="adminUpdateUpgradeRequest('${req._id}', 'CONTACTED')" class="bg-blue-700 text-white py-2 rounded-xl">Contacted</button>
-          <button onclick="adminUpdateUpgradeRequest('${req._id}', 'ACTIVE')" class="bg-green-700 text-white py-2 rounded-xl">Active</button>
-          <button onclick="adminUpdateUpgradeRequest('${req._id}', 'CLOSED')" class="bg-slate-900 text-white py-2 rounded-xl">Closed</button>
-          <button onclick="adminUpdateUpgradeRequest('${req._id}', 'REJECTED')" class="bg-red-600 text-white py-2 rounded-xl">Rejected</button>
-        </div>
-      </div>
-    `).join("");
-  }catch(err){
-    box.innerHTML = `<p class="text-red-600">${err.message}</p>`;
-  }
-}
-
-async function adminUpdateUpgradeRequest(id, status){
-  try{
-    await api(`/api/admin/upgrade-requests/${id}`,{
-      method:"PUT",
-      body:JSON.stringify({ status })
-    });
-
-    loadAdminUpgradeRequests();
-    loadAdminOverview();
-  }catch(err){
-    alert(err.message);
-  }
-}
-
-async function loadAdminLeadRequests(){
-  const box = document.getElementById("adminLeadRequests");
-  if(!box) return;
-
-  try{
-    const data = await api("/api/admin/lead-requests");
-
-    box.innerHTML = (data.requests || []).map(req => `
-      <div class="border rounded-2xl p-5">
-        <h3 class="font-black text-lg">${adminSafeText(req.product)} → ${adminSafeText(req.country)}</h3>
-        <p>Company: ${adminSafeText(req.companyName)}</p>
-        <p>User: ${adminSafeText(req.userName)}</p>
-        <p>Email: ${adminSafeText(req.email)}</p>
-        <p>Count: ${adminSafeText(req.leadCount)}</p>
-        <p>Type: ${adminSafeText(req.leadType)}</p>
-        <p>Status: <b>${adminSafeText(req.status)}</b></p>
-        <p class="text-slate-600 mt-2">${adminSafeText(req.notes)}</p>
-
-        <div class="grid grid-cols-2 gap-2 mt-4">
-          <button onclick="adminUpdateLeadRequest('${req._id}', 'PROCESSING')" class="bg-blue-700 text-white py-2 rounded-xl">Processing</button>
-          <button onclick="adminUpdateLeadRequest('${req._id}', 'DELIVERED')" class="bg-green-700 text-white py-2 rounded-xl">Delivered</button>
-          <button onclick="adminUpdateLeadRequest('${req._id}', 'ON HOLD')" class="bg-yellow-600 text-white py-2 rounded-xl">Hold</button>
-          <button onclick="adminUpdateLeadRequest('${req._id}', 'CLOSED')" class="bg-slate-900 text-white py-2 rounded-xl">Closed</button>
-        </div>
-      </div>
-    `).join("");
-  }catch(err){
-    box.innerHTML = `<p class="text-red-600">${err.message}</p>`;
-  }
-}
-
-async function adminUpdateLeadRequest(id, status){
-  try{
-    await api(`/api/admin/lead-requests/${id}`,{
-      method:"PUT",
-      body:JSON.stringify({ status })
-    });
-
-    loadAdminLeadRequests();
-    loadAdminOverview();
-  }catch(err){
-    alert(err.message);
-  }
-}
-
-async function submitLeadRequest(){
-  const product = document.getElementById("leadRequestProduct").value.trim();
-  const country = document.getElementById("leadRequestCountry").value.trim();
-  const count = document.getElementById("leadRequestCount").value;
-  const type = document.getElementById("leadRequestType").value;
-  const notes = document.getElementById("leadRequestNotes").value.trim();
-
-  if(!product || !country){
-    alert("Product and target country are required.");
+  if (!phone) {
+    alert("Enter WhatsApp number with country code.");
     return;
   }
 
-  const company = CURRENT_USER?.companyName || "TradeFlow Workspace";
-  const email = CURRENT_USER?.email || "";
-  const name = CURRENT_USER?.name || "User";
-
-  const message =
-`Hello TradeFlow Team,
-
-I want verified export buyer leads.
-
-Company: ${company}
-User: ${name}
-Email: ${email}
-
-Product: ${product}
-Country: ${country}
-Lead Count: ${count}
-Lead Type: ${type}
-
-Notes:
-${notes || "-"}
-
-Please contact me regarding pricing and delivery.`;
-
-  try{
-    await api("/api/lead-requests",{
-      method:"POST",
-      body:JSON.stringify({
-        product,
-        country,
-        leadCount: count,
-        leadType: type,
-        notes
-      })
-    });
-  }catch(err){
-    console.log("Lead request saved through WhatsApp only:", err.message);
-  }
-
-  const whatsappNumber = "918743998759";
-  const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-
-  window.open(whatsappLink, "_blank");
+  window.open(
+    `https://wa.me/${phone}?text=${encodeURIComponent(message)}`,
+    "_blank"
+  );
 }
 
-async function upgradeDemo(plan){try{if(plan==="FREE")return alert("You are already on FREE plan or can downgrade later.");const data=await api("/api/billing/upgrade-demo",{method:"POST",body:JSON.stringify({plan})});if(data.token)setToken(data.token);alert(data.message||"Plan upgraded");CURRENT_USER=data.user;showApp(data.user);loadStats();loadPlans();}catch(err){alert(err.message);}}
+
+async function fetchTasks() {
+  try {
+    const res = await fetch(TASK_URL, {
+      headers: getAuthHeaders()
+    });
+
+    if (res.status === 401) {
+      logoutUser();
+      return;
+    }
+
+    const tasks = await res.json();
+
+    renderTasks(tasks);
+  } catch (error) {
+    console.log("Task backend not connected:", error.message);
+  }
+}
+
+function renderTasks(tasks) {
+  const taskList = document.getElementById("taskList");
+
+  if (taskList) {
+    taskList.innerHTML = "";
+  }
+
+  let completed = 0;
+  let pending = 0;
+
+  tasks.forEach((task) => {
+    if (task.status === "Completed") {
+      completed++;
+    } else {
+      pending++;
+    }
+
+    const html = `
+      <div class="supplier-card">
+        <h2 style="font-size:20px;font-weight:900;color:white;">
+          ${task.title}
+        </h2>
+
+        <p class="muted">Related To: ${task.relatedTo || "N/A"}</p>
+        <p class="muted">Due Date: ${task.dueDate || "N/A"}</p>
+        <p class="muted">Priority: ${task.priority || "Medium"}</p>
+        <p class="muted">Status: ${task.status || "Pending"}</p>
+        <p class="muted">Notes: ${task.notes || "No Notes"}</p>
+
+        <select onchange="updateTaskStatus('${task._id}', this.value)">
+          <option ${task.status === "Pending" ? "selected" : ""}>Pending</option>
+          <option ${task.status === "In Progress" ? "selected" : ""}>In Progress</option>
+          <option ${task.status === "Completed" ? "selected" : ""}>Completed</option>
+        </select>
+
+        <button class="danger-btn" onclick="deleteTask('${task._id}')">
+          Delete
+        </button>
+      </div>
+    `;
+
+    if (taskList) {
+      taskList.innerHTML += html;
+    }
+  });
+
+  const taskCount = document.getElementById("taskCount");
+  const completedTaskCount = document.getElementById("completedTaskCount");
+  const pendingTaskCount = document.getElementById("pendingTaskCount");
+
+  if (taskCount) taskCount.innerText = tasks.length;
+  if (completedTaskCount) completedTaskCount.innerText = completed;
+  if (pendingTaskCount) pendingTaskCount.innerText = pending;
+}
+
+async function addTask() {
+  const title = document.getElementById("taskTitle").value;
+  const relatedTo = document.getElementById("taskRelatedTo").value;
+  const dueDate = document.getElementById("taskDueDate").value;
+  const priority = document.getElementById("taskPriority").value;
+  const status = document.getElementById("taskStatus").value;
+  const notes = document.getElementById("taskNotes").value;
+
+  if (!title) {
+    alert("Task title required");
+    return;
+  }
+
+  await fetch(TASK_URL, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      title,
+      relatedTo,
+      dueDate,
+      priority,
+      status,
+      notes
+    })
+  });
+
+  document.getElementById("taskTitle").value = "";
+  document.getElementById("taskRelatedTo").value = "";
+  document.getElementById("taskDueDate").value = "";
+  document.getElementById("taskNotes").value = "";
+
+  fetchTasks();
+}
+
+async function updateTaskStatus(id, status) {
+  await fetch(`${TASK_URL}/${id}`, {
+    method: "PUT",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ status })
+  });
+
+  fetchTasks();
+}
+
+async function deleteTask(id) {
+  await fetch(`${TASK_URL}/${id}`, {
+    method: "DELETE",
+    headers: getAuthHeaders()
+  });
+
+  fetchTasks();
+}
+
+fetchSuppliers();
+fetchDeals();
+fetchTasks();
+fetchAnalytics();
+fetchOutreachRecords();
+fetchEmployees();
+fetchTasks();
 </script>
 
 </body>
