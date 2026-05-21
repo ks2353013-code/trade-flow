@@ -278,20 +278,244 @@
       <div id="billingPlans" class="grid md:grid-cols-4 gap-6 mt-8"></div>
     </section>
 
-    <section id="settings" class="page">
-      <h1 class="text-4xl font-black">Settings</h1>
-      <div class="bg-white p-6 rounded-2xl shadow mt-6">
-        <p><b>Backend:</b> <span id="apiText"></span></p>
-        <p class="mt-2"><b>Mode:</b> Money-ready Multi-Tenant SaaS</p>
-        <p class="mt-2"><b>Storage:</b> MongoDB Atlas</p>
-        <p class="mt-2"><b>Auth:</b> JWT Protected</p>
+   <section id="settings" class="page">
+
+  <h1 class="text-4xl font-black">
+    Workspace Settings
+  </h1>
+
+  <p class="text-slate-500 mt-2">
+    Manage your workspace, subscription, AI controls and security.
+  </p>
+
+  <div class="grid md:grid-cols-2 gap-6 mt-8">
+
+    <div class="bg-white p-6 rounded-2xl shadow">
+
+      <h2 class="text-2xl font-black">
+        Workspace
+      </h2>
+
+      <div class="mt-5 space-y-4">
+
+        <input
+          id="workspaceCompany"
+          class="border rounded-xl px-4 py-3 w-full"
+          placeholder="Company Name"
+        >
+
+        <input
+          id="workspaceIndustry"
+          class="border rounded-xl px-4 py-3 w-full"
+          placeholder="Industry"
+        >
+
+        <input
+          id="workspaceEmail"
+          class="border rounded-xl px-4 py-3 w-full"
+          placeholder="Workspace Email"
+        >
+
+        <button
+          class="w-full bg-blue-700 text-white py-3 rounded-xl font-bold"
+        >
+          Save Workspace
+        </button>
+
       </div>
-    </section>
 
-    <footer class="mt-16 text-center text-slate-500">© 2026 TradeFlow AI™ — Export / Import SaaS Workspace Platform</footer>
-  </main>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow">
+
+      <h2 class="text-2xl font-black">
+        Subscription
+      </h2>
+
+      <div class="mt-5 space-y-3">
+
+        <div class="flex justify-between">
+          <span>Current Plan</span>
+          <b>PRO</b>
+        </div>
+
+        <div class="flex justify-between">
+          <span>Status</span>
+          <b class="text-green-600">
+            Active
+          </b>
+        </div>
+
+        <div class="flex justify-between">
+          <span>Next Renewal</span>
+          <b>28 June 2026</b>
+        </div>
+
+        <div class="flex justify-between">
+          <span>Workspace Users</span>
+          <b>12</b>
+        </div>
+
+        <button
+          class="mt-5 w-full bg-blue-700 text-white py-3 rounded-xl font-bold"
+        >
+          Upgrade Plan
+        </button>
+
+      </div>
+
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow">
+
+      <h2 class="text-2xl font-black">
+        AI Controls
+      </h2>
+
+      <div class="mt-5 space-y-4">
+
+        <label class="flex justify-between items-center">
+
+          <span>
+            AI Lead Scoring
+          </span>
+
+          <input type="checkbox" checked>
+
+        </label>
+
+        <label class="flex justify-between items-center">
+
+          <span>
+            Smart Outreach
+          </span>
+
+          <input type="checkbox" checked>
+
+        </label>
+
+        <label class="flex justify-between items-center">
+
+          <span>
+            Auto Follow-up
+          </span>
+
+          <input type="checkbox" checked>
+
+        </label>
+
+        <label class="flex justify-between items-center">
+
+          <span>
+            Export Intelligence
+          </span>
+
+          <input type="checkbox" checked>
+
+        </label>
+
+      </div>
+
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow">
+
+      <h2 class="text-2xl font-black">
+        Security
+      </h2>
+
+      <div class="mt-5 space-y-4">
+
+        <button
+          class="w-full bg-slate-900 text-white py-3 rounded-xl"
+        >
+          Change Password
+        </button>
+
+        <button
+          class="w-full bg-slate-900 text-white py-3 rounded-xl"
+        >
+          Session Management
+        </button>
+
+        <button
+          class="w-full bg-slate-900 text-white py-3 rounded-xl"
+        >
+          Two Factor Authentication
+        </button>
+
+      </div>
+
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow">
+
+      <h2 class="text-2xl font-black">
+        Integrations
+      </h2>
+
+      <div class="mt-5 space-y-4">
+
+        <div class="flex justify-between">
+          <span>WhatsApp API</span>
+          <b class="text-green-600">Connected</b>
+        </div>
+
+        <div class="flex justify-between">
+          <span>Email Outreach</span>
+          <b class="text-green-600">Connected</b>
+        </div>
+
+        <div class="flex justify-between">
+          <span>Razorpay</span>
+          <b class="text-yellow-600">Pending</b>
+        </div>
+
+        <div class="flex justify-between">
+          <span>AI Engine</span>
+          <b class="text-green-600">Active</b>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow">
+
+      <h2 class="text-2xl font-black">
+        Branding
+      </h2>
+
+      <div class="mt-5 space-y-4">
+
+        <input
+          class="border rounded-xl px-4 py-3 w-full"
+          placeholder="Company Display Name"
+        >
+
+        <input
+          class="border rounded-xl px-4 py-3 w-full"
+          placeholder="Invoice Branding"
+        >
+
+        <input
+          class="border rounded-xl px-4 py-3 w-full"
+          placeholder="Export Document Footer"
+        >
+
+        <button
+          class="w-full bg-blue-700 text-white py-3 rounded-xl font-bold"
+        >
+          Save Branding
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
 </section>
-
 <script>
 const API_BASE = "https://trade-flow-lc1k.onrender.com";
 let CURRENT_USER = null;
