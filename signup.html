@@ -7,165 +7,233 @@
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       min-height: 100vh;
       font-family: Inter, Arial, sans-serif;
       background:
-        radial-gradient(circle at 10% 20%, rgba(14,165,233,.36), transparent 30%),
-        radial-gradient(circle at 85% 15%, rgba(168,85,247,.35), transparent 28%),
-        radial-gradient(circle at 55% 90%, rgba(34,197,94,.16), transparent 28%),
+        radial-gradient(circle at 10% 10%, rgba(56,189,248,.28), transparent 28%),
+        radial-gradient(circle at 90% 20%, rgba(139,92,246,.30), transparent 30%),
+        radial-gradient(circle at 45% 95%, rgba(34,197,94,.14), transparent 28%),
         #020617;
-      color: #fff;
+      color: white;
+      overflow-x: hidden;
     }
+
     .page {
       min-height: 100vh;
       display: grid;
-      grid-template-columns: 1.08fr .92fr;
+      grid-template-columns: 1.1fr .9fr;
     }
-    .hero {
-      padding: 56px;
+
+    .left {
+      padding: 64px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       position: relative;
-      overflow: hidden;
     }
-    .hero::before {
-      content: "TradeFlow";
+
+    .watermark {
       position: absolute;
-      top: 7%;
-      left: 6%;
-      font-size: 132px;
+      top: 50px;
+      left: 42px;
+      font-size: 130px;
       font-weight: 950;
       letter-spacing: -8px;
       color: rgba(255,255,255,.035);
       pointer-events: none;
     }
+
     .badge {
       width: fit-content;
       padding: 10px 16px;
       border-radius: 999px;
-      background: rgba(56,189,248,.14);
-      border: 1px solid rgba(125,211,252,.25);
+      background: rgba(14,165,233,.14);
+      border: 1px solid rgba(125,211,252,.28);
       color: #7dd3fc;
-      font-weight: 800;
       font-size: 13px;
-      margin-bottom: 20px;
+      font-weight: 900;
+      margin-bottom: 22px;
+      backdrop-filter: blur(14px);
     }
-    h1 {
-      font-size: clamp(42px, 6vw, 80px);
+
+    .headline {
+      max-width: 720px;
+      font-size: clamp(44px, 6vw, 78px);
       line-height: .95;
       margin: 0;
       font-weight: 950;
       letter-spacing: -3px;
     }
-    .gradient {
+
+    .headline span {
       background: linear-gradient(135deg, #38bdf8, #a78bfa, #22c55e);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-    .hero p {
+
+    .desc {
       max-width: 660px;
+      margin-top: 24px;
       color: #cbd5e1;
-      line-height: 1.7;
       font-size: 17px;
-      margin-top: 22px;
+      line-height: 1.75;
     }
+
     .features {
       display: grid;
       grid-template-columns: repeat(2, minmax(180px, 1fr));
       gap: 14px;
       max-width: 680px;
-      margin-top: 30px;
+      margin-top: 32px;
     }
+
     .feature {
-      padding: 16px;
+      padding: 16px 17px;
       border-radius: 18px;
-      background: rgba(15,23,42,.66);
+      background: rgba(15,23,42,.62);
       border: 1px solid rgba(148,163,184,.16);
-      backdrop-filter: blur(16px);
       color: #dbeafe;
+      backdrop-filter: blur(18px);
+      box-shadow: 0 16px 45px rgba(0,0,0,.16);
       font-size: 14px;
     }
-    .auth-wrap {
+
+    .right {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 28px;
+      padding: 34px;
     }
+
     .auth-card {
       width: 100%;
-      max-width: 455px;
-      padding: 34px;
-      border-radius: 30px;
-      background: rgba(15,23,42,.82);
-      border: 1px solid rgba(148,163,184,.18);
-      box-shadow: 0 30px 90px rgba(0,0,0,.45);
+      max-width: 450px;
+      padding: 36px;
+      border-radius: 34px;
+      background: linear-gradient(180deg, rgba(15,23,42,.88), rgba(2,6,23,.82));
+      border: 1px solid rgba(148,163,184,.20);
+      box-shadow:
+        0 35px 100px rgba(0,0,0,.50),
+        inset 0 1px 0 rgba(255,255,255,.05);
       backdrop-filter: blur(24px);
     }
-    .logo {
+
+    .brand {
       display: flex;
-      gap: 12px;
       align-items: center;
+      gap: 13px;
       margin-bottom: 28px;
     }
-    .logo-mark {
-      width: 52px;
-      height: 52px;
-      border-radius: 17px;
-      background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+
+    .brand-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 18px;
       display: grid;
       place-items: center;
-      font-size: 24px;
+      background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+      font-size: 25px;
       font-weight: 950;
-      box-shadow: 0 18px 40px rgba(14,165,233,.25);
+      box-shadow: 0 18px 42px rgba(14,165,233,.28);
     }
-    .logo-title { font-size: 25px; font-weight: 950; }
-    .logo-sub { color: #94a3b8; font-size: 12px; margin-top: 2px; }
-    .auth-card h2 { margin: 0 0 8px; font-size: 30px; font-weight: 950; }
-    .sub { color: #94a3b8; line-height: 1.5; margin-bottom: 22px; }
+
+    .brand-title {
+      font-size: 26px;
+      font-weight: 950;
+      letter-spacing: -.6px;
+    }
+
+    .brand-sub {
+      color: #94a3b8;
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .auth-card h2 {
+      margin: 0;
+      font-size: 31px;
+      font-weight: 950;
+      letter-spacing: -.8px;
+    }
+
+    .auth-note {
+      margin-top: 8px;
+      color: #94a3b8;
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .field {
+      margin-top: 18px;
+    }
+
+    .field label {
+      display: block;
+      color: #cbd5e1;
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
     input {
       width: 100%;
       padding: 15px 16px;
-      margin-top: 13px;
       border: 1px solid rgba(148,163,184,.18);
       border-radius: 16px;
-      background: rgba(2,6,23,.68);
+      background: rgba(2,6,23,.72);
       color: white;
       outline: none;
       font-size: 15px;
     }
+
+    input::placeholder {
+      color: #64748b;
+    }
+
     input:focus {
-      border-color: rgba(56,189,248,.75);
+      border-color: rgba(56,189,248,.78);
       box-shadow: 0 0 0 4px rgba(14,165,233,.13);
     }
+
     .btn {
       width: 100%;
+      margin-top: 22px;
       padding: 15px;
-      margin-top: 18px;
-      border: none;
+      border: 0;
       border-radius: 16px;
       background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
       color: white;
-      font-weight: 900;
+      font-weight: 950;
       cursor: pointer;
       font-size: 15px;
-      transition: .2s;
+      transition: .22s;
     }
+
     .btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 20px 42px rgba(14,165,233,.25);
+      box-shadow: 0 20px 48px rgba(14,165,233,.28);
     }
-    .hint {
+
+    .switch {
       text-align: center;
-      margin-top: 20px;
+      margin-top: 22px;
       color: #cbd5e1;
       font-size: 14px;
     }
-    .hint a { color: #7dd3fc; text-decoration: none; font-weight: 900; }
-    .trust {
+
+    .switch a {
+      color: #7dd3fc;
+      font-weight: 950;
+      text-decoration: none;
+    }
+
+    .security {
       margin-top: 22px;
       padding: 14px;
       border-radius: 18px;
@@ -175,52 +243,100 @@
       font-size: 13px;
       line-height: 1.5;
     }
+
     @media (max-width: 950px) {
-      .page { grid-template-columns: 1fr; }
-      .hero { padding: 34px 24px 10px; }
-      .hero::before { font-size: 76px; }
-      .features { grid-template-columns: 1fr; }
-      .auth-wrap { padding: 24px; }
+      .page {
+        grid-template-columns: 1fr;
+      }
+
+      .left {
+        padding: 38px 26px 8px;
+      }
+
+      .watermark {
+        font-size: 74px;
+        top: 30px;
+        left: 20px;
+      }
+
+      .features {
+        grid-template-columns: 1fr;
+      }
+
+      .right {
+        padding: 24px;
+      }
     }
   </style>
-
 </head>
+
 <body>
   <div class="page">
-    <section class="hero">
-      <div class="badge">✨ Build your premium trade workspace</div>
-      <h1>Create your <span class="gradient">TradeFlow SaaS</span> command center.</h1>
-      <p>Start managing suppliers, buyers, CRM, tasks, documents, AI tools, outreach, analytics, teams, and multi-company trade operations.</p>
+    <section class="left">
+      <div class="watermark">TradeFlow</div>
+      <div class="badge">✨ Build your premium TradeFlow workspace</div>
+
+      <h1 class="headline">
+        Create your <span>premium SaaS trade workspace.</span>
+      </h1>
+
+      <p class="desc">
+        Signup to start managing suppliers, buyers, CRM, documents, AI tools,
+        outreach, analytics, employees, notifications, and multi-company operations.
+      </p>
+
       <div class="features">
-        <div class="feature">🏬 Multi-company workspace</div>
-        <div class="feature">🔔 Notifications center</div>
-        <div class="feature">📄 Export PDF generator</div>
-        <div class="feature">👥 Employee permissions</div>
+        <div class="feature">🏬 Multi-company Workspace</div>
+        <div class="feature">📄 Export PDF Generator</div>
+        <div class="feature">👥 Employee Permissions</div>
+        <div class="feature">🔔 Notifications Center</div>
       </div>
     </section>
 
-    <section class="auth-wrap">
+    <section class="right">
       <div class="auth-card">
-        <div class="logo">
-          <div class="logo-mark">T</div>
+        <div class="brand">
+          <div class="brand-icon">T</div>
           <div>
-            <div class="logo-title">TradeFlow</div>
-            <div class="logo-sub">Create Premium Workspace</div>
+            <div class="brand-title">TradeFlow</div>
+            <div class="brand-sub">Create secure workspace</div>
           </div>
         </div>
 
         <h2>Create account</h2>
-        <div class="sub">Signup and enter your protected TradeFlow workspace.</div>
+        <div class="auth-note">
+          Start your protected TradeFlow SaaS workspace.
+        </div>
 
-        <input type="text" id="name" placeholder="Your Name">
-        <input type="text" id="companyName" placeholder="Company Name">
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Password">
+        <div class="field">
+          <label>Your Name</label>
+          <input type="text" id="name" placeholder="Krishna Singh">
+        </div>
+
+        <div class="field">
+          <label>Company Name</label>
+          <input type="text" id="companyName" placeholder="Your company">
+        </div>
+
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" id="email" placeholder="you@company.com">
+        </div>
+
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="password" placeholder="Create a password">
+        </div>
 
         <button class="btn" onclick="signupUser()">Create Workspace</button>
 
-        <div class="hint">Already have an account? <a href="login.html">Login</a></div>
-        <div class="trust">One account • Secure token login • Production backend connected</div>
+        <div class="switch">
+          Already have an account? <a href="login.html">Login</a>
+        </div>
+
+        <div class="security">
+          Secure account • Production backend connected • Private workspace
+        </div>
       </div>
     </section>
   </div>
