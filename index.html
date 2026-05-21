@@ -587,6 +587,20 @@
       color: #fca5a5;
     }
 
+
+    .main {
+      animation: fadeIn .28s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: .0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .nav-btn {
+      will-change: transform;
+    }
+
     footer {
       margin-top: 28px;
       text-align: center;
@@ -1623,10 +1637,6 @@
 <script>
 const BACKEND_URL = "https://trade-flow-lc1k.onrender.com";
 
-const BACKEND_URL = "https://trade-flow-lc1k.onrender.com";
-
-const BACKEND_URL = "https://trade-flow-lc1k.onrender.com";
-
 const API_URL = `${BACKEND_URL}/suppliers`;
 const AI_URL = `${BACKEND_URL}/api/ai`;
 const DEAL_URL = `${BACKEND_URL}/api/deals`;
@@ -1638,6 +1648,9 @@ const EMAIL_URL = `${BACKEND_URL}/api/email`;
 const EMPLOYEE_URL = `${BACKEND_URL}/api/employees`;
 const NOTIFICATION_URL = `${BACKEND_URL}/api/notifications`;
 const WORKSPACE_URL = `${BACKEND_URL}/api/workspaces`;
+
+let appReady = false;
+
 
 function getUser() {
   try {
@@ -1657,11 +1670,11 @@ function protectDashboard() {
     throw new Error("Not logged in");
   }
 
-  const workspaceText =
+  document.getElementById("workspaceName").innerText =
     `${user.companyName || "TradeFlow Company"} • ${user.name || "User"} Workspace`;
 
-  document.getElementById("workspaceName").innerText = workspaceText;
-  document.getElementById("userBadge").innerText = user.email || "Authenticated User";
+  document.getElementById("userBadge").innerText =
+    user.email || "Authenticated User";
 
   const adminActiveCompany = document.getElementById("adminActiveCompany");
   const adminUserName = document.getElementById("adminUserName");
@@ -1674,6 +1687,8 @@ function protectDashboard() {
   if (adminUserName) {
     adminUserName.innerText = user.name || user.email || "Admin";
   }
+
+  appReady = true;
 }
 
 protectDashboard();
@@ -1714,49 +1729,50 @@ const pages = [
 ];
 
 function showPage(page) {
+  if (!appReady) return;
+
   pages.forEach((p) => {
-    document.getElementById(`${p}Page`).classList.add("hidden");
+    const el = document.getElementById(`${p}Page`);
+    if (el) el.classList.add("hidden");
   });
 
-  document.getElementById(`${page}Page`).classList.remove("hidden");
+  const targetPage = document.getElementById(`${page}Page`);
 
-  if (page === "suppliers" || page === "dashboard") {
-    fetchSuppliers();
+  if (!targetPage) {
+    alert("This page is not available yet: " + page);
+    return;
   }
 
-  if (page === "crm" || page === "dashboard") {
-    fetchDeals();
+  targetPage.classList.remove("hidden");
+
+  // Fast dashboard: only lightweight summary calls.
+  if (page === "dashboard") {
+    safeRun(fetchSuppliers);
+    safeRun(fetchDeals);
+    safeRun(fetchAnalytics);
+    safeRun(fetchNotifications);
+    safeRun(fetchWorkspaces);
+    return;
   }
 
-  if (page === "analytics" || page === "dashboard") {
-    fetchAnalytics();
-  }
-
-  if (page === "outreach") {
-    fetchOutreachRecords();
-  }
-
-  if (page === "employees") {
-    fetchEmployees();
-  }
-
-  if (page === "notifications" || page === "dashboard") {
-    fetchNotifications();
-  }
-
-  if (page === "workspaces" || page === "dashboard" || page === "master") {
-    fetchWorkspaces();
-  }
-
-  if (page === "tasks") {
-    fetchTasks();
-  }
-
-  if (page === "tasks" || page === "dashboard") {
-    fetchTasks();
-  }
+  // Lazy-load heavy modules only when opened.
+  if (page === "suppliers") safeRun(fetchSuppliers);
+  if (page === "crm") safeRun(fetchDeals);
+  if (page === "analytics") safeRun(fetchAnalytics);
+  if (page === "outreach") safeRun(fetchOutreachRecords);
+  if (page === "employees") safeRun(fetchEmployees);
+  if (page === "notifications") safeRun(fetchNotifications);
+  if (page === "workspaces" || page === "master") safeRun(fetchWorkspaces);
+  if (page === "tasks") safeRun(fetchTasks);
 }
 
+function safeRun(fn) {
+  try {
+    if (typeof fn === "function") fn();
+  } catch (error) {
+    console.log("Module skipped:", error.message);
+  }
+}
 
 function getEmployeePermissionsFromForm() {
   return {
@@ -2491,7 +2507,7 @@ async function fetchSuppliers() {
     });
 
   } catch (error) {
-    alert("Please login again. Your session is missing or expired.");
+    console.log("Request failed. Please refresh or login again.");
     logoutUser();
   }
 }
@@ -3488,13 +3504,22 @@ async function deleteTask(id) {
   fetchTasks();
 }
 
-fetchSuppliers();
-fetchDeals();
-fetchTasks();
-fetchAnalytics();
-fetchOutreachRecords();
 fetchEmployees();
 fetchTasks();
+
+
+function bootTradeFlow() {
+  if (!appReady) return;
+
+  // Smooth first load: dashboard first, then background summaries.
+  showPage("dashboard");
+
+  setTimeout(() => safeRun(fetchAnalytics), 250);
+  setTimeout(() => safeRun(fetchNotifications), 450);
+  setTimeout(() => safeRun(fetchWorkspaces), 650);
+}
+
+bootTradeFlow();
 </script>
 
 </body>
