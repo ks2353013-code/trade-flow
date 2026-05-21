@@ -3,43 +3,138 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TradeFlow AI™ Master SaaS</title>
+  <title>TradeFlow AI™ | AI Export Intelligence SaaS</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body{background:#f3f6fb;font-family:Arial,sans-serif}
-    .page{display:none}
-    .page.active{display:block}
+    body{font-family:Arial,sans-serif;background:#f3f6fb}
+    .page{display:none}.page.active{display:block}
     .nav-btn.active{background:#2563eb;color:white}
+    .glass{background:rgba(255,255,255,.08);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.14)}
+    .glow{box-shadow:0 0 60px rgba(37,99,235,.35)}
   </style>
 </head>
 
 <body class="text-slate-900">
 
-<section id="authScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-900 p-6">
-  <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-8">
-    <h1 class="text-5xl font-black text-center text-blue-900">TradeFlow AI™</h1>
-    <p class="text-center text-slate-500 mt-3">Master Multi-Tenant Export SaaS</p>
+<!-- LANDING PAGE -->
+<section id="landingScreen" class="min-h-screen bg-slate-950 text-white overflow-hidden">
+  <div class="absolute inset-0 bg-gradient-to-br from-blue-950 via-slate-950 to-indigo-950"></div>
+  <div class="relative max-w-7xl mx-auto px-6 py-6">
+    <header class="flex items-center justify-between">
+      <div class="text-2xl font-black">TradeFlow AI™</div>
+      <div class="hidden md:flex gap-6 text-sm text-slate-300">
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#platform">Platform</a>
+      </div>
+      <button onclick="openAuth()" class="bg-white text-slate-950 px-5 py-3 rounded-xl font-bold">Login / Start Free</button>
+    </header>
 
+    <section class="grid lg:grid-cols-2 gap-12 items-center py-24">
+      <div>
+        <div class="inline-flex px-4 py-2 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-sm mb-6">
+          AI Export Intelligence + CRM + Buyer Outreach
+        </div>
+        <h1 class="text-5xl md:text-7xl font-black leading-tight">
+          AI Operating System for Global Trade
+        </h1>
+        <p class="text-xl text-slate-300 mt-6 leading-relaxed">
+          Manage suppliers, CRM leads, outreach, export documents, negotiation, team workspaces and AI-powered buyer discovery from one premium SaaS platform.
+        </p>
+        <div class="mt-8 flex flex-wrap gap-4">
+          <button onclick="openAuth()" class="bg-blue-600 hover:bg-blue-700 px-7 py-4 rounded-2xl font-black glow">Start Free Workspace</button>
+          <button onclick="scrollToPricing()" class="border border-white/20 px-7 py-4 rounded-2xl font-black">View Pricing</button>
+        </div>
+        <div class="grid grid-cols-3 gap-4 mt-10">
+          <div><h3 class="text-3xl font-black">50+</h3><p class="text-slate-400">Countries</p></div>
+          <div><h3 class="text-3xl font-black">AI</h3><p class="text-slate-400">Lead Scoring</p></div>
+          <div><h3 class="text-3xl font-black">24/7</h3><p class="text-slate-400">Cloud SaaS</p></div>
+        </div>
+      </div>
+
+      <div class="glass rounded-3xl p-6 glow">
+        <div class="bg-slate-900 rounded-2xl p-5 border border-white/10">
+          <div class="flex justify-between items-center">
+            <h2 class="text-xl font-black">Export Command Center</h2>
+            <span class="text-xs bg-green-500/20 text-green-300 px-3 py-1 rounded-full">LIVE</span>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mt-6">
+            <div class="bg-white/10 p-5 rounded-2xl"><p class="text-slate-400">Verified Suppliers</p><h3 class="text-3xl font-black">1,240</h3></div>
+            <div class="bg-white/10 p-5 rounded-2xl"><p class="text-slate-400">Buyer Leads</p><h3 class="text-3xl font-black">8,900</h3></div>
+            <div class="bg-white/10 p-5 rounded-2xl"><p class="text-slate-400">Outreach</p><h3 class="text-3xl font-black">32k</h3></div>
+            <div class="bg-white/10 p-5 rounded-2xl"><p class="text-slate-400">Deals Tracked</p><h3 class="text-3xl font-black">₹4.2Cr</h3></div>
+          </div>
+          <div class="mt-6 bg-blue-600/20 border border-blue-400/20 p-5 rounded-2xl">
+            <b>AI Insight:</b> UAE and Saudi buyers show strong demand for rice, jaggery and agri products this month.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="py-20">
+      <h2 class="text-4xl font-black text-center">Built for Export Growth</h2>
+      <p class="text-slate-400 text-center mt-3">Everything an exporter needs to find, contact and manage buyers.</p>
+      <div class="grid md:grid-cols-3 gap-6 mt-12">
+        <div class="glass p-6 rounded-3xl"><h3 class="text-xl font-black">AI Lead Finder</h3><p class="text-slate-300 mt-3">Find and score importer/buyer leads by product and country.</p></div>
+        <div class="glass p-6 rounded-3xl"><h3 class="text-xl font-black">Export CRM</h3><p class="text-slate-300 mt-3">Track leads, stages, values, follow-ups and deals.</p></div>
+        <div class="glass p-6 rounded-3xl"><h3 class="text-xl font-black">Smart Outreach</h3><p class="text-slate-300 mt-3">Email and WhatsApp outreach workflow for suppliers and buyers.</p></div>
+        <div class="glass p-6 rounded-3xl"><h3 class="text-xl font-black">Team Workspace</h3><p class="text-slate-300 mt-3">Owner and employee logins with company-level data separation.</p></div>
+        <div class="glass p-6 rounded-3xl"><h3 class="text-xl font-black">Trade Documents</h3><p class="text-slate-300 mt-3">Manage invoices, packing lists, shipment references and export records.</p></div>
+        <div class="glass p-6 rounded-3xl"><h3 class="text-xl font-black">Plan Limits</h3><p class="text-slate-300 mt-3">Free, Starter, Pro and Enterprise-ready monetization.</p></div>
+      </div>
+    </section>
+
+    <section id="platform" class="py-20">
+      <div class="bg-white text-slate-950 rounded-[2rem] p-8 md:p-12">
+        <h2 class="text-4xl font-black">From Lead Discovery to Export Execution</h2>
+        <div class="grid md:grid-cols-4 gap-6 mt-10">
+          <div><h3 class="font-black text-xl">1. Find Buyers</h3><p class="text-slate-600 mt-2">Use AI lead finder and supplier database.</p></div>
+          <div><h3 class="font-black text-xl">2. Contact</h3><p class="text-slate-600 mt-2">Send outreach through email/WhatsApp flow.</p></div>
+          <div><h3 class="font-black text-xl">3. Manage Deals</h3><p class="text-slate-600 mt-2">Track CRM, negotiation and follow-ups.</p></div>
+          <div><h3 class="font-black text-xl">4. Export</h3><p class="text-slate-600 mt-2">Handle documents, tasks and operations.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="pricing" class="py-20">
+      <h2 class="text-4xl font-black text-center">Pricing Built for Exporters</h2>
+      <div class="grid md:grid-cols-4 gap-6 mt-12">
+        <div class="glass p-6 rounded-3xl"><h3 class="text-2xl font-black">Free</h3><p class="text-4xl font-black mt-4">₹0</p><p class="text-slate-300 mt-3">Start workspace</p><button onclick="openAuth()" class="mt-6 w-full bg-white text-slate-950 py-3 rounded-xl font-bold">Start</button></div>
+        <div class="glass p-6 rounded-3xl"><h3 class="text-2xl font-black">Starter</h3><p class="text-4xl font-black mt-4">₹999</p><p class="text-slate-300 mt-3">CRM + suppliers</p><button onclick="openAuth()" class="mt-6 w-full bg-blue-600 py-3 rounded-xl font-bold">Start</button></div>
+        <div class="glass p-6 rounded-3xl border-blue-400"><h3 class="text-2xl font-black">Pro</h3><p class="text-4xl font-black mt-4">₹4,999</p><p class="text-slate-300 mt-3">AI leads + outreach</p><button onclick="openAuth()" class="mt-6 w-full bg-blue-600 py-3 rounded-xl font-bold">Upgrade</button></div>
+        <div class="glass p-6 rounded-3xl"><h3 class="text-2xl font-black">Enterprise</h3><p class="text-4xl font-black mt-4">₹25k+</p><p class="text-slate-300 mt-3">Team + automation</p><button onclick="openAuth()" class="mt-6 w-full bg-white text-slate-950 py-3 rounded-xl font-bold">Contact</button></div>
+      </div>
+    </section>
+
+    <footer class="py-10 border-t border-white/10 text-slate-400 flex flex-col md:flex-row justify-between gap-4">
+      <p>© 2026 TradeFlow AI™. Export Intelligence SaaS.</p>
+      <p>Secure • Cloud SaaS • AI Powered • MongoDB Atlas</p>
+    </footer>
+  </div>
+</section>
+
+<!-- AUTH SCREEN -->
+<section id="authScreen" class="hidden min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-900 p-6">
+  <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-8">
+    <button onclick="backToLanding()" class="text-sm text-blue-700 font-bold mb-4">← Back</button>
+    <h1 class="text-4xl font-black text-center text-blue-900">TradeFlow AI™</h1>
+    <p class="text-center text-slate-500 mt-3">Login or create your export workspace</p>
     <div class="mt-8 grid gap-4">
       <input id="authName" class="border rounded-xl px-4 py-3" placeholder="Owner / Employee Name (for signup only)" />
       <input id="companyName" class="border rounded-xl px-4 py-3" placeholder="Company Name (for owner signup)" />
       <input id="authEmail" class="border rounded-xl px-4 py-3" placeholder="Email" />
       <input id="authPassword" type="password" class="border rounded-xl px-4 py-3" placeholder="Password" />
-      <button onclick="login()" class="bg-blue-700 hover:bg-blue-800 text-white rounded-xl py-3 font-bold">
-        Login / Create Workspace
-      </button>
-      <p class="text-xs text-slate-500 text-center">
-        For login: leave name blank. For signup: enter name + company.
-      </p>
+      <button onclick="login()" class="bg-blue-700 hover:bg-blue-800 text-white rounded-xl py-3 font-bold">Login / Create Workspace</button>
+      <p class="text-xs text-slate-500 text-center">For login: leave name blank. For signup: enter name + company.</p>
     </div>
   </div>
 </section>
 
+<!-- APP SCREEN -->
 <section id="appScreen" class="hidden min-h-screen">
   <aside class="fixed left-0 top-0 w-72 h-screen bg-slate-950 text-white p-6 overflow-y-auto">
     <h2 class="text-3xl font-black">TradeFlow AI™</h2>
     <p id="userRoleText" class="text-xs text-slate-400 mt-2">Workspace</p>
-
     <nav class="mt-8 space-y-2">
       <button onclick="showPage('dashboard')" class="nav-btn active w-full text-left px-4 py-3 rounded-xl">Dashboard</button>
       <button onclick="showPage('company')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Company Master</button>
@@ -54,18 +149,13 @@
       <button onclick="showPage('billing')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Billing / Plans</button>
       <button onclick="showPage('settings')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Settings</button>
     </nav>
-
-    <button onclick="logout()" class="mt-8 w-full bg-red-600 hover:bg-red-700 rounded-xl py-3 font-bold">
-      Logout
-    </button>
+    <button onclick="logout()" class="mt-8 w-full bg-red-600 hover:bg-red-700 rounded-xl py-3 font-bold">Logout</button>
   </aside>
 
   <main class="ml-72 p-8">
-
     <section id="dashboard" class="page active">
       <h1 class="text-4xl font-black">Master Dashboard</h1>
       <p class="text-slate-500 mt-2">Company-wide export/import command center.</p>
-
       <div class="grid md:grid-cols-5 gap-5 mt-8">
         <div class="bg-white p-6 rounded-2xl shadow"><p>Suppliers</p><h2 id="supplierCount" class="text-3xl font-black mt-2">0</h2></div>
         <div class="bg-white p-6 rounded-2xl shadow"><p>CRM Leads</p><h2 id="leadCount" class="text-3xl font-black mt-2">0</h2></div>
@@ -73,26 +163,14 @@
         <div class="bg-white p-6 rounded-2xl shadow"><p>Documents</p><h2 id="docCount" class="text-3xl font-black mt-2">0</h2></div>
         <div class="bg-white p-6 rounded-2xl shadow"><p>Employees</p><h2 id="employeeCount" class="text-3xl font-black mt-2">0</h2></div>
       </div>
-
       <div class="grid md:grid-cols-2 gap-6 mt-8">
-        <div class="bg-white p-6 rounded-2xl shadow">
-          <h2 class="text-2xl font-black">Workspace Summary</h2>
-          <div id="workspaceSummary" class="mt-4 text-slate-700">Loading...</div>
-        </div>
-
-        <div class="bg-white p-6 rounded-2xl shadow">
-          <h2 class="text-2xl font-black">AI Growth Notes</h2>
-          <p class="mt-4 text-slate-600">
-            Use Suppliers + CRM + Outreach daily. Upgrade plans unlock more records, more outreach and more team capacity.
-          </p>
-        </div>
+        <div class="bg-white p-6 rounded-2xl shadow"><h2 class="text-2xl font-black">Workspace Summary</h2><div id="workspaceSummary" class="mt-4 text-slate-700">Loading...</div></div>
+        <div class="bg-white p-6 rounded-2xl shadow"><h2 class="text-2xl font-black">AI Growth Notes</h2><p class="mt-4 text-slate-600">Use Suppliers + CRM + Outreach daily. Upgrade plans unlock more records, more outreach and more team capacity.</p></div>
       </div>
     </section>
 
     <section id="company" class="page">
       <h1 class="text-4xl font-black">Company Master</h1>
-      <p class="text-slate-500 mt-2">Manage company profile locally. Backend workspace is tied to your registered company.</p>
-
       <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-2 gap-4">
         <input id="editCompanyName" class="border rounded-xl px-4 py-3" placeholder="Company Name" />
         <input id="editIndustry" class="border rounded-xl px-4 py-3" placeholder="Industry" />
@@ -105,20 +183,13 @@
     <section id="employees" class="page">
       <h1 class="text-4xl font-black">Employees / Multi Login</h1>
       <p class="text-slate-500 mt-2">Add employees under the same company. They can login with their own email/password.</p>
-
       <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-4 gap-3">
         <input id="empName" class="border rounded-xl px-4 py-3" placeholder="Employee Name" />
         <input id="empEmail" class="border rounded-xl px-4 py-3" placeholder="Employee Email" />
         <input id="empPassword" class="border rounded-xl px-4 py-3" placeholder="Password" />
-        <select id="empRole" class="border rounded-xl px-4 py-3">
-          <option>EMPLOYEE</option>
-          <option>SALES</option>
-          <option>OPERATIONS</option>
-          <option>MANAGER</option>
-        </select>
+        <select id="empRole" class="border rounded-xl px-4 py-3"><option>EMPLOYEE</option><option>SALES</option><option>OPERATIONS</option><option>MANAGER</option></select>
         <button onclick="addEmployee()" class="bg-blue-700 text-white rounded-xl py-3 font-bold md:col-span-4">Add Employee Login</button>
       </div>
-
       <div id="employeeList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
     </section>
 
@@ -161,9 +232,7 @@
       <h1 class="text-4xl font-black">Tasks</h1>
       <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-3 gap-3">
         <input id="taskText" class="border rounded-xl px-4 py-3" placeholder="Task" />
-        <select id="taskPriority" class="border rounded-xl px-4 py-3">
-          <option>Low</option><option selected>Medium</option><option>High</option>
-        </select>
+        <select id="taskPriority" class="border rounded-xl px-4 py-3"><option>Low</option><option selected>Medium</option><option>High</option></select>
         <button onclick="addTask()" class="bg-blue-700 text-white rounded-xl py-3 font-bold">Add Task</button>
       </div>
       <ul id="taskList" class="mt-6 space-y-3"></ul>
@@ -172,14 +241,7 @@
     <section id="documents" class="page">
       <h1 class="text-4xl font-black">Export / Import Documents</h1>
       <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-5 gap-3">
-        <select id="documentType" class="border rounded-xl px-4 py-3">
-          <option>Commercial Invoice</option>
-          <option>Packing List</option>
-          <option>Bill of Lading</option>
-          <option>Certificate of Origin</option>
-          <option>Shipping Bill</option>
-          <option>Insurance Certificate</option>
-        </select>
+        <select id="documentType" class="border rounded-xl px-4 py-3"><option>Commercial Invoice</option><option>Packing List</option><option>Bill of Lading</option><option>Certificate of Origin</option><option>Shipping Bill</option><option>Insurance Certificate</option></select>
         <input id="shipmentRef" class="border rounded-xl px-4 py-3" placeholder="Shipment Ref" />
         <input id="docBuyer" class="border rounded-xl px-4 py-3" placeholder="Buyer" />
         <input id="docSupplier" class="border rounded-xl px-4 py-3" placeholder="Supplier" />
@@ -226,10 +288,7 @@
       </div>
     </section>
 
-    <footer class="mt-16 text-center text-slate-500">
-      © 2026 TradeFlow AI™ — Export / Import SaaS Workspace Platform
-    </footer>
-
+    <footer class="mt-16 text-center text-slate-500">© 2026 TradeFlow AI™ — Export / Import SaaS Workspace Platform</footer>
   </main>
 </section>
 
@@ -237,564 +296,165 @@
 const API_BASE = "https://trade-flow-lc1k.onrender.com";
 let CURRENT_USER = null;
 
-function getToken(){ return localStorage.getItem("tradeflowToken"); }
-function setToken(token){ localStorage.setItem("tradeflowToken", token); }
-function removeToken(){ localStorage.removeItem("tradeflowToken"); }
+function openAuth(){document.getElementById("landingScreen").classList.add("hidden");document.getElementById("authScreen").classList.remove("hidden");}
+function backToLanding(){document.getElementById("authScreen").classList.add("hidden");document.getElementById("landingScreen").classList.remove("hidden");}
+function scrollToPricing(){document.getElementById("pricing").scrollIntoView({behavior:"smooth"});}
+function getToken(){return localStorage.getItem("tradeflowToken");}
+function setToken(token){localStorage.setItem("tradeflowToken",token);}
+function removeToken(){localStorage.removeItem("tradeflowToken");}
 
-async function api(path, options = {}){
-  const token = getToken();
-  const headers = {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(options.headers || {})
-  };
-
-  const response = await fetch(API_BASE + path, { ...options, headers });
-  const data = await response.json().catch(() => ({}));
-
-  if(!response.ok){
-    if(response.status === 401){
-      removeToken();
-    }
-    throw new Error(data.message || data.error || "Request failed");
-  }
-
+async function api(path,options={}){
+  const token=getToken();
+  const headers={"Content-Type":"application/json",...(token?{Authorization:`Bearer ${token}`}:{})};
+  const response=await fetch(API_BASE+path,{...options,headers});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok){if(response.status===401)removeToken();throw new Error(data.message||data.error||"Request failed");}
   return data;
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  document.getElementById("apiText").innerText = API_BASE;
-
+document.addEventListener("DOMContentLoaded",async()=>{
+  const apiText=document.getElementById("apiText"); if(apiText) apiText.innerText=API_BASE;
   if(getToken()){
-    try{
-      const data = await api("/api/auth/me");
-      CURRENT_USER = data.user;
-      showApp(data.user);
-      await loadAll();
-    }catch(err){
-      console.log(err.message);
-      removeToken();
-    }
+    try{const data=await api("/api/auth/me");CURRENT_USER=data.user;showApp(data.user);await loadAll();}
+    catch(err){console.log(err.message);removeToken();}
   }
-
-  loadPlans();
 });
 
 async function login(){
   try{
-    const name = document.getElementById("authName").value.trim();
-    const companyName = document.getElementById("companyName").value.trim();
-    const email = document.getElementById("authEmail").value.trim();
-    const password = document.getElementById("authPassword").value.trim();
-
-    if(!email || !password) return alert("Email and password required");
-
+    const name=document.getElementById("authName").value.trim();
+    const companyName=document.getElementById("companyName").value.trim();
+    const email=document.getElementById("authEmail").value.trim();
+    const password=document.getElementById("authPassword").value.trim();
+    if(!email||!password)return alert("Email and password required");
     let data;
-
-    if(name){
-      data = await api("/api/auth/register", {
-        method: "POST",
-        body: JSON.stringify({ name, companyName, email, password })
-      });
-    }else{
-      data = await api("/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ email, password })
-      });
-    }
-
-    setToken(data.token);
-    CURRENT_USER = data.user;
-    showApp(data.user);
-    await loadAll();
-  }catch(err){
-    alert(err.message);
-  }
+    if(name){data=await api("/api/auth/register",{method:"POST",body:JSON.stringify({name,companyName,email,password})});}
+    else{data=await api("/api/auth/login",{method:"POST",body:JSON.stringify({email,password})});}
+    setToken(data.token);CURRENT_USER=data.user;showApp(data.user);await loadAll();
+  }catch(err){alert(err.message);}
 }
 
-function logout(){
-  removeToken();
-  location.reload();
-}
-
+function logout(){removeToken();location.reload();}
 function showApp(user){
+  document.getElementById("landingScreen").classList.add("hidden");
   document.getElementById("authScreen").classList.add("hidden");
   document.getElementById("appScreen").classList.remove("hidden");
-  document.getElementById("userRoleText").innerText =
-    `${user.companyName || "Workspace"} • ${user.role || "USER"} • ${user.plan || "FREE"}`;
+  document.getElementById("userRoleText").innerText=`${user.companyName||"Workspace"} • ${user.role||"USER"} • ${user.plan||"FREE"}`;
 }
-
 function showPage(pageId){
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
   document.getElementById(pageId)?.classList.add("active");
-
-  const btn = [...document.querySelectorAll(".nav-btn")]
-    .find(b => b.getAttribute("onclick")?.includes(pageId));
-  if(btn) btn.classList.add("active");
-
-  if(pageId === "billing") loadPlans();
+  const btn=[...document.querySelectorAll(".nav-btn")].find(b=>b.getAttribute("onclick")?.includes(pageId));
+  if(btn)btn.classList.add("active");
+  if(pageId==="billing")loadPlans();
 }
-
-async function loadAll(){
-  await Promise.allSettled([
-    loadStats(),
-    loadEmployees(),
-    loadSuppliers(),
-    loadLeads(),
-    loadTasks(),
-    loadDocuments(),
-    loadPlans()
-  ]);
-}
+async function loadAll(){await Promise.allSettled([loadStats(),loadEmployees(),loadSuppliers(),loadLeads(),loadTasks(),loadDocuments(),loadPlans()]);}
 
 async function loadStats(){
   try{
-    const data = await api("/api/dashboard/stats");
-
-    document.getElementById("supplierCount").innerText = data.stats.suppliers || 0;
-    document.getElementById("leadCount").innerText = data.stats.leads || 0;
-    document.getElementById("taskCount").innerText = data.stats.tasks || 0;
-    document.getElementById("docCount").innerText = data.stats.documents || 0;
-    document.getElementById("employeeCount").innerText = data.stats.users || data.stats.employees || 0;
-
-    document.getElementById("workspaceSummary").innerHTML = `
-      <b>${data.company.companyName}</b><br><br>
-      Plan: <b>${data.company.plan}</b><br>
-      Status: <b>${data.company.subscriptionStatus}</b><br><br>
-      Suppliers: ${data.stats.suppliers}/${data.usage.limits.suppliers}<br>
-      Leads: ${data.stats.leads}/${data.usage.limits.leads}<br>
-      Tasks: ${data.stats.tasks}/${data.usage.limits.tasks}<br>
-      Documents: ${data.stats.documents}/${data.usage.limits.documents}<br>
-      Outreach Today: ${data.usage.outreachToday}/${data.usage.limits.outreachPerDay}
-    `;
-  }catch(err){
-    console.log(err.message);
-  }
+    const data=await api("/api/dashboard/stats");
+    document.getElementById("supplierCount").innerText=data.stats.suppliers||0;
+    document.getElementById("leadCount").innerText=data.stats.leads||0;
+    document.getElementById("taskCount").innerText=data.stats.tasks||0;
+    document.getElementById("docCount").innerText=data.stats.documents||0;
+    document.getElementById("employeeCount").innerText=data.stats.users||data.stats.employees||0;
+    document.getElementById("workspaceSummary").innerHTML=`<b>${data.company.companyName}</b><br><br>Plan: <b>${data.company.plan}</b><br>Status: <b>${data.company.subscriptionStatus}</b><br><br>Suppliers: ${data.stats.suppliers}/${data.usage.limits.suppliers}<br>Leads: ${data.stats.leads}/${data.usage.limits.leads}<br>Tasks: ${data.stats.tasks}/${data.usage.limits.tasks}<br>Documents: ${data.stats.documents}/${data.usage.limits.documents}<br>Outreach Today: ${data.usage.outreachToday}/${data.usage.limits.outreachPerDay}`;
+  }catch(err){console.log(err.message);}
 }
-
-function updateCompany(){
-  const company = {
-    name: document.getElementById("editCompanyName").value,
-    industry: document.getElementById("editIndustry").value,
-    country: document.getElementById("editCountry").value,
-    plan: document.getElementById("editPlan").value
-  };
-  localStorage.setItem("tradeflowCompanyMaster", JSON.stringify(company));
-  alert("Company Master saved locally.");
-}
+function updateCompany(){localStorage.setItem("tradeflowCompanyMaster",JSON.stringify({name:editCompanyName.value,industry:editIndustry.value,country:editCountry.value,plan:editPlan.value}));alert("Company Master saved locally.");}
 
 async function addEmployee(){
   try{
-    const name = document.getElementById("empName").value.trim();
-    const email = document.getElementById("empEmail").value.trim();
-    const password = document.getElementById("empPassword").value.trim();
-    const role = document.getElementById("empRole").value;
-
-    if(!name || !email || !password) return alert("Employee name, email and password required");
-
-    const data = await api("/api/employees", {
-      method: "POST",
-      body: JSON.stringify({ name, email, password, role })
-    });
-
-    alert(data.message || "Employee added");
-    document.getElementById("empName").value = "";
-    document.getElementById("empEmail").value = "";
-    document.getElementById("empPassword").value = "";
-
-    loadEmployees();
-    loadStats();
-  }catch(err){
-    alert(err.message);
-  }
+    const name=empName.value.trim(),email=empEmail.value.trim(),password=empPassword.value.trim(),role=empRole.value;
+    if(!name||!email||!password)return alert("Employee name, email and password required");
+    const data=await api("/api/employees",{method:"POST",body:JSON.stringify({name,email,password,role})});
+    alert(data.message||"Employee added");empName.value="";empEmail.value="";empPassword.value="";loadEmployees();loadStats();
+  }catch(err){alert(err.message);}
 }
-
 async function loadEmployees(){
-  const box = document.getElementById("employeeList");
-  if(!box) return;
-
-  try{
-    const data = await api("/api/employees");
-    box.innerHTML = (data.employees || []).map(emp => `
-      <div class="bg-white p-5 rounded-2xl shadow">
-        <h3 class="font-black text-lg">${emp.name || "-"}</h3>
-        <p>${emp.email || "-"}</p>
-        <p>Role: ${emp.role || "EMPLOYEE"}</p>
-        <p>Plan: ${emp.plan || "FREE"}</p>
-      </div>
-    `).join("");
-  }catch(err){
-    console.log(err.message);
-  }
+  const box=document.getElementById("employeeList"); if(!box)return;
+  try{const data=await api("/api/employees");box.innerHTML=(data.employees||[]).map(emp=>`<div class="bg-white p-5 rounded-2xl shadow"><h3 class="font-black text-lg">${emp.name||"-"}</h3><p>${emp.email||"-"}</p><p>Role: ${emp.role||"EMPLOYEE"}</p><p>Plan: ${emp.plan||"FREE"}</p></div>`).join("");}
+  catch(err){console.log(err.message);}
 }
 
 async function addSupplier(){
   try{
-    const companyName = document.getElementById("supplierName").value.trim();
-    const product = document.getElementById("supplierProduct").value.trim();
-    const country = document.getElementById("supplierCountry").value.trim();
-    const email = document.getElementById("supplierEmail").value.trim();
-    const phone = document.getElementById("supplierPhone").value.trim();
-
-    if(!companyName) return alert("Supplier name required");
-
-    const scoreData = await api("/api/ai/lead-score", {
-      method: "POST",
-      body: JSON.stringify({ companyName })
-    });
-
-    await api("/api/suppliers", {
-      method: "POST",
-      body: JSON.stringify({
-        companyName, product, country, email, phone,
-        score: scoreData.score,
-        status: "Verified Lead"
-      })
-    });
-
-    document.getElementById("supplierName").value = "";
-    document.getElementById("supplierProduct").value = "";
-    document.getElementById("supplierCountry").value = "";
-    document.getElementById("supplierEmail").value = "";
-    document.getElementById("supplierPhone").value = "";
-
-    loadSuppliers();
-    loadStats();
-  }catch(err){
-    alert(err.message);
-  }
+    const companyName=supplierName.value.trim(),product=supplierProduct.value.trim(),country=supplierCountry.value.trim(),email=supplierEmail.value.trim(),phone=supplierPhone.value.trim();
+    if(!companyName)return alert("Supplier name required");
+    const scoreData=await api("/api/ai/lead-score",{method:"POST",body:JSON.stringify({companyName})});
+    await api("/api/suppliers",{method:"POST",body:JSON.stringify({companyName,product,country,email,phone,score:scoreData.score,status:"Verified Lead"})});
+    supplierName.value="";supplierProduct.value="";supplierCountry.value="";supplierEmail.value="";supplierPhone.value="";
+    loadSuppliers();loadStats();
+  }catch(err){alert(err.message);}
 }
-
 async function loadSuppliers(){
-  const box = document.getElementById("supplierList");
-  if(!box) return;
-
-  try{
-    const data = await api("/api/suppliers");
-    box.innerHTML = (data.suppliers || []).map(s => `
-      <div class="bg-white p-5 rounded-2xl shadow">
-        <h3 class="font-black text-lg">${s.companyName || "Supplier"}</h3>
-        <p>Product: ${s.product || "-"}</p>
-        <p>Country: ${s.country || "-"}</p>
-        <p>Email: ${s.email || "-"}</p>
-        <p>Phone: ${s.phone || "-"}</p>
-        <p>Score: ${s.score || 70}/100</p>
-        <p>Status: ${s.status || "New Lead"}</p>
-        <button onclick="deleteSupplier('${s._id}')" class="mt-3 bg-red-600 text-white px-4 py-2 rounded-xl">Delete</button>
-      </div>
-    `).join("");
-  }catch(err){
-    console.log(err.message);
-  }
+  const box=document.getElementById("supplierList"); if(!box)return;
+  try{const data=await api("/api/suppliers");box.innerHTML=(data.suppliers||[]).map(s=>`<div class="bg-white p-5 rounded-2xl shadow"><h3 class="font-black text-lg">${s.companyName||"Supplier"}</h3><p>Product: ${s.product||"-"}</p><p>Country: ${s.country||"-"}</p><p>Email: ${s.email||"-"}</p><p>Phone: ${s.phone||"-"}</p><p>Score: ${s.score||70}/100</p><p>Status: ${s.status||"New Lead"}</p><button onclick="deleteSupplier('${s._id}')" class="mt-3 bg-red-600 text-white px-4 py-2 rounded-xl">Delete</button></div>`).join("");}
+  catch(err){console.log(err.message);}
 }
-
-async function deleteSupplier(id){
-  try{
-    await api(`/api/suppliers/${id}`, { method: "DELETE" });
-    loadSuppliers();
-    loadStats();
-  }catch(err){
-    alert(err.message);
-  }
-}
+async function deleteSupplier(id){try{await api(`/api/suppliers/${id}`,{method:"DELETE"});loadSuppliers();loadStats();}catch(err){alert(err.message);}}
 
 async function addLead(){
   try{
-    const companyName = document.getElementById("leadName").value.trim();
-    const stage = document.getElementById("leadStage").value.trim();
-    const value = Number(document.getElementById("leadValue").value || 0);
-    const source = document.getElementById("leadSource").value.trim();
-
-    if(!companyName) return alert("Lead name required");
-
-    await api("/api/leads", {
-      method: "POST",
-      body: JSON.stringify({ companyName, stage, value, source })
-    });
-
-    document.getElementById("leadName").value = "";
-    document.getElementById("leadStage").value = "";
-    document.getElementById("leadValue").value = "";
-    document.getElementById("leadSource").value = "";
-
-    loadLeads();
-    loadStats();
-  }catch(err){
-    alert(err.message);
-  }
+    const companyName=leadName.value.trim(),stage=leadStage.value.trim(),value=Number(leadValue.value||0),source=leadSource.value.trim();
+    if(!companyName)return alert("Lead name required");
+    await api("/api/leads",{method:"POST",body:JSON.stringify({companyName,stage,value,source})});
+    leadName.value="";leadStage.value="";leadValue.value="";leadSource.value="";
+    loadLeads();loadStats();
+  }catch(err){alert(err.message);}
 }
-
 async function loadLeads(){
-  const box = document.getElementById("leadList");
-  if(!box) return;
-
-  try{
-    const data = await api("/api/leads");
-    box.innerHTML = (data.leads || []).map(l => `
-      <div class="bg-white p-5 rounded-2xl shadow">
-        <h3 class="font-black text-lg">${l.companyName || "Lead"}</h3>
-        <p>Stage: ${l.stage || "New"}</p>
-        <p>Value: ₹${l.value || 0}</p>
-        <p>Source: ${l.source || "-"}</p>
-        <button onclick="deleteLead('${l._id}')" class="mt-3 bg-red-600 text-white px-4 py-2 rounded-xl">Delete</button>
-      </div>
-    `).join("");
-  }catch(err){
-    console.log(err.message);
-  }
+  const box=document.getElementById("leadList"); if(!box)return;
+  try{const data=await api("/api/leads");box.innerHTML=(data.leads||[]).map(l=>`<div class="bg-white p-5 rounded-2xl shadow"><h3 class="font-black text-lg">${l.companyName||"Lead"}</h3><p>Stage: ${l.stage||"New"}</p><p>Value: ₹${l.value||0}</p><p>Source: ${l.source||"-"}</p><button onclick="deleteLead('${l._id}')" class="mt-3 bg-red-600 text-white px-4 py-2 rounded-xl">Delete</button></div>`).join("");}
+  catch(err){console.log(err.message);}
 }
+async function deleteLead(id){try{await api(`/api/leads/${id}`,{method:"DELETE"});loadLeads();loadStats();}catch(err){alert(err.message);}}
 
-async function deleteLead(id){
-  try{
-    await api(`/api/leads/${id}`, { method: "DELETE" });
-    loadLeads();
-    loadStats();
-  }catch(err){
-    alert(err.message);
-  }
-}
+function calculateMargin(){const buy=Number(buyPrice.value||0),sell=Number(sellPrice.value||0);if(!buy||!sell)return alert("Enter both prices");const profit=sell-buy,margin=((profit/sell)*100).toFixed(2);marginResult.innerText=`Profit: ₹${profit} | Margin: ${margin}%`;}
 
-function calculateMargin(){
-  const buy = Number(document.getElementById("buyPrice").value || 0);
-  const sell = Number(document.getElementById("sellPrice").value || 0);
-  if(!buy || !sell) return alert("Enter both prices");
-
-  const profit = sell - buy;
-  const margin = ((profit / sell) * 100).toFixed(2);
-  document.getElementById("marginResult").innerText = `Profit: ₹${profit} | Margin: ${margin}%`;
-}
-
-async function addTask(){
-  try{
-    const title = document.getElementById("taskText").value.trim();
-    const priority = document.getElementById("taskPriority").value;
-    if(!title) return alert("Task required");
-
-    await api("/api/tasks", {
-      method: "POST",
-      body: JSON.stringify({ title, priority, status: "Pending" })
-    });
-
-    document.getElementById("taskText").value = "";
-    loadTasks();
-    loadStats();
-  }catch(err){
-    alert(err.message);
-  }
-}
-
-async function loadTasks(){
-  const box = document.getElementById("taskList");
-  if(!box) return;
-
-  try{
-    const data = await api("/api/tasks");
-    box.innerHTML = (data.tasks || []).map(t => `
-      <li class="bg-white p-4 rounded-2xl shadow flex justify-between items-center">
-        <span><b>${t.title}</b> — ${t.priority || "Medium"} — ${t.status || "Pending"}</span>
-        <button onclick="deleteTask('${t._id}')" class="bg-red-600 text-white px-4 py-2 rounded-xl">Delete</button>
-      </li>
-    `).join("");
-  }catch(err){
-    console.log(err.message);
-  }
-}
-
-async function deleteTask(id){
-  try{
-    await api(`/api/tasks/${id}`, { method: "DELETE" });
-    loadTasks();
-    loadStats();
-  }catch(err){
-    alert(err.message);
-  }
-}
+async function addTask(){try{const title=taskText.value.trim(),priority=taskPriority.value;if(!title)return alert("Task required");await api("/api/tasks",{method:"POST",body:JSON.stringify({title,priority,status:"Pending"})});taskText.value="";loadTasks();loadStats();}catch(err){alert(err.message);}}
+async function loadTasks(){const box=document.getElementById("taskList");if(!box)return;try{const data=await api("/api/tasks");box.innerHTML=(data.tasks||[]).map(t=>`<li class="bg-white p-4 rounded-2xl shadow flex justify-between items-center"><span><b>${t.title}</b> — ${t.priority||"Medium"} — ${t.status||"Pending"}</span><button onclick="deleteTask('${t._id}')" class="bg-red-600 text-white px-4 py-2 rounded-xl">Delete</button></li>`).join("");}catch(err){console.log(err.message);}}
+async function deleteTask(id){try{await api(`/api/tasks/${id}`,{method:"DELETE"});loadTasks();loadStats();}catch(err){alert(err.message);}}
 
 async function addDocument(){
   try{
-    const type = document.getElementById("documentType").value;
-    const shipmentRef = document.getElementById("shipmentRef").value.trim();
-    const buyer = document.getElementById("docBuyer").value.trim();
-    const supplier = document.getElementById("docSupplier").value.trim();
-
-    await api("/api/documents", {
-      method: "POST",
-      body: JSON.stringify({
-        title: `${type} - ${shipmentRef || "New Shipment"}`,
-        type,
-        partyName: buyer || supplier,
-        notes: `Buyer: ${buyer || "-"} | Supplier: ${supplier || "-"}`,
-        status: "Draft"
-      })
-    });
-
-    document.getElementById("shipmentRef").value = "";
-    document.getElementById("docBuyer").value = "";
-    document.getElementById("docSupplier").value = "";
-
-    loadDocuments();
-    loadStats();
-  }catch(err){
-    alert(err.message);
-  }
+    const type=documentType.value,shipmentRef=shipmentRef.value.trim(),buyer=docBuyer.value.trim(),supplier=docSupplier.value.trim();
+  }catch(e){}
+  try{
+    const type=document.getElementById("documentType").value;
+    const ref=document.getElementById("shipmentRef").value.trim();
+    const buyer=document.getElementById("docBuyer").value.trim();
+    const supplier=document.getElementById("docSupplier").value.trim();
+    await api("/api/documents",{method:"POST",body:JSON.stringify({title:`${type} - ${ref||"New Shipment"}`,type,partyName:buyer||supplier,notes:`Buyer: ${buyer||"-"} | Supplier: ${supplier||"-"}`,status:"Draft"})});
+    shipmentRef.value="";docBuyer.value="";docSupplier.value="";loadDocuments();loadStats();
+  }catch(err){alert(err.message);}
 }
-
 async function loadDocuments(){
-  const box = document.getElementById("documentList");
-  if(!box) return;
-
-  try{
-    const data = await api("/api/documents");
-    box.innerHTML = (data.documents || []).map(d => `
-      <div class="bg-white p-5 rounded-2xl shadow">
-        <h3 class="font-black text-lg">${d.title || "Document"}</h3>
-        <p>Type: ${d.type || "-"}</p>
-        <p>Party: ${d.partyName || "-"}</p>
-        <p>Status: ${d.status || "Draft"}</p>
-        <p>${d.notes || ""}</p>
-        <button onclick="deleteDocument('${d._id}')" class="mt-3 bg-red-600 text-white px-4 py-2 rounded-xl">Delete</button>
-      </div>
-    `).join("");
-  }catch(err){
-    console.log(err.message);
-  }
+  const box=document.getElementById("documentList"); if(!box)return;
+  try{const data=await api("/api/documents");box.innerHTML=(data.documents||[]).map(d=>`<div class="bg-white p-5 rounded-2xl shadow"><h3 class="font-black text-lg">${d.title||"Document"}</h3><p>Type: ${d.type||"-"}</p><p>Party: ${d.partyName||"-"}</p><p>Status: ${d.status||"Draft"}</p><p>${d.notes||""}</p><button onclick="deleteDocument('${d._id}')" class="mt-3 bg-red-600 text-white px-4 py-2 rounded-xl">Delete</button></div>`).join("");}
+  catch(err){console.log(err.message);}
 }
+async function deleteDocument(id){try{await api(`/api/documents/${id}`,{method:"DELETE"});loadDocuments();loadStats();}catch(err){alert(err.message);}}
 
-async function deleteDocument(id){
-  try{
-    await api(`/api/documents/${id}`, { method: "DELETE" });
-    loadDocuments();
-    loadStats();
-  }catch(err){
-    alert(err.message);
-  }
-}
-
-async function sendEmail(){
-  try{
-    const email = document.getElementById("contactEmail").value.trim();
-    const message = document.getElementById("outreachMsg").value.trim();
-
-    if(!email || !message) return alert("Email and message required");
-
-    const data = await api("/api/outreach/email", {
-      method: "POST",
-      body: JSON.stringify({ email, message })
-    });
-
-    alert(data.message || "Email outreach simulated");
-    loadStats();
-  }catch(err){
-    alert(err.message);
-  }
-}
-
-async function openWhatsApp(){
-  try{
-    const phone = document.getElementById("contactPhone").value.trim();
-    const message = document.getElementById("outreachMsg").value.trim();
-
-    if(!phone) return alert("WhatsApp number required");
-
-    const data = await api("/api/outreach/whatsapp", {
-      method: "POST",
-      body: JSON.stringify({ phone, message })
-    });
-
-    window.open(data.link, "_blank");
-    loadStats();
-  }catch(err){
-    alert(err.message);
-  }
-}
+async function sendEmail(){try{const email=contactEmail.value.trim(),message=outreachMsg.value.trim();if(!email||!message)return alert("Email and message required");const data=await api("/api/outreach/email",{method:"POST",body:JSON.stringify({email,message})});alert(data.message||"Email outreach simulated");loadStats();}catch(err){alert(err.message);}}
+async function openWhatsApp(){try{const phone=contactPhone.value.trim(),message=outreachMsg.value.trim();if(!phone)return alert("WhatsApp number required");const data=await api("/api/outreach/whatsapp",{method:"POST",body:JSON.stringify({phone,message})});window.open(data.link,"_blank");loadStats();}catch(err){alert(err.message);}}
 
 async function generateFakeLeads(){
   try{
-    const product = document.getElementById("fakeLeadProduct").value.trim() || "Rice";
-
-    const data = await api("/api/ai/demo-leads", {
-      method: "POST",
-      body: JSON.stringify({ product })
-    });
-
-    document.getElementById("fakeLeadList").innerHTML = (data.leads || []).map(l => `
-      <div class="bg-white p-5 rounded-2xl shadow">
-        <h3 class="font-black text-lg">${l.companyName}</h3>
-        <p>Product: ${l.product}</p>
-        <p>Country: ${l.country}</p>
-        <p>Email: ${l.email}</p>
-        <p>Phone: ${l.phone}</p>
-        <p>Score: ${l.score}</p>
-        <button onclick="saveDemoLead('${l.companyName}', '${l.product}', '${l.country}', '${l.email}', '${l.phone}', '${l.score}')" class="mt-3 bg-purple-700 text-white px-4 py-2 rounded-xl">Save to Suppliers</button>
-      </div>
-    `).join("");
-  }catch(err){
-    alert(err.message);
-  }
+    const product=fakeLeadProduct.value.trim()||"Rice";
+    const data=await api("/api/ai/demo-leads",{method:"POST",body:JSON.stringify({product})});
+    fakeLeadList.innerHTML=(data.leads||[]).map(l=>`<div class="bg-white p-5 rounded-2xl shadow"><h3 class="font-black text-lg">${l.companyName}</h3><p>Product: ${l.product}</p><p>Country: ${l.country}</p><p>Email: ${l.email}</p><p>Phone: ${l.phone}</p><p>Score: ${l.score}</p><button onclick="saveDemoLead('${l.companyName}','${l.product}','${l.country}','${l.email}','${l.phone}','${l.score}')" class="mt-3 bg-purple-700 text-white px-4 py-2 rounded-xl">Save to Suppliers</button></div>`).join("");
+  }catch(err){alert(err.message);}
 }
-
-async function saveDemoLead(companyName, product, country, email, phone, score){
-  try{
-    await api("/api/suppliers", {
-      method: "POST",
-      body: JSON.stringify({
-        companyName, product, country, email, phone,
-        score,
-        status: "AI Generated Lead"
-      })
-    });
-
-    alert("Lead saved to suppliers");
-    loadSuppliers();
-    loadStats();
-  }catch(err){
-    alert(err.message);
-  }
-}
+async function saveDemoLead(companyName,product,country,email,phone,score){try{await api("/api/suppliers",{method:"POST",body:JSON.stringify({companyName,product,country,email,phone,score,status:"AI Generated Lead"})});alert("Lead saved to suppliers");loadSuppliers();loadStats();}catch(err){alert(err.message);}}
 
 async function loadPlans(){
-  const box = document.getElementById("billingPlans");
-  if(!box) return;
-
-  try{
-    const data = await api("/api/billing/plans");
-    box.innerHTML = (data.plans || []).map(plan => `
-      <div class="bg-white p-6 rounded-2xl shadow">
-        <h2 class="text-2xl font-black">${plan.name}</h2>
-        <p class="text-3xl mt-4 font-black">₹${plan.price}</p>
-        <p class="text-slate-500">${plan.currency}/month</p>
-        <ul class="mt-4 space-y-2">
-          ${plan.features.map(f => `<li>• ${f}</li>`).join("")}
-        </ul>
-        <button onclick="upgradeDemo('${plan.id}')" class="mt-5 w-full bg-blue-700 text-white py-3 rounded-xl font-bold">
-          ${plan.id === "FREE" ? "Current / Free" : "Upgrade Demo"}
-        </button>
-      </div>
-    `).join("");
-  }catch(err){
-    console.log(err.message);
-  }
+  const box=document.getElementById("billingPlans"); if(!box)return;
+  try{const data=await api("/api/billing/plans");box.innerHTML=(data.plans||[]).map(plan=>`<div class="bg-white p-6 rounded-2xl shadow"><h2 class="text-2xl font-black">${plan.name}</h2><p class="text-3xl mt-4 font-black">₹${plan.price}</p><p class="text-slate-500">${plan.currency}/month</p><ul class="mt-4 space-y-2">${plan.features.map(f=>`<li>• ${f}</li>`).join("")}</ul><button onclick="upgradeDemo('${plan.id}')" class="mt-5 w-full bg-blue-700 text-white py-3 rounded-xl font-bold">${plan.id==="FREE"?"Current / Free":"Upgrade Demo"}</button></div>`).join("");}
+  catch(err){console.log(err.message);}
 }
-
-async function upgradeDemo(plan){
-  try{
-    if(plan === "FREE") return alert("You are already on FREE plan or can downgrade later.");
-    const data = await api("/api/billing/upgrade-demo", {
-      method: "POST",
-      body: JSON.stringify({ plan })
-    });
-
-    if(data.token) setToken(data.token);
-    alert(data.message || "Plan upgraded");
-    CURRENT_USER = data.user;
-    showApp(data.user);
-    loadStats();
-    loadPlans();
-  }catch(err){
-    alert(err.message);
-  }
-}
+async function upgradeDemo(plan){try{if(plan==="FREE")return alert("You are already on FREE plan or can downgrade later.");const data=await api("/api/billing/upgrade-demo",{method:"POST",body:JSON.stringify({plan})});if(data.token)setToken(data.token);alert(data.message||"Plan upgraded");CURRENT_USER=data.user;showApp(data.user);loadStats();loadPlans();}catch(err){alert(err.message);}}
 </script>
 
 </body>
