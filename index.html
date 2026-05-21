@@ -496,59 +496,95 @@
     }
 
 
-    .tm-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(168,85,247,.10);
-      border: 1px solid rgba(168,85,247,.22);
-      color: #ddd6fe;
-      font-size: 12px;
-      font-weight: 900;
+    .admin-hero {
+      position: relative;
+      overflow: hidden;
+      padding: 30px;
+      border-radius: 34px;
+      background:
+        radial-gradient(circle at 12% 14%, rgba(168,85,247,.26), transparent 32%),
+        radial-gradient(circle at 88% 18%, rgba(56,189,248,.22), transparent 30%),
+        linear-gradient(135deg, rgba(15,23,42,.94), rgba(2,6,23,.84));
+      border: 1px solid rgba(196,181,253,.22);
+      box-shadow: 0 24px 80px rgba(0,0,0,.28);
+      margin-bottom: 22px;
+    }
+
+    .admin-hero::after {
+      content: "Admin";
+      position: absolute;
+      right: -12px;
+      bottom: -28px;
+      font-size: 96px;
+      line-height: .8;
+      font-weight: 950;
+      letter-spacing: -5px;
+      color: rgba(255,255,255,.04);
+      pointer-events: none;
+    }
+
+    .admin-control-card {
+      background:
+        radial-gradient(circle at top left, rgba(168,85,247,.13), transparent 46%),
+        linear-gradient(135deg, rgba(15,23,42,.92), rgba(2,6,23,.74));
+    }
+
+    .approval-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
       margin-top: 12px;
     }
 
-    .admin-overview {
-      background:
-        radial-gradient(circle at top left, rgba(168,85,247,.15), transparent 42%),
-        linear-gradient(135deg, rgba(15,23,42,.90), rgba(2,6,23,.78));
-    }
-
-    .admin-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(148,163,184,.10);
-    }
-
-    .admin-row:last-child {
-      border-bottom: none;
-    }
-
-    .admin-label {
-      color: #94a3b8;
-      font-size: 13px;
-      font-weight: 800;
-    }
-
-    .admin-value {
+    .approve-btn {
+      padding: 11px 12px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #16a34a, #22c55e);
       color: white;
       font-weight: 900;
-      text-align: right;
+      cursor: pointer;
     }
 
-    .copyright-card {
-      padding: 18px;
-      border-radius: 22px;
-      background: rgba(2,6,23,.55);
-      border: 1px solid rgba(148,163,184,.13);
-      color: #94a3b8;
-      font-size: 13px;
-      line-height: 1.7;
+    .reject-btn {
+      padding: 11px 12px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #dc2626, #f97316);
+      color: white;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .subscription-card {
+      background:
+        radial-gradient(circle at top right, rgba(234,179,8,.14), transparent 44%),
+        linear-gradient(135deg, rgba(15,23,42,.92), rgba(2,6,23,.78));
+      border-color: rgba(250,204,21,.18);
+    }
+
+    .plan-pill {
+      display: inline-flex;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: rgba(250,204,21,.12);
+      border: 1px solid rgba(250,204,21,.24);
+      color: #fde68a;
+      font-size: 12px;
+      font-weight: 900;
+      margin-top: 8px;
+    }
+
+    .status-approved {
+      background: rgba(34,197,94,.12);
+      border-color: rgba(34,197,94,.22);
+      color: #86efac;
+    }
+
+    .status-rejected {
+      background: rgba(239,68,68,.12);
+      border-color: rgba(239,68,68,.22);
+      color: #fca5a5;
     }
 
     footer {
@@ -636,18 +672,16 @@
     </div>
 
     
-    
     <section id="dashboardPage">
       <div class="dashboard-hero">
         <div class="hero-kicker">Live SaaS Workspace • Export / Import OS</div>
         <h1 class="hero-title">
-          Welcome to your <span>TradeFlow™ Command Center.</span>
+          Welcome to your <span>TradeFlow Command Center.</span>
         </h1>
         <p class="hero-copy">
           A clean premium workspace for suppliers, CRM, tasks, analytics, export documents,
           AI tools, outreach, employees, notifications, and multi-company trade operations.
         </p>
-        <div class="tm-badge">™ TradeFlow Cloud SaaS OS • © 2026 Krishna Singh</div>
         <div class="hero-actions">
           <div class="hero-chip">🌍 Supplier Intelligence</div>
           <div class="hero-chip">📈 Drag & Drop CRM</div>
@@ -696,33 +730,6 @@
       </div>
 
       <div class="grid grid-3">
-        <div class="card admin-overview">
-          <div class="section-title">👑 Admin Company Overview</div>
-          <p class="muted">Admin can monitor company identity, active workspace, SaaS status, and operating modules.</p>
-
-          <div class="admin-row">
-            <div class="admin-label">Active Company</div>
-            <div class="admin-value" id="adminActiveCompany">TradeFlow Company</div>
-          </div>
-
-          <div class="admin-row">
-            <div class="admin-label">Logged-in Admin</div>
-            <div class="admin-value" id="adminUserName">User</div>
-          </div>
-
-          <div class="admin-row">
-            <div class="admin-label">Workspace Mode</div>
-            <div class="admin-value">Protected SaaS</div>
-          </div>
-
-          <div class="admin-row">
-            <div class="admin-label">Backend</div>
-            <div class="admin-value">Production Live</div>
-          </div>
-
-          <button class="btn" onclick="showPage('workspaces')">Manage Companies</button>
-        </div>
-
         <div class="card quick-card ai-panel">
           <div class="icon">🤖</div>
           <div class="section-title">AI Command Center</div>
@@ -736,14 +743,21 @@
           <p>Move deals through New Lead, Contacted, Negotiation, Closed, and Lost with drag and drop.</p>
           <button class="btn" onclick="showPage('crm')">Open CRM</button>
         </div>
-      </div>
 
-      <div class="grid grid-3">
         <div class="card quick-card">
           <div class="icon">🌍</div>
           <div class="section-title">Supplier Workspace</div>
           <p>Save supplier leads, score records, manage contacts, and connect them with outreach.</p>
           <button class="btn" onclick="showPage('suppliers')">Open Suppliers</button>
+        </div>
+      </div>
+
+      <div class="grid grid-3">
+        <div class="card">
+          <div class="section-title">Today’s Focus</div>
+          <div class="deal">Check new supplier leads and update their status.</div>
+          <div class="deal">Move hot CRM deals to Negotiation or Closed.</div>
+          <div class="deal">Send follow-up from Smart Outreach.</div>
         </div>
 
         <div class="card">
@@ -753,29 +767,115 @@
           <p class="muted">Login protection is active for SaaS security.</p>
         </div>
 
-        <div class="card">
-          <div class="section-title">Trademark & Ownership</div>
-          <div class="copyright-card">
-            TradeFlow™ Cloud SaaS OS is a proprietary export/import workspace concept by Krishna Singh.
-            © 2026 TradeFlow. All rights reserved. Unauthorized copying, resale, or redistribution is prohibited.
-          </div>
+        <div class="card ai-panel">
+          <div class="section-title">Premium Modules</div>
+          <div class="deal">Employees + Permissions</div>
+          <div class="deal">Notifications Center</div>
+          <div class="deal">Multi-company Workspace</div>
         </div>
       </div>
     </section>
 
 
+    
     <section id="masterPage" class="hidden">
+      <div class="admin-hero">
+        <div class="hero-kicker">Master Admin Control • TradeFlow™ SaaS</div>
+        <h1 class="hero-title">
+          Master Admin <span>Control Dashboard.</span>
+        </h1>
+        <p class="hero-copy">
+          This is not a normal company dashboard. This area is for the owner/admin to monitor companies,
+          approve or reject workspaces, view subscription status, and control the SaaS platform.
+        </p>
+        <div class="tm-badge">👑 Master Admin • Company Approval • Subscription Control</div>
+      </div>
+
+      <div class="grid grid-4">
+        <div class="card metric">
+          <h3>Total Companies</h3>
+          <p id="masterTotalCompanies">0</p>
+          <span>All company workspaces</span>
+        </div>
+
+        <div class="card metric">
+          <h3>Approved</h3>
+          <p id="masterApprovedCompanies">0</p>
+          <span>Active companies</span>
+        </div>
+
+        <div class="card metric">
+          <h3>Rejected</h3>
+          <p id="masterRejectedCompanies">0</p>
+          <span>Inactive companies</span>
+        </div>
+
+        <div class="card metric">
+          <h3>Subscription</h3>
+          <p id="masterSubscriptionPlan">Pro</p>
+          <span>Current SaaS plan</span>
+        </div>
+      </div>
+
+      <div class="grid grid-3">
+        <div class="card admin-control-card">
+          <div class="section-title">🏢 Master Company Profile</div>
+          <p class="muted">Admin profile and legal company identity for the SaaS owner.</p>
+
+          <input id="masterCompanyName" placeholder="Master Company Name">
+          <input id="masterOwnerName" placeholder="Owner / Admin Name">
+          <input id="masterGstNumber" placeholder="GST Number">
+          <input id="masterIecCode" placeholder="IEC Code">
+          <input id="masterCountry" placeholder="Business Country">
+          <input id="masterIndustry" placeholder="Primary Industry">
+
+          <button class="btn" onclick="saveMasterProfile()">Save Master Profile</button>
+        </div>
+
+        <div class="card subscription-card">
+          <div class="section-title">💳 Subscription Control</div>
+          <p class="muted">Visible SaaS subscription area restored for admin management.</p>
+
+          <div class="deal">Current Plan: <b id="subscriptionPlanText">Pro Exporter</b></div>
+          <div class="deal">Billing Status: <b id="subscriptionStatusText">Active</b></div>
+          <div class="deal">Company Limit: <b>10 Workspaces</b></div>
+          <div class="deal">Modules: <b>CRM, AI, PDF, Outreach, Analytics</b></div>
+
+          <select id="subscriptionPlan">
+            <option>Starter</option>
+            <option selected>Pro Exporter</option>
+            <option>Enterprise</option>
+            <option>Custom Agency</option>
+          </select>
+
+          <select id="subscriptionStatus">
+            <option selected>Active</option>
+            <option>Trial</option>
+            <option>Past Due</option>
+            <option>Cancelled</option>
+          </select>
+
+          <button class="btn" onclick="saveSubscriptionSettings()">Save Subscription</button>
+          <span class="plan-pill">Premium SaaS billing ready</span>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">🔐 Admin Permissions</div>
+          <div class="deal">Approve or reject company workspaces</div>
+          <div class="deal">Manage subscription status</div>
+          <div class="deal">View active companies</div>
+          <div class="deal">Control employees and modules</div>
+          <button class="btn" onclick="showPage('workspaces')">Open Company Approvals</button>
+        </div>
+      </div>
+
       <div class="card">
-        <div class="section-title">🏢 Master Company Profile</div>
-        <p class="muted">Store exporter/importer identity, compliance, and company-level settings.</p>
-        <input placeholder="Company Name">
-        <input placeholder="GST Number">
-        <input placeholder="Import Export Code / IEC">
-        <input placeholder="Business Country">
-        <input placeholder="Primary Product Category">
-        <button class="btn">Save Company Profile</button>
+        <div class="section-title">🏬 Company Approval Queue</div>
+        <p class="muted">Approve or reject companies from the admin side. Approved = Active, Rejected = Inactive.</p>
+        <div id="masterCompanyApprovalList"></div>
       </div>
     </section>
+
 
     <section id="workspacesPage" class="hidden">
 
@@ -1513,13 +1613,15 @@
     </section>
 
     <footer>
-      © 2026 TradeFlow™ Cloud — Advanced Export / Import SaaS OS • All Rights Reserved
+      © 2026 TradeFlow Cloud — Advanced Export / Import SaaS OS
     </footer>
 
   </main>
 </div>
 
 <script>
+const BACKEND_URL = "https://trade-flow-lc1k.onrender.com";
+
 const BACKEND_URL = "https://trade-flow-lc1k.onrender.com";
 
 const API_URL = `${BACKEND_URL}/suppliers`;
@@ -1557,18 +1659,6 @@ function protectDashboard() {
 
   document.getElementById("userBadge").innerText =
     user.email || "Authenticated User";
-
-  const adminActiveCompany = document.getElementById("adminActiveCompany");
-  const adminUserName = document.getElementById("adminUserName");
-
-  if (adminActiveCompany) {
-    adminActiveCompany.innerText =
-      localStorage.getItem("tradeflowActiveWorkspaceName") || user.companyName || "TradeFlow Company";
-  }
-
-  if (adminUserName) {
-    adminUserName.innerText = user.name || user.email || "Admin";
-  }
 }
 
 protectDashboard();
@@ -1639,7 +1729,7 @@ function showPage(page) {
     fetchNotifications();
   }
 
-  if (page === "workspaces" || page === "dashboard") {
+  if (page === "workspaces" || page === "dashboard" || page === "master") {
     fetchWorkspaces();
   }
 
@@ -1934,16 +2024,24 @@ async function fetchWorkspaces() {
 function renderWorkspaces(workspaces) {
   const list = document.getElementById("workspaceList");
   const select = document.getElementById("activeWorkspaceSelect");
+  const approvalList = document.getElementById("masterCompanyApprovalList");
 
   let activeCount = 0;
+  let rejectedCount = 0;
 
   if (list) list.innerHTML = "";
+  if (approvalList) approvalList.innerHTML = "";
   if (select) select.innerHTML = `<option value="">Select Workspace</option>`;
 
   workspaces.forEach((workspace) => {
-    if (workspace.status === "Active") activeCount++;
+    const isApproved = workspace.status === "Active";
+    const statusLabel = isApproved ? "Approved" : "Rejected";
+    const statusClass = isApproved ? "status-approved" : "status-rejected";
 
-    if (select) {
+    if (isApproved) activeCount++;
+    if (!isApproved) rejectedCount++;
+
+    if (select && isApproved) {
       const selected = getActiveWorkspaceId() === workspace._id ? "selected" : "";
       select.innerHTML += `
         <option value="${workspace._id}" ${selected}>
@@ -1952,34 +2050,47 @@ function renderWorkspaces(workspaces) {
       `;
     }
 
-    if (list) {
-      list.innerHTML += `
-        <div class="supplier-card">
-          <h2 style="font-size:20px;font-weight:900;color:white;">
-            ${workspace.companyName}
-          </h2>
+    const companyNameSafe = (workspace.companyName || "Company").replace(/'/g, "\\'");
 
-          <p class="muted">Business Type: ${workspace.businessType}</p>
-          <p class="muted">Country: ${workspace.country || "N/A"}</p>
-          <p class="muted">GST: ${workspace.gstNumber || "N/A"}</p>
-          <p class="muted">IEC: ${workspace.iecCode || "N/A"}</p>
-          <p class="muted">Industry: ${workspace.industry || "N/A"}</p>
-          <p class="muted">Currency: ${workspace.defaultCurrency || "USD"}</p>
+    const companyCard = `
+      <div class="supplier-card">
+        <h2 style="font-size:20px;font-weight:900;color:white;">
+          ${workspace.companyName}
+        </h2>
 
-          <span class="status">
-            ${workspace.status}
-          </span>
+        <p class="muted">Business Type: ${workspace.businessType}</p>
+        <p class="muted">Country: ${workspace.country || "N/A"}</p>
+        <p class="muted">GST: ${workspace.gstNumber || "N/A"}</p>
+        <p class="muted">IEC: ${workspace.iecCode || "N/A"}</p>
+        <p class="muted">Industry: ${workspace.industry || "N/A"}</p>
+        <p class="muted">Currency: ${workspace.defaultCurrency || "USD"}</p>
 
-          <button class="mini-btn" onclick="activateWorkspace('${workspace._id}', '${workspace.companyName.replace(/'/g, "\\'")}')">
-            Set Active Workspace
+        <span class="status ${statusClass}">
+          ${statusLabel}
+        </span>
+
+        <div class="approval-actions">
+          <button class="approve-btn" onclick="approveWorkspace('${workspace._id}')">
+            Approve
           </button>
 
-          <button class="danger-btn" onclick="deleteWorkspace('${workspace._id}')">
-            Delete Workspace
+          <button class="reject-btn" onclick="rejectWorkspace('${workspace._id}')">
+            Reject
           </button>
         </div>
-      `;
-    }
+
+        <button class="mini-btn" onclick="activateWorkspace('${workspace._id}', '${companyNameSafe}')">
+          Set Active Workspace
+        </button>
+
+        <button class="danger-btn" onclick="deleteWorkspace('${workspace._id}')">
+          Delete Workspace
+        </button>
+      </div>
+    `;
+
+    if (list) list.innerHTML += companyCard;
+    if (approvalList) approvalList.innerHTML += companyCard;
   });
 
   const setText = (id, value) => {
@@ -1992,11 +2103,86 @@ function renderWorkspaces(workspaces) {
   setText("dashboardWorkspaceCount", workspaces.length);
   setText("currentWorkspaceName", getActiveWorkspaceName());
 
+  setText("masterTotalCompanies", workspaces.length);
+  setText("masterApprovedCompanies", activeCount);
+  setText("masterRejectedCompanies", rejectedCount);
+
   if (getActiveWorkspaceName() !== "None") {
     const user = getUser();
     document.getElementById("workspaceName").innerText =
       `${getActiveWorkspaceName()} • ${user?.name || "User"} Workspace`;
+
+    const adminActiveCompany = document.getElementById("adminActiveCompany");
+    if (adminActiveCompany) adminActiveCompany.innerText = getActiveWorkspaceName();
   }
+}
+
+async function approveWorkspace(id) {
+  await fetch(`${WORKSPACE_URL}/${id}`, {
+    method: "PUT",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ status: "Active" })
+  });
+
+  createSystemNotification(
+    "Company Approved",
+    "A company workspace has been approved by admin.",
+    "System",
+    "Medium"
+  );
+
+  fetchWorkspaces();
+}
+
+async function rejectWorkspace(id) {
+  await fetch(`${WORKSPACE_URL}/${id}`, {
+    method: "PUT",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ status: "Inactive" })
+  });
+
+  createSystemNotification(
+    "Company Rejected",
+    "A company workspace has been rejected by admin.",
+    "System",
+    "High"
+  );
+
+  fetchWorkspaces();
+}
+
+function saveMasterProfile() {
+  const companyName = document.getElementById("masterCompanyName").value || "TradeFlow Company";
+  const ownerName = document.getElementById("masterOwnerName").value || "Admin";
+
+  localStorage.setItem("tradeflowMasterCompany", companyName);
+  localStorage.setItem("tradeflowMasterOwner", ownerName);
+
+  const adminActiveCompany = document.getElementById("adminActiveCompany");
+  const adminUserName = document.getElementById("adminUserName");
+
+  if (adminActiveCompany) adminActiveCompany.innerText = companyName;
+  if (adminUserName) adminUserName.innerText = ownerName;
+
+  alert("Master admin profile saved.");
+}
+
+function saveSubscriptionSettings() {
+  const plan = document.getElementById("subscriptionPlan").value;
+  const status = document.getElementById("subscriptionStatus").value;
+
+  localStorage.setItem("tradeflowSubscriptionPlan", plan);
+  localStorage.setItem("tradeflowSubscriptionStatus", status);
+
+  const planText = document.getElementById("subscriptionPlanText");
+  const statusText = document.getElementById("subscriptionStatusText");
+  const masterPlan = document.getElementById("masterSubscriptionPlan");
+
+  if (planText) planText.innerText = plan;
+  if (statusText) statusText.innerText = status;
+  if (masterPlan) masterPlan.innerText = plan;
+
+  alert("Subscription settings saved.");
 }
 
 function activateWorkspace(id, name) {
