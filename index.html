@@ -146,9 +146,14 @@
       <button onclick="showPage('documents')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Documents</button>
       <button onclick="showPage('outreach')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Smart Outreach</button>
       <button onclick="showPage('leadfinder')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">AI Lead Finder</button>
-      <button onclick="showPage('leadrequest')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Lead Request</button>
+      <button onclick="showPage('leadrequest')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
+        Lead Request
+      </button>
       <button onclick="showPage('billing')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Billing / Plans</button>
       <button onclick="showPage('settings')" class="nav-btn w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">Settings</button>
+      <button id="adminNavBtn" onclick="showPage('admin')" class="nav-btn hidden w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800">
+        Admin OS
+      </button>
     </nav>
     <button onclick="logout()" class="mt-8 w-full bg-red-600 hover:bg-red-700 rounded-xl py-3 font-bold">Logout</button>
   </aside>
@@ -273,29 +278,29 @@
       <div id="fakeLeadList" class="grid md:grid-cols-3 gap-4 mt-6"></div>
     </section>
 
+    
     <section id="leadrequest" class="page">
       <h1 class="text-4xl font-black">Lead Request</h1>
       <p class="text-slate-500 mt-2">Request verified importer and buyer leads for your export business.</p>
 
       <div class="bg-white p-6 rounded-2xl shadow mt-6 grid md:grid-cols-2 gap-4">
-        <input id="leadRequestProduct" class="border rounded-xl px-4 py-3" placeholder="Product e.g. Rice, Medicine, Jaggery, Agri" />
-        <input id="leadRequestCountry" class="border rounded-xl px-4 py-3" placeholder="Target Country e.g. UAE, Saudi, Singapore" />
+        <input id="leadRequestProduct" class="border rounded-xl px-4 py-3" placeholder="Product e.g. Rice, Medicine, Jaggery" />
+        <input id="leadRequestCountry" class="border rounded-xl px-4 py-3" placeholder="Target Country e.g. UAE, Saudi" />
 
         <select id="leadRequestCount" class="border rounded-xl px-4 py-3">
-          <option value="25">25 Verified Leads</option>
-          <option value="50">50 Verified Leads</option>
-          <option value="100">100 Verified Leads</option>
-          <option value="250">250 Verified Leads</option>
+          <option value="25">25 Leads</option>
+          <option value="50">50 Leads</option>
+          <option value="100">100 Leads</option>
+          <option value="250">250 Leads</option>
         </select>
 
         <select id="leadRequestType" class="border rounded-xl px-4 py-3">
-          <option>Company Name + Email</option>
-          <option>Company Name + WhatsApp</option>
-          <option>Company Name + Email + WhatsApp</option>
+          <option>Email Leads</option>
+          <option>WhatsApp Leads</option>
           <option>Full Buyer Profile</option>
         </select>
 
-        <textarea id="leadRequestNotes" rows="5" class="border rounded-xl px-4 py-3 md:col-span-2" placeholder="Extra details e.g. HS code, buyer type, certification, quantity, target market, target price"></textarea>
+        <textarea id="leadRequestNotes" rows="5" class="border rounded-xl px-4 py-3 md:col-span-2" placeholder="Extra details about buyer requirements"></textarea>
 
         <button onclick="submitLeadRequest()" class="bg-purple-700 text-white py-3 rounded-xl font-bold md:col-span-2">
           Request Verified Leads
@@ -305,22 +310,22 @@
       <div class="grid md:grid-cols-3 gap-5 mt-8">
         <div class="bg-white p-6 rounded-2xl shadow">
           <h2 class="text-xl font-black">Verified Buyers</h2>
-          <p class="text-slate-600 mt-3">Get buyer/importer data with company details, country, product interest and contact priority.</p>
+          <p class="text-slate-600 mt-3">Get manually verified buyer/importer data with business relevance.</p>
         </div>
 
         <div class="bg-white p-6 rounded-2xl shadow">
           <h2 class="text-xl font-black">Export Focused</h2>
-          <p class="text-slate-600 mt-3">Designed for rice, jaggery, agri products, medicine, spices, food exports and B2B trade.</p>
+          <p class="text-slate-600 mt-3">Designed for rice, agri, jaggery, medicine and food exports.</p>
         </div>
 
         <div class="bg-white p-6 rounded-2xl shadow">
           <h2 class="text-xl font-black">Manual Delivery</h2>
-          <p class="text-slate-600 mt-3">Early-stage requests are processed manually so you can validate demand before automation.</p>
+          <p class="text-slate-600 mt-3">Early-stage requests are processed manually for higher quality.</p>
         </div>
       </div>
     </section>
 
-    <section id="billing" class="page">
+<section id="billing" class="page">
   <h1 class="text-4xl font-black">Billing / Plans</h1>
   <p class="text-slate-500 mt-2">
     Choose a plan and request activation. Our team will contact you for manual onboarding.
@@ -329,7 +334,68 @@
   <div id="billingPlans" class="grid md:grid-cols-4 gap-6 mt-8"></div>
 </section>
 
-   <section id="settings" class="page">
+   
+<section id="admin" class="page">
+
+  <h1 class="text-4xl font-black">
+    TradeFlow Admin OS
+  </h1>
+
+  <p class="text-slate-500 mt-2">
+    Control companies, users, upgrade requests, lead requests and manual plan activation.
+  </p>
+
+  <div class="grid md:grid-cols-4 gap-5 mt-8">
+    <div class="bg-white p-6 rounded-2xl shadow">
+      <p>Total Companies</p>
+      <h2 id="adminCompanyCount" class="text-3xl font-black mt-2">0</h2>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow">
+      <p>Total Users</p>
+      <h2 id="adminUserCount" class="text-3xl font-black mt-2">0</h2>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow">
+      <p>Upgrade Requests</p>
+      <h2 id="adminUpgradeCount" class="text-3xl font-black mt-2">0</h2>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow">
+      <p>Lead Requests</p>
+      <h2 id="adminLeadRequestCount" class="text-3xl font-black mt-2">0</h2>
+    </div>
+  </div>
+
+  <div class="bg-white p-6 rounded-2xl shadow mt-8">
+    <div class="flex justify-between items-center">
+      <h2 class="text-2xl font-black">Companies / Workspaces</h2>
+      <button onclick="loadAdminData()" class="bg-slate-900 text-white px-5 py-3 rounded-xl font-bold">
+        Refresh Admin Data
+      </button>
+    </div>
+
+    <div id="adminCompanies" class="grid md:grid-cols-2 gap-5 mt-6"></div>
+  </div>
+
+  <div class="bg-white p-6 rounded-2xl shadow mt-8">
+    <h2 class="text-2xl font-black">Upgrade Requests</h2>
+    <div id="adminUpgradeRequests" class="grid md:grid-cols-2 gap-5 mt-6"></div>
+  </div>
+
+  <div class="bg-white p-6 rounded-2xl shadow mt-8">
+    <h2 class="text-2xl font-black">Lead Requests</h2>
+    <div id="adminLeadRequests" class="grid md:grid-cols-2 gap-5 mt-6"></div>
+  </div>
+
+  <div class="bg-white p-6 rounded-2xl shadow mt-8">
+    <h2 class="text-2xl font-black">All Users</h2>
+    <div id="adminUsers" class="grid md:grid-cols-3 gap-5 mt-6"></div>
+  </div>
+
+</section>
+
+<section id="settings" class="page">
 
   <h1 class="text-4xl font-black">
     Workspace Settings
@@ -567,6 +633,14 @@
   </div>
 
 </section>
+
+    <footer class="mt-16 text-center text-slate-500">
+      © 2026 TradeFlow AI™ — Export / Import SaaS Workspace Platform
+    </footer>
+
+  </main>
+</section>
+
 <script>
 const API_BASE = "https://trade-flow-lc1k.onrender.com";
 let CURRENT_USER = null;
@@ -615,6 +689,11 @@ function showApp(user){
   document.getElementById("authScreen").classList.add("hidden");
   document.getElementById("appScreen").classList.remove("hidden");
   document.getElementById("userRoleText").innerText=`${user.companyName||"Workspace"} • ${user.role||"USER"} • ${user.plan||"FREE"}`;
+
+  const adminBtn = document.getElementById("adminNavBtn");
+  if(adminBtn && user.isAdmin){
+    adminBtn.classList.remove("hidden");
+  }
 }
 function showPage(pageId){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
@@ -623,6 +702,7 @@ function showPage(pageId){
   const btn=[...document.querySelectorAll(".nav-btn")].find(b=>b.getAttribute("onclick")?.includes(pageId));
   if(btn)btn.classList.add("active");
   if(pageId==="billing")loadPlans();
+  if(pageId==="admin")loadAdminData();
 }
 async function loadAll(){await Promise.allSettled([loadStats(),loadEmployees(),loadSuppliers(),loadLeads(),loadTasks(),loadDocuments(),loadPlans()]);}
 
@@ -763,20 +843,15 @@ async function loadPlans(){
   }
 }
 
-function requestUpgrade(planId, planName, price){
+async function requestUpgrade(planId, planName, price){
   if(planId === "FREE"){
     alert("You are already using the Free plan.");
     return;
   }
 
-  const company =
-    CURRENT_USER?.companyName || "TradeFlow Workspace";
-
-  const email =
-    CURRENT_USER?.email || "";
-
-  const name =
-    CURRENT_USER?.name || "User";
+  const company = CURRENT_USER?.companyName || "TradeFlow Workspace";
+  const email = CURRENT_USER?.email || "";
+  const name = CURRENT_USER?.name || "User";
 
   const message =
 `Hello TradeFlow Team,
@@ -791,14 +866,209 @@ Monthly Price: ₹${price}
 
 Please contact me for activation and payment process.`;
 
+  try{
+    await api("/api/billing/request-upgrade",{
+      method:"POST",
+      body:JSON.stringify({
+        requestedPlan: planName,
+        price: Number(price || 0),
+        notes: message
+      })
+    });
+  }catch(err){
+    console.log("Upgrade request saved through WhatsApp only:", err.message);
+  }
+
   const whatsappNumber = "918743998759";
-
-  const whatsappLink =
-    `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-
+  const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
   window.open(whatsappLink, "_blank");
 }
-function submitLeadRequest(){
+
+function adminSafeText(value){
+  return String(value || "-").replace(/[<>&]/g, "");
+}
+
+async function loadAdminData(){
+  if(!CURRENT_USER?.isAdmin){
+    alert("Admin access only.");
+    return;
+  }
+
+  await Promise.allSettled([
+    loadAdminOverview(),
+    loadAdminCompanies(),
+    loadAdminUsers(),
+    loadAdminUpgradeRequests(),
+    loadAdminLeadRequests()
+  ]);
+}
+
+async function loadAdminOverview(){
+  try{
+    const data = await api("/api/admin/overview");
+    const overview = data.overview || {};
+
+    document.getElementById("adminCompanyCount").innerText = overview.companies || 0;
+    document.getElementById("adminUserCount").innerText = overview.users || 0;
+    document.getElementById("adminUpgradeCount").innerText = overview.upgradeRequests || 0;
+    document.getElementById("adminLeadRequestCount").innerText = overview.leadRequests || 0;
+  }catch(err){
+    console.log(err.message);
+  }
+}
+
+async function loadAdminCompanies(){
+  const box = document.getElementById("adminCompanies");
+  if(!box) return;
+
+  try{
+    const data = await api("/api/admin/companies");
+
+    box.innerHTML = (data.companies || []).map(company => `
+      <div class="border rounded-2xl p-5">
+        <h3 class="font-black text-lg">${adminSafeText(company.companyName)}</h3>
+        <p class="text-slate-600 mt-1">Company ID: ${adminSafeText(company._id)}</p>
+        <p>Plan: <b>${adminSafeText(company.plan)}</b></p>
+        <p>Status: ${adminSafeText(company.subscriptionStatus)}</p>
+        <p>Users: ${company.users || 0}</p>
+
+        <div class="grid grid-cols-2 gap-2 mt-4">
+          <button onclick="adminChangePlan('${company._id}', 'STARTER')" class="bg-blue-700 text-white py-2 rounded-xl">Starter</button>
+          <button onclick="adminChangePlan('${company._id}', 'PRO')" class="bg-purple-700 text-white py-2 rounded-xl">Pro</button>
+          <button onclick="adminChangePlan('${company._id}', 'ENTERPRISE')" class="bg-slate-900 text-white py-2 rounded-xl">Enterprise</button>
+          <button onclick="adminChangePlan('${company._id}', 'FREE')" class="bg-red-600 text-white py-2 rounded-xl">Free</button>
+        </div>
+      </div>
+    `).join("");
+  }catch(err){
+    box.innerHTML = `<p class="text-red-600">${err.message}</p>`;
+  }
+}
+
+async function adminChangePlan(companyId, plan){
+  try{
+    const data = await api(`/api/admin/company/${companyId}/plan`,{
+      method:"PUT",
+      body:JSON.stringify({ plan })
+    });
+
+    alert(data.message || "Plan updated");
+    loadAdminData();
+  }catch(err){
+    alert(err.message);
+  }
+}
+
+async function loadAdminUsers(){
+  const box = document.getElementById("adminUsers");
+  if(!box) return;
+
+  try{
+    const data = await api("/api/admin/users");
+
+    box.innerHTML = (data.users || []).map(user => `
+      <div class="border rounded-2xl p-5">
+        <h3 class="font-black">${adminSafeText(user.name)}</h3>
+        <p>${adminSafeText(user.email)}</p>
+        <p>Company: ${adminSafeText(user.companyName)}</p>
+        <p>Role: ${adminSafeText(user.role)}</p>
+        <p>Plan: ${adminSafeText(user.plan)}</p>
+      </div>
+    `).join("");
+  }catch(err){
+    box.innerHTML = `<p class="text-red-600">${err.message}</p>`;
+  }
+}
+
+async function loadAdminUpgradeRequests(){
+  const box = document.getElementById("adminUpgradeRequests");
+  if(!box) return;
+
+  try{
+    const data = await api("/api/admin/upgrade-requests");
+
+    box.innerHTML = (data.requests || []).map(req => `
+      <div class="border rounded-2xl p-5">
+        <h3 class="font-black text-lg">${adminSafeText(req.companyName)}</h3>
+        <p>User: ${adminSafeText(req.userName)}</p>
+        <p>Email: ${adminSafeText(req.email)}</p>
+        <p>Plan: <b>${adminSafeText(req.requestedPlan)}</b></p>
+        <p>Price: ₹${req.price || 0}</p>
+        <p>Status: <b>${adminSafeText(req.status)}</b></p>
+
+        <div class="grid grid-cols-2 gap-2 mt-4">
+          <button onclick="adminUpdateUpgradeRequest('${req._id}', 'CONTACTED')" class="bg-blue-700 text-white py-2 rounded-xl">Contacted</button>
+          <button onclick="adminUpdateUpgradeRequest('${req._id}', 'ACTIVE')" class="bg-green-700 text-white py-2 rounded-xl">Active</button>
+          <button onclick="adminUpdateUpgradeRequest('${req._id}', 'CLOSED')" class="bg-slate-900 text-white py-2 rounded-xl">Closed</button>
+          <button onclick="adminUpdateUpgradeRequest('${req._id}', 'REJECTED')" class="bg-red-600 text-white py-2 rounded-xl">Rejected</button>
+        </div>
+      </div>
+    `).join("");
+  }catch(err){
+    box.innerHTML = `<p class="text-red-600">${err.message}</p>`;
+  }
+}
+
+async function adminUpdateUpgradeRequest(id, status){
+  try{
+    await api(`/api/admin/upgrade-requests/${id}`,{
+      method:"PUT",
+      body:JSON.stringify({ status })
+    });
+
+    loadAdminUpgradeRequests();
+    loadAdminOverview();
+  }catch(err){
+    alert(err.message);
+  }
+}
+
+async function loadAdminLeadRequests(){
+  const box = document.getElementById("adminLeadRequests");
+  if(!box) return;
+
+  try{
+    const data = await api("/api/admin/lead-requests");
+
+    box.innerHTML = (data.requests || []).map(req => `
+      <div class="border rounded-2xl p-5">
+        <h3 class="font-black text-lg">${adminSafeText(req.product)} → ${adminSafeText(req.country)}</h3>
+        <p>Company: ${adminSafeText(req.companyName)}</p>
+        <p>User: ${adminSafeText(req.userName)}</p>
+        <p>Email: ${adminSafeText(req.email)}</p>
+        <p>Count: ${adminSafeText(req.leadCount)}</p>
+        <p>Type: ${adminSafeText(req.leadType)}</p>
+        <p>Status: <b>${adminSafeText(req.status)}</b></p>
+        <p class="text-slate-600 mt-2">${adminSafeText(req.notes)}</p>
+
+        <div class="grid grid-cols-2 gap-2 mt-4">
+          <button onclick="adminUpdateLeadRequest('${req._id}', 'PROCESSING')" class="bg-blue-700 text-white py-2 rounded-xl">Processing</button>
+          <button onclick="adminUpdateLeadRequest('${req._id}', 'DELIVERED')" class="bg-green-700 text-white py-2 rounded-xl">Delivered</button>
+          <button onclick="adminUpdateLeadRequest('${req._id}', 'ON HOLD')" class="bg-yellow-600 text-white py-2 rounded-xl">Hold</button>
+          <button onclick="adminUpdateLeadRequest('${req._id}', 'CLOSED')" class="bg-slate-900 text-white py-2 rounded-xl">Closed</button>
+        </div>
+      </div>
+    `).join("");
+  }catch(err){
+    box.innerHTML = `<p class="text-red-600">${err.message}</p>`;
+  }
+}
+
+async function adminUpdateLeadRequest(id, status){
+  try{
+    await api(`/api/admin/lead-requests/${id}`,{
+      method:"PUT",
+      body:JSON.stringify({ status })
+    });
+
+    loadAdminLeadRequests();
+    loadAdminOverview();
+  }catch(err){
+    alert(err.message);
+  }
+}
+
+async function submitLeadRequest(){
   const product = document.getElementById("leadRequestProduct").value.trim();
   const country = document.getElementById("leadRequestCountry").value.trim();
   const count = document.getElementById("leadRequestCount").value;
@@ -817,21 +1087,36 @@ function submitLeadRequest(){
   const message =
 `Hello TradeFlow Team,
 
-I want verified export buyer/importer leads.
+I want verified export buyer leads.
 
 Company: ${company}
 User: ${name}
 Email: ${email}
 
 Product: ${product}
-Target Country: ${country}
+Country: ${country}
 Lead Count: ${count}
 Lead Type: ${type}
 
-Extra Notes:
+Notes:
 ${notes || "-"}
 
-Please contact me regarding pricing and delivery process.`;
+Please contact me regarding pricing and delivery.`;
+
+  try{
+    await api("/api/lead-requests",{
+      method:"POST",
+      body:JSON.stringify({
+        product,
+        country,
+        leadCount: count,
+        leadType: type,
+        notes
+      })
+    });
+  }catch(err){
+    console.log("Lead request saved through WhatsApp only:", err.message);
+  }
 
   const whatsappNumber = "918743998759";
   const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
