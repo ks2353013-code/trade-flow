@@ -1221,17 +1221,21 @@ const NOTIFICATION_URL = `${BACKEND_URL}/api/notifications`;
 const WORKSPACE_URL = `${BACKEND_URL}/api/workspaces`;
 
 function getUser() {
-  const user = localStorage.getItem("tradeflowUser");
-  return user ? JSON.parse(user) : null;
+  try {
+    const user = localStorage.getItem("tradeflowUser");
+    return user ? JSON.parse(user) : null;
+  } catch (error) {
+    localStorage.removeItem("tradeflowUser");
+    return null;
+  }
 }
-
 function protectDashboard() {
   const user = getUser();
 
   if (!user || !user.token) {
     localStorage.removeItem("tradeflowUser");
-    window.location.href = "login.html";
-    return;
+    window.location.replace("login.html");
+    throw new Error("Not logged in");
   }
 
   document.getElementById("workspaceName").innerText =
@@ -1242,14 +1246,13 @@ function protectDashboard() {
 }
 
 protectDashboard();
-
 function getAuthHeaders() {
   const user = getUser();
 
   if (!user || !user.token) {
-    return {
-      "Content-Type": "application/json"
-    };
+    localStorage.removeItem("tradeflowUser");
+    window.location.replace("login.html");
+    throw new Error("Token missing");
   }
 
   return {
@@ -1257,7 +1260,6 @@ function getAuthHeaders() {
     "Authorization": `Bearer ${user.token}`
   };
 }
-
 function logoutUser() {
   localStorage.removeItem("tradeflowUser");
   window.location.href = "login.html";
@@ -1962,7 +1964,8 @@ async function fetchSuppliers() {
     });
 
   } catch (error) {
-    alert("Please login again. Your session token is missing or expired.");\n    logoutUser();
+    alert("Please login again. Your session is missing or expired.");
+    logoutUser();
   }
 }
 

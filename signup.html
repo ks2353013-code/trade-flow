@@ -5,63 +5,224 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TradeFlow Signup</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
   <style>
+    * { box-sizing: border-box; }
     body {
-      background: linear-gradient(to right, #0f172a, #1e293b);
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: Arial, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, Arial, sans-serif;
+      background:
+        radial-gradient(circle at 10% 20%, rgba(14,165,233,.36), transparent 30%),
+        radial-gradient(circle at 85% 15%, rgba(168,85,247,.35), transparent 28%),
+        radial-gradient(circle at 55% 90%, rgba(34,197,94,.16), transparent 28%),
+        #020617;
+      color: #fff;
     }
-    .signup-box {
-      background: #111827;
-      padding: 40px;
-      width: 420px;
-      border-radius: 20px;
-      box-shadow: 0px 0px 30px rgba(56, 189, 248, 0.3);
+    .page {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1.08fr .92fr;
+    }
+    .hero {
+      padding: 56px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "TradeFlow";
+      position: absolute;
+      top: 7%;
+      left: 6%;
+      font-size: 132px;
+      font-weight: 950;
+      letter-spacing: -8px;
+      color: rgba(255,255,255,.035);
+      pointer-events: none;
+    }
+    .badge {
+      width: fit-content;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(56,189,248,.14);
+      border: 1px solid rgba(125,211,252,.25);
+      color: #7dd3fc;
+      font-weight: 800;
+      font-size: 13px;
+      margin-bottom: 20px;
     }
     h1 {
-      text-align: center;
-      color: #38bdf8;
-      font-size: 32px;
-      font-weight: bold;
-      margin-bottom: 25px;
+      font-size: clamp(42px, 6vw, 80px);
+      line-height: .95;
+      margin: 0;
+      font-weight: 950;
+      letter-spacing: -3px;
     }
+    .gradient {
+      background: linear-gradient(135deg, #38bdf8, #a78bfa, #22c55e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      max-width: 660px;
+      color: #cbd5e1;
+      line-height: 1.7;
+      font-size: 17px;
+      margin-top: 22px;
+    }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(180px, 1fr));
+      gap: 14px;
+      max-width: 680px;
+      margin-top: 30px;
+    }
+    .feature {
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(15,23,42,.66);
+      border: 1px solid rgba(148,163,184,.16);
+      backdrop-filter: blur(16px);
+      color: #dbeafe;
+      font-size: 14px;
+    }
+    .auth-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 455px;
+      padding: 34px;
+      border-radius: 30px;
+      background: rgba(15,23,42,.82);
+      border: 1px solid rgba(148,163,184,.18);
+      box-shadow: 0 30px 90px rgba(0,0,0,.45);
+      backdrop-filter: blur(24px);
+    }
+    .logo {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+    .logo-mark {
+      width: 52px;
+      height: 52px;
+      border-radius: 17px;
+      background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      font-weight: 950;
+      box-shadow: 0 18px 40px rgba(14,165,233,.25);
+    }
+    .logo-title { font-size: 25px; font-weight: 950; }
+    .logo-sub { color: #94a3b8; font-size: 12px; margin-top: 2px; }
+    .auth-card h2 { margin: 0 0 8px; font-size: 30px; font-weight: 950; }
+    .sub { color: #94a3b8; line-height: 1.5; margin-bottom: 22px; }
     input {
       width: 100%;
-      padding: 14px;
-      margin-top: 14px;
-      border: none;
-      border-radius: 10px;
-      background: #1e293b;
+      padding: 15px 16px;
+      margin-top: 13px;
+      border: 1px solid rgba(148,163,184,.18);
+      border-radius: 16px;
+      background: rgba(2,6,23,.68);
       color: white;
+      outline: none;
+      font-size: 15px;
     }
-    button {
+    input:focus {
+      border-color: rgba(56,189,248,.75);
+      box-shadow: 0 0 0 4px rgba(14,165,233,.13);
+    }
+    .btn {
       width: 100%;
-      padding: 14px;
-      margin-top: 20px;
+      padding: 15px;
+      margin-top: 18px;
       border: none;
-      border-radius: 10px;
-      background: #38bdf8;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
       color: white;
-      font-weight: bold;
+      font-weight: 900;
       cursor: pointer;
+      font-size: 15px;
+      transition: .2s;
     }
-    button:hover { background: #0ea5e9; }
-    p { text-align: center; margin-top: 20px; color: white; }
-    a { color: #38bdf8; text-decoration: none; }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 42px rgba(14,165,233,.25);
+    }
+    .hint {
+      text-align: center;
+      margin-top: 20px;
+      color: #cbd5e1;
+      font-size: 14px;
+    }
+    .hint a { color: #7dd3fc; text-decoration: none; font-weight: 900; }
+    .trust {
+      margin-top: 22px;
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(34,197,94,.10);
+      border: 1px solid rgba(34,197,94,.18);
+      color: #bbf7d0;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    @media (max-width: 950px) {
+      .page { grid-template-columns: 1fr; }
+      .hero { padding: 34px 24px 10px; }
+      .hero::before { font-size: 76px; }
+      .features { grid-template-columns: 1fr; }
+      .auth-wrap { padding: 24px; }
+    }
   </style>
+
 </head>
 <body>
-  <div class="signup-box">
-    <h1>Create Account</h1>
-    <input type="text" id="name" placeholder="Your Name">
-    <input type="text" id="companyName" placeholder="Company Name">
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Password">
-    <button onclick="signupUser()">Signup</button>
-    <p>Already have an account? <a href="login.html">Login</a></p>
+  <div class="page">
+    <section class="hero">
+      <div class="badge">✨ Build your premium trade workspace</div>
+      <h1>Create your <span class="gradient">TradeFlow SaaS</span> command center.</h1>
+      <p>Start managing suppliers, buyers, CRM, tasks, documents, AI tools, outreach, analytics, teams, and multi-company trade operations.</p>
+      <div class="features">
+        <div class="feature">🏬 Multi-company workspace</div>
+        <div class="feature">🔔 Notifications center</div>
+        <div class="feature">📄 Export PDF generator</div>
+        <div class="feature">👥 Employee permissions</div>
+      </div>
+    </section>
+
+    <section class="auth-wrap">
+      <div class="auth-card">
+        <div class="logo">
+          <div class="logo-mark">T</div>
+          <div>
+            <div class="logo-title">TradeFlow</div>
+            <div class="logo-sub">Create Premium Workspace</div>
+          </div>
+        </div>
+
+        <h2>Create account</h2>
+        <div class="sub">Signup and enter your protected TradeFlow workspace.</div>
+
+        <input type="text" id="name" placeholder="Your Name">
+        <input type="text" id="companyName" placeholder="Company Name">
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password">
+
+        <button class="btn" onclick="signupUser()">Create Workspace</button>
+
+        <div class="hint">Already have an account? <a href="login.html">Login</a></div>
+        <div class="trust">One account • Secure token login • Production backend connected</div>
+      </div>
+    </section>
   </div>
 
 <script>
@@ -93,7 +254,7 @@ async function signupUser() {
     }
 
     if (!data.token) {
-      alert("Signup response did not include token. Check backend auth controller.");
+      alert("Signup failed: token not received from backend.");
       return;
     }
 
@@ -101,7 +262,7 @@ async function signupUser() {
     localStorage.setItem("tradeflowUser", JSON.stringify(data));
     window.location.href = "index.html";
   } catch (error) {
-    alert("Backend connection failed. Open backend URL first: " + API_BASE);
+    alert("Backend connection failed. Please open backend once: " + API_BASE);
   }
 }
 </script>
