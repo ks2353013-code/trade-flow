@@ -1208,7 +1208,7 @@
 <script>
 const BACKEND_URL = "https://trade-flow-lc1k.onrender.com";
 
-const API_URL = `${BACKEND_URL}/api/suppliers`;
+const API_URL = `${BACKEND_URL}/suppliers`;
 const AI_URL = `${BACKEND_URL}/api/ai`;
 const DEAL_URL = `${BACKEND_URL}/api/deals`;
 const TASK_URL = `${BACKEND_URL}/api/tasks`;
@@ -1958,7 +1958,7 @@ async function fetchSuppliers() {
     });
 
   } catch (error) {
-    alert("Backend not connected or server stopped.");
+    alert(`Backend not connected. Check backend URL: ${API_URL}`);
   }
 }
 

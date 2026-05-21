@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TradeFlow Login</title>
-
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
@@ -73,41 +72,37 @@
 </head>
 
 <body>
-
   <div class="login-box">
-
     <h1>TradeFlow</h1>
 
     <input type="email" id="email" placeholder="Email">
-
     <input type="password" id="password" placeholder="Password">
 
-    <button onclick="loginUser()">
-      Login
-    </button>
+    <button onclick="loginUser()">Login</button>
 
     <p>
       Don't have an account?
       <a href="signup.html">Signup</a>
     </p>
-
   </div>
 
 <script>
-const API_BASE = "https://tradeflow-backend.onrender.com";
+const API_BASE = "https://trade-flow-lc1k.onrender.com";
 
 async function loginUser() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
 
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  if (!email || !password) {
+    alert("Please enter email and password");
+    return;
+  }
 
   const res = await fetch(`${API_BASE}/api/auth/login`, {
     method: "POST",
-
     headers: {
       "Content-Type": "application/json",
     },
-
     body: JSON.stringify({
       email,
       password,
@@ -122,8 +117,6 @@ async function loginUser() {
   }
 
   localStorage.setItem("tradeflowUser", JSON.stringify(data));
-
-  alert("Login successful");
 
   window.location.href = "index.html";
 }
