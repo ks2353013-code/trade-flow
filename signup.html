@@ -75,6 +75,7 @@
 <body>
 
   <div class="signup-box">
+
     <h1>Create Account</h1>
 
     <input type="text" id="name" placeholder="Your Name">
@@ -82,28 +83,39 @@
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
 
-    <button onclick="signupUser()">Signup</button>
+    <button onclick="signupUser()">
+      Signup
+    </button>
 
     <p>
       Already have an account?
       <a href="login.html">Login</a>
     </p>
+
   </div>
 
 <script>
-const API_BASE = "https://tradeflow-backend.onrender.com";
+const API_BASE = "https://trade-flow-lc1k.onrender.com";
 
 async function signupUser() {
-  const name = document.getElementById("name").value;
-  const companyName = document.getElementById("companyName").value;
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+
+  const name = document.getElementById("name").value.trim();
+  const companyName = document.getElementById("companyName").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+
+  if (!name || !companyName || !email || !password) {
+    alert("Please fill all fields");
+    return;
+  }
 
   const res = await fetch(`${API_BASE}/api/auth/register`, {
     method: "POST",
+
     headers: {
       "Content-Type": "application/json",
     },
+
     body: JSON.stringify({
       name,
       companyName,
@@ -120,8 +132,6 @@ async function signupUser() {
   }
 
   localStorage.setItem("tradeflowUser", JSON.stringify(data));
-
-  alert("Signup successful");
 
   window.location.href = "index.html";
 }
