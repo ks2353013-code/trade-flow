@@ -273,10 +273,13 @@
     </section>
 
     <section id="billing" class="page">
-      <h1 class="text-4xl font-black">Billing / Plans</h1>
-      <p class="text-slate-500 mt-2">Upgrade system is ready. Razorpay can be connected next.</p>
-      <div id="billingPlans" class="grid md:grid-cols-4 gap-6 mt-8"></div>
-    </section>
+  <h1 class="text-4xl font-black">Billing / Plans</h1>
+  <p class="text-slate-500 mt-2">
+    Choose a plan and request activation. Our team will contact you for manual onboarding.
+  </p>
+
+  <div id="billingPlans" class="grid md:grid-cols-4 gap-6 mt-8"></div>
+</section>
 
    <section id="settings" class="page">
 
@@ -674,9 +677,78 @@ async function generateFakeLeads(){
 async function saveDemoLead(companyName,product,country,email,phone,score){try{await api("/api/suppliers",{method:"POST",body:JSON.stringify({companyName,product,country,email,phone,score,status:"AI Generated Lead"})});alert("Lead saved to suppliers");loadSuppliers();loadStats();}catch(err){alert(err.message);}}
 
 async function loadPlans(){
-  const box=document.getElementById("billingPlans"); if(!box)return;
-  try{const data=await api("/api/billing/plans");box.innerHTML=(data.plans||[]).map(plan=>`<div class="bg-white p-6 rounded-2xl shadow"><h2 class="text-2xl font-black">${plan.name}</h2><p class="text-3xl mt-4 font-black">₹${plan.price}</p><p class="text-slate-500">${plan.currency}/month</p><ul class="mt-4 space-y-2">${plan.features.map(f=>`<li>• ${f}</li>`).join("")}</ul><button onclick="upgradeDemo('${plan.id}')" class="mt-5 w-full bg-blue-700 text-white py-3 rounded-xl font-bold">${plan.id==="FREE"?"Current / Free":"Upgrade Demo"}</button></div>`).join("");}
-  catch(err){console.log(err.message);}
+  const box = document.getElementById("billingPlans");
+  if(!box) return;
+
+  try{
+    const data = await api("/api/billing/plans");
+
+    box.innerHTML = (data.plans || []).map(plan => `
+      <div class="bg-white p-6 rounded-2xl shadow border ${plan.id === "PRO" ? "border-blue-600" : "border-slate-200"}">
+
+        <h2 class="text-2xl font-black">${plan.name}</h2>
+
+        <p class="text-3xl mt-4 font-black">
+          ₹${plan.price}
+        </p>
+
+        <p class="text-slate-500">
+          ${plan.currency}/month
+        </p>
+
+        <ul class="mt-4 space-y-2 text-slate-700">
+          ${plan.features.map(f => `<li>• ${f}</li>`).join("")}
+        </ul>
+
+        <button
+          onclick="requestUpgrade('${plan.id}', '${plan.name}', '${plan.price}')"
+          class="mt-5 w-full ${plan.id === "FREE" ? "bg-slate-700" : "bg-blue-700"} text-white py-3 rounded-xl font-bold"
+        >
+          ${plan.id === "FREE" ? "Continue Free" : "Request Upgrade"}
+        </button>
+
+      </div>
+    `).join("");
+
+  }catch(err){
+    console.log(err.message);
+  }
+}
+
+function requestUpgrade(planId, planName, price){
+  if(planId === "FREE"){
+    alert("You are already using the Free plan.");
+    return;
+  }
+
+  const company =
+    CURRENT_USER?.companyName || "TradeFlow Workspace";
+
+  const email =
+    CURRENT_USER?.email || "";
+
+  const name =
+    CURRENT_USER?.name || "User";
+
+  const message =
+`Hello TradeFlow Team,
+
+I want to upgrade my workspace.
+
+Company: ${company}
+User: ${name}
+Email: ${email}
+Requested Plan: ${planName}
+Monthly Price: ₹${price}
+
+Please contact me for activation and payment process.`;
+
+  const whatsappNumber = "918743998759";
+
+  const whatsappLink =
+    `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+  window.open(whatsappLink, "_blank");
 }
 async function upgradeDemo(plan){try{if(plan==="FREE")return alert("You are already on FREE plan or can downgrade later.");const data=await api("/api/billing/upgrade-demo",{method:"POST",body:JSON.stringify({plan})});if(data.token)setToken(data.token);alert(data.message||"Plan upgraded");CURRENT_USER=data.user;showApp(data.user);loadStats();loadPlans();}catch(err){alert(err.message);}}
 </script>
