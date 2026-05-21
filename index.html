@@ -27,7 +27,10 @@
         <a href="#pricing">Pricing</a>
         <a href="#platform">Platform</a>
       </div>
-      <button onclick="openAuth()" class="bg-white text-slate-950 px-5 py-3 rounded-xl font-bold">Login / Start Free</button>
+      <div class="flex gap-3">
+        <button onclick="openAuth('user')" class="bg-white text-slate-950 px-5 py-3 rounded-xl font-bold">Login / Start Free</button>
+        <button onclick="openAuth('admin')" class="border border-white/20 text-white px-5 py-3 rounded-xl font-bold">Admin Login</button>
+      </div>
     </header>
 
     <section class="grid lg:grid-cols-2 gap-12 items-center py-24">
@@ -42,7 +45,7 @@
           Manage suppliers, CRM leads, outreach, export documents, negotiation, team workspaces and AI-powered buyer discovery from one premium SaaS platform.
         </p>
         <div class="mt-8 flex flex-wrap gap-4">
-          <button onclick="openAuth()" class="bg-blue-600 hover:bg-blue-700 px-7 py-4 rounded-2xl font-black glow">Start Free Workspace</button>
+          <button onclick="openAuth('user')" class="bg-blue-600 hover:bg-blue-700 px-7 py-4 rounded-2xl font-black glow">Start Free Workspace</button>
           <button onclick="scrollToPricing()" class="border border-white/20 px-7 py-4 rounded-2xl font-black">View Pricing</button>
         </div>
         <div class="grid grid-cols-3 gap-4 mt-10">
@@ -99,10 +102,10 @@
     <section id="pricing" class="py-20">
       <h2 class="text-4xl font-black text-center">Pricing Built for Exporters</h2>
       <div class="grid md:grid-cols-4 gap-6 mt-12">
-        <div class="glass p-6 rounded-3xl"><h3 class="text-2xl font-black">Free</h3><p class="text-4xl font-black mt-4">₹0</p><p class="text-slate-300 mt-3">Start workspace</p><button onclick="openAuth()" class="mt-6 w-full bg-white text-slate-950 py-3 rounded-xl font-bold">Start</button></div>
-        <div class="glass p-6 rounded-3xl"><h3 class="text-2xl font-black">Starter</h3><p class="text-4xl font-black mt-4">₹999</p><p class="text-slate-300 mt-3">CRM + suppliers</p><button onclick="openAuth()" class="mt-6 w-full bg-blue-600 py-3 rounded-xl font-bold">Start</button></div>
-        <div class="glass p-6 rounded-3xl border-blue-400"><h3 class="text-2xl font-black">Pro</h3><p class="text-4xl font-black mt-4">₹4,999</p><p class="text-slate-300 mt-3">AI leads + outreach</p><button onclick="openAuth()" class="mt-6 w-full bg-blue-600 py-3 rounded-xl font-bold">Upgrade</button></div>
-        <div class="glass p-6 rounded-3xl"><h3 class="text-2xl font-black">Enterprise</h3><p class="text-4xl font-black mt-4">₹25k+</p><p class="text-slate-300 mt-3">Team + automation</p><button onclick="openAuth()" class="mt-6 w-full bg-white text-slate-950 py-3 rounded-xl font-bold">Contact</button></div>
+        <div class="glass p-6 rounded-3xl"><h3 class="text-2xl font-black">Free</h3><p class="text-4xl font-black mt-4">₹0</p><p class="text-slate-300 mt-3">Start workspace</p><button onclick="openAuth('user')" class="mt-6 w-full bg-white text-slate-950 py-3 rounded-xl font-bold">Start</button></div>
+        <div class="glass p-6 rounded-3xl"><h3 class="text-2xl font-black">Starter</h3><p class="text-4xl font-black mt-4">₹999</p><p class="text-slate-300 mt-3">CRM + suppliers</p><button onclick="openAuth('user')" class="mt-6 w-full bg-blue-600 py-3 rounded-xl font-bold">Start</button></div>
+        <div class="glass p-6 rounded-3xl border-blue-400"><h3 class="text-2xl font-black">Pro</h3><p class="text-4xl font-black mt-4">₹4,999</p><p class="text-slate-300 mt-3">AI leads + outreach</p><button onclick="openAuth('user')" class="mt-6 w-full bg-blue-600 py-3 rounded-xl font-bold">Upgrade</button></div>
+        <div class="glass p-6 rounded-3xl"><h3 class="text-2xl font-black">Enterprise</h3><p class="text-4xl font-black mt-4">₹25k+</p><p class="text-slate-300 mt-3">Team + automation</p><button onclick="openAuth('user')" class="mt-6 w-full bg-white text-slate-950 py-3 rounded-xl font-bold">Contact</button></div>
       </div>
     </section>
 
@@ -117,15 +120,22 @@
 <section id="authScreen" class="hidden min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-900 p-6">
   <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-8">
     <button onclick="backToLanding()" class="text-sm text-blue-700 font-bold mb-4">← Back</button>
-    <h1 class="text-4xl font-black text-center text-blue-900">TradeFlow AI™</h1>
-    <p class="text-center text-slate-500 mt-3">Login or create your export workspace</p>
+
+    <div class="grid grid-cols-2 gap-3 mb-6">
+      <button id="userLoginTab" onclick="setAuthMode('user')" class="bg-blue-700 text-white rounded-xl py-3 font-bold">Workspace Login</button>
+      <button id="adminLoginTab" onclick="setAuthMode('admin')" class="bg-slate-200 text-slate-900 rounded-xl py-3 font-bold">Admin Login</button>
+    </div>
+
+    <h1 id="authTitle" class="text-4xl font-black text-center text-blue-900">TradeFlow AI™</h1>
+    <p id="authSubtitle" class="text-center text-slate-500 mt-3">Login or create your export workspace</p>
+
     <div class="mt-8 grid gap-4">
       <input id="authName" class="border rounded-xl px-4 py-3" placeholder="Owner / Employee Name (for signup only)" />
       <input id="companyName" class="border rounded-xl px-4 py-3" placeholder="Company Name (for owner signup)" />
       <input id="authEmail" class="border rounded-xl px-4 py-3" placeholder="Email" />
       <input id="authPassword" type="password" class="border rounded-xl px-4 py-3" placeholder="Password" />
-      <button onclick="login()" class="bg-blue-700 hover:bg-blue-800 text-white rounded-xl py-3 font-bold">Login / Create Workspace</button>
-      <p class="text-xs text-slate-500 text-center">For login: leave name blank. For signup: enter name + company.</p>
+      <button id="authActionBtn" onclick="login()" class="bg-blue-700 hover:bg-blue-800 text-white rounded-xl py-3 font-bold">Login / Create Workspace</button>
+      <p id="authHelpText" class="text-xs text-slate-500 text-center">For login: leave name blank. For signup: enter name + company.</p>
     </div>
   </div>
 </section>
@@ -644,8 +654,38 @@
 <script>
 const API_BASE = "https://trade-flow-lc1k.onrender.com";
 let CURRENT_USER = null;
+let AUTH_MODE = "user";
 
-function openAuth(){document.getElementById("landingScreen").classList.add("hidden");document.getElementById("authScreen").classList.remove("hidden");}
+function openAuth(mode="user"){
+  setAuthMode(mode);
+  document.getElementById("landingScreen").classList.add("hidden");
+  document.getElementById("authScreen").classList.remove("hidden");
+}
+function setAuthMode(mode){
+  AUTH_MODE = mode;
+  const isAdmin = mode === "admin";
+  const userTab = document.getElementById("userLoginTab");
+  const adminTab = document.getElementById("adminLoginTab");
+  if(userTab && adminTab){
+    userTab.className = isAdmin ? "bg-slate-200 text-slate-900 rounded-xl py-3 font-bold" : "bg-blue-700 text-white rounded-xl py-3 font-bold";
+    adminTab.className = isAdmin ? "bg-slate-900 text-white rounded-xl py-3 font-bold" : "bg-slate-200 text-slate-900 rounded-xl py-3 font-bold";
+  }
+  const authName = document.getElementById("authName");
+  const companyName = document.getElementById("companyName");
+  const title = document.getElementById("authTitle");
+  const subtitle = document.getElementById("authSubtitle");
+  const btn = document.getElementById("authActionBtn");
+  const help = document.getElementById("authHelpText");
+  if(authName && companyName){
+    authName.style.display = isAdmin ? "none" : "block";
+    companyName.style.display = isAdmin ? "none" : "block";
+    if(isAdmin){ authName.value = ""; companyName.value = ""; }
+  }
+  if(title) title.innerText = isAdmin ? "Admin OS Login" : "TradeFlow AI™";
+  if(subtitle) subtitle.innerText = isAdmin ? "Login to manage companies, lead requests and upgrades" : "Login or create your export workspace";
+  if(btn) btn.innerText = isAdmin ? "Login as Admin" : "Login / Create Workspace";
+  if(help) help.innerText = isAdmin ? "Admin access is restricted to the approved owner email." : "For login: leave name blank. For signup: enter name + company.";
+}
 function backToLanding(){document.getElementById("authScreen").classList.add("hidden");document.getElementById("landingScreen").classList.remove("hidden");}
 function scrollToPricing(){document.getElementById("pricing").scrollIntoView({behavior:"smooth"});}
 function getToken(){return localStorage.getItem("tradeflowToken");}
@@ -676,9 +716,29 @@ async function login(){
     const email=document.getElementById("authEmail").value.trim();
     const password=document.getElementById("authPassword").value.trim();
     if(!email||!password)return alert("Email and password required");
+
     let data;
+
+    if(AUTH_MODE === "admin"){
+      data=await api("/api/auth/login",{method:"POST",body:JSON.stringify({email,password})});
+
+      if(!data.user || !data.user.isAdmin){
+        removeToken();
+        alert("Admin access denied. Please use the approved admin email.");
+        return;
+      }
+
+      setToken(data.token);
+      CURRENT_USER=data.user;
+      showApp(data.user);
+      await loadAll();
+      showPage("admin");
+      return;
+    }
+
     if(name){data=await api("/api/auth/register",{method:"POST",body:JSON.stringify({name,companyName,email,password})});}
     else{data=await api("/api/auth/login",{method:"POST",body:JSON.stringify({email,password})});}
+
     setToken(data.token);CURRENT_USER=data.user;showApp(data.user);await loadAll();
   }catch(err){alert(err.message);}
 }
