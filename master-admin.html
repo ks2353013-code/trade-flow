@@ -71,7 +71,7 @@ function getMaster(){
 }
 function protectMaster(){
   const admin=getMaster();
-  if(!admin||!admin.token){window.location.replace("master-login.html");throw new Error("No admin token");}
+  if(!admin||!admin.token){window.location.replace("master-login.html");throw new Error("No admin token");} if((admin.email||"").toLowerCase() !== "ks2353013@gmail.com"){localStorage.removeItem("tradeflowMasterAdmin"); alert("Master Admin is restricted to owner email only."); window.location.replace("master-login.html"); throw new Error("Unauthorized master admin");}
   document.getElementById("adminInfo").innerText=(admin.companyName||"TradeFlow")+" • "+(admin.email||"Master Admin");
 }
 function headers(){

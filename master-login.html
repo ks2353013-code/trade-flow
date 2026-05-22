@@ -55,24 +55,50 @@
         <div class="field"><label>Password</label><input type="password" id="password" placeholder="Enter password"></div>
         <button class="btn" onclick="loginMasterAdmin()">Enter Master Admin</button>
         <div class="switch"><a href="login.html">Back to user login</a></div>
-        <div class="legal">Master admin area • TradeFlow™ Cloud SaaS OS • © 2026</div>
+        <div class="legal">Only owner email can access Master Admin: ks2353013@gmail.com<br>Master admin area • TradeFlow™ Cloud SaaS OS • © 2026</div>
       </div>
     </section>
   </main>
 <script>
 const API_BASE="https://trade-flow-lc1k.onrender.com";
 async function loginMasterAdmin(){
-  const email=document.getElementById("email").value.trim();
+  const email=document.getElementById("email").value.trim().toLowerCase();
   const password=document.getElementById("password").value.trim();
-  if(!email||!password){alert("Enter admin email and password");return;}
+
+  if(!email||!password){
+    alert("Enter admin email and password");
+    return;
+  }
+
+  if(email !== "ks2353013@gmail.com"){
+    alert("Access denied. Master Admin is only for the TradeFlow owner email.");
+    return;
+  }
+
   try{
-    const res=await fetch(`${API_BASE}/api/auth/login`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,password})});
+    const res=await fetch(`${API_BASE}/api/auth/login`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({email,password})
+    });
+
     const data=await res.json();
-    if(!res.ok){alert(data.message||"Master admin login failed");return;}
-    if(!data.token){alert("Admin token not received");return;}
+
+    if(!res.ok){
+      alert(data.message||"Master admin login failed");
+      return;
+    }
+
+    if(!data.token){
+      alert("Admin token not received");
+      return;
+    }
+
     localStorage.setItem("tradeflowMasterAdmin",JSON.stringify(data));
     window.location.href="master-admin.html";
-  }catch(error){alert("Backend connection failed. Open backend once: "+API_BASE);}
+  }catch(error){
+    alert("Backend connection failed. Open backend once: "+API_BASE);
+  }
 }
 </script>
 </body></html>
