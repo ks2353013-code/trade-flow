@@ -1,4 +1,4 @@
-/* TradeFlow AI Chat Console + Live Business Intelligence */
+/* TradeFlow AI Chat Console + Real OpenAI Trade Agent Connection */
 
 (function () {
   const CHAT_KEY = "tradeflowAiChatHistory";
@@ -24,6 +24,22 @@
     return new Date().toLocaleString();
   }
 
+  function getBackendUrl() {
+    if (typeof BACKEND_URL !== "undefined") return BACKEND_URL;
+    return "https://trade-flow-lc1k.onrender.com";
+  }
+
+  function getAuthHeadersSafe() {
+    if (typeof getAuthHeaders === "function") return getAuthHeaders();
+
+    const user = JSON.parse(localStorage.getItem("tradeflowUser") || "{}");
+
+    return {
+      "Content-Type": "application/json",
+      "Authorization": user.token ? `Bearer ${user.token}` : ""
+    };
+  }
+
   function addBusinessFeed(type, message) {
     const feed = getJson(BI_KEY, []);
     feed.unshift({ type, message, time: now() });
@@ -43,11 +59,12 @@
       pipeline: read("dashboardPipelineValue"),
       closed: read("dashboardClosedDeals"),
       alerts: read("dashboardUnreadNotifications"),
-      workspaces: read("dashboardWorkspaceCount")
+      workspaces: read("dashboardWorkspaceCount"),
+      activeWorkspace: localStorage.getItem("tradeflowActiveWorkspaceName") || "None"
     };
   }
 
-  function buildAiReply(prompt) {
+  function fallbackReply(prompt) {
     const p = (prompt || "").toLowerCase();
     const ctx = getContextNumbers();
 
@@ -61,10 +78,7 @@ Recommended action:
 2. Prioritize suppliers with complete contact details.
 3. Move high-quality suppliers into CRM.
 4. Send WhatsApp + email outreach from TradeFlow.
-5. Ask for catalogue, MOQ, price, packaging, and export documents.
-
-AI note:
-Strong suppliers should have clear documents, fast replies, and realistic pricing.`;
+5. Ask for catalogue, MOQ, price, packaging, and export documents.`;
     }
 
     if (p.includes("crm") || p.includes("deal") || p.includes("pipeline")) {
@@ -79,10 +93,7 @@ Recommended action:
 2. Move serious replies into Negotiation.
 3. Do not keep dead leads inside active stages.
 4. Use AI Deal Advice on each CRM card.
-5. Focus on high-value opportunities first.
-
-AI note:
-Your CRM should behave like a revenue machine, not just a storage table.`;
+5. Focus on high-value opportunities first.`;
     }
 
     if (p.includes("outreach") || p.includes("email") || p.includes("whatsapp")) {
@@ -93,14 +104,7 @@ Recommended outreach workflow:
 2. Personalize it by product and country.
 3. Send email first for professionalism.
 4. Send WhatsApp follow-up for faster response.
-5. Save every reply into CRM.
-
-Best message structure:
-• Greeting
-• Product interest
-• MOQ/pricing request
-• Certification/document request
-• Clear next step`;
+5. Save every reply into CRM.`;
     }
 
     if (p.includes("document") || p.includes("export") || p.includes("invoice")) {
@@ -116,10 +120,7 @@ Core export checklist:
 7. Bill of Lading / Airway Bill
 8. Insurance Certificate
 9. IEC / GST details
-10. Product-specific compliance certificates
-
-AI note:
-Before dispatch, confirm destination-country compliance and payment terms.`;
+10. Product-specific compliance certificates`;
     }
 
     if (p.includes("risk") || p.includes("verify") || p.includes("fraud")) {
@@ -131,10 +132,7 @@ Supplier / buyer risk checks:
 3. Avoid unrealistic pricing.
 4. Confirm export/import history.
 5. Prefer company email over personal email.
-6. Request GST/IEC or legal registration where applicable.
-
-AI warning:
-High margin is useless if supplier reliability is weak.`;
+6. Request GST/IEC or legal registration where applicable.`;
     }
 
     if (p.includes("today") || p.includes("next") || p.includes("focus")) {
@@ -150,10 +148,7 @@ Priority plan:
 2. Send 3 high-quality outreach messages.
 3. Follow up active CRM deals.
 4. Prepare quotation/document checklist.
-5. Clear unread alerts.
-
-AI goal:
-Create momentum every day: lead → outreach → CRM → negotiation → documents → closure.`;
+5. Clear unread alerts.`;
     }
 
     return `🤖 TradeFlow AI
@@ -175,6 +170,35 @@ Try asking:
 “Check supplier risk”`;
   }
 
+  async function callRealTradeAgent(prompt) {
+    const context = getContextNumbers();
+
+    const response = await fetch(`${getBackendUrl()}/api/ai/trade-agent`, {
+      method: "POST",
+      headers: getAuthHeadersSafe(),
+      body: JSON.stringify({
+        prompt,
+        context
+      })
+    });
+
+    if (response.status === 401) {
+      if (typeof logoutUser === "function") logoutUser();
+      throw new Error("Unauthorized");
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "TradeFlow AI request failed");
+    }
+
+    return {
+      mode: data.mode || "openai",
+      output: data.output || fallbackReply(prompt)
+    };
+  }
+
   function renderChat() {
     const box = $("tradeflowLiveAiMessages");
     if (!box) return;
@@ -190,7 +214,7 @@ Try asking:
       <div class="supplier-card" style="margin-bottom:12px;">
         <b>${item.role === "user" ? "You" : "TradeFlow AI"}</b>
         <p class="muted" style="white-space:pre-wrap;margin-top:8px;">${item.text}</p>
-        <span class="status">${item.time}</span>
+        <span class="status">${item.time}${item.mode ? " • " + item.mode : ""}</span>
       </div>
     `).join("");
 
@@ -219,14 +243,14 @@ Try asking:
     `).join("");
   }
 
-  function addChat(role, text) {
+  function addChat(role, text, mode = "") {
     const history = getJson(CHAT_KEY, []);
-    history.push({ role, text, time: now() });
+    history.push({ role, text, time: now(), mode });
     setJson(CHAT_KEY, history.slice(-30));
     renderChat();
   }
 
-  function askTradeFlowAI() {
+  async function askTradeFlowAI() {
     const input = $("tradeflowLiveAiInput");
     if (!input) return;
 
@@ -241,14 +265,25 @@ Try asking:
     input.value = "";
 
     const typing = $("tradeflowAiTyping");
-    if (typing) typing.innerText = "TradeFlow AI is thinking...";
+    if (typing) typing.innerText = "TradeFlow AI is thinking with real trade context...";
 
-    setTimeout(() => {
-      const reply = buildAiReply(prompt);
-      addChat("ai", reply);
-      addBusinessFeed("🤖 AI Assistant", `Answered: ${prompt}`);
+    try {
+      const result = await callRealTradeAgent(prompt);
+      addChat("ai", result.output, result.mode === "openai" ? "Real AI" : "Fallback");
+      addBusinessFeed("🤖 Trade Agent", `${result.mode === "openai" ? "Real OpenAI" : "Fallback AI"} answered: ${prompt}`);
+
+      const consoleBox = $("tradeflowAiConsole");
+      if (consoleBox) consoleBox.value = result.output;
+    } catch (error) {
+      const fallback = fallbackReply(prompt);
+      addChat("ai", fallback, "Local Fallback");
+      addBusinessFeed("⚠️ AI Fallback", `Real AI unavailable. Local fallback answered: ${prompt}`);
+
+      const consoleBox = $("tradeflowAiConsole");
+      if (consoleBox) consoleBox.value = fallback;
+    } finally {
       if (typing) typing.innerText = "";
-    }, 650);
+    }
   }
 
   function clearAiChat() {
@@ -266,6 +301,7 @@ Pipeline Value: ${ctx.pipeline}
 Closed Deals: ${ctx.closed}
 Unread Alerts: ${ctx.alerts}
 Workspaces: ${ctx.workspaces}
+Active Workspace: ${ctx.activeWorkspace}
 
 AI Recommendation:
 Improve supplier-to-CRM conversion and keep outreach active daily.`;
@@ -352,9 +388,9 @@ Improve supplier-to-CRM conversion and keep outreach active daily.`;
     panel.id = "tradeflowAiChatPanel";
     panel.className = "card ai-panel";
     panel.innerHTML = `
-      <div class="section-title">💬 TradeFlow AI Chat Console</div>
+      <div class="section-title">💬 TradeFlow Real AI Chat Console</div>
       <p class="muted">
-        Ask your AI trade operator about suppliers, CRM, outreach, documents, risk, and today’s business focus.
+        Connected to backend route <b>/api/ai/trade-agent</b>. If OpenAI key is missing, fallback mode will still answer.
       </p>
 
       <div class="tradeflow-ai-chat-grid" style="margin-top:16px;">
@@ -362,8 +398,8 @@ Improve supplier-to-CRM conversion and keep outreach active daily.`;
           <div id="tradeflowLiveAiMessages" class="tradeflow-ai-messages"></div>
 
           <div class="tradeflow-ai-input-row">
-            <input id="tradeflowLiveAiInput" placeholder="Ask: Give me today’s focus / Analyze CRM / Write outreach...">
-            <button class="btn" onclick="TradeFlowAIChat.ask()">Ask AI</button>
+            <input id="tradeflowLiveAiInput" placeholder="Ask: Find suppliers / Analyze CRM / Write outreach / Export checklist...">
+            <button class="btn" onclick="TradeFlowAIChat.ask()">Ask Real AI</button>
           </div>
 
           <div id="tradeflowAiTyping" class="tradeflow-ai-typing"></div>
