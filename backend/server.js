@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 const connectDB = require("./config/db");
 
@@ -25,9 +26,9 @@ app.use(express.json());
 
 connectDB();
 
-app.get("/", (req, res) => {
-  res.send("TradeFlow Backend Running");
-});
+/* =========================
+   API ROUTES
+========================= */
 
 app.use("/suppliers", supplierRoutes);
 
@@ -37,7 +38,7 @@ app.use("/api/deals", dealRoutes);
 
 app.use("/api/ai", aiRoutes);
 
-app.use("/api/tasks", taskRoutes); 
+app.use("/api/tasks", taskRoutes);
 
 app.use("/api/pdf", pdfRoutes);
 
@@ -53,8 +54,22 @@ app.use("/api/notifications", notificationRoutes);
 
 app.use("/api/workspaces", workspaceRoutes);
 
+/* =========================
+   FRONTEND SERVING
+========================= */
+
+app.use(express.static(path.join(__dirname, "../frontend")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/index.html"));
+});
+
+/* =========================
+   SERVER START
+========================= */
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`✅ TradeFlow Server running on port ${PORT}`);
 });
