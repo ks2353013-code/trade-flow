@@ -1,7 +1,7 @@
 {
-  "name": "tradeflow-os-backend",
+  "name": "tradeflow",
   "version": "1.0.0",
-  "description": "TradeFlow OS Master SaaS Backend",
+  "description": "TradeFlow AI Operating System",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
