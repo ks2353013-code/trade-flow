@@ -3,9 +3,13 @@ const OpenAI = require("openai");
 
 const router = express.Router();
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+function getOpenAIClient() {
+  if (!process.env.OPENAI_API_KEY) return null;
+
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
+  });
+}
 
 function fallbackAI(prompt) {
   return `
@@ -33,7 +37,9 @@ router.post("/trade-agent", async (req, res) => {
       return res.status(400).json({ message: "Prompt is required" });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    const client = getOpenAIClient();
+
+    if (!client) {
       return res.json({
         mode: "fallback",
         output: fallbackAI(prompt)
