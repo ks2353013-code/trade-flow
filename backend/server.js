@@ -18,6 +18,7 @@ const emailRoutes = require("./routes/emailRoutes");
 const employeeRoutes = require("./routes/employeeRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const workspaceRoutes = require("./routes/workspaceRoutes");
+const activityRoutes = require("./routes/activityRoutes");
 
 const app = express();
 
@@ -53,6 +54,8 @@ app.use("/api/employees", employeeRoutes);
 app.use("/api/notifications", notificationRoutes);
 
 app.use("/api/workspaces", workspaceRoutes);
+
+app.use("/api/activity", activityRoutes);
 
 /* =========================
    FRONTEND SERVING
