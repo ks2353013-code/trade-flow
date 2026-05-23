@@ -1,1651 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TradeFlow Cloud — Advanced SaaS Workspace</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    :root {
-      --bg: #020617;
-      --panel: rgba(15, 23, 42, 0.76);
-      --panel-strong: rgba(15, 23, 42, 0.94);
-      --line: rgba(148, 163, 184, 0.16);
-      --muted: #94a3b8;
-      --text: #e5e7eb;
-      --white: #ffffff;
-      --blue: #38bdf8;
-      --purple: #8b5cf6;
-      --green: #22c55e;
-      --danger: #ef4444;
-    }
-
-    body {
-      margin: 0;
-      font-family: Inter, Arial, sans-serif;
-      background:
-        radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.16), transparent 28%),
-        radial-gradient(circle at 92% 10%, rgba(139, 92, 246, 0.16), transparent 28%),
-        radial-gradient(circle at 50% 100%, rgba(34, 197, 94, 0.08), transparent 30%),
-        var(--bg);
-      color: var(--text);
-      overflow-x: hidden;
-    }
-
-    .app {
-      display: flex;
-      min-height: 100vh;
-    }
-
-    .sidebar {
-      width: 280px;
-      height: 100vh;
-      position: fixed;
-      left: 0;
-      top: 0;
-      padding: 18px 14px;
-      background:
-        linear-gradient(180deg, rgba(2,6,23,.98), rgba(15,23,42,.96));
-      border-right: 1px solid var(--line);
-      overflow-y: auto;
-      overflow-x: hidden;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(56,189,248,.75) transparent;
-      z-index: 50;
-    }
-
-    .sidebar::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    .sidebar::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .sidebar::-webkit-scrollbar-thumb {
-      background: linear-gradient(180deg, #38bdf8, #8b5cf6);
-      border-radius: 999px;
-    }
-
-    .brand {
-      padding: 18px;
-      border-radius: 24px;
-      margin-bottom: 18px;
-      background:
-        radial-gradient(circle at top left, rgba(56,189,248,.28), transparent 48%),
-        linear-gradient(135deg, rgba(14,165,233,.16), rgba(139,92,246,.14));
-      border: 1px solid rgba(125,211,252,.22);
-      box-shadow: 0 18px 45px rgba(0,0,0,.22);
-    }
-
-    .brand h1 {
-      margin: 0;
-      font-size: 28px;
-      line-height: 1;
-      font-weight: 950;
-      color: white;
-      letter-spacing: -.8px;
-    }
-
-    .brand h1::first-letter {
-      color: var(--blue);
-    }
-
-    .brand p {
-      margin: 8px 0 0;
-      color: #cbd5e1;
-      font-size: 12px;
-      line-height: 1.45;
-    }
-
-    .nav-btn {
-      width: 100%;
-      padding: 12px 13px;
-      margin-bottom: 8px;
-      border: 1px solid rgba(148,163,184,.12);
-      border-radius: 16px;
-      background: rgba(15, 23, 42, .72);
-      color: #dbeafe;
-      text-align: left;
-      cursor: pointer;
-      transition: .22s ease;
-      font-size: 13.5px;
-      font-weight: 800;
-      letter-spacing: -.1px;
-    }
-
-    .nav-btn:hover {
-      transform: translateX(4px);
-      background: linear-gradient(135deg, rgba(14,165,233,.45), rgba(139,92,246,.36));
-      border-color: rgba(56,189,248,.45);
-      color: white;
-      box-shadow: 0 12px 28px rgba(14,165,233,.12);
-    }
-
-    .logout {
-      background: rgba(239, 68, 68, .12);
-      border-color: rgba(239, 68, 68, .28);
-      color: #fecaca;
-    }
-
-    .main {
-      margin-left: 280px;
-      width: calc(100% - 280px);
-      min-height: 100vh;
-      padding: 26px;
-    }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: center;
-      padding: 18px 20px;
-      border-radius: 26px;
-      background: rgba(15,23,42,.64);
-      border: 1px solid var(--line);
-      backdrop-filter: blur(20px);
-      margin-bottom: 22px;
-      box-shadow: 0 18px 55px rgba(0,0,0,.18);
-    }
-
-    .page-title {
-      font-size: 26px;
-      font-weight: 950;
-      color: white;
-      letter-spacing: -.7px;
-    }
-
-    .muted {
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.6;
-    }
-
-    .pill {
-      padding: 10px 14px;
-      border-radius: 999px;
-      background: rgba(56,189,248,.11);
-      border: 1px solid rgba(56,189,248,.24);
-      color: #7dd3fc;
-      font-size: 13px;
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
-    .grid {
-      display: grid;
-      gap: 18px;
-    }
-
-    .grid-4 {
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    }
-
-    .grid-3 {
-      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
-    }
-
-    .grid-2 {
-      grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
-    }
-
-    .card {
-      padding: 22px;
-      border-radius: 26px;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      backdrop-filter: blur(18px);
-      box-shadow: 0 18px 55px rgba(0,0,0,.20);
-      margin-bottom: 20px;
-    }
-
-    .card:hover {
-      border-color: rgba(56,189,248,.25);
-    }
-
-    .section-title {
-      font-size: 21px;
-      font-weight: 950;
-      margin-bottom: 9px;
-      color: white;
-      letter-spacing: -.4px;
-    }
-
-    .dashboard-hero {
-      position: relative;
-      overflow: hidden;
-      padding: 30px;
-      border-radius: 34px;
-      background:
-        radial-gradient(circle at 12% 14%, rgba(56,189,248,.28), transparent 32%),
-        radial-gradient(circle at 88% 18%, rgba(139,92,246,.24), transparent 30%),
-        linear-gradient(135deg, rgba(15,23,42,.92), rgba(2,6,23,.82));
-      border: 1px solid rgba(125,211,252,.20);
-      box-shadow: 0 24px 80px rgba(0,0,0,.28);
-      margin-bottom: 22px;
-    }
-
-    .dashboard-hero::after {
-      content: "TradeFlow";
-      position: absolute;
-      right: -18px;
-      bottom: -26px;
-      font-size: 92px;
-      line-height: .8;
-      font-weight: 950;
-      letter-spacing: -5px;
-      color: rgba(255,255,255,.035);
-      pointer-events: none;
-    }
-
-    .hero-kicker {
-      display: inline-flex;
-      padding: 9px 13px;
-      border-radius: 999px;
-      background: rgba(34,197,94,.12);
-      border: 1px solid rgba(34,197,94,.22);
-      color: #86efac;
-      font-size: 12px;
-      font-weight: 900;
-      margin-bottom: 16px;
-    }
-
-    .hero-title {
-      margin: 0;
-      max-width: 820px;
-      color: white;
-      font-size: clamp(34px, 4.4vw, 58px);
-      line-height: 1;
-      letter-spacing: -2.3px;
-      font-weight: 950;
-    }
-
-    .hero-title span {
-      background: linear-gradient(135deg, #38bdf8, #a78bfa, #22c55e);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .hero-copy {
-      max-width: 760px;
-      color: #cbd5e1;
-      line-height: 1.7;
-      font-size: 15.5px;
-      margin: 16px 0 0;
-    }
-
-    .hero-actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 22px;
-      max-width: 760px;
-    }
-
-    .hero-chip {
-      padding: 10px 13px;
-      border-radius: 999px;
-      background: rgba(15,23,42,.72);
-      border: 1px solid rgba(148,163,184,.15);
-      color: #dbeafe;
-      font-size: 13px;
-      font-weight: 800;
-    }
-
-    .metric {
-      min-height: 130px;
-      position: relative;
-      overflow: hidden;
-      background:
-        radial-gradient(circle at top right, rgba(56,189,248,.13), transparent 42%),
-        linear-gradient(135deg, rgba(15,23,42,.90), rgba(2,6,23,.78));
-    }
-
-    .metric h3 {
-      color: #a5b4fc;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .7px;
-      margin: 0 0 13px;
-      font-weight: 900;
-    }
-
-    .metric p {
-      font-size: 34px;
-      line-height: 1;
-      font-weight: 950;
-      color: white;
-      margin: 0;
-      letter-spacing: -1px;
-    }
-
-    .metric span {
-      display: block;
-      margin-top: 10px;
-      color: #86efac;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .quick-card {
-      min-height: 170px;
-      background:
-        linear-gradient(135deg, rgba(15,23,42,.86), rgba(15,23,42,.62));
-    }
-
-    .quick-card .icon {
-      font-size: 28px;
-      margin-bottom: 12px;
-    }
-
-    .quick-card p {
-      margin: 0;
-      color: #cbd5e1;
-      line-height: 1.6;
-      font-size: 14px;
-    }
-
-    input, textarea, select {
-      width: 100%;
-      padding: 14px;
-      margin-top: 10px;
-      border: 1px solid rgba(148,163,184,.17);
-      border-radius: 16px;
-      background: rgba(2,6,23,.74);
-      color: white;
-      outline: none;
-      font-size: 14px;
-    }
-
-    input:focus, textarea:focus, select:focus {
-      border-color: rgba(56,189,248,.68);
-      box-shadow: 0 0 0 4px rgba(14,165,233,.10);
-    }
-
-    textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
-
-    .btn {
-      width: 100%;
-      padding: 14px;
-      margin-top: 14px;
-      border: none;
-      border-radius: 16px;
-      background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
-      color: white;
-      font-weight: 900;
-      cursor: pointer;
-      transition: .22s ease;
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 16px 38px rgba(14,165,233,.22);
-    }
-
-    .danger-btn {
-      background: linear-gradient(135deg, #ef4444, #f97316);
-      padding: 9px 13px;
-      border-radius: 13px;
-      border: none;
-      color: white;
-      cursor: pointer;
-      margin-top: 12px;
-      font-weight: 800;
-    }
-
-    .mini-btn {
-      padding: 9px 10px;
-      border: none;
-      border-radius: 13px;
-      background: rgba(56,189,248,.16);
-      color: #7dd3fc;
-      cursor: pointer;
-      margin-top: 8px;
-      width: 100%;
-      font-weight: 800;
-    }
-
-    .supplier-card {
-      padding: 18px;
-      border-radius: 22px;
-      background: linear-gradient(135deg, rgba(15,23,42,.92), rgba(2,6,23,.72));
-      border: 1px solid rgba(56,189,248,.16);
-      margin-bottom: 14px;
-    }
-
-    .status {
-      display: inline-block;
-      margin-top: 8px;
-      padding: 7px 11px;
-      border-radius: 999px;
-      background: rgba(34,197,94,.12);
-      color: #86efac;
-      font-size: 12px;
-      font-weight: 900;
-      border: 1px solid rgba(34,197,94,.22);
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    .kanban {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      gap: 16px;
-    }
-
-    .column {
-      padding: 16px;
-      border-radius: 22px;
-      background: rgba(15,23,42,.68);
-      border: 1px solid rgba(148,163,184,.15);
-      min-height: 260px;
-    }
-
-    .column.drag-over {
-      border-color: rgba(56,189,248,.75);
-      background: rgba(14,165,233,.14);
-      box-shadow: 0 0 30px rgba(14,165,233,.18);
-    }
-
-    .deal {
-      margin-top: 12px;
-      padding: 14px;
-      border-radius: 17px;
-      background: rgba(2,6,23,.66);
-      border: 1px solid rgba(148,163,184,.12);
-    }
-
-    .deal[draggable="true"] {
-      cursor: grab;
-      transition: .2s;
-    }
-
-    .deal[draggable="true"]:active {
-      cursor: grabbing;
-      transform: scale(.98);
-    }
-
-    .drag-hint {
-      color: #7dd3fc;
-      font-size: 12px;
-      margin-top: 8px;
-    }
-
-    .ai-panel {
-      background:
-        radial-gradient(circle at top left, rgba(14,165,233,.13), transparent 45%),
-        linear-gradient(135deg, rgba(14,165,233,.10), rgba(139,92,246,.10));
-      border: 1px solid rgba(125,211,252,.20);
-    }
-
-    .ai-output {
-      white-space: pre-wrap;
-      line-height: 1.6;
-    }
-
-
-    .admin-hero {
-      position: relative;
-      overflow: hidden;
-      padding: 30px;
-      border-radius: 34px;
-      background:
-        radial-gradient(circle at 12% 14%, rgba(168,85,247,.26), transparent 32%),
-        radial-gradient(circle at 88% 18%, rgba(56,189,248,.22), transparent 30%),
-        linear-gradient(135deg, rgba(15,23,42,.94), rgba(2,6,23,.84));
-      border: 1px solid rgba(196,181,253,.22);
-      box-shadow: 0 24px 80px rgba(0,0,0,.28);
-      margin-bottom: 22px;
-    }
-
-    .admin-hero::after {
-      content: "Admin";
-      position: absolute;
-      right: -12px;
-      bottom: -28px;
-      font-size: 96px;
-      line-height: .8;
-      font-weight: 950;
-      letter-spacing: -5px;
-      color: rgba(255,255,255,.04);
-      pointer-events: none;
-    }
-
-    .admin-control-card {
-      background:
-        radial-gradient(circle at top left, rgba(168,85,247,.13), transparent 46%),
-        linear-gradient(135deg, rgba(15,23,42,.92), rgba(2,6,23,.74));
-    }
-
-    .approval-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    .approve-btn {
-      padding: 11px 12px;
-      border: none;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #16a34a, #22c55e);
-      color: white;
-      font-weight: 900;
-      cursor: pointer;
-    }
-
-    .reject-btn {
-      padding: 11px 12px;
-      border: none;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #dc2626, #f97316);
-      color: white;
-      font-weight: 900;
-      cursor: pointer;
-    }
-
-    .subscription-card {
-      background:
-        radial-gradient(circle at top right, rgba(234,179,8,.14), transparent 44%),
-        linear-gradient(135deg, rgba(15,23,42,.92), rgba(2,6,23,.78));
-      border-color: rgba(250,204,21,.18);
-    }
-
-    .plan-pill {
-      display: inline-flex;
-      padding: 7px 11px;
-      border-radius: 999px;
-      background: rgba(250,204,21,.12);
-      border: 1px solid rgba(250,204,21,.24);
-      color: #fde68a;
-      font-size: 12px;
-      font-weight: 900;
-      margin-top: 8px;
-    }
-
-    .status-approved {
-      background: rgba(34,197,94,.12);
-      border-color: rgba(34,197,94,.22);
-      color: #86efac;
-    }
-
-    .status-rejected {
-      background: rgba(239,68,68,.12);
-      border-color: rgba(239,68,68,.22);
-      color: #fca5a5;
-    }
-
-
-    .main {
-      animation: fadeIn .28s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: .0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .nav-btn {
-      will-change: transform;
-    }
-
-    footer {
-      margin-top: 28px;
-      text-align: center;
-      color: #64748b;
-      font-size: 13px;
-      padding: 20px;
-    }
-
-    @media (max-width: 900px) {
-      .sidebar {
-        position: relative;
-        width: 100%;
-        height: auto;
-        max-height: 60vh;
-      }
-
-      .app {
-        display: block;
-      }
-
-      .main {
-        margin-left: 0;
-        width: 100%;
-        padding: 18px;
-      }
-
-      .topbar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .dashboard-hero {
-        padding: 22px;
-      }
-
-      .dashboard-hero::after {
-        font-size: 58px;
-      }
-    }
-  </style>
-
-</head>
-
-<body>
-<div class="app">
-
-  <aside class="sidebar">
-    <div class="brand">
-      <h1>TradeFlow™</h1>
-      <p>Advanced Export / Import AI SaaS OS</p>
-    </div>
-
-    <button class="nav-btn" onclick="showPage('dashboard')">📊 Command Dashboard</button>
-    <button class="nav-btn" onclick="showPage('master')">🏢 Master Company</button>
-    <button class="nav-btn" onclick="showPage('workspaces')">🏬 Multi-company Workspace</button>
-    <button class="nav-btn" onclick="showPage('employees')">👥 Employees & Roles</button>
-    <button class="nav-btn" onclick="showPage('suppliers')">🌍 Supplier Intelligence</button>
-    <button class="nav-btn" onclick="showPage('crm')">📈 CRM Pipeline</button>
-    <button class="nav-btn" onclick="showPage('negotiation')">💰 Negotiation Desk</button>
-    <button class="nav-btn" onclick="showPage('tasks')">✅ Task Automation</button>
-    <button class="nav-btn" onclick="showPage('marketing')">📣 Marketing & Branding</button>
-    <button class="nav-btn" onclick="showPage('documents')">📄 Export Documents</button>
-    <button class="nav-btn" onclick="showPage('outreach')">📧 Smart Outreach</button>
-    <button class="nav-btn" onclick="showPage('analytics')">📉 Analytics Center</button>
-    <button class="nav-btn" onclick="showPage('ai')">🤖 AI Command Center</button>
-    <button class="nav-btn" onclick="showPage('notifications')">🔔 Notifications Center <span id="sidebarUnreadCount"></span></button>
-    <button class="nav-btn" onclick="contactSupport()">📩 Contact Support</button>
-    <button class="nav-btn" onclick="window.location.href='master-login.html'">👑 Master Admin</button>
-    <button class="nav-btn logout" onclick="logoutUser()">🚪 Logout</button>
-  </aside>
-
-  <main class="main">
-
-    <div class="topbar">
-      <div>
-        <div class="page-title">TradeFlow Cloud Workspace</div>
-        <div class="muted" id="workspaceName">Premium SaaS workspace loading...</div>
-      </div>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-        <select id="activeWorkspaceSelect" onchange="setActiveWorkspace()" style="max-width:260px;margin-top:0;">
-          <option value="">Select Workspace</option>
-        </select>
-        <div class="pill" id="userBadge">Authenticated Workspace</div>
-      </div>
-    </div>
-
-    
-    <section id="dashboardPage">
-      <div class="dashboard-hero">
-        <div class="hero-kicker">Live SaaS Workspace • Export / Import OS</div>
-        <h1 class="hero-title">
-          Welcome to your <span>TradeFlow Command Center.</span>
-        </h1>
-        <p class="hero-copy">
-          A clean premium workspace for suppliers, CRM, tasks, analytics, export documents,
-          AI tools, outreach, employees, notifications, and multi-company trade operations.
-        </p>
-        <div class="hero-actions">
-          <div class="hero-chip">🌍 Supplier Intelligence</div>
-          <div class="hero-chip">📈 Drag & Drop CRM</div>
-          <div class="hero-chip">🤖 AI Command Center</div>
-          <div class="hero-chip">📄 PDF Export Docs</div>
-          <div class="hero-chip">📧 Email + WhatsApp</div>
-        </div>
-      </div>
-
-      <div class="grid grid-4">
-        <div class="card metric">
-          <h3>Total Suppliers</h3>
-          <p id="supplierCount">0</p>
-          <span>Live supplier database</span>
-        </div>
-
-        <div class="card metric">
-          <h3>CRM Deals</h3>
-          <p id="dashboardDealCount">0</p>
-          <span>Pipeline records</span>
-        </div>
-
-        <div class="card metric">
-          <h3>Pipeline Value</h3>
-          <p id="dashboardPipelineValue">0</p>
-          <span>Tracked deal value</span>
-        </div>
-
-        <div class="card metric">
-          <h3>Closed Deals</h3>
-          <p id="dashboardClosedDeals">0</p>
-          <span>Sales progress</span>
-        </div>
-
-        <div class="card metric">
-          <h3>Unread Alerts</h3>
-          <p id="dashboardUnreadNotifications">0</p>
-          <span>Notifications center</span>
-        </div>
-
-        <div class="card metric">
-          <h3>Workspaces</h3>
-          <p id="dashboardWorkspaceCount">0</p>
-          <span>Multi-company SaaS</span>
-        </div>
-      </div>
-
-      <div class="grid grid-3">
-        <div class="card quick-card ai-panel">
-          <div class="icon">🤖</div>
-          <div class="section-title">AI Command Center</div>
-          <p>Generate outreach, negotiation advice, CRM suggestions, document help, and task plans.</p>
-          <button class="btn" onclick="showPage('ai')">Open AI Center</button>
-        </div>
-
-        <div class="card quick-card">
-          <div class="icon">📈</div>
-          <div class="section-title">CRM Pipeline</div>
-          <p>Move deals through New Lead, Contacted, Negotiation, Closed, and Lost with drag and drop.</p>
-          <button class="btn" onclick="showPage('crm')">Open CRM</button>
-        </div>
-
-        <div class="card quick-card">
-          <div class="icon">🌍</div>
-          <div class="section-title">Supplier Workspace</div>
-          <p>Save supplier leads, score records, manage contacts, and connect them with outreach.</p>
-          <button class="btn" onclick="showPage('suppliers')">Open Suppliers</button>
-        </div>
-      </div>
-
-      <div class="grid grid-3">
-        <div class="card">
-          <div class="section-title">Today’s Focus</div>
-          <div class="deal">Check new supplier leads and update their status.</div>
-          <div class="deal">Move hot CRM deals to Negotiation or Closed.</div>
-          <div class="deal">Send follow-up from Smart Outreach.</div>
-        </div>
-
-        <div class="card">
-          <div class="section-title">Workspace Health</div>
-          <p class="muted">Backend connected to production.</p>
-          <p class="muted">MongoDB stores your private workspace records.</p>
-          <p class="muted">Login protection is active for SaaS security.</p>
-        </div>
-
-        <div class="card ai-panel">
-          <div class="section-title">Premium Modules</div>
-          <div class="deal">Employees + Permissions</div>
-          <div class="deal">Notifications Center</div>
-          <div class="deal">Multi-company Workspace</div>
-        </div>
-
-        <div class="card">
-          <div class="section-title">📩 Need help or updates?</div>
-          <p class="muted">
-            Company users can contact TradeFlow support for product updates, queries, onboarding help, or technical issues.
-          </p>
-          <div class="deal">Support Mail: <b>ks2353013@gmail.com</b></div>
-          <button class="btn" onclick="contactSupport()">Contact Support</button>
-        </div>
-
-      </div>
-    </section>
-
-
-    
-    <section id="masterPage" class="hidden">
-      <div class="admin-hero">
-        <div class="hero-kicker">Master Admin Control • TradeFlow™ SaaS</div>
-        <h1 class="hero-title">
-          Master Admin <span>Control Dashboard.</span>
-        </h1>
-        <p class="hero-copy">
-          This is not a normal company dashboard. This area is for the owner/admin to monitor companies,
-          approve or reject workspaces, view subscription status, and control the SaaS platform.
-        </p>
-        <div class="tm-badge">👑 Master Admin • Company Approval • Subscription Control</div>
-      </div>
-
-      <div class="grid grid-4">
-        <div class="card metric">
-          <h3>Total Companies</h3>
-          <p id="masterTotalCompanies">0</p>
-          <span>All company workspaces</span>
-        </div>
-
-        <div class="card metric">
-          <h3>Approved</h3>
-          <p id="masterApprovedCompanies">0</p>
-          <span>Active companies</span>
-        </div>
-
-        <div class="card metric">
-          <h3>Rejected</h3>
-          <p id="masterRejectedCompanies">0</p>
-          <span>Inactive companies</span>
-        </div>
-
-        <div class="card metric">
-          <h3>Subscription</h3>
-          <p id="masterSubscriptionPlan">Pro</p>
-          <span>Current SaaS plan</span>
-        </div>
-      </div>
-
-      <div class="grid grid-3">
-        <div class="card admin-control-card">
-          <div class="section-title">🏢 Master Company Profile</div>
-          <p class="muted">Admin profile and legal company identity for the SaaS owner.</p>
-
-          <input id="masterCompanyName" placeholder="Master Company Name">
-          <input id="masterOwnerName" placeholder="Owner / Admin Name">
-          <input id="masterGstNumber" placeholder="GST Number">
-          <input id="masterIecCode" placeholder="IEC Code">
-          <input id="masterCountry" placeholder="Business Country">
-          <input id="masterIndustry" placeholder="Primary Industry">
-
-          <button class="btn" onclick="saveMasterProfile()">Save Master Profile</button>
-        </div>
-
-        <div class="card subscription-card">
-          <div class="section-title">💳 Subscription Control</div>
-          <p class="muted">Visible SaaS subscription area restored for admin management.</p>
-
-          <div class="deal">Current Plan: <b id="subscriptionPlanText">Pro Exporter</b></div>
-          <div class="deal">Billing Status: <b id="subscriptionStatusText">Active</b></div>
-          <div class="deal">Company Limit: <b>10 Workspaces</b></div>
-          <div class="deal">Modules: <b>CRM, AI, PDF, Outreach, Analytics</b></div>
-
-          <select id="subscriptionPlan">
-            <option>Starter</option>
-            <option selected>Pro Exporter</option>
-            <option>Enterprise</option>
-            <option>Custom Agency</option>
-          </select>
-
-          <select id="subscriptionStatus">
-            <option selected>Active</option>
-            <option>Trial</option>
-            <option>Past Due</option>
-            <option>Cancelled</option>
-          </select>
-
-          <button class="btn" onclick="saveSubscriptionSettings()">Save Subscription</button>
-          <span class="plan-pill">Premium SaaS billing ready</span>
-        </div>
-
-        <div class="card ai-panel">
-          <div class="section-title">🔐 Admin Permissions</div>
-          <div class="deal">Approve or reject company workspaces</div>
-          <div class="deal">Manage subscription status</div>
-          <div class="deal">View active companies</div>
-          <div class="deal">Control employees and modules</div>
-          <button class="btn" onclick="showPage('workspaces')">Open Company Approvals</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="section-title">🏬 Company Approval Queue</div>
-        <p class="muted">Approve or reject companies from the admin side. Approved = Active, Rejected = Inactive.</p>
-        <div id="masterCompanyApprovalList"></div>
-      </div>
-    </section>
-
-
-    <section id="workspacesPage" class="hidden">
-
-      <div class="grid grid-3">
-
-        <div class="card">
-          <div class="section-title">🏬 Create Company Workspace</div>
-
-          <input id="workspaceCompanyName" placeholder="Company / Workspace Name">
-
-          <select id="workspaceBusinessType">
-            <option>Exporter</option>
-            <option>Importer</option>
-            <option selected>Both</option>
-            <option>Agency</option>
-            <option>Manufacturer</option>
-          </select>
-
-          <input id="workspaceCountry" placeholder="Country">
-          <input id="workspaceGstNumber" placeholder="GST Number">
-          <input id="workspaceIecCode" placeholder="IEC Code">
-          <input id="workspaceIndustry" placeholder="Industry / Product Category">
-
-          <select id="workspaceCurrency">
-            <option>USD</option>
-            <option>INR</option>
-            <option>AED</option>
-            <option>EUR</option>
-            <option>GBP</option>
-          </select>
-
-          <select id="workspaceStatus">
-            <option>Active</option>
-            <option>Inactive</option>
-          </select>
-
-          <button class="btn" onclick="addWorkspace()">
-            Save Workspace
-          </button>
-        </div>
-
-        <div class="card ai-panel">
-          <div class="section-title">🧠 Multi-company Intelligence</div>
-          <div class="deal">Manage multiple export/import companies</div>
-          <div class="deal">Switch active company workspace</div>
-          <div class="deal">Store IEC, GST, country, industry</div>
-          <div class="deal">Foundation for true multi-tenant SaaS</div>
-        </div>
-
-        <div class="card">
-          <div class="section-title">📊 Workspace Summary</div>
-          <div class="deal">Total Workspaces: <b id="workspaceCount">0</b></div>
-          <div class="deal">Active Workspaces: <b id="activeWorkspaceCount">0</b></div>
-          <div class="deal">Current Workspace: <b id="currentWorkspaceName">None</b></div>
-
-          <button class="btn" onclick="fetchWorkspaces()">
-            Refresh Workspaces
-          </button>
-        </div>
-
-      </div>
-
-      <div class="card">
-        <div class="section-title">🏢 Company Workspace Cards</div>
-        <div id="workspaceList"></div>
-      </div>
-
-    </section>
-
-
-    <section id="employeesPage" class="hidden">
-
-      <div class="grid grid-3">
-
-        <div class="card">
-          <div class="section-title">👥 Add Employee / Team Member</div>
-
-          <input id="employeeName" placeholder="Employee Name">
-          <input id="employeeEmail" placeholder="Employee Email">
-
-          <select id="employeeRole" onchange="applyRolePreset()">
-            <option>Admin</option>
-            <option>Sales Manager</option>
-            <option>Operations</option>
-            <option>Documentation</option>
-            <option>Viewer</option>
-          </select>
-
-          <select id="employeeStatus">
-            <option>Active</option>
-            <option>Inactive</option>
-          </select>
-
-          <div class="deal">
-            <b>Module Permissions</b>
-
-            <label><input type="checkbox" id="permDashboard" checked> Dashboard</label><br>
-            <label><input type="checkbox" id="permSuppliers"> Suppliers</label><br>
-            <label><input type="checkbox" id="permCrm"> CRM</label><br>
-            <label><input type="checkbox" id="permTasks"> Tasks</label><br>
-            <label><input type="checkbox" id="permAnalytics"> Analytics</label><br>
-            <label><input type="checkbox" id="permDocuments"> Documents</label><br>
-            <label><input type="checkbox" id="permOutreach"> Outreach</label><br>
-            <label><input type="checkbox" id="permAi"> AI Command Center</label>
-          </div>
-
-          <button class="btn" onclick="addEmployee()">
-            Save Employee
-          </button>
-        </div>
-
-        <div class="card ai-panel">
-          <div class="section-title">🔐 Permission Intelligence</div>
-          <div class="deal">Admin: full workspace access</div>
-          <div class="deal">Sales: suppliers, CRM, outreach, tasks</div>
-          <div class="deal">Operations: tasks, docs, suppliers</div>
-          <div class="deal">Documentation: export docs focused</div>
-          <div class="deal">Viewer: dashboard + analytics only</div>
-        </div>
-
-        <div class="card">
-          <div class="section-title">📊 Team Summary</div>
-          <div class="deal">Total Employees: <b id="employeeCount">0</b></div>
-          <div class="deal">Active Employees: <b id="activeEmployeeCount">0</b></div>
-          <div class="deal">Admins: <b id="adminEmployeeCount">0</b></div>
-
-          <button class="btn" onclick="fetchEmployees()">
-            Refresh Team
-          </button>
-        </div>
-
-      </div>
-
-      <div class="card">
-        <div class="section-title">👥 Employee Access Control</div>
-        <div id="employeeList"></div>
-      </div>
-
-    </section>
-
-    <section id="suppliersPage" class="hidden">
-      <div class="grid grid-3">
-
-        <div class="card">
-          <div class="section-title">🌍 Add Supplier Lead</div>
-          <input id="supplierName" placeholder="Supplier Name">
-          <input id="product" placeholder="Product">
-          <input id="country" placeholder="Country">
-          <input id="email" placeholder="Email">
-          <input id="phone" placeholder="Phone">
-          <textarea id="notes" placeholder="Notes / deal context"></textarea>
-          <button class="btn" onclick="addSupplier()">Add Supplier</button>
-        </div>
-
-        <div class="card ai-panel">
-          <div class="section-title">Lead Intelligence</div>
-          <p class="muted">Auto-score supplier leads, mark verified leads, and prepare outreach strategy.</p>
-          <div class="deal">Verification Score: 75 default</div>
-          <div class="deal">Source: Manual Entry / AI Finder</div>
-          <div class="deal">Workspace: User-specific</div>
-        </div>
-
-        <div class="card">
-          <div class="section-title">Supplier Filters</div>
-          <input placeholder="Search supplier">
-          <select>
-            <option>All Countries</option>
-            <option>India</option>
-            <option>UAE</option>
-            <option>USA</option>
-            <option>China</option>
-          </select>
-          <button class="btn" onclick="fetchSuppliers()">Refresh Suppliers</button>
-        </div>
-
-      </div>
-
-      <div class="card">
-        <div class="section-title">Saved Suppliers</div>
-        <div id="supplierList"></div>
-      </div>
-    </section>
-
-    <section id="crmPage" class="hidden">
-
-      <div class="grid grid-3">
-
-        <div class="card">
-          <div class="section-title">➕ Add CRM Deal</div>
-
-          <input id="dealCompanyName" placeholder="Company / Buyer Name">
-          <input id="dealContactPerson" placeholder="Contact Person">
-          <input id="dealEmail" placeholder="Email">
-          <input id="dealPhone" placeholder="Phone">
-          <input id="dealProduct" placeholder="Product">
-          <input id="dealCountry" placeholder="Country">
-          <input id="dealValue" type="number" placeholder="Deal Value">
-
-          <select id="dealStage">
-            <option>New Lead</option>
-            <option>Contacted</option>
-            <option>Negotiation</option>
-            <option>Closed</option>
-            <option>Lost</option>
-          </select>
-
-          <select id="dealPriority">
-            <option>Low</option>
-            <option selected>Medium</option>
-            <option>High</option>
-          </select>
-
-          <textarea id="dealNotes" placeholder="Deal notes"></textarea>
-
-          <button class="btn" onclick="addDeal()">Save Deal</button>
-        </div>
-
-        <div class="card ai-panel">
-          <div class="section-title">🧲 Drag & Drop CRM</div>
-          <div class="deal">Drag cards between stages</div>
-          <div class="deal">Stage updates save to MongoDB</div>
-          <div class="deal">User-specific CRM pipeline</div>
-          <div class="deal">Premium SaaS kanban experience</div>
-        </div>
-
-        <div class="card">
-          <div class="section-title">📊 CRM Summary</div>
-          <div class="deal">Total Deals: <b id="dealCount">0</b></div>
-          <div class="deal">Closed Deals: <b id="closedDealCount">0</b></div>
-          <div class="deal">Pipeline Value: <b id="pipelineValue">0</b></div>
-        </div>
-
-      </div>
-
-      <div class="card">
-        <div class="section-title">📈 Drag & Drop CRM Pipeline</div>
-        <p class="muted">Drag any deal card into another stage. TradeFlow saves the new stage instantly.</p>
-
-        <div class="kanban">
-          <div class="column" data-stage="New Lead" ondragover="allowDealDrop(event)" ondragenter="highlightDropZone(event)" ondragleave="removeDropHighlight(event)" ondrop="dropDeal(event)">
-            <b>New Lead</b>
-            <div class="drag-hint">Drop new opportunities here</div>
-            <div id="newLeadDeals"></div>
-          </div>
-
-          <div class="column" data-stage="Contacted" ondragover="allowDealDrop(event)" ondragenter="highlightDropZone(event)" ondragleave="removeDropHighlight(event)" ondrop="dropDeal(event)">
-            <b>Contacted</b>
-            <div class="drag-hint">Supplier/buyer contacted</div>
-            <div id="contactedDeals"></div>
-          </div>
-
-          <div class="column" data-stage="Negotiation" ondragover="allowDealDrop(event)" ondragenter="highlightDropZone(event)" ondragleave="removeDropHighlight(event)" ondrop="dropDeal(event)">
-            <b>Negotiation</b>
-            <div class="drag-hint">Pricing and terms discussion</div>
-            <div id="negotiationDeals"></div>
-          </div>
-
-          <div class="column" data-stage="Closed" ondragover="allowDealDrop(event)" ondragenter="highlightDropZone(event)" ondragleave="removeDropHighlight(event)" ondrop="dropDeal(event)">
-            <b>Closed</b>
-            <div class="drag-hint">Successful deals</div>
-            <div id="closedDeals"></div>
-          </div>
-
-          <div class="column" data-stage="Lost" ondragover="allowDealDrop(event)" ondragenter="highlightDropZone(event)" ondragleave="removeDropHighlight(event)" ondrop="dropDeal(event)">
-            <b>Lost</b>
-            <div class="drag-hint">Not converted</div>
-            <div id="lostDeals"></div>
-          </div>
-        </div>
-      </div>
-
-    </section>
-
-    <section id="negotiationPage" class="hidden">
-      <div class="card">
-        <div class="section-title">💰 Negotiation Desk</div>
-        <input placeholder="Supplier Name">
-        <input placeholder="Quoted Price">
-        <input placeholder="Target Price">
-        <input placeholder="Expected Margin">
-        <button class="btn">Analyze Negotiation</button>
-      </div>
-    </section>
-
-    <section id="tasksPage" class="hidden">
-
-      <div class="grid grid-3">
-
-        <div class="card">
-          <div class="section-title">➕ Create Task</div>
-
-          <input id="taskTitle" placeholder="Task Title">
-          <input id="taskRelatedTo" placeholder="Related To (CRM / Supplier / Buyer)">
-          <input id="taskDueDate" type="date">
-
-          <select id="taskPriority">
-            <option>Low</option>
-            <option selected>Medium</option>
-            <option>High</option>
-          </select>
-
-          <select id="taskStatus">
-            <option>Pending</option>
-            <option>In Progress</option>
-            <option>Completed</option>
-          </select>
-
-          <textarea id="taskNotes" placeholder="Task Notes"></textarea>
-
-          <button class="btn" onclick="addTask()">
-            Create Task
-          </button>
-        </div>
-
-        <div class="card ai-panel">
-          <div class="section-title">🤖 AI Task Intelligence</div>
-          <div class="deal">User-specific task storage</div>
-          <div class="deal">Priority management</div>
-          <div class="deal">CRM-linked tasks</div>
-          <div class="deal">Future AI reminders</div>
-        </div>
-
-        <div class="card">
-          <div class="section-title">📊 Task Summary</div>
-          <div class="deal">Total Tasks: <b id="taskCount">0</b></div>
-          <div class="deal">Completed: <b id="completedTaskCount">0</b></div>
-          <div class="deal">Pending: <b id="pendingTaskCount">0</b></div>
-        </div>
-
-      </div>
-
-      <div class="card">
-        <div class="section-title">✅ Workspace Tasks</div>
-        <div id="taskList"></div>
-      </div>
-
-    </section>
-
-    <section id="marketingPage" class="hidden">
-      <div class="card">
-        <div class="section-title">📣 Marketing & Branding</div>
-        <div class="grid grid-3">
-          <div class="deal">Campaign Manager</div>
-          <div class="deal">Brand Asset Storage</div>
-          <div class="deal">AI Campaign Ideas</div>
-        </div>
-      </div>
-    </section>
-
-    <section id="documentsPage" class="hidden">
-
-      <div class="grid grid-3">
-
-        <div class="card">
-          <div class="section-title">📄 Generate Export Invoice PDF</div>
-
-          <input id="pdfCompanyName" placeholder="Exporter Company Name">
-          <input id="pdfBuyerName" placeholder="Buyer Name">
-          <input id="pdfProduct" placeholder="Product">
-          <input id="pdfQuantity" type="number" placeholder="Quantity">
-          <input id="pdfPrice" type="number" placeholder="Unit Price">
-          <input id="pdfCountry" placeholder="Destination Country">
-          <textarea id="pdfNotes" placeholder="Invoice Notes / Terms"></textarea>
-
-          <button class="btn" onclick="generateInvoicePDF()">
-            Download Invoice PDF
-          </button>
-        </div>
-
-        <div class="card ai-panel">
-          <div class="section-title">🤖 Document Intelligence</div>
-          <div class="deal">Commercial Invoice Generator</div>
-          <div class="deal">Company branding ready</div>
-          <div class="deal">Authenticated PDF API</div>
-          <div class="deal">Future: Packing List + Quotation + Bill of Lading</div>
-        </div>
-
-        <div class="card">
-          <div class="section-title">📦 Export Document Suite</div>
-          <button class="btn" onclick="generateInvoicePDF()">Generate Invoice</button>
-          <button class="btn" onclick="alert('Packing List PDF coming next')">Generate Packing List</button>
-          <button class="btn" onclick="alert('Quotation PDF coming next')">Generate Quotation</button>
-          <button class="btn" onclick="alert('Shipping Checklist coming next')">Generate Shipping Checklist</button>
-        </div>
-
-      </div>
-
-    </section>
-
-    <section id="outreachPage" class="hidden">
-
-      <div class="grid grid-3">
-
-        <div class="card">
-          <div class="section-title">📲 WhatsApp Automation</div>
-
-          <input id="outreachContactName" placeholder="Contact / Supplier Name">
-          <input id="outreachPhone" placeholder="WhatsApp Number with country code, e.g. 919876543210">
-          <input id="outreachProduct" placeholder="Product / Deal Context">
-
-          <textarea id="outreachMessage">Hello, we are interested in discussing export/import business opportunities with your company.</textarea>
-
-          <select id="outreachStatus">
-            <option>Draft</option>
-            <option>Opened</option>
-            <option>Follow-up Needed</option>
-            <option>Converted</option>
-            <option>Closed</option>
-          </select>
-
-          <textarea id="outreachNotes" placeholder="Internal notes"></textarea>
-
-          <button class="btn" onclick="saveOutreachRecord()">
-            Save WhatsApp Record
-          </button>
-
-          <button class="btn" onclick="saveAndOpenWhatsApp()">
-            Save & Open WhatsApp
-          </button>
-        </div>
-
-        <div class="card">
-          <div class="section-title">📧 Real Email Automation</div>
-
-          <input id="emailTo" placeholder="Recipient Email">
-          <input id="emailSubject" placeholder="Email Subject">
-          <textarea id="emailMessage" placeholder="Email message"></textarea>
-
-          <button class="btn" onclick="generateEmailMessage()">
-            Generate AI Email
-          </button>
-
-          <button class="btn" onclick="sendTradeFlowEmail()">
-            Send Email from TradeFlow
-          </button>
-        </div>
-
-        <div class="card ai-panel">
-          <div class="section-title">🤖 Outreach Intelligence</div>
-
-          <input id="waAiProduct" placeholder="Product">
-          <input id="waAiBuyer" placeholder="Buyer / Supplier Type">
-
-          <button class="btn" onclick="generateWhatsAppMessage()">
-            Generate WhatsApp Message
-          </button>
-
-          <div class="deal">
-            WhatsApp outreach saved in MongoDB
-          </div>
-
-          <div class="deal">
-            Real email sending via backend Nodemailer
-          </div>
-
-          <div class="deal">
-            AI-ready sales message generation
-          </div>
-        </div>
-
-      </div>
-
-      <div class="grid grid-3">
-
-        <div class="card">
-          <div class="section-title">📊 Outreach Summary</div>
-
-          <div class="deal">
-            Total WhatsApp Records:
-            <b id="outreachCount">0</b>
-          </div>
-
-          <div class="deal">
-            Follow-up Needed:
-            <b id="outreachFollowupCount">0</b>
-          </div>
-
-          <div class="deal">
-            Converted:
-            <b id="outreachConvertedCount">0</b>
-          </div>
-
-          <button class="btn" onclick="fetchOutreachRecords()">
-            Refresh Outreach
-          </button>
-        </div>
-
-        <div class="card ai-panel">
-          <div class="section-title">📨 Email Follow-up Templates</div>
-
-          <button class="mini-btn" onclick="useEmailTemplate('supplier')">
-            Supplier Inquiry Template
-          </button>
-
-          <button class="mini-btn" onclick="useEmailTemplate('buyer')">
-            Buyer Proposal Template
-          </button>
-
-          <button class="mini-btn" onclick="useEmailTemplate('followup')">
-            Follow-up Template
-          </button>
-        </div>
-
-        <div class="card">
-          <div class="section-title">⚡ Automation Status</div>
-          <div class="deal">Email API: /api/email/send</div>
-          <div class="deal">WhatsApp API: wa.me launch</div>
-          <div class="deal">Outreach DB: MongoDB records</div>
-        </div>
-
-      </div>
-
-      <div class="card">
-        <div class="section-title">📜 WhatsApp Outreach History</div>
-        <div id="outreachList"></div>
-      </div>
-
-    </section>
-
-    <section id="analyticsPage" class="hidden">
-
-      <div class="grid grid-4">
-
-        <div class="card metric">
-          <h3>Total Suppliers</h3>
-          <p id="analyticsTotalSuppliers">0</p>
-          <span>Live workspace leads</span>
-        </div>
-
-        <div class="card metric">
-          <h3>Total Deals</h3>
-          <p id="analyticsTotalDeals">0</p>
-          <span>CRM database</span>
-        </div>
-
-        <div class="card metric">
-          <h3>Pipeline Value</h3>
-          <p id="analyticsPipelineValue">0</p>
-          <span>Open + closed deals</span>
-        </div>
-
-        <div class="card metric">
-          <h3>Conversion Rate</h3>
-          <p id="analyticsConversionRate">0%</p>
-          <span>Closed / total deals</span>
-        </div>
-
-      </div>
-
-      <div class="grid grid-3">
-
-        <div class="card ai-panel">
-          <div class="section-title">📊 Live Analytics Engine</div>
-          <p class="muted">
-            Analytics are calculated from your MongoDB suppliers, CRM deals, and task automation data.
-          </p>
-
-          <div class="deal">
-            Closed Deal Value:
-            <b id="analyticsClosedValue">0</b>
-          </div>
-
-          <div class="deal">
-            Average Supplier Score:
-            <b id="analyticsAverageSupplierScore">0</b>
-          </div>
-
-          <div class="deal">
-            Task Completion Rate:
-            <b id="analyticsTaskCompletionRate">0%</b>
-          </div>
-
-          <button class="btn" onclick="fetchAnalytics()">
-            Refresh Analytics
-          </button>
-        </div>
-
-        <div class="card">
-          <div class="section-title">📈 Deal Stage Breakdown</div>
-
-          <div class="deal">New Leads: <b id="analyticsNewLead">0</b></div>
-          <div class="deal">Contacted: <b id="analyticsContacted">0</b></div>
-          <div class="deal">Negotiation: <b id="analyticsNegotiation">0</b></div>
-          <div class="deal">Closed: <b id="analyticsClosed">0</b></div>
-          <div class="deal">Lost: <b id="analyticsLost">0</b></div>
-        </div>
-
-        <div class="card">
-          <div class="section-title">✅ Task Performance</div>
-
-          <div class="deal">Total Tasks: <b id="analyticsTotalTasks">0</b></div>
-          <div class="deal">Pending Tasks: <b id="analyticsPendingTasks">0</b></div>
-          <div class="deal">Completed Tasks: <b id="analyticsCompletedTasks">0</b></div>
-          <div class="deal">Action: Use AI Task Planner for follow-ups</div>
-        </div>
-
-      </div>
-
-    </section>
-
-    <section id="aiPage" class="hidden">
-
-      <div class="card ai-panel">
-        <div class="section-title">🤖 AI Command Center</div>
-        <p class="muted">
-          One AI hub for TradeFlow: supplier discovery, outreach, negotiation, CRM advice, tasks, and export documentation.
-        </p>
-      </div>
-
-      <div class="grid grid-2">
-
-        <div class="card">
-          <div class="section-title">🌍 AI Supplier Finder</div>
-          <input type="text" id="aiProduct" placeholder="Product (Rice, Medicine, Jaggery...)">
-          <input type="text" id="aiCountry" placeholder="Country (India, UAE, USA...)">
-          <button class="btn" onclick="findAISuppliers()">Find AI Suppliers</button>
-        </div>
-
-        <div class="card">
-          <div class="section-title">📧 AI Outreach Writer</div>
-          <input id="aiOutreachProduct" placeholder="Product / Service">
-          <input id="aiOutreachBuyer" placeholder="Buyer / Supplier Type">
-          <textarea id="aiOutreachOutput" class="ai-output" placeholder="AI outreach message will appear here..."></textarea>
-          <button class="btn" onclick="generateOutreach()">Generate Outreach Message</button>
-        </div>
-
-        <div class="card">
-          <div class="section-title">📧 AI Email Writer</div>
-          <input id="aiEmailProduct" placeholder="Product / Service">
-          <input id="aiEmailReceiver" placeholder="Receiver Type (supplier / buyer)">
-          <textarea id="aiEmailOutput" class="ai-output" placeholder="AI email will appear here..."></textarea>
-          <button class="btn" onclick="generateAIEmail()">Generate Email Draft</button>
-          <button class="mini-btn" onclick="copyAIEmailToSender()">Copy to Email Sender</button>
-        </div>
-
-        <div class="card">
-          <div class="section-title">💰 AI Negotiation Assistant</div>
-          <input id="aiQuotedPrice" placeholder="Quoted Price">
-          <input id="aiTargetPrice" placeholder="Target Price">
-          <textarea id="aiNegotiationOutput" class="ai-output" placeholder="AI negotiation advice will appear here..."></textarea>
-          <button class="btn" onclick="generateNegotiationAdvice()">Generate Negotiation Advice</button>
-        </div>
-
-        <div class="card">
-          <div class="section-title">📄 AI Export Document Helper</div>
-          <input id="aiDocProduct" placeholder="Product">
-          <input id="aiDocCountry" placeholder="Destination Country">
-          <textarea id="aiDocOutput" class="ai-output" placeholder="AI export document checklist will appear here..."></textarea>
-          <button class="btn" onclick="generateDocumentHelp()">Generate Checklist</button>
-        </div>
-
-        <div class="card">
-          <div class="section-title">📈 AI CRM Deal Advisor</div>
-          <input id="aiDealStage" placeholder="Deal Stage (New Lead / Negotiation / Closed)">
-          <input id="aiDealValue" placeholder="Deal Value">
-          <textarea id="aiCrmOutput" class="ai-output" placeholder="AI CRM advice will appear here..."></textarea>
-          <button class="btn" onclick="generateCrmAdvice()">Generate CRM Advice</button>
-        </div>
-
-        <div class="card">
-          <div class="section-title">✅ AI Task Planner</div>
-          <input id="aiTaskGoal" placeholder="Goal (close rice buyer, follow up supplier...)">
-          <textarea id="aiTaskOutput" class="ai-output" placeholder="AI task plan will appear here..."></textarea>
-          <button class="btn" onclick="generateTaskPlan()">Generate Task Plan</button>
-        </div>
-
-      </div>
-
-      <div class="card">
-        <div class="section-title">🌍 AI Supplier Results</div>
-        <div id="aiSupplierResults"></div>
-      </div>
-
-    </section>
-
-    <section id="notificationsPage" class="hidden">
-
-      <div class="grid grid-3">
-
-        <div class="card">
-          <div class="section-title">🔔 Create Notification</div>
-
-          <input id="notificationTitle" placeholder="Notification Title">
-
-          <textarea id="notificationMessage" placeholder="Notification message"></textarea>
-
-          <select id="notificationType">
-            <option>General</option>
-            <option>CRM</option>
-            <option>Supplier</option>
-            <option>Task</option>
-            <option>Outreach</option>
-            <option>Document</option>
-            <option>AI</option>
-            <option>System</option>
-          </select>
-
-          <select id="notificationPriority">
-            <option>Low</option>
-            <option selected>Medium</option>
-            <option>High</option>
-          </select>
-
-          <button class="btn" onclick="addNotification()">
-            Save Notification
-          </button>
-        </div>
-
-        <div class="card ai-panel">
-          <div class="section-title">🤖 Smart Alert Intelligence</div>
-          <div class="deal">CRM follow-up reminders</div>
-          <div class="deal">Task deadline alerts</div>
-          <div class="deal">Supplier action notifications</div>
-          <div class="deal">System + AI alerts</div>
-        </div>
-
-        <div class="card">
-          <div class="section-title">📊 Notification Summary</div>
-          <div class="deal">Total Notifications: <b id="notificationCount">0</b></div>
-          <div class="deal">Unread: <b id="unreadNotificationCount">0</b></div>
-          <div class="deal">High Priority: <b id="highPriorityNotificationCount">0</b></div>
-
-          <button class="btn" onclick="fetchNotifications()">
-            Refresh Notifications
-          </button>
-        </div>
-
-      </div>
-
-      <div class="card">
-        <div class="section-title">📜 Notification History</div>
-        <div id="notificationList"></div>
-      </div>
-
-    </section>
-
-    <footer>
-      © 2026 TradeFlow Cloud — Advanced Export / Import SaaS OS
-    </footer>
-
-  </main>
-</div>
-
-<script>
 const BACKEND_URL = "https://trade-flow-lc1k.onrender.com";
 
 const API_URL = `${BACKEND_URL}/suppliers`;
@@ -3542,7 +1894,230 @@ function bootTradeFlow() {
 }
 
 bootTradeFlow();
-</script>
 
-</body>
-</html>
+
+/* =========================================================
+   TRADEFLOW AI OPERATING SYSTEM UPGRADE
+   Full replacement-safe block. Keep this at the end of app.js.
+   This creates a fake AI business engine now and can later be
+   connected to OpenAI / supplier APIs without changing the UI.
+========================================================= */
+
+function setTradeFlowAIConsole(text) {
+  const box = document.getElementById("tradeflowAiConsole");
+  if (box) box.value = text.trim();
+}
+
+function getAIField(id, fallback) {
+  const el = document.getElementById(id);
+  return el && el.value.trim() ? el.value.trim() : fallback;
+}
+
+function tradeFlowQuickAI(type) {
+  const product = getAIField("aiProduct", "export product");
+  const country = getAIField("aiCountry", "target country");
+
+  const outputs = {
+    supplier: `🌍 TRADEFLOW AI SUPPLIER STRATEGY\n\nProduct: ${product}\nTarget Market: ${country}\n\nBest sourcing approach:\n1. Shortlist 10 suppliers with export history.\n2. Check GST/IEC/company registration where applicable.\n3. Ask for MOQ, packaging, certifications, lead time, and port of shipment.\n4. Compare price, reliability, communication speed, and document readiness.\n5. Move only verified suppliers into CRM.\n\nRisk signals:\n• No company email\n• No export documents\n• Very low pricing\n• Unclear payment terms\n\nRecommended next step:\nSend professional inquiry + request catalogue and quotation.`,
+
+    email: `📧 TRADEFLOW AI EXPORT EMAIL\n\nSubject: Export Business Inquiry for ${product}\n\nHello,\n\nI hope you are doing well.\n\nWe are exploring a serious export/import opportunity for ${product} in ${country}. Please share your latest catalogue, MOQ, pricing, packaging details, certifications, payment terms, and delivery timeline.\n\nIf the pricing and documentation are suitable, we can move ahead with a formal quotation discussion.\n\nRegards,\nTradeFlow Workspace`,
+
+    whatsapp: `📱 TRADEFLOW AI WHATSAPP MESSAGE\n\nHello,\nWe are interested in ${product} for ${country}. Please share your catalogue, MOQ, pricing, packaging details, certifications, and export timeline.\n\nIf suitable, we can discuss quotation and next steps.\n\nRegards,\nTradeFlow Team`,
+
+    negotiation: `💰 TRADEFLOW AI NEGOTIATION PLAN\n\nProduct: ${product}\nMarket: ${country}\n\nSuggested negotiation strategy:\n1. Start 10–12% below quoted price.\n2. Ask for better rate based on repeat orders.\n3. Negotiate packaging and shipping support.\n4. Request payment flexibility: advance + balance after document scan.\n5. Ask for sample or third-party inspection before bulk order.\n\nClose only if:\n• Quality is verified\n• Documents are ready\n• Timeline is clear\n• Margin remains profitable`,
+
+    crm: `📈 TRADEFLOW AI CRM NEXT ACTION\n\nRecommended action:\nMove this lead to Contacted or Negotiation only after receiving catalogue, pricing, MOQ, and payment terms.\n\nPriority score: High if buyer replies within 24 hours.\n\nFollow-up timing:\n• First follow-up: after 24 hours\n• Second follow-up: after 72 hours\n• Final follow-up: after 7 days\n\nSuggested CRM note:\nLead requires quotation validation and document verification before closing.`,
+
+    documents: `📄 TRADEFLOW AI EXPORT DOCUMENT CHECKLIST\n\nProduct: ${product}\nDestination: ${country}\n\nCore documents:\n1. Commercial Invoice\n2. Packing List\n3. Proforma Invoice\n4. Purchase Order\n5. Certificate of Origin\n6. Bill of Lading / Airway Bill\n7. Insurance Certificate\n8. Shipping Bill\n9. IEC / GST details\n10. Product-specific certificates\n\nAI note:\nConfirm destination-country compliance before dispatch.`
+  };
+
+  setTradeFlowAIConsole(outputs[type] || "TradeFlow AI ready.");
+}
+
+function copyTradeFlowAIConsole() {
+  const box = document.getElementById("tradeflowAiConsole");
+  if (!box || !box.value.trim()) {
+    alert("No AI output to copy.");
+    return;
+  }
+  navigator.clipboard.writeText(box.value).then(() => {
+    alert("AI output copied.");
+  }).catch(() => {
+    box.select();
+    document.execCommand("copy");
+    alert("AI output copied.");
+  });
+}
+
+function sendAIConsoleToOutreach() {
+  const box = document.getElementById("tradeflowAiConsole");
+  if (!box || !box.value.trim()) {
+    alert("Generate AI output first.");
+    return;
+  }
+
+  showPage("outreach");
+
+  const subject = document.getElementById("emailSubject");
+  const message = document.getElementById("emailMessage");
+
+  if (subject) subject.value = "TradeFlow Business Outreach";
+  if (message) message.value = box.value;
+}
+
+async function findAISuppliers() {
+  const product = getAIField("aiProduct", "Rice");
+  const country = getAIField("aiCountry", "UAE");
+  const results = document.getElementById("aiSupplierResults");
+
+  if (!results) return;
+
+  results.innerHTML = `<p class="muted">AI is preparing supplier intelligence...</p>`;
+
+  try {
+    const res = await fetch(`${AI_URL}/find-suppliers`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ product, country })
+    });
+
+    if (res.status === 401) {
+      logoutUser();
+      return;
+    }
+
+    if (res.ok) {
+      const leads = await res.json();
+      if (Array.isArray(leads) && leads.length > 0) {
+        results.innerHTML = "";
+        leads.forEach((lead) => {
+          const encodedLead = encodeURIComponent(JSON.stringify(lead));
+          results.innerHTML += `
+            <div class="supplier-card">
+              <h2 style="font-size:20px;font-weight:900;color:white;">${lead.supplierName || "AI Supplier Lead"}</h2>
+              <p class="muted">Product: ${lead.product || product}</p>
+              <p class="muted">Country: ${lead.country || country}</p>
+              <p class="muted">Email: ${lead.email || "Not available"}</p>
+              <p class="muted">Phone: ${lead.phone || "Not available"}</p>
+              <p class="muted">Source: ${lead.source || "TradeFlow AI"}</p>
+              <p class="muted">Notes: ${lead.notes || "Verify company details before outreach."}</p>
+              <span class="status">Score ${lead.score || 78} • ${lead.status || "Warm Lead"}</span>
+              <button class="btn" onclick="saveAISupplier('${encodedLead}')">Save to Workspace</button>
+            </div>`;
+        });
+        setTradeFlowAIConsole(`AI found ${leads.length} supplier leads for ${product} in ${country}. Review and save only verified leads.`);
+        return;
+      }
+    }
+  } catch (error) {
+    console.warn("Backend AI unavailable. Using fake AI supplier engine.", error);
+  }
+
+  const fakeLeads = [
+    {
+      supplierName: `${country} Premium ${product} Trade Co.`,
+      product,
+      country,
+      email: `sales@${product.toLowerCase().replace(/\s+/g, "")}trade.com`,
+      phone: "+971-000-000000",
+      source: "TradeFlow Fake AI Engine",
+      notes: "Demo lead. Verify before real outreach.",
+      score: 82,
+      status: "Warm Lead"
+    },
+    {
+      supplierName: `Global ${product} Export Network`,
+      product,
+      country,
+      email: "export@example.com",
+      phone: "+91-000-0000000",
+      source: "TradeFlow Fake AI Engine",
+      notes: "Useful for demo and workflow testing.",
+      score: 76,
+      status: "Research Needed"
+    },
+    {
+      supplierName: `${product} Wholesale International`,
+      product,
+      country,
+      email: "contact@example.com",
+      phone: "+1-000-0000000",
+      source: "TradeFlow Fake AI Engine",
+      notes: "Ask for catalogue, MOQ, and certifications.",
+      score: 71,
+      status: "New Lead"
+    }
+  ];
+
+  results.innerHTML = "";
+  fakeLeads.forEach((lead) => {
+    const encodedLead = encodeURIComponent(JSON.stringify(lead));
+    results.innerHTML += `
+      <div class="supplier-card">
+        <h2 style="font-size:20px;font-weight:900;color:white;">${lead.supplierName}</h2>
+        <p class="muted">Product: ${lead.product}</p>
+        <p class="muted">Country: ${lead.country}</p>
+        <p class="muted">Email: ${lead.email}</p>
+        <p class="muted">Phone: ${lead.phone}</p>
+        <p class="muted">Source: ${lead.source}</p>
+        <p class="muted">Notes: ${lead.notes}</p>
+        <span class="status">Score ${lead.score} • ${lead.status}</span>
+        <button class="btn" onclick="saveAISupplier('${encodedLead}')">Save to Workspace</button>
+      </div>`;
+  });
+
+  setTradeFlowAIConsole(`Fake AI supplier engine generated ${fakeLeads.length} demo leads for ${product} in ${country}. Later this can connect to real supplier APIs.`);
+}
+
+function generateAIEmail() {
+  const product = getAIField("aiEmailProduct", "your product");
+  const receiver = getAIField("aiEmailReceiver", "business partner");
+  const output = `Subject: Export / Import Opportunity for ${product}\n\nHello,\n\nI hope you are doing well.\n\nWe are exploring a serious business opportunity for ${product} and would like to connect with a reliable ${receiver}. Please share your latest catalogue, pricing, MOQ, packaging details, certifications, payment terms, and shipment timeline.\n\nIf the details are suitable, we can proceed with a formal quotation and next steps.\n\nRegards,\nTradeFlow Team`;
+  const el = document.getElementById("aiEmailOutput");
+  if (el) el.value = output;
+  setTradeFlowAIConsole(output);
+}
+
+function generateOutreach() {
+  const product = getAIField("aiOutreachProduct", "your product");
+  const buyer = getAIField("aiOutreachBuyer", "potential buyer");
+  const output = `Subject: Business Opportunity for ${product}\n\nHello,\n\nWe are looking to discuss a serious export/import opportunity for ${product} with a ${buyer}.\n\nPlease share your requirements, MOQ, pricing expectations, packaging standards, documentation needs, and preferred delivery timeline.\n\nWe can proceed with quotation and product details after your confirmation.\n\nRegards,\nTradeFlow Team`;
+  const el = document.getElementById("aiOutreachOutput");
+  if (el) el.value = output;
+  setTradeFlowAIConsole(output);
+}
+
+function generateNegotiationAdvice() {
+  const quoted = getAIField("aiQuotedPrice", "quoted price");
+  const target = getAIField("aiTargetPrice", "target price");
+  const output = `AI Negotiation Strategy\n\nQuoted Price: ${quoted}\nTarget Price: ${target}\n\n1. Start politely and show long-term buying intent.\n2. Ask for volume discount instead of directly rejecting the quote.\n3. Request packaging or shipping support if price cannot be reduced.\n4. Ask for payment flexibility.\n5. Close slightly above target only if quality, delivery, and documentation are strong.\n\nSuggested message:\nYour price is close to our working range, but for repeat orders we need stronger support. Can you improve the rate or include better packaging/shipping terms?`;
+  const el = document.getElementById("aiNegotiationOutput");
+  if (el) el.value = output;
+  setTradeFlowAIConsole(output);
+}
+
+function generateDocumentHelp() {
+  const product = getAIField("aiDocProduct", "selected product");
+  const country = getAIField("aiDocCountry", "destination country");
+  const output = `Export Document Checklist for ${product} to ${country}\n\n1. Commercial Invoice\n2. Packing List\n3. Proforma Invoice\n4. Purchase Order\n5. Certificate of Origin\n6. Shipping Bill\n7. Bill of Lading / Airway Bill\n8. Insurance Certificate\n9. IEC and GST details\n10. Product-specific compliance certificates\n\nAI Advice:\nBefore dispatch, confirm buyer requirements, destination compliance, payment terms, and shipment responsibility.`;
+  const el = document.getElementById("aiDocOutput");
+  if (el) el.value = output;
+  setTradeFlowAIConsole(output);
+}
+
+function generateCrmAdvice() {
+  const stage = getAIField("aiDealStage", "current stage");
+  const value = getAIField("aiDealValue", "deal value");
+  const output = `CRM Deal Intelligence\n\nStage: ${stage}\nDeal Value: ${value}\n\nRecommended next action:\n1. If this is a new lead, send first outreach immediately.\n2. If contacted, schedule a 24-hour follow-up.\n3. If in negotiation, prepare price comparison and margin calculation.\n4. If closed, prepare documents and payment tracking.\n\nDeal probability:\n• New Lead: 25%\n• Contacted: 45%\n• Negotiation: 70%\n• Closed: 100%\n\nAI note: Save every response inside CRM so the system can recommend the next step.`;
+  const el = document.getElementById("aiCrmOutput");
+  if (el) el.value = output;
+  setTradeFlowAIConsole(output);
+}
+
+function generateTaskPlan() {
+  const goal = getAIField("aiTaskGoal", "business goal");
+  const output = `AI Task Plan for: ${goal}\n\nToday:\n1. Identify 5 qualified leads.\n2. Send first outreach message.\n3. Save replies inside CRM.\n\nTomorrow:\n1. Follow up with non-responders.\n2. Compare quotes and quality indicators.\n3. Shortlist best suppliers/buyers.\n\nThis Week:\n1. Negotiate pricing and terms.\n2. Prepare required documents.\n3. Move qualified opportunities forward in the pipeline.`;
+  const el = document.getElementById("aiTaskOutput");
+  if (el) el.value = output;
+  setTradeFlowAIConsole(output);
+}

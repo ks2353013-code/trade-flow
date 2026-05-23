@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TradeFlow Cloud — Advanced SaaS Workspace</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <h1>TradeFlow™</h1>
+      <p>Advanced Export / Import AI SaaS OS</p>
+    </div>
+
+    <button class="nav-btn" onclick="showPage('dashboard')">📊 Command Dashboard</button>
+    <button class="nav-btn" onclick="showPage('master')">🏢 Master Company</button>
+    <button class="nav-btn" onclick="showPage('workspaces')">🏬 Multi-company Workspace</button>
+    <button class="nav-btn" onclick="showPage('employees')">👥 Employees & Roles</button>
+    <button class="nav-btn" onclick="showPage('suppliers')">🌍 Supplier Intelligence</button>
+    <button class="nav-btn" onclick="showPage('crm')">📈 CRM Pipeline</button>
+    <button class="nav-btn" onclick="showPage('negotiation')">💰 Negotiation Desk</button>
+    <button class="nav-btn" onclick="showPage('tasks')">✅ Task Automation</button>
+    <button class="nav-btn" onclick="showPage('marketing')">📣 Marketing & Branding</button>
+    <button class="nav-btn" onclick="showPage('documents')">📄 Export Documents</button>
+    <button class="nav-btn" onclick="showPage('outreach')">📧 Smart Outreach</button>
+    <button class="nav-btn" onclick="showPage('analytics')">📉 Analytics Center</button>
+    <button class="nav-btn" onclick="showPage('ai')">🤖 AI Command Center</button>
+    <button class="nav-btn" onclick="showPage('notifications')">🔔 Notifications Center <span id="sidebarUnreadCount"></span></button>
+    <button class="nav-btn" onclick="contactSupport()">📩 Contact Support</button>
+    <button class="nav-btn" onclick="window.location.href='master-login.html'">👑 Master Admin</button>
+    <button class="nav-btn logout" onclick="logoutUser()">🚪 Logout</button>
+  </aside>
+
+  <main class="main">
+
+    <div class="topbar">
+      <div>
+        <div class="page-title">TradeFlow Cloud Workspace</div>
+        <div class="muted" id="workspaceName">Premium SaaS workspace loading...</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <select id="activeWorkspaceSelect" onchange="setActiveWorkspace()" style="max-width:260px;margin-top:0;">
+          <option value="">Select Workspace</option>
+        </select>
+        <div class="pill" id="userBadge">Authenticated Workspace</div>
+      </div>
+    </div>
+
+    
+    <section id="dashboardPage">
+      <div class="dashboard-hero">
+        <div class="hero-kicker">Live SaaS Workspace • Export / Import OS</div>
+        <h1 class="hero-title">
+          Welcome to your <span>TradeFlow Command Center.</span>
+        </h1>
+        <p class="hero-copy">
+          A clean premium workspace for suppliers, CRM, tasks, analytics, export documents,
+          AI tools, outreach, employees, notifications, and multi-company trade operations.
+        </p>
+        <div class="hero-actions">
+          <div class="hero-chip">🌍 Supplier Intelligence</div>
+          <div class="hero-chip">📈 Drag & Drop CRM</div>
+          <div class="hero-chip">🤖 AI Command Center</div>
+          <div class="hero-chip">📄 PDF Export Docs</div>
+          <div class="hero-chip">📧 Email + WhatsApp</div>
+        </div>
+      </div>
+
+      <div class="grid grid-4">
+        <div class="card metric">
+          <h3>Total Suppliers</h3>
+          <p id="supplierCount">0</p>
+          <span>Live supplier database</span>
+        </div>
+
+        <div class="card metric">
+          <h3>CRM Deals</h3>
+          <p id="dashboardDealCount">0</p>
+          <span>Pipeline records</span>
+        </div>
+
+        <div class="card metric">
+          <h3>Pipeline Value</h3>
+          <p id="dashboardPipelineValue">0</p>
+          <span>Tracked deal value</span>
+        </div>
+
+        <div class="card metric">
+          <h3>Closed Deals</h3>
+          <p id="dashboardClosedDeals">0</p>
+          <span>Sales progress</span>
+        </div>
+
+        <div class="card metric">
+          <h3>Unread Alerts</h3>
+          <p id="dashboardUnreadNotifications">0</p>
+          <span>Notifications center</span>
+        </div>
+
+        <div class="card metric">
+          <h3>Workspaces</h3>
+          <p id="dashboardWorkspaceCount">0</p>
+          <span>Multi-company SaaS</span>
+        </div>
+      </div>
+
+      <div class="grid grid-3">
+        <div class="card quick-card ai-panel">
+          <div class="icon">🤖</div>
+          <div class="section-title">AI Command Center</div>
+          <p>Generate outreach, negotiation advice, CRM suggestions, document help, and task plans.</p>
+          <button class="btn" onclick="showPage('ai')">Open AI Center</button>
+        </div>
+
+        <div class="card quick-card">
+          <div class="icon">📈</div>
+          <div class="section-title">CRM Pipeline</div>
+          <p>Move deals through New Lead, Contacted, Negotiation, Closed, and Lost with drag and drop.</p>
+          <button class="btn" onclick="showPage('crm')">Open CRM</button>
+        </div>
+
+        <div class="card quick-card">
+          <div class="icon">🌍</div>
+          <div class="section-title">Supplier Workspace</div>
+          <p>Save supplier leads, score records, manage contacts, and connect them with outreach.</p>
+          <button class="btn" onclick="showPage('suppliers')">Open Suppliers</button>
+        </div>
+      </div>
+
+      <div class="grid grid-3">
+        <div class="card">
+          <div class="section-title">Today’s Focus</div>
+          <div class="deal">Check new supplier leads and update their status.</div>
+          <div class="deal">Move hot CRM deals to Negotiation or Closed.</div>
+          <div class="deal">Send follow-up from Smart Outreach.</div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">Workspace Health</div>
+          <p class="muted">Backend connected to production.</p>
+          <p class="muted">MongoDB stores your private workspace records.</p>
+          <p class="muted">Login protection is active for SaaS security.</p>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">Premium Modules</div>
+          <div class="deal">Employees + Permissions</div>
+          <div class="deal">Notifications Center</div>
+          <div class="deal">Multi-company Workspace</div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📩 Need help or updates?</div>
+          <p class="muted">
+            Company users can contact TradeFlow support for product updates, queries, onboarding help, or technical issues.
+          </p>
+          <div class="deal">Support Mail: <b>ks2353013@gmail.com</b></div>
+          <button class="btn" onclick="contactSupport()">Contact Support</button>
+        </div>
+
+      </div>
+    </section>
+
+
+    
+    <section id="masterPage" class="hidden">
+      <div class="admin-hero">
+        <div class="hero-kicker">Master Admin Control • TradeFlow™ SaaS</div>
+        <h1 class="hero-title">
+          Master Admin <span>Control Dashboard.</span>
+        </h1>
+        <p class="hero-copy">
+          This is not a normal company dashboard. This area is for the owner/admin to monitor companies,
+          approve or reject workspaces, view subscription status, and control the SaaS platform.
+        </p>
+        <div class="tm-badge">👑 Master Admin • Company Approval • Subscription Control</div>
+      </div>
+
+      <div class="grid grid-4">
+        <div class="card metric">
+          <h3>Total Companies</h3>
+          <p id="masterTotalCompanies">0</p>
+          <span>All company workspaces</span>
+        </div>
+
+        <div class="card metric">
+          <h3>Approved</h3>
+          <p id="masterApprovedCompanies">0</p>
+          <span>Active companies</span>
+        </div>
+
+        <div class="card metric">
+          <h3>Rejected</h3>
+          <p id="masterRejectedCompanies">0</p>
+          <span>Inactive companies</span>
+        </div>
+
+        <div class="card metric">
+          <h3>Subscription</h3>
+          <p id="masterSubscriptionPlan">Pro</p>
+          <span>Current SaaS plan</span>
+        </div>
+      </div>
+
+      <div class="grid grid-3">
+        <div class="card admin-control-card">
+          <div class="section-title">🏢 Master Company Profile</div>
+          <p class="muted">Admin profile and legal company identity for the SaaS owner.</p>
+
+          <input id="masterCompanyName" placeholder="Master Company Name">
+          <input id="masterOwnerName" placeholder="Owner / Admin Name">
+          <input id="masterGstNumber" placeholder="GST Number">
+          <input id="masterIecCode" placeholder="IEC Code">
+          <input id="masterCountry" placeholder="Business Country">
+          <input id="masterIndustry" placeholder="Primary Industry">
+
+          <button class="btn" onclick="saveMasterProfile()">Save Master Profile</button>
+        </div>
+
+        <div class="card subscription-card">
+          <div class="section-title">💳 Subscription Control</div>
+          <p class="muted">Visible SaaS subscription area restored for admin management.</p>
+
+          <div class="deal">Current Plan: <b id="subscriptionPlanText">Pro Exporter</b></div>
+          <div class="deal">Billing Status: <b id="subscriptionStatusText">Active</b></div>
+          <div class="deal">Company Limit: <b>10 Workspaces</b></div>
+          <div class="deal">Modules: <b>CRM, AI, PDF, Outreach, Analytics</b></div>
+
+          <select id="subscriptionPlan">
+            <option>Starter</option>
+            <option selected>Pro Exporter</option>
+            <option>Enterprise</option>
+            <option>Custom Agency</option>
+          </select>
+
+          <select id="subscriptionStatus">
+            <option selected>Active</option>
+            <option>Trial</option>
+            <option>Past Due</option>
+            <option>Cancelled</option>
+          </select>
+
+          <button class="btn" onclick="saveSubscriptionSettings()">Save Subscription</button>
+          <span class="plan-pill">Premium SaaS billing ready</span>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">🔐 Admin Permissions</div>
+          <div class="deal">Approve or reject company workspaces</div>
+          <div class="deal">Manage subscription status</div>
+          <div class="deal">View active companies</div>
+          <div class="deal">Control employees and modules</div>
+          <button class="btn" onclick="showPage('workspaces')">Open Company Approvals</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">🏬 Company Approval Queue</div>
+        <p class="muted">Approve or reject companies from the admin side. Approved = Active, Rejected = Inactive.</p>
+        <div id="masterCompanyApprovalList"></div>
+      </div>
+    </section>
+
+
+    <section id="workspacesPage" class="hidden">
+
+      <div class="grid grid-3">
+
+        <div class="card">
+          <div class="section-title">🏬 Create Company Workspace</div>
+
+          <input id="workspaceCompanyName" placeholder="Company / Workspace Name">
+
+          <select id="workspaceBusinessType">
+            <option>Exporter</option>
+            <option>Importer</option>
+            <option selected>Both</option>
+            <option>Agency</option>
+            <option>Manufacturer</option>
+          </select>
+
+          <input id="workspaceCountry" placeholder="Country">
+          <input id="workspaceGstNumber" placeholder="GST Number">
+          <input id="workspaceIecCode" placeholder="IEC Code">
+          <input id="workspaceIndustry" placeholder="Industry / Product Category">
+
+          <select id="workspaceCurrency">
+            <option>USD</option>
+            <option>INR</option>
+            <option>AED</option>
+            <option>EUR</option>
+            <option>GBP</option>
+          </select>
+
+          <select id="workspaceStatus">
+            <option>Active</option>
+            <option>Inactive</option>
+          </select>
+
+          <button class="btn" onclick="addWorkspace()">
+            Save Workspace
+          </button>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">🧠 Multi-company Intelligence</div>
+          <div class="deal">Manage multiple export/import companies</div>
+          <div class="deal">Switch active company workspace</div>
+          <div class="deal">Store IEC, GST, country, industry</div>
+          <div class="deal">Foundation for true multi-tenant SaaS</div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📊 Workspace Summary</div>
+          <div class="deal">Total Workspaces: <b id="workspaceCount">0</b></div>
+          <div class="deal">Active Workspaces: <b id="activeWorkspaceCount">0</b></div>
+          <div class="deal">Current Workspace: <b id="currentWorkspaceName">None</b></div>
+
+          <button class="btn" onclick="fetchWorkspaces()">
+            Refresh Workspaces
+          </button>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <div class="section-title">🏢 Company Workspace Cards</div>
+        <div id="workspaceList"></div>
+      </div>
+
+    </section>
+
+
+    <section id="employeesPage" class="hidden">
+
+      <div class="grid grid-3">
+
+        <div class="card">
+          <div class="section-title">👥 Add Employee / Team Member</div>
+
+          <input id="employeeName" placeholder="Employee Name">
+          <input id="employeeEmail" placeholder="Employee Email">
+
+          <select id="employeeRole" onchange="applyRolePreset()">
+            <option>Admin</option>
+            <option>Sales Manager</option>
+            <option>Operations</option>
+            <option>Documentation</option>
+            <option>Viewer</option>
+          </select>
+
+          <select id="employeeStatus">
+            <option>Active</option>
+            <option>Inactive</option>
+          </select>
+
+          <div class="deal">
+            <b>Module Permissions</b>
+
+            <label><input type="checkbox" id="permDashboard" checked> Dashboard</label><br>
+            <label><input type="checkbox" id="permSuppliers"> Suppliers</label><br>
+            <label><input type="checkbox" id="permCrm"> CRM</label><br>
+            <label><input type="checkbox" id="permTasks"> Tasks</label><br>
+            <label><input type="checkbox" id="permAnalytics"> Analytics</label><br>
+            <label><input type="checkbox" id="permDocuments"> Documents</label><br>
+            <label><input type="checkbox" id="permOutreach"> Outreach</label><br>
+            <label><input type="checkbox" id="permAi"> AI Command Center</label>
+          </div>
+
+          <button class="btn" onclick="addEmployee()">
+            Save Employee
+          </button>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">🔐 Permission Intelligence</div>
+          <div class="deal">Admin: full workspace access</div>
+          <div class="deal">Sales: suppliers, CRM, outreach, tasks</div>
+          <div class="deal">Operations: tasks, docs, suppliers</div>
+          <div class="deal">Documentation: export docs focused</div>
+          <div class="deal">Viewer: dashboard + analytics only</div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📊 Team Summary</div>
+          <div class="deal">Total Employees: <b id="employeeCount">0</b></div>
+          <div class="deal">Active Employees: <b id="activeEmployeeCount">0</b></div>
+          <div class="deal">Admins: <b id="adminEmployeeCount">0</b></div>
+
+          <button class="btn" onclick="fetchEmployees()">
+            Refresh Team
+          </button>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <div class="section-title">👥 Employee Access Control</div>
+        <div id="employeeList"></div>
+      </div>
+
+    </section>
+
+    <section id="suppliersPage" class="hidden">
+      <div class="grid grid-3">
+
+        <div class="card">
+          <div class="section-title">🌍 Add Supplier Lead</div>
+          <input id="supplierName" placeholder="Supplier Name">
+          <input id="product" placeholder="Product">
+          <input id="country" placeholder="Country">
+          <input id="email" placeholder="Email">
+          <input id="phone" placeholder="Phone">
+          <textarea id="notes" placeholder="Notes / deal context"></textarea>
+          <button class="btn" onclick="addSupplier()">Add Supplier</button>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">Lead Intelligence</div>
+          <p class="muted">Auto-score supplier leads, mark verified leads, and prepare outreach strategy.</p>
+          <div class="deal">Verification Score: 75 default</div>
+          <div class="deal">Source: Manual Entry / AI Finder</div>
+          <div class="deal">Workspace: User-specific</div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">Supplier Filters</div>
+          <input placeholder="Search supplier">
+          <select>
+            <option>All Countries</option>
+            <option>India</option>
+            <option>UAE</option>
+            <option>USA</option>
+            <option>China</option>
+          </select>
+          <button class="btn" onclick="fetchSuppliers()">Refresh Suppliers</button>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <div class="section-title">Saved Suppliers</div>
+        <div id="supplierList"></div>
+      </div>
+    </section>
+
+    <section id="crmPage" class="hidden">
+
+      <div class="grid grid-3">
+
+        <div class="card">
+          <div class="section-title">➕ Add CRM Deal</div>
+
+          <input id="dealCompanyName" placeholder="Company / Buyer Name">
+          <input id="dealContactPerson" placeholder="Contact Person">
+          <input id="dealEmail" placeholder="Email">
+          <input id="dealPhone" placeholder="Phone">
+          <input id="dealProduct" placeholder="Product">
+          <input id="dealCountry" placeholder="Country">
+          <input id="dealValue" type="number" placeholder="Deal Value">
+
+          <select id="dealStage">
+            <option>New Lead</option>
+            <option>Contacted</option>
+            <option>Negotiation</option>
+            <option>Closed</option>
+            <option>Lost</option>
+          </select>
+
+          <select id="dealPriority">
+            <option>Low</option>
+            <option selected>Medium</option>
+            <option>High</option>
+          </select>
+
+          <textarea id="dealNotes" placeholder="Deal notes"></textarea>
+
+          <button class="btn" onclick="addDeal()">Save Deal</button>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">🧲 Drag & Drop CRM</div>
+          <div class="deal">Drag cards between stages</div>
+          <div class="deal">Stage updates save to MongoDB</div>
+          <div class="deal">User-specific CRM pipeline</div>
+          <div class="deal">Premium SaaS kanban experience</div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📊 CRM Summary</div>
+          <div class="deal">Total Deals: <b id="dealCount">0</b></div>
+          <div class="deal">Closed Deals: <b id="closedDealCount">0</b></div>
+          <div class="deal">Pipeline Value: <b id="pipelineValue">0</b></div>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <div class="section-title">📈 Drag & Drop CRM Pipeline</div>
+        <p class="muted">Drag any deal card into another stage. TradeFlow saves the new stage instantly.</p>
+
+        <div class="kanban">
+          <div class="column" data-stage="New Lead" ondragover="allowDealDrop(event)" ondragenter="highlightDropZone(event)" ondragleave="removeDropHighlight(event)" ondrop="dropDeal(event)">
+            <b>New Lead</b>
+            <div class="drag-hint">Drop new opportunities here</div>
+            <div id="newLeadDeals"></div>
+          </div>
+
+          <div class="column" data-stage="Contacted" ondragover="allowDealDrop(event)" ondragenter="highlightDropZone(event)" ondragleave="removeDropHighlight(event)" ondrop="dropDeal(event)">
+            <b>Contacted</b>
+            <div class="drag-hint">Supplier/buyer contacted</div>
+            <div id="contactedDeals"></div>
+          </div>
+
+          <div class="column" data-stage="Negotiation" ondragover="allowDealDrop(event)" ondragenter="highlightDropZone(event)" ondragleave="removeDropHighlight(event)" ondrop="dropDeal(event)">
+            <b>Negotiation</b>
+            <div class="drag-hint">Pricing and terms discussion</div>
+            <div id="negotiationDeals"></div>
+          </div>
+
+          <div class="column" data-stage="Closed" ondragover="allowDealDrop(event)" ondragenter="highlightDropZone(event)" ondragleave="removeDropHighlight(event)" ondrop="dropDeal(event)">
+            <b>Closed</b>
+            <div class="drag-hint">Successful deals</div>
+            <div id="closedDeals"></div>
+          </div>
+
+          <div class="column" data-stage="Lost" ondragover="allowDealDrop(event)" ondragenter="highlightDropZone(event)" ondragleave="removeDropHighlight(event)" ondrop="dropDeal(event)">
+            <b>Lost</b>
+            <div class="drag-hint">Not converted</div>
+            <div id="lostDeals"></div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <section id="negotiationPage" class="hidden">
+      <div class="card">
+        <div class="section-title">💰 Negotiation Desk</div>
+        <input placeholder="Supplier Name">
+        <input placeholder="Quoted Price">
+        <input placeholder="Target Price">
+        <input placeholder="Expected Margin">
+        <button class="btn">Analyze Negotiation</button>
+      </div>
+    </section>
+
+    <section id="tasksPage" class="hidden">
+
+      <div class="grid grid-3">
+
+        <div class="card">
+          <div class="section-title">➕ Create Task</div>
+
+          <input id="taskTitle" placeholder="Task Title">
+          <input id="taskRelatedTo" placeholder="Related To (CRM / Supplier / Buyer)">
+          <input id="taskDueDate" type="date">
+
+          <select id="taskPriority">
+            <option>Low</option>
+            <option selected>Medium</option>
+            <option>High</option>
+          </select>
+
+          <select id="taskStatus">
+            <option>Pending</option>
+            <option>In Progress</option>
+            <option>Completed</option>
+          </select>
+
+          <textarea id="taskNotes" placeholder="Task Notes"></textarea>
+
+          <button class="btn" onclick="addTask()">
+            Create Task
+          </button>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">🤖 AI Task Intelligence</div>
+          <div class="deal">User-specific task storage</div>
+          <div class="deal">Priority management</div>
+          <div class="deal">CRM-linked tasks</div>
+          <div class="deal">Future AI reminders</div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📊 Task Summary</div>
+          <div class="deal">Total Tasks: <b id="taskCount">0</b></div>
+          <div class="deal">Completed: <b id="completedTaskCount">0</b></div>
+          <div class="deal">Pending: <b id="pendingTaskCount">0</b></div>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <div class="section-title">✅ Workspace Tasks</div>
+        <div id="taskList"></div>
+      </div>
+
+    </section>
+
+    <section id="marketingPage" class="hidden">
+      <div class="card">
+        <div class="section-title">📣 Marketing & Branding</div>
+        <div class="grid grid-3">
+          <div class="deal">Campaign Manager</div>
+          <div class="deal">Brand Asset Storage</div>
+          <div class="deal">AI Campaign Ideas</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="documentsPage" class="hidden">
+
+      <div class="grid grid-3">
+
+        <div class="card">
+          <div class="section-title">📄 Generate Export Invoice PDF</div>
+
+          <input id="pdfCompanyName" placeholder="Exporter Company Name">
+          <input id="pdfBuyerName" placeholder="Buyer Name">
+          <input id="pdfProduct" placeholder="Product">
+          <input id="pdfQuantity" type="number" placeholder="Quantity">
+          <input id="pdfPrice" type="number" placeholder="Unit Price">
+          <input id="pdfCountry" placeholder="Destination Country">
+          <textarea id="pdfNotes" placeholder="Invoice Notes / Terms"></textarea>
+
+          <button class="btn" onclick="generateInvoicePDF()">
+            Download Invoice PDF
+          </button>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">🤖 Document Intelligence</div>
+          <div class="deal">Commercial Invoice Generator</div>
+          <div class="deal">Company branding ready</div>
+          <div class="deal">Authenticated PDF API</div>
+          <div class="deal">Future: Packing List + Quotation + Bill of Lading</div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📦 Export Document Suite</div>
+          <button class="btn" onclick="generateInvoicePDF()">Generate Invoice</button>
+          <button class="btn" onclick="alert('Packing List PDF coming next')">Generate Packing List</button>
+          <button class="btn" onclick="alert('Quotation PDF coming next')">Generate Quotation</button>
+          <button class="btn" onclick="alert('Shipping Checklist coming next')">Generate Shipping Checklist</button>
+        </div>
+
+      </div>
+
+    </section>
+
+    <section id="outreachPage" class="hidden">
+
+      <div class="grid grid-3">
+
+        <div class="card">
+          <div class="section-title">📲 WhatsApp Automation</div>
+
+          <input id="outreachContactName" placeholder="Contact / Supplier Name">
+          <input id="outreachPhone" placeholder="WhatsApp Number with country code, e.g. 919876543210">
+          <input id="outreachProduct" placeholder="Product / Deal Context">
+
+          <textarea id="outreachMessage">Hello, we are interested in discussing export/import business opportunities with your company.</textarea>
+
+          <select id="outreachStatus">
+            <option>Draft</option>
+            <option>Opened</option>
+            <option>Follow-up Needed</option>
+            <option>Converted</option>
+            <option>Closed</option>
+          </select>
+
+          <textarea id="outreachNotes" placeholder="Internal notes"></textarea>
+
+          <button class="btn" onclick="saveOutreachRecord()">
+            Save WhatsApp Record
+          </button>
+
+          <button class="btn" onclick="saveAndOpenWhatsApp()">
+            Save & Open WhatsApp
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📧 Real Email Automation</div>
+
+          <input id="emailTo" placeholder="Recipient Email">
+          <input id="emailSubject" placeholder="Email Subject">
+          <textarea id="emailMessage" placeholder="Email message"></textarea>
+
+          <button class="btn" onclick="generateEmailMessage()">
+            Generate AI Email
+          </button>
+
+          <button class="btn" onclick="sendTradeFlowEmail()">
+            Send Email from TradeFlow
+          </button>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">🤖 Outreach Intelligence</div>
+
+          <input id="waAiProduct" placeholder="Product">
+          <input id="waAiBuyer" placeholder="Buyer / Supplier Type">
+
+          <button class="btn" onclick="generateWhatsAppMessage()">
+            Generate WhatsApp Message
+          </button>
+
+          <div class="deal">
+            WhatsApp outreach saved in MongoDB
+          </div>
+
+          <div class="deal">
+            Real email sending via backend Nodemailer
+          </div>
+
+          <div class="deal">
+            AI-ready sales message generation
+          </div>
+        </div>
+
+      </div>
+
+      <div class="grid grid-3">
+
+        <div class="card">
+          <div class="section-title">📊 Outreach Summary</div>
+
+          <div class="deal">
+            Total WhatsApp Records:
+            <b id="outreachCount">0</b>
+          </div>
+
+          <div class="deal">
+            Follow-up Needed:
+            <b id="outreachFollowupCount">0</b>
+          </div>
+
+          <div class="deal">
+            Converted:
+            <b id="outreachConvertedCount">0</b>
+          </div>
+
+          <button class="btn" onclick="fetchOutreachRecords()">
+            Refresh Outreach
+          </button>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">📨 Email Follow-up Templates</div>
+
+          <button class="mini-btn" onclick="useEmailTemplate('supplier')">
+            Supplier Inquiry Template
+          </button>
+
+          <button class="mini-btn" onclick="useEmailTemplate('buyer')">
+            Buyer Proposal Template
+          </button>
+
+          <button class="mini-btn" onclick="useEmailTemplate('followup')">
+            Follow-up Template
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">⚡ Automation Status</div>
+          <div class="deal">Email API: /api/email/send</div>
+          <div class="deal">WhatsApp API: wa.me launch</div>
+          <div class="deal">Outreach DB: MongoDB records</div>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <div class="section-title">📜 WhatsApp Outreach History</div>
+        <div id="outreachList"></div>
+      </div>
+
+    </section>
+
+    <section id="analyticsPage" class="hidden">
+
+      <div class="grid grid-4">
+
+        <div class="card metric">
+          <h3>Total Suppliers</h3>
+          <p id="analyticsTotalSuppliers">0</p>
+          <span>Live workspace leads</span>
+        </div>
+
+        <div class="card metric">
+          <h3>Total Deals</h3>
+          <p id="analyticsTotalDeals">0</p>
+          <span>CRM database</span>
+        </div>
+
+        <div class="card metric">
+          <h3>Pipeline Value</h3>
+          <p id="analyticsPipelineValue">0</p>
+          <span>Open + closed deals</span>
+        </div>
+
+        <div class="card metric">
+          <h3>Conversion Rate</h3>
+          <p id="analyticsConversionRate">0%</p>
+          <span>Closed / total deals</span>
+        </div>
+
+      </div>
+
+      <div class="grid grid-3">
+
+        <div class="card ai-panel">
+          <div class="section-title">📊 Live Analytics Engine</div>
+          <p class="muted">
+            Analytics are calculated from your MongoDB suppliers, CRM deals, and task automation data.
+          </p>
+
+          <div class="deal">
+            Closed Deal Value:
+            <b id="analyticsClosedValue">0</b>
+          </div>
+
+          <div class="deal">
+            Average Supplier Score:
+            <b id="analyticsAverageSupplierScore">0</b>
+          </div>
+
+          <div class="deal">
+            Task Completion Rate:
+            <b id="analyticsTaskCompletionRate">0%</b>
+          </div>
+
+          <button class="btn" onclick="fetchAnalytics()">
+            Refresh Analytics
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📈 Deal Stage Breakdown</div>
+
+          <div class="deal">New Leads: <b id="analyticsNewLead">0</b></div>
+          <div class="deal">Contacted: <b id="analyticsContacted">0</b></div>
+          <div class="deal">Negotiation: <b id="analyticsNegotiation">0</b></div>
+          <div class="deal">Closed: <b id="analyticsClosed">0</b></div>
+          <div class="deal">Lost: <b id="analyticsLost">0</b></div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">✅ Task Performance</div>
+
+          <div class="deal">Total Tasks: <b id="analyticsTotalTasks">0</b></div>
+          <div class="deal">Pending Tasks: <b id="analyticsPendingTasks">0</b></div>
+          <div class="deal">Completed Tasks: <b id="analyticsCompletedTasks">0</b></div>
+          <div class="deal">Action: Use AI Task Planner for follow-ups</div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <section id="aiPage" class="hidden">
+
+      <div class="dashboard-hero">
+        <div class="hero-kicker">TradeFlow AI Copilot • Global Trade Intelligence</div>
+        <h1 class="hero-title">
+          Run export/import work with your <span>AI Trade Operator.</span>
+        </h1>
+        <p class="hero-copy">
+          Generate supplier strategies, outreach messages, negotiation plans, CRM next actions,
+          export document checklists, and daily execution plans from one premium AI command center.
+        </p>
+        <div class="hero-actions">
+          <div class="hero-chip">🌍 Supplier Intelligence</div>
+          <div class="hero-chip">📧 Outreach Automation</div>
+          <div class="hero-chip">💰 Negotiation Strategy</div>
+          <div class="hero-chip">📈 CRM Intelligence</div>
+          <div class="hero-chip">📄 Export Docs</div>
+        </div>
+      </div>
+
+      <div class="grid grid-4">
+        <div class="card metric">
+          <h3>AI Mode</h3>
+          <p>OS</p>
+          <span>Fake AI engine active</span>
+        </div>
+        <div class="card metric">
+          <h3>Response Speed</h3>
+          <p>Fast</p>
+          <span>Instant business drafts</span>
+        </div>
+        <div class="card metric">
+          <h3>Use Case</h3>
+          <p>Trade</p>
+          <span>Export/import focused</span>
+        </div>
+        <div class="card metric">
+          <h3>Automation</h3>
+          <p>Ready</p>
+          <span>Outreach + CRM actions</span>
+        </div>
+      </div>
+
+      <div class="grid grid-3">
+        <div class="card ai-panel">
+          <div class="section-title">⚡ Quick AI Actions</div>
+          <p class="muted">Click once and TradeFlow generates practical business output.</p>
+          <button class="btn" onclick="tradeFlowQuickAI('supplier')">🌍 Supplier Strategy</button>
+          <button class="btn" onclick="tradeFlowQuickAI('email')">📧 Export Email Draft</button>
+          <button class="btn" onclick="tradeFlowQuickAI('whatsapp')">📱 WhatsApp Outreach</button>
+          <button class="btn" onclick="tradeFlowQuickAI('negotiation')">💰 Negotiation Plan</button>
+          <button class="btn" onclick="tradeFlowQuickAI('crm')">📈 CRM Next Action</button>
+          <button class="btn" onclick="tradeFlowQuickAI('documents')">📄 Export Checklist</button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">🤖 AI Output Console</div>
+          <p class="muted">Your generated trade intelligence appears here.</p>
+          <textarea id="tradeflowAiConsole" class="ai-output" style="min-height:420px" placeholder="AI output will appear here...">TradeFlow AI Copilot ready.
+
+Choose any quick action or use the advanced tools below.</textarea>
+          <button class="mini-btn" onclick="copyTradeFlowAIConsole()">Copy AI Output</button>
+          <button class="mini-btn" onclick="sendAIConsoleToOutreach()">Send to Outreach Module</button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">🧠 AI Business Priorities</div>
+          <div class="deal">1. Find qualified suppliers/buyers</div>
+          <div class="deal">2. Send professional outreach</div>
+          <div class="deal">3. Move replies into CRM</div>
+          <div class="deal">4. Negotiate margin and payment terms</div>
+          <div class="deal">5. Prepare export documents</div>
+        </div>
+      </div>
+
+      <div class="grid grid-2">
+
+        <div class="card">
+          <div class="section-title">🌍 AI Supplier Finder</div>
+          <input type="text" id="aiProduct" placeholder="Product (Rice, Medicine, Jaggery...)" value="Rice">
+          <input type="text" id="aiCountry" placeholder="Country (India, UAE, USA...)" value="UAE">
+          <button class="btn" onclick="findAISuppliers()">Find AI Suppliers</button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📧 AI Outreach Writer</div>
+          <input id="aiOutreachProduct" placeholder="Product / Service" value="Indian rice export">
+          <input id="aiOutreachBuyer" placeholder="Buyer / Supplier Type" value="UAE food importer">
+          <textarea id="aiOutreachOutput" class="ai-output" placeholder="AI outreach message will appear here..."></textarea>
+          <button class="btn" onclick="generateOutreach()">Generate Outreach Message</button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📧 AI Email Writer</div>
+          <input id="aiEmailProduct" placeholder="Product / Service" value="Premium basmati rice">
+          <input id="aiEmailReceiver" placeholder="Receiver Type (supplier / buyer)" value="import buyer">
+          <textarea id="aiEmailOutput" class="ai-output" placeholder="AI email will appear here..."></textarea>
+          <button class="btn" onclick="generateAIEmail()">Generate Email Draft</button>
+          <button class="mini-btn" onclick="copyAIEmailToSender()">Copy to Email Sender</button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">💰 AI Negotiation Assistant</div>
+          <input id="aiQuotedPrice" placeholder="Quoted Price" value="100">
+          <input id="aiTargetPrice" placeholder="Target Price" value="88">
+          <textarea id="aiNegotiationOutput" class="ai-output" placeholder="AI negotiation advice will appear here..."></textarea>
+          <button class="btn" onclick="generateNegotiationAdvice()">Generate Negotiation Advice</button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📄 AI Export Document Helper</div>
+          <input id="aiDocProduct" placeholder="Product" value="Rice">
+          <input id="aiDocCountry" placeholder="Destination Country" value="UAE">
+          <textarea id="aiDocOutput" class="ai-output" placeholder="AI export document checklist will appear here..."></textarea>
+          <button class="btn" onclick="generateDocumentHelp()">Generate Checklist</button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📈 AI CRM Deal Advisor</div>
+          <input id="aiDealStage" placeholder="Deal Stage (New Lead / Negotiation / Closed)" value="New Lead">
+          <input id="aiDealValue" placeholder="Deal Value" value="25000">
+          <textarea id="aiCrmOutput" class="ai-output" placeholder="AI CRM advice will appear here..."></textarea>
+          <button class="btn" onclick="generateCrmAdvice()">Generate CRM Advice</button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">✅ AI Task Planner</div>
+          <input id="aiTaskGoal" placeholder="Goal (close rice buyer, follow up supplier...)" value="Close rice buyer in UAE">
+          <textarea id="aiTaskOutput" class="ai-output" placeholder="AI task plan will appear here..."></textarea>
+          <button class="btn" onclick="generateTaskPlan()">Generate Task Plan</button>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">🚀 AI OS Roadmap</div>
+          <div class="deal">Phase 1: Fake AI engine for demo experience</div>
+          <div class="deal">Phase 2: Connect real OpenAI API</div>
+          <div class="deal">Phase 3: Add supplier web data APIs</div>
+          <div class="deal">Phase 4: Automate email + WhatsApp workflows</div>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <div class="section-title">🌍 AI Supplier Results</div>
+        <div id="aiSupplierResults"></div>
+      </div>
+
+    </section>
+
+    <section id="notificationsPage" class="hidden">
+
+      <div class="grid grid-3">
+
+        <div class="card">
+          <div class="section-title">🔔 Create Notification</div>
+
+          <input id="notificationTitle" placeholder="Notification Title">
+
+          <textarea id="notificationMessage" placeholder="Notification message"></textarea>
+
+          <select id="notificationType">
+            <option>General</option>
+            <option>CRM</option>
+            <option>Supplier</option>
+            <option>Task</option>
+            <option>Outreach</option>
+            <option>Document</option>
+            <option>AI</option>
+            <option>System</option>
+          </select>
+
+          <select id="notificationPriority">
+            <option>Low</option>
+            <option selected>Medium</option>
+            <option>High</option>
+          </select>
+
+          <button class="btn" onclick="addNotification()">
+            Save Notification
+          </button>
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">🤖 Smart Alert Intelligence</div>
+          <div class="deal">CRM follow-up reminders</div>
+          <div class="deal">Task deadline alerts</div>
+          <div class="deal">Supplier action notifications</div>
+          <div class="deal">System + AI alerts</div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">📊 Notification Summary</div>
+          <div class="deal">Total Notifications: <b id="notificationCount">0</b></div>
+          <div class="deal">Unread: <b id="unreadNotificationCount">0</b></div>
+          <div class="deal">High Priority: <b id="highPriorityNotificationCount">0</b></div>
+
+          <button class="btn" onclick="fetchNotifications()">
+            Refresh Notifications
+          </button>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <div class="section-title">📜 Notification History</div>
+        <div id="notificationList"></div>
+      </div>
+
+    </section>
+
+    <footer>
+      © 2026 TradeFlow Cloud — Advanced Export / Import SaaS OS
+    </footer>
+
+  </main>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
