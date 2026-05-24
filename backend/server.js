@@ -47,6 +47,8 @@ const { startWorkflowScheduler } = require("./services/workflowScheduler");
 const whatsappAutomationRoutes = require("./routes/whatsappAutomationRoutes");
 const executiveAnalyticsRoutes = require("./routes/executiveAnalyticsRoutes");
 const whiteLabelRoutes = require("./routes/whiteLabelRoutes");
+const liveSupplierIntelligenceRoutes =
+require("./routes/liveSupplierIntelligenceRoutes");
 
 const app = express();
 
@@ -167,6 +169,12 @@ app.use("/api/whatsapp-automation", whatsappAutomationRoutes);
 app.use("/api/executive-analytics", executiveAnalyticsRoutes);
 
 app.use("/api/white-label", whiteLabelRoutes);
+
+
+app.use(
+  "/api/live-supplier-intelligence",
+  liveSupplierIntelligenceRoutes
+);
 
 app.use(
   "/api/org-workspaces",

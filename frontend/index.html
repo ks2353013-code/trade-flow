@@ -410,15 +410,28 @@
       <div class="grid grid-3">
 
         <div class="card">
-          <div class="section-title">🌍 Add Supplier Lead</div>
-          <input id="supplierName" placeholder="Supplier Name">
-          <input id="product" placeholder="Product">
-          <input id="country" placeholder="Country">
-          <input id="email" placeholder="Email">
-          <input id="phone" placeholder="Phone">
-          <textarea id="notes" placeholder="Notes / deal context"></textarea>
-          <button class="btn" onclick="addSupplier()">Add Supplier</button>
-        </div>
+  <div class="section-title">🌍 Add Supplier Lead</div>
+
+  <input id="supplierName" placeholder="Supplier Name">
+  <input id="product" placeholder="Product">
+  <input id="country" placeholder="Country">
+  <input id="email" placeholder="Email">
+  <input id="phone" placeholder="Phone">
+
+  <textarea id="notes" placeholder="Notes / deal context"></textarea>
+
+  <button class="btn" onclick="addSupplier()">
+    Add Supplier
+  </button>
+
+  <button
+    class="btn"
+    onclick="enrichSupplierWebsite()"
+    style="margin-top:10px;"
+  >
+    🌍 Live Supplier Intelligence
+  </button>
+</div>
 
         <div class="card ai-panel">
           <div class="section-title">Lead Intelligence</div>
@@ -1119,5 +1132,6 @@ Choose any quick action or use the advanced tools below.</textarea>
 <script src="./js/whatsapp-automation-dashboard.js"></script>
 <script src="./js/executive-ai-analytics-dashboard.js"></script>
 <script src="./js/white-label-portal-engine.js"></script>
+<script src="./js/live-supplier-intelligence-engine.js"></script>
 </body>
 </html>
