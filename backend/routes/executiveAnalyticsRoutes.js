@@ -1,6 +1,6 @@
 const express = require("express");
 
-const AutomationWorkflow = require("../models/AutomationWorkflow");
+const AutomationWorkflow = require("../models/AutomationWorkflow2");
 
 const router = express.Router();
 
