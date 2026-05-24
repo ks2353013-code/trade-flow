@@ -38,6 +38,7 @@ const razorpayWebhookRoutes = require("./routes/razorpayWebhookRoutes");
 const usageRoutes = require("./routes/usageRoutes");
 const aiSupplierAgentRoutes = require("./routes/aiSupplierAgentRoutes");
 const aiOutreachAgentRoutes = require("./routes/aiOutreachAgentRoutes");
+const aiFollowupAgentRoutes = require("./routes/aiFollowupAgentRoutes");
 
 const app = express();
 
@@ -142,6 +143,8 @@ app.use("/api/usage", usageRoutes);
 app.use("/api/ai-supplier-agent", aiSupplierAgentRoutes);
 
 app.use("/api/ai-outreach-agent", aiOutreachAgentRoutes);
+
+app.use("/api/ai-followup-agent", aiFollowupAgentRoutes);
 
 app.use(
   "/api/org-workspaces",
