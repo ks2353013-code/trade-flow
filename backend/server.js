@@ -51,6 +51,8 @@ const liveSupplierIntelligenceRoutes =
 require("./routes/liveSupplierIntelligenceRoutes");
 const onboardingRoutes =
 require("./routes/onboardingRoutes");
+const realSupplierDiscoveryRoutes =
+require("./routes/realSupplierDiscoveryRoutes");
 
 const app = express();
 
@@ -181,6 +183,11 @@ app.use(
 app.use(
   "/api/onboarding",
   onboardingRoutes
+);
+
+app.use(
+  "/api/real-supplier-discovery",
+  realSupplierDiscoveryRoutes
 );
 
 app.use(
