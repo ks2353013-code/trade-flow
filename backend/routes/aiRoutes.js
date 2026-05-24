@@ -1,7 +1,7 @@
 const { usageTracker } = require("../middleware/usageMiddleware");
 const express = require("express");
 const OpenAI = require("openai");
-
+const { enforceLimit } = require("../middleware/planLimitMiddleware");
 const router = express.Router();
 
 function getOpenAIClient() {
@@ -28,7 +28,7 @@ Recommended workflow:
 `;
 }
 
-router.post("/trade-agent", usageTracker("ai_request"), async (req, res) => {
+router.post("/trade-agent", enforceLimit("ai_request"), usageTracker("ai_request"), async (req, res) => {
   try {
     const { prompt, message, context } = req.body;
     const finalPrompt = prompt || message;

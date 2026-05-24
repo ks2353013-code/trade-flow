@@ -1,7 +1,7 @@
 const express = require("express");
 const Workspace = require("../models/Workspace");
 const { usageTracker } = require("../middleware/usageMiddleware");
-
+const { enforceLimit } = require("../middleware/planLimitMiddleware");
 const {
   requirePlan
 } = require("../middleware/subscriptionMiddleware");
@@ -26,7 +26,7 @@ function tenantFilter(req) {
   return filter;
 }
 
-router.post("/", requirePlan("Pro"), usageTracker("workspace_create"), async (req, res) => {
+router.post("/", requirePlan("Pro"), enforceLimit("workspace_create"), usageTracker("workspace_create"), async (req, res) => {
   try {
     const workspaces = await Workspace.find(tenantFilter(req)).sort({
       createdAt: -1

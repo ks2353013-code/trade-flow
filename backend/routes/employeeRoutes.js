@@ -1,7 +1,7 @@
 const express = require("express");
 const Employee = require("../models/Employee");
 const { usageTracker } = require("../middleware/usageMiddleware");
-
+const { enforceLimit } = require("../middleware/planLimitMiddleware");
 const {
   requirePlan
 } = require("../middleware/subscriptionMiddleware");
@@ -37,7 +37,8 @@ function tenantFilter(req) {
 router.post(
   "/",
   requirePlan("Pro"),
-  usageTracker("employee_create"),
+enforceLimit("employee_create"),
+usageTracker("employee_create"),
 
   async (req, res) => {
 

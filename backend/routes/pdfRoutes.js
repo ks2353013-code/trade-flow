@@ -1,13 +1,14 @@
 const express = require("express");
 const PDFDocument = require("pdfkit");
 const { usageTracker } = require("../middleware/usageMiddleware");
+const { enforceLimit } = require("../middleware/planLimitMiddleware");
 const {
   requirePlan
 } = require("../middleware/subscriptionMiddleware");
 
 const router = express.Router();
 
-router.post("/invoice", requirePlan("Pro"), async (req, res) => {
+router.post("/invoice", requirePlan("Pro"), enforceLimit("pdf_export"), usageTracker("pdf_export"), async (req, res) => {
   try {
     const {
       companyName = "TradeFlow Company",
@@ -50,7 +51,7 @@ router.post("/invoice", requirePlan("Pro"), async (req, res) => {
   }
 });
 
-router.post("/generate", requirePlan("Pro"), usageTracker("pdf_export"), async (req, res) => {
+router.post("/generate", requirePlan("Pro"), enforceLimit("pdf_export"), usageTracker("pdf_export"), async (req, res) => {
   try {
     const {
       title = "TradeFlow Report",

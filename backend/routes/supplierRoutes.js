@@ -1,6 +1,7 @@
 const express = require("express");
 const Supplier = require("../models/Supplier");
 const { usageTracker } = require("../middleware/usageMiddleware");
+const { enforceLimit } = require("../middleware/planLimitMiddleware");
 const router = express.Router();
 
 function tenantFilter(req) {
@@ -33,7 +34,7 @@ router.post("/", usageTracker("supplier_create"), async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", enforceLimit("supplier_create"), usageTracker("supplier_create"), async (req, res) => {
   try {
     const supplier = await Supplier.create({
       ...req.body,
