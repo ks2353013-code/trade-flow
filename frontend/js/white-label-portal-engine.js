@@ -30,28 +30,97 @@
     };
   }
 
+  function setStatus(text) {
+    const el = $("whiteLabelStatus");
+    if (el) el.innerText = text;
+  }
+
+  function injectBrandStyles(settings) {
+    const old = $("whiteLabelRuntimeStyles");
+    if (old) old.remove();
+
+    const style = document.createElement("style");
+    style.id = "whiteLabelRuntimeStyles";
+
+    style.innerHTML = `
+      :root{
+        --brand-primary:${settings.primaryColor || "#2563eb"};
+        --brand-secondary:${settings.secondaryColor || "#0f172a"};
+        --brand-accent:${settings.accentColor || "#38bdf8"};
+      }
+
+      .sidebar,
+      .dashboard-hero,
+      .admin-hero {
+        background:
+          radial-gradient(circle at top left, ${settings.primaryColor || "#2563eb"}33, transparent 35%),
+          linear-gradient(135deg, ${settings.secondaryColor || "#0f172a"}, #020617) !important;
+      }
+
+      .btn,
+      .hero-chip,
+      .plan-pill,
+      .tm-badge {
+        background: linear-gradient(135deg, ${settings.primaryColor || "#2563eb"}, ${settings.accentColor || "#38bdf8"}) !important;
+      }
+
+      .section-title,
+      .hero-title span,
+      .brand h1,
+      .page-title {
+        color: ${settings.accentColor || "#38bdf8"} !important;
+      }
+
+      ${settings.customCss || ""}
+    `;
+
+    document.head.appendChild(style);
+  }
+
   function applyBranding(settings) {
     if (!settings) return;
 
-    document.documentElement.style.setProperty("--brand-primary", settings.primaryColor || "#2563eb");
-    document.documentElement.style.setProperty("--brand-secondary", settings.secondaryColor || "#0f172a");
-    document.documentElement.style.setProperty("--brand-accent", settings.accentColor || "#38bdf8");
+    const companyName = settings.companyName || "TradeFlow";
+    const portalTitle = settings.portalTitle || `${companyName} Enterprise Portal`;
 
-    document.title = settings.portalTitle || "TradeFlow Enterprise Portal";
+    document.title = portalTitle;
 
-    const existing = document.getElementById("whiteLabelCustomCss");
-    if (existing) existing.remove();
+    injectBrandStyles(settings);
 
-    if (settings.customCss) {
-      const style = document.createElement("style");
-      style.id = "whiteLabelCustomCss";
-      style.innerHTML = settings.customCss;
-      document.head.appendChild(style);
+    document.querySelectorAll(".brand h1").forEach((el) => {
+      el.innerText = `${companyName}™`;
+    });
+
+    document.querySelectorAll(".brand p").forEach((el) => {
+      el.innerText = "AI-powered export / import operating system";
+    });
+
+    document.querySelectorAll(".page-title").forEach((el) => {
+      el.innerText = `${companyName} Workspace`;
+    });
+
+    const heroTitle = document.querySelector("#dashboardPage .hero-title");
+    if (heroTitle) {
+      heroTitle.innerHTML = `Welcome to your <span>${companyName} Command Center.</span>`;
     }
 
-    const brandEls = document.querySelectorAll("[data-brand-name]");
-    brandEls.forEach((el) => {
-      el.innerText = settings.companyName || "TradeFlow";
+    const heroKicker = document.querySelector("#dashboardPage .hero-kicker");
+    if (heroKicker) {
+      heroKicker.innerText = "Live Enterprise Workspace • AI Trade OS";
+    }
+
+    const footer = document.querySelector("footer");
+    if (footer) {
+      footer.innerText = `© 2026 ${companyName} — Enterprise AI Trade Operating System`;
+    }
+
+    const aiHeroTitle = document.querySelector("#aiPage .hero-title");
+    if (aiHeroTitle) {
+      aiHeroTitle.innerHTML = `Run export/import work with your <span>${companyName} AI Operator.</span>`;
+    }
+
+    document.querySelectorAll("[data-brand-name]").forEach((el) => {
+      el.innerText = companyName;
     });
   }
 
@@ -125,11 +194,6 @@
     if ($("wlPortalTitle")) $("wlPortalTitle").value = s.portalTitle || "";
     if ($("wlCustomDomain")) $("wlCustomDomain").value = s.customDomain || "";
     if ($("wlCustomCss")) $("wlCustomCss").value = s.customCss || "";
-  }
-
-  function setStatus(text) {
-    const el = $("whiteLabelStatus");
-    if (el) el.innerText = text;
   }
 
   function buildPanel() {
