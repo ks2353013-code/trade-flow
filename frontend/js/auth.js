@@ -2,7 +2,13 @@
    Place this file at: frontend/js/auth.js
 */
 
-const TRADEFLOW_OWNER_EMAIL = "ks2353013@gmail.com";
+const TRADEFLOW_OWNER_EMAIL = "contact@tradeflowai.in";
+
+const TRADEFLOW_OWNER_EMAILS = [
+  "contact@tradeflowai.in",
+  "ks2353013@gmail.com"
+];
+
 const API_BASE = window.TRADEFLOW_API_BASE || "https://trade-flow-lc1k.onrender.com";
 
 function safeJsonParse(value, fallback = null) {
@@ -13,6 +19,10 @@ function safeJsonParse(value, fallback = null) {
   }
 }
 
+function normalizeEmail(email) {
+  return String(email || "").trim().toLowerCase();
+}
+
 function getTradeflowUser() {
   return safeJsonParse(localStorage.getItem("tradeflowUser"));
 }
@@ -21,19 +31,51 @@ function getTradeflowMasterAdmin() {
   return safeJsonParse(localStorage.getItem("tradeflowMasterAdmin"));
 }
 
+function isOwnerEmail(email) {
+  return TRADEFLOW_OWNER_EMAILS.includes(normalizeEmail(email));
+}
+
 function saveTradeflowUser(data) {
   localStorage.removeItem("tradeflowMasterAdmin");
-  localStorage.setItem("tradeflowUser", JSON.stringify(data));
+
+  const email = normalizeEmail(data?.email);
+
+  localStorage.setItem(
+    "tradeflowUser",
+    JSON.stringify({
+      ...data,
+      email,
+      isOwner: isOwnerEmail(email)
+    })
+  );
+
+  localStorage.setItem(
+    "tradeflowIsOwner",
+    isOwnerEmail(email) ? "true" : "false"
+  );
 }
 
 function saveTradeflowMasterAdmin(data) {
   localStorage.removeItem("tradeflowUser");
-  localStorage.setItem("tradeflowMasterAdmin", JSON.stringify(data));
+
+  const email = normalizeEmail(data?.email);
+
+  localStorage.setItem(
+    "tradeflowMasterAdmin",
+    JSON.stringify({
+      ...data,
+      email,
+      isOwner: isOwnerEmail(email)
+    })
+  );
+
+  localStorage.setItem("tradeflowIsOwner", "true");
 }
 
 function clearTradeflowSession() {
   localStorage.removeItem("tradeflowUser");
   localStorage.removeItem("tradeflowMasterAdmin");
+  localStorage.removeItem("tradeflowIsOwner");
 }
 
 function getInputValue(id) {
@@ -62,10 +104,11 @@ async function requestAuth(endpoint, payload) {
   const res = await fetch(`${API_BASE}${endpoint}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(payload)
   });
 
   let data = {};
+
   try {
     data = await res.json();
   } catch (error) {
@@ -88,7 +131,7 @@ async function signupUser(name, email, password, companyName) {
 
   const finalName = name || getInputValue("name");
   const finalCompanyName = companyName || getInputValue("companyName");
-  const finalEmail = (email || getInputValue("email")).toLowerCase();
+  const finalEmail = normalizeEmail(email || getInputValue("email"));
   const finalPassword = password || getInputValue("password");
 
   if (!finalName || !finalCompanyName || !finalEmail || !finalPassword) {
@@ -98,14 +141,19 @@ async function signupUser(name, email, password, companyName) {
 
   try {
     setButtonLoading(btn, true, "Creating workspace...");
+
     const data = await requestAuth("/api/auth/register", {
       name: finalName,
       email: finalEmail,
       password: finalPassword,
-      companyName: finalCompanyName,
+      companyName: finalCompanyName
     });
 
-    saveTradeflowUser(data);
+    saveTradeflowUser({
+      ...data,
+      email: data.email || finalEmail
+    });
+
     window.location.href = "index.html";
   } catch (error) {
     alert(error.message || "Signup failed");
@@ -117,7 +165,7 @@ async function signupUser(name, email, password, companyName) {
 async function loginUser(email, password) {
   const btn = event?.target || null;
 
-  const finalEmail = (email || getInputValue("email")).toLowerCase();
+  const finalEmail = normalizeEmail(email || getInputValue("email"));
   const finalPassword = password || getInputValue("password");
 
   if (!finalEmail || !finalPassword) {
@@ -127,12 +175,17 @@ async function loginUser(email, password) {
 
   try {
     setButtonLoading(btn, true, "Logging in...");
+
     const data = await requestAuth("/api/auth/login", {
       email: finalEmail,
-      password: finalPassword,
+      password: finalPassword
     });
 
-    saveTradeflowUser(data);
+    saveTradeflowUser({
+      ...data,
+      email: data.email || finalEmail
+    });
+
     window.location.href = "index.html";
   } catch (error) {
     alert(error.message || "Login failed");
@@ -144,7 +197,7 @@ async function loginUser(email, password) {
 async function loginMasterAdmin(email, password) {
   const btn = event?.target || null;
 
-  const finalEmail = (email || getInputValue("email")).toLowerCase();
+  const finalEmail = normalizeEmail(email || getInputValue("email"));
   const finalPassword = password || getInputValue("password");
 
   if (!finalEmail || !finalPassword) {
@@ -152,23 +205,30 @@ async function loginMasterAdmin(email, password) {
     return;
   }
 
-  if (finalEmail !== TRADEFLOW_OWNER_EMAIL) {
+  if (!isOwnerEmail(finalEmail)) {
     alert("Access denied. Master Admin is only for the TradeFlow owner email.");
     return;
   }
 
   try {
     setButtonLoading(btn, true, "Opening Master Admin...");
+
     const data = await requestAuth("/api/auth/login", {
       email: finalEmail,
-      password: finalPassword,
+      password: finalPassword
     });
 
-    if ((data.email || finalEmail).toLowerCase() !== TRADEFLOW_OWNER_EMAIL) {
+    const backendEmail = normalizeEmail(data.email || finalEmail);
+
+    if (!isOwnerEmail(backendEmail)) {
       throw new Error("Unauthorized master admin account.");
     }
 
-    saveTradeflowMasterAdmin(data);
+    saveTradeflowMasterAdmin({
+      ...data,
+      email: backendEmail
+    });
+
     window.location.href = "master-admin.html";
   } catch (error) {
     alert(error.message || "Master admin login failed");
@@ -201,10 +261,10 @@ function protectDashboard() {
 
 function protectMasterAdmin() {
   const admin = getTradeflowMasterAdmin();
-  const email = (admin?.email || "").toLowerCase();
+  const email = normalizeEmail(admin?.email);
 
-  if (!admin || !admin.token || email !== TRADEFLOW_OWNER_EMAIL) {
-    clearTradeflowSession();
+  if (!admin || !admin.token || !isOwnerEmail(email)) {
+    localStorage.removeItem("tradeflowMasterAdmin");
     alert("Master Admin is restricted to the owner email only.");
     window.location.replace("master-login.html");
     return false;
@@ -215,6 +275,7 @@ function protectMasterAdmin() {
 
 function redirectAuthenticatedUser() {
   const user = getTradeflowUser();
+
   if (user?.token) {
     window.location.replace("index.html");
   }
@@ -222,7 +283,9 @@ function redirectAuthenticatedUser() {
 
 function redirectAuthenticatedMaster() {
   const admin = getTradeflowMasterAdmin();
-  if (admin?.token && (admin.email || "").toLowerCase() === TRADEFLOW_OWNER_EMAIL) {
+  const email = normalizeEmail(admin?.email);
+
+  if (admin?.token && isOwnerEmail(email)) {
     window.location.replace("master-admin.html");
   }
 }
