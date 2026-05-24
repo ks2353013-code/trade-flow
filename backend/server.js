@@ -32,6 +32,7 @@ const companyRoutes = require("./routes/companyRoutes");
 const workspaceOrgRoutes = require("./routes/workspaceOrgRoutes");
 const aiMemoryRoutes = require("./routes/aiMemoryRoutes");
 const auditRoutes = require("./routes/auditRoutes");
+const backupRoutes = require("./routes/backupRoutes");
 const tenantMiddleware = require("./middleware/tenantMiddleware");
 
 const app = express();
@@ -116,6 +117,8 @@ app.use("/api/billing", billingRoutes);
 app.use("/api/companies", companyRoutes);
 
 app.use("/api/audit", auditRoutes);
+
+app.use("/api/backup", backupRoutes);
 
 app.use(
   "/api/org-workspaces",
