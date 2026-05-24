@@ -34,6 +34,7 @@ const aiMemoryRoutes = require("./routes/aiMemoryRoutes");
 const auditRoutes = require("./routes/auditRoutes");
 const backupRoutes = require("./routes/backupRoutes");
 const tenantMiddleware = require("./middleware/tenantMiddleware");
+const razorpayWebhookRoutes = require("./routes/razorpayWebhookRoutes");
 
 const app = express();
 
@@ -65,6 +66,19 @@ const apiLimiter = rateLimit({
 });
 
 app.use("/api", apiLimiter);
+
+/* =========================
+   RAZORPAY WEBHOOK RAW BODY
+========================= */
+
+app.use(
+  "/api/razorpay",
+  razorpayWebhookRoutes
+);
+
+/* =========================
+   JSON BODY PARSER
+========================= */
 
 app.use(express.json());
 
