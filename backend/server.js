@@ -24,6 +24,8 @@ const billingRoutes = require("./routes/billingRoutes");
 const companyRoutes = require("./routes/companyRoutes");
 const workspaceOrgRoutes = require("./routes/workspaceOrgRoutes");
 const aiMemoryRoutes = require("./routes/aiMemoryRoutes");
+const tenantMiddleware = require("./middleware/tenantMiddleware");
+
 const app = express();
 
 app.use(cors());
@@ -70,6 +72,9 @@ app.use("/api/companies", companyRoutes);
 app.use("/api/org-workspaces", workspaceOrgRoutes);
 
 app.use("/api/ai-memory", aiMemoryRoutes);
+
+app.use(tenantMiddleware);
+
 
 /* =========================
    FRONTEND SERVING
