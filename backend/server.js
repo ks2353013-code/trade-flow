@@ -20,6 +20,7 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const workspaceRoutes = require("./routes/workspaceRoutes");
 const activityRoutes = require("./routes/activityRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const billingRoutes = require("./routes/billingRoutes");
 
 const app = express();
 
@@ -59,6 +60,8 @@ app.use("/api/workspaces", workspaceRoutes);
 app.use("/api/activity", activityRoutes);
 
 app.use("/api/payment", paymentRoutes);
+
+app.use("/api/billing", billingRoutes);
 
 /* =========================
    FRONTEND SERVING
