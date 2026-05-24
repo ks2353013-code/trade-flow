@@ -1,6 +1,6 @@
 const express = require("express");
 const PDFDocument = require("pdfkit");
-
+const { usageTracker } = require("../middleware/usageMiddleware");
 const {
   requirePlan
 } = require("../middleware/subscriptionMiddleware");
@@ -50,7 +50,7 @@ router.post("/invoice", requirePlan("Pro"), async (req, res) => {
   }
 });
 
-router.post("/generate", requirePlan("Pro"), async (req, res) => {
+router.post("/generate", requirePlan("Pro"), usageTracker("pdf_export"), async (req, res) => {
   try {
     const {
       title = "TradeFlow Report",

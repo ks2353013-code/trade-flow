@@ -1,6 +1,6 @@
 const express = require("express");
 const Supplier = require("../models/Supplier");
-
+const { usageTracker } = require("../middleware/usageMiddleware");
 const router = express.Router();
 
 function tenantFilter(req) {
@@ -19,7 +19,7 @@ function tenantFilter(req) {
   return filter;
 }
 
-router.get("/", async (req, res) => {
+router.post("/", usageTracker("supplier_create"), async (req, res) => {
   try {
     const suppliers = await Supplier.find(tenantFilter(req)).sort({
       createdAt: -1

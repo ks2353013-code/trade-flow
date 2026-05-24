@@ -1,5 +1,6 @@
 const express = require("express");
 const Employee = require("../models/Employee");
+const { usageTracker } = require("../middleware/usageMiddleware");
 
 const {
   requirePlan
@@ -33,9 +34,10 @@ function tenantFilter(req) {
    GET EMPLOYEES
 ========================= */
 
-router.get(
+router.post(
   "/",
   requirePlan("Pro"),
+  usageTracker("employee_create"),
 
   async (req, res) => {
 

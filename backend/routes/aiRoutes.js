@@ -1,3 +1,4 @@
+const { usageTracker } = require("../middleware/usageMiddleware");
 const express = require("express");
 const OpenAI = require("openai");
 
@@ -27,7 +28,7 @@ Recommended workflow:
 `;
 }
 
-router.post("/trade-agent", async (req, res) => {
+router.post("/trade-agent", usageTracker("ai_request"), async (req, res) => {
   try {
     const { prompt, message, context } = req.body;
     const finalPrompt = prompt || message;

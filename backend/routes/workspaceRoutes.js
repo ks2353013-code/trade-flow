@@ -1,5 +1,6 @@
 const express = require("express");
 const Workspace = require("../models/Workspace");
+const { usageTracker } = require("../middleware/usageMiddleware");
 
 const {
   requirePlan
@@ -25,7 +26,7 @@ function tenantFilter(req) {
   return filter;
 }
 
-router.get("/", requirePlan("Pro"), async (req, res) => {
+router.post("/", requirePlan("Pro"), usageTracker("workspace_create"), async (req, res) => {
   try {
     const workspaces = await Workspace.find(tenantFilter(req)).sort({
       createdAt: -1

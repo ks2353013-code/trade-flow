@@ -35,7 +35,7 @@ const auditRoutes = require("./routes/auditRoutes");
 const backupRoutes = require("./routes/backupRoutes");
 const tenantMiddleware = require("./middleware/tenantMiddleware");
 const razorpayWebhookRoutes = require("./routes/razorpayWebhookRoutes");
-
+const usageRoutes = require("./routes/usageRoutes");
 const app = express();
 
 /* =========================
@@ -133,6 +133,8 @@ app.use("/api/companies", companyRoutes);
 app.use("/api/audit", auditRoutes);
 
 app.use("/api/backup", backupRoutes);
+
+app.use("/api/usage", usageRoutes);
 
 app.use(
   "/api/org-workspaces",
