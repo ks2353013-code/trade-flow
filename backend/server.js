@@ -42,6 +42,7 @@ const aiFollowupAgentRoutes = require("./routes/aiFollowupAgentRoutes");
 const aiCrmForecastAgentRoutes = require("./routes/aiCrmForecastAgentRoutes");
 const aiTradeRiskAgentRoutes = require("./routes/aiTradeRiskAgentRoutes");
 const automationWorkflowRoutes = require("./routes/automationWorkflowRoutes");
+const emailAutomationRoutes = require("./routes/emailAutomationRoutes");
 
 const app = express();
 
@@ -154,6 +155,8 @@ app.use("/api/ai-crm-forecast-agent", aiCrmForecastAgentRoutes);
 app.use("/api/ai-trade-risk-agent", aiTradeRiskAgentRoutes);
 
 app.use("/api/automation-workflows", automationWorkflowRoutes);
+
+app.use("/api/email-automation", emailAutomationRoutes);
 
 
 
