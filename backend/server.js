@@ -90,8 +90,51 @@ app.get("*", (req, res) => {
    SERVER START
 ========================= */
 
+const http = require("http");
+const { Server } = require("socket.io");
+
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"]
+  }
+});
+
+io.on("connection", (socket) => {
+  console.log("🟢 User connected:", socket.id);
+
+  socket.on("join-workspace", (data) => {
+    const workspaceId = data?.workspaceId || "global";
+    socket.join(workspaceId);
+
+    io.to(workspaceId).emit("workspace-activity", {
+      type: "presence",
+      message: `${data?.email || "A user"} joined workspace`,
+      time: new Date().toISOString()
+    });
+  });
+
+  socket.on("tradeflow-activity", (data) => {
+    const workspaceId = data?.workspaceId || "global";
+
+    io.to(workspaceId).emit("workspace-activity", {
+      type: data?.type || "activity",
+      message: data?.message || "New TradeFlow activity",
+      email: data?.email || "",
+      time: new Date().toISOString()
+    });
+  });
+
+  socket.on("disconnect", () => {
+    console.log("🔴 User disconnected:", socket.id);
+  });
+});
+
+server.listen(PORT, () => {
   console.log(`✅ TradeFlow Server running on port ${PORT}`);
+  console.log("✅ Real-time collaboration engine active");
 });
