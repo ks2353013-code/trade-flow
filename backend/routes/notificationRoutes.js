@@ -3,12 +3,27 @@ const Notification = require("../models/Notification");
 
 const router = express.Router();
 
+function tenantFilter(req) {
+  const filter = {
+    ownerEmail: req.tenant?.ownerEmail || "unknown@tradeflow.local"
+  };
+
+  if (req.tenant?.companyId) {
+    filter.companyId = req.tenant.companyId;
+  }
+
+  if (req.tenant?.workspaceId) {
+    filter.workspaceId = req.tenant.workspaceId;
+  }
+
+  return filter;
+}
+
 router.get("/", async (req, res) => {
   try {
-    const notifications =
-      await Notification.find().sort({
-        createdAt: -1
-      });
+    const notifications = await Notification.find(tenantFilter(req)).sort({
+      createdAt: -1
+    });
 
     res.json(notifications);
   } catch (error) {
@@ -18,10 +33,31 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/unread-count", async (req, res) => {
+  try {
+    const count = await Notification.countDocuments({
+      ...tenantFilter(req),
+      read: false
+    });
+
+    res.json({
+      count
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch unread count"
+    });
+  }
+});
+
 router.post("/", async (req, res) => {
   try {
-    const notification =
-      await Notification.create(req.body);
+    const notification = await Notification.create({
+      ...req.body,
+      ownerEmail: req.tenant?.ownerEmail,
+      companyId: req.tenant?.companyId || req.body.companyId,
+      workspaceId: req.tenant?.workspaceId || req.body.workspaceId
+    });
 
     res.status(201).json(notification);
   } catch (error) {
@@ -31,14 +67,16 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id/read", async (req, res) => {
   try {
-    const notification =
-      await Notification.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        { new: true }
-      );
+    const notification = await Notification.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        ...tenantFilter(req)
+      },
+      { read: true },
+      { new: true }
+    );
 
     if (!notification) {
       return res.status(404).json({
@@ -49,17 +87,33 @@ router.put("/:id", async (req, res) => {
     res.json(notification);
   } catch (error) {
     res.status(500).json({
-      message: "Failed to update notification"
+      message: "Failed to mark notification as read"
+    });
+  }
+});
+
+router.put("/mark-all-read", async (req, res) => {
+  try {
+    await Notification.updateMany(tenantFilter(req), {
+      read: true
+    });
+
+    res.json({
+      message: "All notifications marked as read"
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to mark all as read"
     });
   }
 });
 
 router.delete("/:id", async (req, res) => {
   try {
-    const notification =
-      await Notification.findByIdAndDelete(
-        req.params.id
-      );
+    const notification = await Notification.findOneAndDelete({
+      _id: req.params.id,
+      ...tenantFilter(req)
+    });
 
     if (!notification) {
       return res.status(404).json({

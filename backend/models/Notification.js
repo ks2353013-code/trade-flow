@@ -2,52 +2,68 @@ const mongoose = require("mongoose");
 
 const notificationSchema = new mongoose.Schema(
   {
-    user: {
+    ownerEmail: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      default: "unknown@tradeflow.local"
+    },
+
+    companyId: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: "User",
+      ref: "Company",
+      required: false
+    },
+
+    workspaceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Workspace",
+      required: false
     },
 
     title: {
       type: String,
-      required: true,
+      required: true
     },
 
     message: {
       type: String,
-      required: true,
+      required: true
     },
 
     type: {
       type: String,
       enum: [
-        "General",
+        "System",
+        "AI",
+        "Billing",
+        "Security",
+        "Workspace",
+        "Employee",
         "CRM",
         "Supplier",
-        "Task",
-        "Outreach",
-        "Document",
-        "AI",
-        "System",
+        "Task"
       ],
-      default: "General",
+      default: "System"
     },
 
     priority: {
       type: String,
-      enum: ["Low", "Medium", "High"],
-      default: "Medium",
+      enum: ["Low", "Medium", "High", "Critical"],
+      default: "Medium"
     },
 
-    status: {
-      type: String,
-      enum: ["Unread", "Read"],
-      default: "Unread",
+    read: {
+      type: Boolean,
+      default: false
     },
+
+    metadata: {
+      type: Object,
+      default: {}
+    }
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("Notification", notificationSchema);
