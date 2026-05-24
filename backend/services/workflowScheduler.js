@@ -1,6 +1,6 @@
 const cron = require("node-cron");
 
-const AutomationWorkflow = require("../models/AutomationWorkflow");
+const AutomationWorkflow = require("../models/AutomationWorkflow2");
 const Notification = require("../models/Notification");
 
 let schedulerStarted = false;
