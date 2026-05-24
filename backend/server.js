@@ -45,6 +45,7 @@ const automationWorkflowRoutes = require("./routes/automationWorkflowRoutes");
 const emailAutomationRoutes = require("./routes/emailAutomationRoutes");
 const { startWorkflowScheduler } = require("./services/workflowScheduler");
 const whatsappAutomationRoutes = require("./routes/whatsappAutomationRoutes");
+const executiveAnalyticsRoutes = require("./routes/executiveAnalyticsRoutes");
 
 const app = express();
 
@@ -161,6 +162,9 @@ app.use("/api/automation-workflows", automationWorkflowRoutes);
 app.use("/api/email-automation", emailAutomationRoutes);
 
 app.use("/api/whatsapp-automation", whatsappAutomationRoutes);
+
+app.use("/api/executive-analytics", executiveAnalyticsRoutes);
+
 
 app.use(
   "/api/org-workspaces",
