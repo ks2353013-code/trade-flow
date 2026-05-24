@@ -43,6 +43,7 @@ const aiCrmForecastAgentRoutes = require("./routes/aiCrmForecastAgentRoutes");
 const aiTradeRiskAgentRoutes = require("./routes/aiTradeRiskAgentRoutes");
 const automationWorkflowRoutes = require("./routes/automationWorkflowRoutes");
 const emailAutomationRoutes = require("./routes/emailAutomationRoutes");
+const { startWorkflowScheduler } = require("./services/workflowScheduler");
 
 const app = express();
 
@@ -298,5 +299,7 @@ server.listen(PORT, () => {
   console.log(
     "✅ SaaS security middleware active"
   );
+  
+startWorkflowScheduler();
 
 });
