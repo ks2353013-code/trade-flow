@@ -1,9 +1,26 @@
-/* TradeFlow Razorpay Payment Engine */
+/* TradeFlow Razorpay Payment Engine + Billing Auto Sync */
 
 (function () {
   function getBackendUrl() {
     if (typeof BACKEND_URL !== "undefined") return BACKEND_URL;
     return "https://trade-flow-lc1k.onrender.com";
+  }
+
+  function getUser() {
+    try {
+      if (typeof window.getUser === "function") return window.getUser();
+    } catch {}
+
+    try {
+      return JSON.parse(localStorage.getItem("tradeflowUser") || "{}");
+    } catch {
+      return {};
+    }
+  }
+
+  function getUserEmail() {
+    const user = getUser();
+    return (user.email || localStorage.getItem("tradeflowUserEmail") || "").toLowerCase();
   }
 
   function loadRazorpayScript() {
@@ -18,9 +35,48 @@
     });
   }
 
+  function showMessage(message) {
+    if (window.TradeFlowPremiumUX && typeof window.TradeFlowPremiumUX.toast === "function") {
+      window.TradeFlowPremiumUX.toast(message);
+      return;
+    }
+    alert(message.replace(/<[^>]*>/g, ""));
+  }
+
+  async function refreshBillingAfterPayment() {
+    if (window.TradeFlowBillingEngine) {
+      if (typeof window.TradeFlowBillingEngine.fetchSubscription === "function") {
+        await window.TradeFlowBillingEngine.fetchSubscription();
+      }
+
+      if (typeof window.TradeFlowBillingEngine.fetchPayments === "function") {
+        await window.TradeFlowBillingEngine.fetchPayments();
+      }
+
+      if (typeof window.TradeFlowBillingEngine.render === "function") {
+        window.TradeFlowBillingEngine.render();
+      }
+    }
+
+    if (window.TradeFlowSubscriptionEngine && typeof window.TradeFlowSubscriptionEngine.render === "function") {
+      window.TradeFlowSubscriptionEngine.render();
+    }
+
+    if (window.TradeFlowAccessControl && typeof window.TradeFlowAccessControl.updateNavLocks === "function") {
+      window.TradeFlowAccessControl.updateNavLocks();
+    }
+  }
+
   async function startPayment(plan) {
     if (!["Pro", "Enterprise"].includes(plan)) {
       alert("Please select Pro or Enterprise plan.");
+      return;
+    }
+
+    const email = getUserEmail();
+
+    if (!email) {
+      alert("Please login first before upgrading.");
       return;
     }
 
@@ -34,7 +90,7 @@
     const res = await fetch(`${getBackendUrl()}/api/payment/create-order`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan })
+      body: JSON.stringify({ plan, email })
     });
 
     const order = await res.json();
@@ -51,6 +107,9 @@
       name: "TradeFlow AI OS",
       description: `${plan} Subscription`,
       order_id: order.orderId,
+      prefill: {
+        email
+      },
 
       handler: async function (response) {
         const verifyRes = await fetch(`${getBackendUrl()}/api/payment/verify`, {
@@ -58,7 +117,10 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             ...response,
-            plan
+            plan,
+            email,
+            amount: order.amount,
+            currency: order.currency
           })
         });
 
@@ -69,15 +131,29 @@
           return;
         }
 
-        localStorage.setItem("tradeflowSubscriptionPlan", plan);
-        localStorage.setItem("tradeflowPaymentId", verifyData.paymentId);
+        const activePlan =
+          verifyData.subscription?.plan ||
+          verifyData.plan ||
+          plan;
+
+        localStorage.setItem("tradeflowSubscriptionPlan", activePlan);
+        localStorage.setItem("tradeflowPaymentId", verifyData.paymentId || response.razorpay_payment_id);
+        localStorage.setItem("tradeflowBillingSynced", "yes");
 
         if (window.TradeFlowSubscriptionEngine) {
-          TradeFlowSubscriptionEngine.setPlan(plan);
+          TradeFlowSubscriptionEngine.setPlan(activePlan);
           TradeFlowSubscriptionEngine.render();
         }
 
-        alert(`Payment successful. ${plan} plan activated.`);
+        await refreshBillingAfterPayment();
+
+        showMessage(`✅ Payment successful. <b>${activePlan}</b> plan activated and saved in MongoDB.`);
+      },
+
+      modal: {
+        ondismiss: function () {
+          showMessage("Payment window closed.");
+        }
       },
 
       theme: {
@@ -92,9 +168,7 @@
   function injectPaymentButtons() {
     const modal = document.getElementById("upgradePlanCards");
 
-    if (!modal || modal.dataset.paymentButtonsAdded) return;
-
-    modal.dataset.paymentButtonsAdded = "true";
+    if (!modal) return;
 
     setTimeout(() => {
       const cards = modal.querySelectorAll(".plan-card");
@@ -102,9 +176,9 @@
       cards.forEach((card) => {
         const title = card.querySelector("h2")?.innerText?.trim();
 
-        if (title === "Pro" || title === "Enterprise") {
+        if ((title === "Pro" || title === "Enterprise") && !card.querySelector(".razorpay-pay-btn")) {
           const payBtn = document.createElement("button");
-          payBtn.className = "btn";
+          payBtn.className = "btn razorpay-pay-btn";
           payBtn.style.marginTop = "10px";
           payBtn.innerText = `Pay & Activate ${title}`;
           payBtn.onclick = () => startPayment(title);
@@ -118,10 +192,12 @@
     injectPaymentButtons();
   });
 
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
-  });
+  if (document.body) {
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
 
   window.TradeFlowPaymentEngine = {
     startPayment
