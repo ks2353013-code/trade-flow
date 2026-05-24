@@ -1,11 +1,33 @@
 const express = require("express");
 const Outreach = require("../models/Outreach");
 
+const {
+  requirePlan
+} = require("../middleware/subscriptionMiddleware");
+
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+function tenantFilter(req) {
+  const filter = {
+    ownerEmail:
+      req.tenant?.ownerEmail ||
+      "unknown@tradeflow.local"
+  };
+
+  if (req.tenant?.companyId) {
+    filter.companyId = req.tenant.companyId;
+  }
+
+  if (req.tenant?.workspaceId) {
+    filter.workspaceId = req.tenant.workspaceId;
+  }
+
+  return filter;
+}
+
+router.get("/", requirePlan("Pro"), async (req, res) => {
   try {
-    const items = await Outreach.find().sort({
+    const items = await Outreach.find(tenantFilter(req)).sort({
       createdAt: -1
     });
 
@@ -17,9 +39,14 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", requirePlan("Pro"), async (req, res) => {
   try {
-    const item = await Outreach.create(req.body);
+    const item = await Outreach.create({
+      ...req.body,
+      ownerEmail: req.tenant?.ownerEmail,
+      companyId: req.tenant?.companyId || req.body.companyId,
+      workspaceId: req.tenant?.workspaceId || req.body.workspaceId
+    });
 
     res.status(201).json(item);
   } catch (error) {
@@ -29,10 +56,13 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", requirePlan("Pro"), async (req, res) => {
   try {
-    const item = await Outreach.findByIdAndUpdate(
-      req.params.id,
+    const item = await Outreach.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        ...tenantFilter(req)
+      },
       req.body,
       { new: true }
     );
@@ -51,11 +81,12 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requirePlan("Pro"), async (req, res) => {
   try {
-    const item = await Outreach.findByIdAndDelete(
-      req.params.id
-    );
+    const item = await Outreach.findOneAndDelete({
+      _id: req.params.id,
+      ...tenantFilter(req)
+    });
 
     if (!item) {
       return res.status(404).json({

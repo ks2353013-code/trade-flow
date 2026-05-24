@@ -1,14 +1,18 @@
 const express = require("express");
 const AIMemory = require("../models/AIMemory");
 
+const {
+  requirePlan
+} = require("../middleware/subscriptionMiddleware");
+
 const router = express.Router();
 
 function getOwnerEmail(req) {
   return (
     req.user?.email ||
+    req.headers["x-user-email"] ||
     req.body?.ownerEmail ||
     req.query?.ownerEmail ||
-    req.headers["x-user-email"] ||
     "unknown@tradeflow.local"
   )
     .toString()
@@ -16,19 +20,14 @@ function getOwnerEmail(req) {
     .trim();
 }
 
-router.get("/", async (req, res) => {
+router.get("/", requirePlan("Pro"), async (req, res) => {
   try {
     const ownerEmail = getOwnerEmail(req);
 
     const filter = { ownerEmail };
 
-    if (req.query.companyId) {
-      filter.companyId = req.query.companyId;
-    }
-
-    if (req.query.workspaceId) {
-      filter.workspaceId = req.query.workspaceId;
-    }
+    if (req.query.companyId) filter.companyId = req.query.companyId;
+    if (req.query.workspaceId) filter.workspaceId = req.query.workspaceId;
 
     const memories = await AIMemory.find(filter)
       .sort({ createdAt: -1 })
@@ -42,7 +41,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", requirePlan("Pro"), async (req, res) => {
   try {
     const ownerEmail = getOwnerEmail(req);
 
@@ -65,7 +64,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requirePlan("Pro"), async (req, res) => {
   try {
     const ownerEmail = getOwnerEmail(req);
 
@@ -90,19 +89,14 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-router.delete("/", async (req, res) => {
+router.delete("/", requirePlan("Pro"), async (req, res) => {
   try {
     const ownerEmail = getOwnerEmail(req);
 
     const filter = { ownerEmail };
 
-    if (req.query.companyId) {
-      filter.companyId = req.query.companyId;
-    }
-
-    if (req.query.workspaceId) {
-      filter.workspaceId = req.query.workspaceId;
-    }
+    if (req.query.companyId) filter.companyId = req.query.companyId;
+    if (req.query.workspaceId) filter.workspaceId = req.query.workspaceId;
 
     await AIMemory.deleteMany(filter);
 

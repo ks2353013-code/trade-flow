@@ -1,14 +1,35 @@
 const express = require("express");
 const Workspace = require("../models/Workspace");
 
+const {
+  requirePlan
+} = require("../middleware/subscriptionMiddleware");
+
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+function tenantFilter(req) {
+  const filter = {
+    ownerEmail:
+      req.tenant?.ownerEmail ||
+      "unknown@tradeflow.local"
+  };
+
+  if (req.tenant?.companyId) {
+    filter.companyId = req.tenant.companyId;
+  }
+
+  if (req.tenant?.workspaceId) {
+    filter._id = req.tenant.workspaceId;
+  }
+
+  return filter;
+}
+
+router.get("/", requirePlan("Pro"), async (req, res) => {
   try {
-    const workspaces =
-      await Workspace.find().sort({
-        createdAt: -1
-      });
+    const workspaces = await Workspace.find(tenantFilter(req)).sort({
+      createdAt: -1
+    });
 
     res.json(workspaces);
   } catch (error) {
@@ -18,10 +39,13 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", requirePlan("Pro"), async (req, res) => {
   try {
-    const workspace =
-      await Workspace.create(req.body);
+    const workspace = await Workspace.create({
+      ...req.body,
+      ownerEmail: req.tenant?.ownerEmail,
+      companyId: req.tenant?.companyId || req.body.companyId
+    });
 
     res.status(201).json(workspace);
   } catch (error) {
@@ -31,14 +55,16 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", requirePlan("Pro"), async (req, res) => {
   try {
-    const workspace =
-      await Workspace.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        { new: true }
-      );
+    const workspace = await Workspace.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        ownerEmail: req.tenant?.ownerEmail || "unknown@tradeflow.local"
+      },
+      req.body,
+      { new: true }
+    );
 
     if (!workspace) {
       return res.status(404).json({
@@ -54,12 +80,12 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requirePlan("Pro"), async (req, res) => {
   try {
-    const workspace =
-      await Workspace.findByIdAndDelete(
-        req.params.id
-      );
+    const workspace = await Workspace.findOneAndDelete({
+      _id: req.params.id,
+      ownerEmail: req.tenant?.ownerEmail || "unknown@tradeflow.local"
+    });
 
     if (!workspace) {
       return res.status(404).json({

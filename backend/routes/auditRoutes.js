@@ -1,6 +1,10 @@
 const express = require("express");
 const AuditLog = require("../models/AuditLog");
 
+const {
+  requirePlan
+} = require("../middleware/subscriptionMiddleware");
+
 const router = express.Router();
 
 function getOwnerEmail(req) {
@@ -32,7 +36,7 @@ function getTenant(req) {
   };
 }
 
-router.get("/", async (req, res) => {
+router.get("/", requirePlan("Enterprise"), async (req, res) => {
   try {
     const tenant = getTenant(req);
 
@@ -40,21 +44,10 @@ router.get("/", async (req, res) => {
       ownerEmail: tenant.ownerEmail
     };
 
-    if (tenant.companyId) {
-      filter.companyId = tenant.companyId;
-    }
-
-    if (tenant.workspaceId) {
-      filter.workspaceId = tenant.workspaceId;
-    }
-
-    if (req.query.module) {
-      filter.module = req.query.module;
-    }
-
-    if (req.query.severity) {
-      filter.severity = req.query.severity;
-    }
+    if (tenant.companyId) filter.companyId = tenant.companyId;
+    if (tenant.workspaceId) filter.workspaceId = tenant.workspaceId;
+    if (req.query.module) filter.module = req.query.module;
+    if (req.query.severity) filter.severity = req.query.severity;
 
     const logs = await AuditLog.find(filter)
       .sort({ createdAt: -1 })
@@ -68,7 +61,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", requirePlan("Enterprise"), async (req, res) => {
   try {
     const tenant = getTenant(req);
 
@@ -105,7 +98,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requirePlan("Enterprise"), async (req, res) => {
   try {
     const ownerEmail = getOwnerEmail(req);
 
@@ -130,7 +123,7 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-router.delete("/", async (req, res) => {
+router.delete("/", requirePlan("Enterprise"), async (req, res) => {
   try {
     const tenant = getTenant(req);
 
@@ -138,13 +131,8 @@ router.delete("/", async (req, res) => {
       ownerEmail: tenant.ownerEmail
     };
 
-    if (tenant.companyId) {
-      filter.companyId = tenant.companyId;
-    }
-
-    if (tenant.workspaceId) {
-      filter.workspaceId = tenant.workspaceId;
-    }
+    if (tenant.companyId) filter.companyId = tenant.companyId;
+    if (tenant.workspaceId) filter.workspaceId = tenant.workspaceId;
 
     await AuditLog.deleteMany(filter);
 

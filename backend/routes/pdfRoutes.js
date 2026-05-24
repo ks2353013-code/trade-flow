@@ -1,9 +1,13 @@
 const express = require("express");
 const PDFDocument = require("pdfkit");
 
+const {
+  requirePlan
+} = require("../middleware/subscriptionMiddleware");
+
 const router = express.Router();
 
-router.post("/invoice", async (req, res) => {
+router.post("/invoice", requirePlan("Pro"), async (req, res) => {
   try {
     const {
       companyName = "TradeFlow Company",
@@ -40,11 +44,13 @@ router.post("/invoice", async (req, res) => {
     doc.end();
   } catch (error) {
     console.error("PDF invoice error:", error.message);
-    res.status(500).json({ message: "Failed to generate invoice PDF" });
+    res.status(500).json({
+      message: "Failed to generate invoice PDF"
+    });
   }
 });
 
-router.post("/generate", async (req, res) => {
+router.post("/generate", requirePlan("Pro"), async (req, res) => {
   try {
     const {
       title = "TradeFlow Report",
@@ -68,7 +74,9 @@ router.post("/generate", async (req, res) => {
     doc.end();
   } catch (error) {
     console.error("PDF generation error:", error.message);
-    res.status(500).json({ message: "Failed to generate PDF" });
+    res.status(500).json({
+      message: "Failed to generate PDF"
+    });
   }
 });
 
