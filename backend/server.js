@@ -3,6 +3,13 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const morgan = require("morgan");
+const compression = require("compression");
+
+const http = require("http");
+const { Server } = require("socket.io");
 
 const connectDB = require("./config/db");
 
@@ -24,14 +31,53 @@ const billingRoutes = require("./routes/billingRoutes");
 const companyRoutes = require("./routes/companyRoutes");
 const workspaceOrgRoutes = require("./routes/workspaceOrgRoutes");
 const aiMemoryRoutes = require("./routes/aiMemoryRoutes");
+
 const tenantMiddleware = require("./middleware/tenantMiddleware");
 
 const app = express();
 
+/* =========================
+   SECURITY + PERFORMANCE
+========================= */
+
+app.set("trust proxy", 1);
+
 app.use(cors());
+
+app.use(
+  helmet({
+    contentSecurityPolicy: false
+  })
+);
+
+app.use(compression());
+
+app.use(morgan("combined"));
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  message: {
+    message:
+      "Too many requests. Please try again later."
+  }
+});
+
+app.use("/api", apiLimiter);
+
 app.use(express.json());
 
+/* =========================
+   DATABASE
+========================= */
+
 connectDB();
+
+/* =========================
+   TENANT MIDDLEWARE
+========================= */
+
+app.use(tenantMiddleware);
 
 /* =========================
    API ROUTES
@@ -69,72 +115,143 @@ app.use("/api/billing", billingRoutes);
 
 app.use("/api/companies", companyRoutes);
 
-app.use("/api/org-workspaces", workspaceOrgRoutes);
+app.use(
+  "/api/org-workspaces",
+  workspaceOrgRoutes
+);
 
-app.use("/api/ai-memory", aiMemoryRoutes);
-
-app.use(tenantMiddleware);
-
+app.use(
+  "/api/ai-memory",
+  aiMemoryRoutes
+);
 
 /* =========================
    FRONTEND SERVING
 ========================= */
 
-app.use(express.static(path.join(__dirname, "../frontend")));
+app.use(
+  express.static(
+    path.join(__dirname, "../frontend")
+  )
+);
 
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/index.html"));
+  res.sendFile(
+    path.join(
+      __dirname,
+      "../frontend/index.html"
+    )
+  );
+});
+
+/* =========================
+   REALTIME COLLABORATION
+========================= */
+
+const PORT =
+  process.env.PORT || 5000;
+
+const server =
+  http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE"
+    ]
+  }
+});
+
+io.on("connection", (socket) => {
+
+  console.log(
+    "🟢 User connected:",
+    socket.id
+  );
+
+  socket.on(
+    "join-workspace",
+    (data) => {
+
+      const workspaceId =
+        data?.workspaceId || "global";
+
+      socket.join(workspaceId);
+
+      io.to(workspaceId).emit(
+        "workspace-activity",
+        {
+          type: "presence",
+          message:
+            `${data?.email || "A user"} joined workspace`,
+          time: new Date().toISOString()
+        }
+      );
+    }
+  );
+
+  socket.on(
+    "tradeflow-activity",
+    (data) => {
+
+      const workspaceId =
+        data?.workspaceId || "global";
+
+      io.to(workspaceId).emit(
+        "workspace-activity",
+        {
+          type:
+            data?.type || "activity",
+
+          message:
+            data?.message ||
+            "New TradeFlow activity",
+
+          email:
+            data?.email || "",
+
+          time:
+            new Date().toISOString()
+        }
+      );
+    }
+  );
+
+  socket.on("disconnect", () => {
+
+    console.log(
+      "🔴 User disconnected:",
+      socket.id
+    );
+
+  });
+
 });
 
 /* =========================
    SERVER START
 ========================= */
 
-const http = require("http");
-const { Server } = require("socket.io");
-
-const PORT = process.env.PORT || 5000;
-
-const server = http.createServer(app);
-
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE"]
-  }
-});
-
-io.on("connection", (socket) => {
-  console.log("🟢 User connected:", socket.id);
-
-  socket.on("join-workspace", (data) => {
-    const workspaceId = data?.workspaceId || "global";
-    socket.join(workspaceId);
-
-    io.to(workspaceId).emit("workspace-activity", {
-      type: "presence",
-      message: `${data?.email || "A user"} joined workspace`,
-      time: new Date().toISOString()
-    });
-  });
-
-  socket.on("tradeflow-activity", (data) => {
-    const workspaceId = data?.workspaceId || "global";
-
-    io.to(workspaceId).emit("workspace-activity", {
-      type: data?.type || "activity",
-      message: data?.message || "New TradeFlow activity",
-      email: data?.email || "",
-      time: new Date().toISOString()
-    });
-  });
-
-  socket.on("disconnect", () => {
-    console.log("🔴 User disconnected:", socket.id);
-  });
-});
-
 server.listen(PORT, () => {
-  console.log(`✅ TradeFlow Server running on port ${PORT}`);
-  console.log("✅ Real-time collaboration engine active");
+
+  console.log(
+    `✅ TradeFlow Server running on port ${PORT}`
+  );
+
+  console.log(
+    "✅ MongoDB Connected"
+  );
+
+  console.log(
+    "✅ Real-time collaboration engine active"
+  );
+
+  console.log(
+    "✅ SaaS security middleware active"
+  );
+
 });
