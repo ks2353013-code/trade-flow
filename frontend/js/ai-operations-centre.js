@@ -10,7 +10,8 @@
       "aiSupplierFinderPanel",
       "aiOutreachWriterPanel",
       "aiFollowupAgentPanel",
-      "aiCrmForecastPanel"
+      "aiCrmForecastPanel",
+      "aiTradeRiskPanel"
     ];
 
     panels.forEach((id) => {
@@ -33,7 +34,7 @@
     panel.innerHTML = `
       <div class="section-title">🧠 AI Operations Center</div>
       <p class="muted">
-        Unified command center for supplier intelligence, outreach, follow-ups, CRM forecasting, and trade automation.
+        Unified command center for supplier intelligence, outreach, follow-ups, CRM forecasting, trade risk, and automation.
       </p>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:18px;">
@@ -60,15 +61,22 @@
           <p class="muted">Predict deal probability, revenue, risk, and pipeline health.</p>
           <button class="btn" onclick="TradeFlowAIOps.open('aiCrmForecastPanel')">Open Agent</button>
         </div>
+
+        <div class="supplier-card">
+          <h2 style="color:white;margin:0 0 8px;">🛡 Trade Risk Analyzer</h2>
+          <p class="muted">Analyze supplier, payment, shipment, and operational trade risk.</p>
+          <button class="btn" onclick="TradeFlowAIOps.open('aiTradeRiskPanel')">Open Agent</button>
+        </div>
       </div>
 
       <div class="supplier-card" style="margin-top:18px;">
         <h2 style="color:white;margin:0 0 8px;">🚀 AI Operating Flow</h2>
         <div class="deal">1. Find supplier opportunities</div>
-        <div class="deal">2. Generate outreach</div>
-        <div class="deal">3. Plan follow-ups</div>
-        <div class="deal">4. Forecast CRM conversion</div>
-        <div class="deal">5. Push high-probability deals toward negotiation</div>
+        <div class="deal">2. Analyze trade risk</div>
+        <div class="deal">3. Generate outreach</div>
+        <div class="deal">4. Plan follow-ups</div>
+        <div class="deal">5. Forecast CRM conversion</div>
+        <div class="deal">6. Push high-probability deals toward negotiation</div>
       </div>
     `;
 
@@ -81,7 +89,8 @@
         "aiSupplierFinderPanel",
         "aiOutreachWriterPanel",
         "aiFollowupAgentPanel",
-        "aiCrmForecastPanel"
+        "aiCrmForecastPanel",
+        "aiTradeRiskPanel"
       ].forEach((id) => {
         const el = $(id);
         if (el) el.style.display = "none";
