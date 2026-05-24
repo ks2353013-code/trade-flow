@@ -49,6 +49,8 @@ const executiveAnalyticsRoutes = require("./routes/executiveAnalyticsRoutes");
 const whiteLabelRoutes = require("./routes/whiteLabelRoutes");
 const liveSupplierIntelligenceRoutes =
 require("./routes/liveSupplierIntelligenceRoutes");
+const onboardingRoutes =
+require("./routes/onboardingRoutes");
 
 const app = express();
 
@@ -174,6 +176,11 @@ app.use("/api/white-label", whiteLabelRoutes);
 app.use(
   "/api/live-supplier-intelligence",
   liveSupplierIntelligenceRoutes
+);
+
+app.use(
+  "/api/onboarding",
+  onboardingRoutes
 );
 
 app.use(
