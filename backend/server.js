@@ -44,6 +44,7 @@ const aiTradeRiskAgentRoutes = require("./routes/aiTradeRiskAgentRoutes");
 const automationWorkflowRoutes = require("./routes/automationWorkflowRoutes");
 const emailAutomationRoutes = require("./routes/emailAutomationRoutes");
 const { startWorkflowScheduler } = require("./services/workflowScheduler");
+const whatsappAutomationRoutes = require("./routes/whatsappAutomationRoutes");
 
 const app = express();
 
@@ -159,7 +160,7 @@ app.use("/api/automation-workflows", automationWorkflowRoutes);
 
 app.use("/api/email-automation", emailAutomationRoutes);
 
-
+app.use("/api/whatsapp-automation", whatsappAutomationRoutes);
 
 app.use(
   "/api/org-workspaces",
