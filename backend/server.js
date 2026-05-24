@@ -21,6 +21,8 @@ const workspaceRoutes = require("./routes/workspaceRoutes");
 const activityRoutes = require("./routes/activityRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const billingRoutes = require("./routes/billingRoutes");
+const companyRoutes = require("./routes/companyRoutes");
+const workspaceOrgRoutes = require("./routes/workspaceOrgRoutes");
 
 const app = express();
 
@@ -63,6 +65,9 @@ app.use("/api/payment", paymentRoutes);
 
 app.use("/api/billing", billingRoutes);
 
+app.use("/api/companies", companyRoutes);
+
+app.use("/api/org-workspaces", workspaceOrgRoutes);
 /* =========================
    FRONTEND SERVING
 ========================= */

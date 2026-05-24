@@ -2,57 +2,90 @@ const mongoose = require("mongoose");
 
 const workspaceSchema = new mongoose.Schema(
   {
-    owner: {
+    companyId: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: "User",
+      ref: "Company",
+      required: true
     },
 
-    companyName: {
+    ownerEmail: {
       type: String,
       required: true,
+      lowercase: true,
+      trim: true
     },
 
-    businessType: {
+    workspaceName: {
       type: String,
-      enum: ["Exporter", "Importer", "Both", "Agency", "Manufacturer"],
-      default: "Both",
+      required: true,
+      trim: true
     },
 
-    country: {
+    description: {
       type: String,
-      default: "",
+      default: ""
     },
 
-    gstNumber: {
+    type: {
       type: String,
-      default: "",
+      enum: [
+        "Sales",
+        "Export",
+        "Import",
+        "Marketing",
+        "Operations",
+        "Finance",
+        "Management"
+      ],
+      default: "Sales"
     },
 
-    iecCode: {
+    visibility: {
       type: String,
-      default: "",
-    },
-
-    industry: {
-      type: String,
-      default: "",
-    },
-
-    defaultCurrency: {
-      type: String,
-      default: "USD",
+      enum: ["Private", "Company", "Public"],
+      default: "Company"
     },
 
     status: {
       type: String,
-      enum: ["Active", "Inactive"],
-      default: "Active",
+      enum: ["Active", "Archived"],
+      default: "Active"
     },
+
+    members: [
+      {
+        email: {
+          type: String,
+          lowercase: true,
+          trim: true
+        },
+
+        role: {
+          type: String,
+          enum: [
+            "Owner",
+            "Admin",
+            "Manager",
+            "Sales",
+            "Support",
+            "Viewer"
+          ],
+          default: "Viewer"
+        }
+      }
+    ],
+
+    aiMemoryEnabled: {
+      type: Boolean,
+      default: true
+    },
+
+    automationEnabled: {
+      type: Boolean,
+      default: true
+    }
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("Workspace", workspaceSchema);
