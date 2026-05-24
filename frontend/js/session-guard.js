@@ -1,11 +1,6 @@
-/* TradeFlow Session Guard */
+/* TradeFlow Safe Session Guard */
 
 (function () {
-  function getBackendUrl() {
-    if (typeof BACKEND_URL !== "undefined") return BACKEND_URL;
-    return "https://trade-flow-lc1k.onrender.com";
-  }
-
   function getUser() {
     try {
       return JSON.parse(localStorage.getItem("tradeflowUser") || "{}");
@@ -14,49 +9,30 @@
     }
   }
 
-  function logoutSession() {
-    localStorage.removeItem("tradeflowUser");
-    localStorage.removeItem("tradeflowSubscriptionPlan");
-
-    alert("Session expired. Please login again.");
-
-    if (typeof logoutUser === "function") {
-      logoutUser();
-    } else {
-      window.location.href = "./login.html";
-    }
+  function normalizeEmail(email) {
+    return String(email || "").trim().toLowerCase();
   }
 
-  async function validateSession() {
+  function markOwnerStatus() {
     const user = getUser();
+    const email = normalizeEmail(user.email);
 
-    if (!user.token) return;
+    const ownerEmails = [
+      "contact@tradeflowai.in",
+      "ks2353013@gmail.com"
+    ];
 
-    try {
-      const res = await fetch(`${getBackendUrl()}/api/auth/session`, {
-        headers: {
-          Authorization: `Bearer ${user.token}`
-        }
-      });
+    const isOwner = ownerEmails.includes(email);
 
-      const data = await res.json();
+    localStorage.setItem("tradeflowIsOwner", isOwner ? "true" : "false");
 
-      if (!res.ok || !data.valid) {
-        logoutSession();
-        return;
-      }
+    window.TradeFlowSession = {
+      user,
+      isOwner,
+      ownerEmails
+    };
 
-      localStorage.setItem(
-        "tradeflowUser",
-        JSON.stringify({
-          ...user,
-          ...data.user,
-          token: user.token
-        })
-      );
-    } catch {
-      console.warn("Session check skipped due to network issue.");
-    }
+    console.log("TradeFlow session:", email, "Owner:", isOwner);
   }
 
   function patchFetchForSessionExpiry() {
@@ -69,7 +45,7 @@
       const response = await originalFetch(url, options);
 
       if (response.status === 401) {
-        logoutSession();
+        console.warn("Session API returned 401, but no forced logout to prevent redirect loop.");
       }
 
       return response;
@@ -78,9 +54,7 @@
 
   function boot() {
     patchFetchForSessionExpiry();
-    validateSession();
-
-    setInterval(validateSession, 5 * 60 * 1000);
+    markOwnerStatus();
   }
 
   if (document.readyState === "loading") {
