@@ -37,6 +37,7 @@ const tenantMiddleware = require("./middleware/tenantMiddleware");
 const razorpayWebhookRoutes = require("./routes/razorpayWebhookRoutes");
 const usageRoutes = require("./routes/usageRoutes");
 const aiSupplierAgentRoutes = require("./routes/aiSupplierAgentRoutes");
+const aiOutreachAgentRoutes = require("./routes/aiOutreachAgentRoutes");
 
 const app = express();
 
@@ -139,6 +140,8 @@ app.use("/api/backup", backupRoutes);
 app.use("/api/usage", usageRoutes);
 
 app.use("/api/ai-supplier-agent", aiSupplierAgentRoutes);
+
+app.use("/api/ai-outreach-agent", aiOutreachAgentRoutes);
 
 app.use(
   "/api/org-workspaces",
