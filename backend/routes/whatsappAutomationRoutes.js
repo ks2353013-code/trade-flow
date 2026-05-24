@@ -2,8 +2,7 @@ const express = require("express");
 
 const {
   sendWhatsAppMessage
-} = require("../services/whatsappService");
-
+} = require("../services/whatsappService2");
 const {
   enforceLimit
 } = require("../middleware/planLimitMiddleware");
