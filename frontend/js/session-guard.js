@@ -1,11 +1,11 @@
-/* TradeFlow Safe Session Guard */
+/* TradeFlow Unified Session Guard */
 
 (function () {
-  function getUser() {
+  function safeParse(key) {
     try {
-      return JSON.parse(localStorage.getItem("tradeflowUser") || "{}");
+      return JSON.parse(localStorage.getItem(key) || "null");
     } catch {
-      return {};
+      return null;
     }
   }
 
@@ -13,26 +13,35 @@
     return String(email || "").trim().toLowerCase();
   }
 
-  function markOwnerStatus() {
-    const user = getUser();
-    const email = normalizeEmail(user.email);
+  const OWNER_EMAILS = [
+    "contact@tradeflowai.in",
+    "ks2353013@gmail.com"
+  ];
 
-    const ownerEmails = [
-      "contact@tradeflowai.in",
-      "ks2353013@gmail.com"
-    ];
+  function syncOwnerToUserSession() {
+    const user = safeParse("tradeflowUser");
+    const master = safeParse("tradeflowMasterAdmin");
 
-    const isOwner = ownerEmails.includes(email);
+    if (user && user.token) {
+      localStorage.setItem(
+        "tradeflowIsOwner",
+        OWNER_EMAILS.includes(normalizeEmail(user.email)) ? "true" : "false"
+      );
+      return;
+    }
 
-    localStorage.setItem("tradeflowIsOwner", isOwner ? "true" : "false");
+    if (master && master.token && OWNER_EMAILS.includes(normalizeEmail(master.email))) {
+      localStorage.setItem(
+        "tradeflowUser",
+        JSON.stringify({
+          ...master,
+          isOwner: true
+        })
+      );
 
-    window.TradeFlowSession = {
-      user,
-      isOwner,
-      ownerEmails
-    };
-
-    console.log("TradeFlow session:", email, "Owner:", isOwner);
+      localStorage.setItem("tradeflowIsOwner", "true");
+      return;
+    }
   }
 
   function patchFetchForSessionExpiry() {
@@ -45,7 +54,7 @@
       const response = await originalFetch(url, options);
 
       if (response.status === 401) {
-        console.warn("Session API returned 401, but no forced logout to prevent redirect loop.");
+        console.warn("401 detected, but not forcing logout to avoid redirect loop.");
       }
 
       return response;
@@ -53,8 +62,8 @@
   }
 
   function boot() {
+    syncOwnerToUserSession();
     patchFetchForSessionExpiry();
-    markOwnerStatus();
   }
 
   if (document.readyState === "loading") {
