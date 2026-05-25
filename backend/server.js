@@ -52,6 +52,7 @@ require("./routes/liveSupplierIntelligenceRoutes");
 const onboardingRoutes =
 require("./routes/onboardingRoutes");
 const realSupplierDiscoveryRoutes = require("./routes/realSupplierDiscoveryRoutes");
+const buyerDiscoveryRoutes = require("./routes/buyerDiscoveryRoutes");
 
 const app = express();
 
@@ -174,6 +175,8 @@ app.use("/api/executive-analytics", executiveAnalyticsRoutes);
 app.use("/api/white-label", whiteLabelRoutes);
 
 app.use("/api/real-supplier-discovery", realSupplierDiscoveryRoutes);
+
+app.use("/api/buyer-discovery", buyerDiscoveryRoutes);
 
 app.use(
   "/api/live-supplier-intelligence",
