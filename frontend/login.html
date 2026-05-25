@@ -97,29 +97,33 @@ async function loginUser() {
       return;
     }
 
+    const userEmail = normalizeEmail(data.email || data.user?.email || email);
+
     localStorage.removeItem("tradeflowMasterAdmin");
 
     localStorage.setItem(
       "tradeflowUser",
       JSON.stringify({
         ...data,
-        email: data.email || email,
+        email: userEmail,
+        name: data.name || data.user?.name || "TradeFlow User",
+        companyName: data.companyName || data.user?.companyName || "TradeFlow Workspace",
         isOwner:
-          email === "contact@tradeflowai.in" ||
-          email === "ks2353013@gmail.com"
+          userEmail === "contact@tradeflowai.in" ||
+          userEmail === "ks2353013@gmail.com"
       })
     );
 
     localStorage.setItem(
       "tradeflowIsOwner",
-      email === "contact@tradeflowai.in" || email === "ks2353013@gmail.com"
+      userEmail === "contact@tradeflowai.in" || userEmail === "ks2353013@gmail.com"
         ? "true"
         : "false"
     );
 
-    window.location.href = "./index.html";
+    window.location.href = "index.html";
   } catch (error) {
-    console.error(error);
+    console.error("Login error:", error);
     alert("Backend connection failed. Please try again.");
   }
 }
