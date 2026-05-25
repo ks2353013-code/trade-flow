@@ -870,8 +870,7 @@ async function fetchSuppliers() {
     });
 
   } catch (error) {
-    console.log("Request failed. Please refresh or login again.");
-    logoutUser();
+    console.warn("API request failed but session preserved.");
   }
 }
 
