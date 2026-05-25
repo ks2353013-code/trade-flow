@@ -62,19 +62,66 @@
   </main>
 <script>
 const API_BASE = "https://trade-flow-lc1k.onrender.com";
-async function loginUser(){
-  const email=document.getElementById("email").value.trim();
-  const password=document.getElementById("password").value.trim();
-  if(!email||!password){alert("Please enter email and password");return;}
-  try{
-    const res=await fetch(`${API_BASE}/api/auth/login`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,password})});
-    const data=await res.json();
-    if(!res.ok){alert(data.message||"Login failed");return;}
-    if(!data.token){alert("Login failed: token not received from backend.");return;}
-    localStorage.removeItem("tradeflowUser");
-    localStorage.setItem("tradeflowUser",JSON.stringify(data));
-    window.location.href="index.html";
-  }catch(error){alert("Backend connection failed. Please open backend once: "+API_BASE);}
+
+function normalizeEmail(email) {
+  return String(email || "").trim().toLowerCase();
+}
+
+async function loginUser() {
+  const email = normalizeEmail(document.getElementById("email").value);
+  const password = document.getElementById("password").value.trim();
+
+  if (!email || !password) {
+    alert("Please enter email and password");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || "Login failed");
+      return;
+    }
+
+    if (!data.token) {
+      alert("Login failed: token not received from backend.");
+      return;
+    }
+
+    localStorage.removeItem("tradeflowMasterAdmin");
+
+    localStorage.setItem(
+      "tradeflowUser",
+      JSON.stringify({
+        ...data,
+        email: data.email || email,
+        isOwner:
+          email === "contact@tradeflowai.in" ||
+          email === "ks2353013@gmail.com"
+      })
+    );
+
+    localStorage.setItem(
+      "tradeflowIsOwner",
+      email === "contact@tradeflowai.in" || email === "ks2353013@gmail.com"
+        ? "true"
+        : "false"
+    );
+
+    window.location.href = "./index.html";
+  } catch (error) {
+    console.error(error);
+    alert("Backend connection failed. Please try again.");
+  }
 }
 </script>
 </body></html>
