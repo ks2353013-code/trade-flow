@@ -21,9 +21,31 @@ function createToken(user) {
   );
 }
 
-router.post("/signup", async (req, res) => {
+function buildUser({ name, email, companyName }) {
+  return {
+    id: Date.now().toString(),
+    name: name || "TradeFlow User",
+    companyName: companyName || "TradeFlow Workspace",
+    email: String(email || "").toLowerCase(),
+    role: "Owner",
+    permissions: {
+      dashboard: true,
+      suppliers: true,
+      crm: true,
+      tasks: true,
+      analytics: true,
+      documents: true,
+      outreach: true,
+      ai: true,
+      billing: true,
+      admin: true
+    }
+  };
+}
+
+async function handleSignup(req, res) {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, companyName } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({
@@ -31,41 +53,34 @@ router.post("/signup", async (req, res) => {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    await bcrypt.hash(password, 10);
 
-    const user = {
-      id: Date.now().toString(),
-      name: name || "TradeFlow User",
-      email: email.toLowerCase(),
-      role: "Owner",
-      permissions: {
-        dashboard: true,
-        suppliers: true,
-        crm: true,
-        tasks: true,
-        analytics: true,
-        documents: true,
-        outreach: true,
-        ai: true,
-        billing: true,
-        admin: true
-      }
-    };
+    const user = buildUser({
+      name,
+      email,
+      companyName
+    });
 
     const token = createToken(user);
 
     res.json({
       success: true,
       token,
+      ...user,
       user,
       expiresIn: "7d"
     });
   } catch (error) {
+    console.error("Signup error:", error.message);
+
     res.status(500).json({
       message: "Signup failed"
     });
   }
-});
+}
+
+router.post("/signup", handleSignup);
+router.post("/register", handleSignup);
 
 router.post("/login", async (req, res) => {
   try {
@@ -77,33 +92,24 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const user = {
-      id: Date.now().toString(),
-      email: email.toLowerCase(),
-      role: "Owner",
-      permissions: {
-        dashboard: true,
-        suppliers: true,
-        crm: true,
-        tasks: true,
-        analytics: true,
-        documents: true,
-        outreach: true,
-        ai: true,
-        billing: true,
-        admin: true
-      }
-    };
+    const user = buildUser({
+      email,
+      name: "TradeFlow User",
+      companyName: "TradeFlow Workspace"
+    });
 
     const token = createToken(user);
 
     res.json({
       success: true,
       token,
+      ...user,
       user,
       expiresIn: "7d"
     });
   } catch (error) {
+    console.error("Login error:", error.message);
+
     res.status(500).json({
       message: "Login failed"
     });
