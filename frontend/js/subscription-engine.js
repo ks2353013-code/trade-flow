@@ -5,35 +5,57 @@
   const USAGE_KEY = "tradeflowUsageStats";
 
   const PLANS = {
-    Free: {
-      label: "Free",
-      price: "₹0",
-      aiLimit: 20,
-      supplierLimit: 25,
-      dealLimit: 20,
-      workspaceLimit: 1,
-      employeeLimit: 1,
-      features: ["Dashboard", "Basic CRM", "Basic Suppliers", "Limited AI"]
-    },
-    Pro: {
-      label: "Pro",
+    Starter: {
+      label: "Starter",
       price: "₹1,999/month",
-      aiLimit: 500,
-      supplierLimit: 500,
-      dealLimit: 300,
-      workspaceLimit: 5,
-      employeeLimit: 10,
-      features: ["AI Copilot", "Supplier Intelligence", "CRM Intelligence", "Outreach", "Automation"]
+      aiLimit: 20,
+      supplierLimit: 200,
+      dealLimit: 50,
+      workspaceLimit: 1,
+      employeeLimit: 3,
+      features: [
+        "Dashboard",
+        "Basic CRM",
+        "Basic Suppliers",
+        "Tasks",
+        "Basic Outreach"
+      ]
     },
-    Enterprise: {
-      label: "Enterprise",
-      price: "Custom",
+
+    "Pro Exporter": {
+      label: "Pro Exporter",
+      price: "₹8,999/month",
+      aiLimit: 1000,
+      supplierLimit: 2000,
+      dealLimit: 1000,
+      workspaceLimit: 5,
+      employeeLimit: 25,
+      features: [
+        "AI Copilot",
+        "Buyer Discovery",
+        "PDF Documents",
+        "Analytics",
+        "WhatsApp/Email Automation",
+        "Trade Risk Engine"
+      ]
+    },
+
+    "Enterprise AI OS": {
+      label: "Enterprise AI OS",
+      price: "₹49,999/month",
       aiLimit: 10000,
       supplierLimit: 10000,
       dealLimit: 5000,
       workspaceLimit: 100,
       employeeLimit: 200,
-      features: ["Unlimited AI", "Multi-company", "Admin Controls", "Priority Support", "Custom Workflows"]
+      features: [
+        "Autonomous AI",
+        "Executive Brain",
+        "Strategic Control Tower",
+        "White Label Portal",
+        "Live Supplier Network",
+        "Priority Support"
+      ]
     }
   };
 
@@ -54,11 +76,11 @@
   }
 
   function getPlanName() {
-    return localStorage.getItem(PLAN_KEY) || "Free";
+    return localStorage.getItem(PLAN_KEY) || "Starter";
   }
 
   function getPlan() {
-    return PLANS[getPlanName()] || PLANS.Free;
+    return PLANS[getPlanName()] || PLANS.Starter;
   }
 
   function setPlan(planName) {
@@ -138,7 +160,7 @@
   function requirePlan(type, actionLabel) {
     if (!isOverLimit(type)) return true;
 
-    showUpgradeToast(`Limit reached for ${actionLabel}. Upgrade to Pro or Enterprise.`);
+    showUpgradeToast(`Limit reached for ${actionLabel}. Upgrade to Pro Exporter or Enterprise AI OS.`);
     if (window.TradeFlowSubscriptionEngine) {
       window.TradeFlowSubscriptionEngine.openUpgrade();
     }
@@ -271,9 +293,9 @@
       <p class="muted">Control current plan for demo/testing. Later this connects to Razorpay/Stripe.</p>
 
       <select id="subscriptionPlanSelector">
-        <option value="Free">Free</option>
-        <option value="Pro">Pro</option>
-        <option value="Enterprise">Enterprise</option>
+        <option value="Starter">Starter</option>
+        <option value="Pro Exporter">Pro Exporter</option>
+        <option value="Enterprise AI OS">Enterprise AI OS</option>
       </select>
 
       <button class="btn" onclick="TradeFlowSubscriptionEngine.applySelectedPlan()">Apply Plan</button>

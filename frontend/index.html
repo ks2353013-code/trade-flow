@@ -202,7 +202,7 @@
 
         <div class="card metric">
           <h3>Subscription</h3>
-          <p id="masterSubscriptionPlan">Pro</p>
+          <p id="masterSubscriptionPlan">Pro Exporter</p>
           <span>Current SaaS plan</span>
         </div>
       </div>
@@ -234,8 +234,7 @@
           <select id="subscriptionPlan">
             <option>Starter</option>
             <option selected>Pro Exporter</option>
-            <option>Enterprise</option>
-            <option>Custom Agency</option>
+            <option>Enterprise AI OS</option>
           </select>
 
           <select id="subscriptionStatus">
@@ -1137,17 +1136,92 @@ Choose any quick action or use the advanced tools below.</textarea>
 <script src="./js/enterprise-onboarding-engine.js"></script>
 <script src="./js/real-supplier-discovery-engine.js"></script>
 <script src="./js/buyer-discovery-engine.js"></script>
-<script src="./js/premium-ux-visual.js"></script>
-<script src="./js/premium-experience-engine.js"></script>
-<script src="./js/ai-growth-opportunity-engine.js"></script>
-<script src="./js/enterprise-operational-timeline.js"></script>
+<script>
+/*
+  TradeFlow Plan Gate Loader
+  Starter: core SaaS only
+  Pro Exporter: premium UX + growth/analytics modules
+  Enterprise AI OS: executive brain + autonomous/live supplier modules
+*/
+(function () {
+  const PLAN_KEY = "tradeflowSubscriptionPlan";
 
-<script src="./js/ai-autonomous-operations-engine.js"></script>
- 
-<script src="./js/ai-executive-workspace-brain.js"></script>
-<script src="./js/strategic-control-tower.js"></script>
-<script src="./js/live-supplier-network-engine.js"></script>
+  function currentPlan() {
+    return localStorage.getItem(PLAN_KEY) || "Starter";
+  }
 
+  function loadScript(src) {
+    if (document.querySelector(`script[src="${src}"]`)) return;
+
+    const script = document.createElement("script");
+    script.src = src;
+    script.defer = true;
+    document.body.appendChild(script);
+  }
+
+  function hideNavByText(text) {
+    document.querySelectorAll(".nav-btn").forEach((btn) => {
+      if ((btn.innerText || "").toLowerCase().includes(text.toLowerCase())) {
+        btn.style.display = "none";
+      }
+    });
+  }
+
+  function lockStarterFeatures() {
+    hideNavByText("AI Command Center");
+    hideNavByText("Analytics Center");
+    hideNavByText("Smart Outreach");
+    hideNavByText("Export Documents");
+  }
+
+  function lockProFeatures() {
+    // Pro gets AI, analytics, documents and outreach.
+    // Only owner-level/enterprise modules remain restricted.
+  }
+
+  function applyPlanGate() {
+    const plan = currentPlan();
+
+    if (plan === "Starter") {
+      lockStarterFeatures();
+      return;
+    }
+
+    if (plan === "Pro Exporter") {
+      lockProFeatures();
+      loadScript("./js/premium-ux-visual.js");
+      loadScript("./js/premium-experience-engine.js");
+      loadScript("./js/ai-growth-opportunity-engine.js");
+      loadScript("./js/enterprise-operational-timeline.js");
+      return;
+    }
+
+    if (plan === "Enterprise AI OS") {
+      loadScript("./js/premium-ux-visual.js");
+      loadScript("./js/premium-experience-engine.js");
+      loadScript("./js/ai-growth-opportunity-engine.js");
+      loadScript("./js/enterprise-operational-timeline.js");
+      loadScript("./js/ai-executive-workspace-brain.js");
+      loadScript("./js/strategic-control-tower.js");
+      loadScript("./js/ai-autonomous-operations-engine.js");
+      loadScript("./js/live-supplier-network-engine.js");
+    }
+  }
+
+  window.TradeFlowPlanGate = {
+    apply: applyPlanGate,
+    currentPlan
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", applyPlanGate);
+  } else {
+    applyPlanGate();
+  }
+})();
+</script>
+
+<!-- Enterprise API hub stays disabled until backend keys and API billing are ready -->
 <!-- <script src="./js/api-integration-hub.js"></script> -->
 
 </body>

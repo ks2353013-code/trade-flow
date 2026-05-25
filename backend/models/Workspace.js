@@ -52,6 +52,85 @@ const workspaceSchema = new mongoose.Schema(
       default: "Active"
     },
 
+    subscriptionPlan: {
+      type: String,
+      enum: ["Starter", "Pro Exporter", "Enterprise AI OS"],
+      default: "Starter"
+    },
+
+    subscriptionPrice: {
+      type: Number,
+      default: 1999
+    },
+
+    subscriptionStatus: {
+      type: String,
+      enum: ["Trial", "Active", "Past Due", "Cancelled"],
+      default: "Active"
+    },
+
+    planLimits: {
+      maxSuppliers: {
+        type: Number,
+        default: 200
+      },
+      maxBuyerSearches: {
+        type: Number,
+        default: 50
+      },
+      maxEmployees: {
+        type: Number,
+        default: 3
+      },
+      maxWorkspaces: {
+        type: Number,
+        default: 1
+      }
+    },
+
+    features: {
+      aiTools: {
+        type: Boolean,
+        default: false
+      },
+      analytics: {
+        type: Boolean,
+        default: false
+      },
+      buyerDiscovery: {
+        type: Boolean,
+        default: false
+      },
+      automation: {
+        type: Boolean,
+        default: false
+      },
+      documents: {
+        type: Boolean,
+        default: false
+      },
+      tradeRiskEngine: {
+        type: Boolean,
+        default: false
+      },
+      executiveControlTower: {
+        type: Boolean,
+        default: false
+      },
+      autonomousAI: {
+        type: Boolean,
+        default: false
+      },
+      whiteLabel: {
+        type: Boolean,
+        default: false
+      },
+      liveSupplierNetwork: {
+        type: Boolean,
+        default: false
+      }
+    },
+
     members: [
       {
         email: {
@@ -82,10 +161,92 @@ const workspaceSchema = new mongoose.Schema(
 
     automationEnabled: {
       type: Boolean,
-      default: true
+      default: false
     }
   },
   { timestamps: true }
 );
+
+workspaceSchema.pre("save", function (next) {
+  if (this.subscriptionPlan === "Starter") {
+    this.subscriptionPrice = 1999;
+
+    this.planLimits = {
+      maxSuppliers: 200,
+      maxBuyerSearches: 50,
+      maxEmployees: 3,
+      maxWorkspaces: 1
+    };
+
+    this.features = {
+      aiTools: false,
+      analytics: false,
+      buyerDiscovery: false,
+      automation: false,
+      documents: false,
+      tradeRiskEngine: false,
+      executiveControlTower: false,
+      autonomousAI: false,
+      whiteLabel: false,
+      liveSupplierNetwork: false
+    };
+
+    this.automationEnabled = false;
+  }
+
+  if (this.subscriptionPlan === "Pro Exporter") {
+    this.subscriptionPrice = 8999;
+
+    this.planLimits = {
+      maxSuppliers: 2000,
+      maxBuyerSearches: 1000,
+      maxEmployees: 25,
+      maxWorkspaces: 5
+    };
+
+    this.features = {
+      aiTools: true,
+      analytics: true,
+      buyerDiscovery: true,
+      automation: true,
+      documents: true,
+      tradeRiskEngine: true,
+      executiveControlTower: false,
+      autonomousAI: false,
+      whiteLabel: false,
+      liveSupplierNetwork: false
+    };
+
+    this.automationEnabled = true;
+  }
+
+  if (this.subscriptionPlan === "Enterprise AI OS") {
+    this.subscriptionPrice = 49999;
+
+    this.planLimits = {
+      maxSuppliers: 999999,
+      maxBuyerSearches: 999999,
+      maxEmployees: 999999,
+      maxWorkspaces: 999999
+    };
+
+    this.features = {
+      aiTools: true,
+      analytics: true,
+      buyerDiscovery: true,
+      automation: true,
+      documents: true,
+      tradeRiskEngine: true,
+      executiveControlTower: true,
+      autonomousAI: true,
+      whiteLabel: true,
+      liveSupplierNetwork: true
+    };
+
+    this.automationEnabled = true;
+  }
+
+  next();
+});
 
 module.exports = mongoose.model("Workspace", workspaceSchema);

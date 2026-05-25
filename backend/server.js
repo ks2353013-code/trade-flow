@@ -36,23 +36,40 @@ const backupRoutes = require("./routes/backupRoutes");
 const tenantMiddleware = require("./middleware/tenantMiddleware");
 const razorpayWebhookRoutes = require("./routes/razorpayWebhookRoutes");
 const usageRoutes = require("./routes/usageRoutes");
+
 const aiSupplierAgentRoutes = require("./routes/aiSupplierAgentRoutes");
 const aiOutreachAgentRoutes = require("./routes/aiOutreachAgentRoutes");
 const aiFollowupAgentRoutes = require("./routes/aiFollowupAgentRoutes");
 const aiCrmForecastAgentRoutes = require("./routes/aiCrmForecastAgentRoutes");
 const aiTradeRiskAgentRoutes = require("./routes/aiTradeRiskAgentRoutes");
+
 const automationWorkflowRoutes = require("./routes/automationWorkflowRoutes2");
 const emailAutomationRoutes = require("./routes/emailAutomationRoutes");
-const { startWorkflowScheduler } = require("./services/workflowScheduler");
 const whatsappAutomationRoutes = require("./routes/whatsappAutomationRoutes");
+
 const executiveAnalyticsRoutes = require("./routes/executiveAnalyticsRoutes");
 const whiteLabelRoutes = require("./routes/whiteLabelRoutes");
+
 const liveSupplierIntelligenceRoutes =
 require("./routes/liveSupplierIntelligenceRoutes");
+
 const onboardingRoutes =
 require("./routes/onboardingRoutes");
-const realSupplierDiscoveryRoutes = require("./routes/realSupplierDiscoveryRoutes");
-const buyerDiscoveryRoutes = require("./routes/buyerDiscoveryRoutes");
+
+const realSupplierDiscoveryRoutes =
+require("./routes/realSupplierDiscoveryRoutes");
+
+const buyerDiscoveryRoutes =
+require("./routes/buyerDiscoveryRoutes");
+
+const {
+  requirePro,
+  requireEnterprise
+} = require("./middleware/subscriptionMiddleware");
+
+const {
+  startWorkflowScheduler
+} = require("./services/workflowScheduler");
 
 const app = express();
 
@@ -170,24 +187,47 @@ app.use("/api/email-automation", emailAutomationRoutes);
 
 app.use("/api/whatsapp-automation", whatsappAutomationRoutes);
 
-app.use("/api/executive-analytics", executiveAnalyticsRoutes);
+/* =========================
+   ENTERPRISE PROTECTED APIs
+========================= */
 
-app.use("/api/white-label", whiteLabelRoutes);
+app.use(
+  "/api/executive-analytics",
+  requireEnterprise(),
+  executiveAnalyticsRoutes
+);
 
-app.use("/api/real-supplier-discovery", realSupplierDiscoveryRoutes);
+app.use(
+  "/api/white-label",
+  requireEnterprise(),
+  whiteLabelRoutes
+);
 
-app.use("/api/buyer-discovery", buyerDiscoveryRoutes);
+app.use(
+  "/api/buyer-discovery",
+  requirePro(),
+  buyerDiscoveryRoutes
+);
 
 app.use(
   "/api/live-supplier-intelligence",
+  requireEnterprise(),
   liveSupplierIntelligenceRoutes
+);
+
+/* =========================
+   ADVANCED SaaS APIs
+========================= */
+
+app.use(
+  "/api/real-supplier-discovery",
+  realSupplierDiscoveryRoutes
 );
 
 app.use(
   "/api/onboarding",
   onboardingRoutes
 );
-
 
 app.use(
   "/api/org-workspaces",
@@ -260,9 +300,12 @@ io.on("connection", (socket) => {
         "workspace-activity",
         {
           type: "presence",
+
           message:
             `${data?.email || "A user"} joined workspace`,
-          time: new Date().toISOString()
+
+          time:
+            new Date().toISOString()
         }
       );
     }
@@ -325,9 +368,13 @@ server.listen(PORT, () => {
   );
 
   console.log(
-    "✅ SaaS security middleware active"
+    "✅ SaaS subscription security active"
   );
-  
-startWorkflowScheduler();
+
+  console.log(
+    "✅ Enterprise access control active"
+  );
+
+  startWorkflowScheduler();
 
 });
