@@ -29,7 +29,7 @@ function protectDashboard() {
 
   if (!user || !user.token) {
     localStorage.removeItem("tradeflowUser");
-    console.warn("Login redirect blocked.");
+    window.location.replace("login.html");
     throw new Error("Not logged in");
   }
 
@@ -60,7 +60,7 @@ function getAuthHeaders() {
 
   if (!user || !user.token) {
     localStorage.removeItem("tradeflowUser");
-    console.warn("Login redirect blocked.");
+    window.location.replace("login.html");
     throw new Error("Token missing");
   }
 
