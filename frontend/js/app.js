@@ -71,7 +71,7 @@ function getAuthHeaders() {
 }
 function logoutUser() {
   localStorage.removeItem("tradeflowUser");
-  console.warn("Logout redirect blocked.");
+  window.location.href = "login.html";
 }
 
 const pages = [
