@@ -62,79 +62,165 @@
 </div>
 
 <script>
-const BACKEND_URL="https://trade-flow-lc1k.onrender.com";
-const WORKSPACE_URL=`${BACKEND_URL}/api/workspaces`;
+const BACKEND_URL = "https://trade-flow-lc1k.onrender.com";
+const WORKSPACE_URL = `${BACKEND_URL}/api/workspaces`;
 
-function getMaster(){
-  try{return JSON.parse(localStorage.getItem("tradeflowMasterAdmin")||"null");}
-  catch(e){localStorage.removeItem("tradeflowMasterAdmin");return null;}
-}
-function protectMaster(){
-  const admin=getMaster();
-  if(!admin||!admin.token){window.location.replace("master-login.html");throw new Error("No admin token");} if((admin.email||"").toLowerCase() !== "ks2353013@gmail.com"){localStorage.removeItem("tradeflowMasterAdmin"); alert("Master Admin is restricted to owner email only."); window.location.replace("master-login.html"); throw new Error("Unauthorized master admin");}
-  document.getElementById("adminInfo").innerText=(admin.companyName||"TradeFlow")+" • "+(admin.email||"Master Admin");
-}
-function headers(){
-  const admin=getMaster();
-  return{"Content-Type":"application/json","Authorization":`Bearer ${admin.token}`};
-}
-function logoutMaster(){localStorage.removeItem("tradeflowMasterAdmin");window.location.href="master-login.html";}
+const OWNER_EMAILS = [
+  "contact@tradeflowai.in",
+  "ks2353013@gmail.com"
+];
 
-async function fetchWorkspaces(){
-  try{
-    const res=await fetch(WORKSPACE_URL,{headers:headers()});
-    if(res.status===401){logoutMaster();return;}
-    const data=await res.json();
-    renderCompanies(Array.isArray(data)?data:[]);
-  }catch(e){alert("Could not load companies. Check backend or login again.");}
+function normalizeEmail(email) {
+  return String(email || "").trim().toLowerCase();
 }
-function renderCompanies(companies){
-  const list=document.getElementById("companyList");
-  list.innerHTML="";
-  let approved=0,rejected=0;
-  companies.forEach(c=>{
-    const ok=c.status==="Active";
-    if(ok)approved++; else rejected++;
-    list.innerHTML+=`
+
+function getMaster() {
+  try {
+    return JSON.parse(localStorage.getItem("tradeflowMasterAdmin") || "null");
+  } catch (e) {
+    localStorage.removeItem("tradeflowMasterAdmin");
+    return null;
+  }
+}
+
+function protectMaster() {
+  const admin = getMaster();
+  const email = normalizeEmail(admin?.email);
+
+  if (!admin || !admin.token) {
+    window.location.replace("master-login.html");
+    throw new Error("No admin token");
+  }
+
+  if (!OWNER_EMAILS.includes(email)) {
+    localStorage.removeItem("tradeflowMasterAdmin");
+    alert("Master Admin is restricted to owner email only.");
+    window.location.replace("master-login.html");
+    throw new Error("Unauthorized master admin");
+  }
+
+  document.getElementById("adminInfo").innerText =
+    (admin.companyName || "TradeFlow") + " • " + email;
+}
+
+function headers() {
+  const admin = getMaster();
+
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${admin.token}`,
+    "x-user-email": normalizeEmail(admin.email)
+  };
+}
+
+function logoutMaster() {
+  localStorage.removeItem("tradeflowMasterAdmin");
+  window.location.href = "master-login.html";
+}
+
+async function fetchWorkspaces() {
+  try {
+    const res = await fetch(WORKSPACE_URL, {
+      headers: headers()
+    });
+
+    if (res.status === 401) {
+      alert("Master session expired. Please login again.");
+      logoutMaster();
+      return;
+    }
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Could not load companies.");
+    }
+
+    renderCompanies(Array.isArray(data) ? data : []);
+  } catch (e) {
+    console.error("Company load error:", e);
+    alert(e.message || "Could not load companies. Check backend or login again.");
+  }
+}
+
+function renderCompanies(companies) {
+  const list = document.getElementById("companyList");
+  list.innerHTML = "";
+
+  let approved = 0;
+  let rejected = 0;
+
+  companies.forEach((c) => {
+    const ok = c.status === "Active";
+    if (ok) approved++;
+    else rejected++;
+
+    list.innerHTML += `
       <div class="company">
-        <h2 style="color:white;margin:0 0 8px">${c.companyName}</h2>
-        <div class="muted">Type: ${c.businessType||"N/A"} • Country: ${c.country||"N/A"} • Industry: ${c.industry||"N/A"}</div>
-        <div class="muted">GST: ${c.gstNumber||"N/A"} • IEC: ${c.iecCode||"N/A"} • Currency: ${c.defaultCurrency||"USD"}</div>
-        <span class="status ${ok?"ok":"bad"}">${ok?"Approved":"Rejected"}</span>
+        <h2 style="color:white;margin:0 0 8px">${c.companyName || "Unnamed Company"}</h2>
+        <div class="muted">Type: ${c.businessType || "N/A"} • Country: ${c.country || "N/A"} • Industry: ${c.industry || "N/A"}</div>
+        <div class="muted">GST: ${c.gstNumber || "N/A"} • IEC: ${c.iecCode || "N/A"} • Currency: ${c.defaultCurrency || "USD"}</div>
+        <span class="status ${ok ? "ok" : "bad"}">${ok ? "Approved" : "Rejected"}</span>
         <div class="actions">
           <button class="approve" onclick="approveCompany('${c._id}')">Approve</button>
           <button class="reject" onclick="rejectCompany('${c._id}')">Reject</button>
         </div>
-      </div>`;
+      </div>
+    `;
   });
-  document.getElementById("totalCompanies").innerText=companies.length;
-  document.getElementById("approvedCompanies").innerText=approved;
-  document.getElementById("rejectedCompanies").innerText=rejected;
+
+  document.getElementById("totalCompanies").innerText = companies.length;
+  document.getElementById("approvedCompanies").innerText = approved;
+  document.getElementById("rejectedCompanies").innerText = rejected;
 }
-async function approveCompany(id){
-  await fetch(`${WORKSPACE_URL}/${id}`,{method:"PUT",headers:headers(),body:JSON.stringify({status:"Active"})});
+
+async function approveCompany(id) {
+  await fetch(`${WORKSPACE_URL}/${id}`, {
+    method: "PUT",
+    headers: headers(),
+    body: JSON.stringify({ status: "Active" })
+  });
+
   fetchWorkspaces();
 }
-async function rejectCompany(id){
-  await fetch(`${WORKSPACE_URL}/${id}`,{method:"PUT",headers:headers(),body:JSON.stringify({status:"Inactive"})});
+
+async function rejectCompany(id) {
+  await fetch(`${WORKSPACE_URL}/${id}`, {
+    method: "PUT",
+    headers: headers(),
+    body: JSON.stringify({ status: "Inactive" })
+  });
+
   fetchWorkspaces();
 }
-function saveSubscription(){
-  const plan=document.getElementById("subscriptionPlan").value;
-  const status=document.getElementById("subscriptionStatus").value;
-  const limit=document.getElementById("companyLimit").value;
-  localStorage.setItem("tradeflowSubscription",JSON.stringify({plan,status,limit}));
-  document.getElementById("planMetric").innerText=plan;
+
+function saveSubscription() {
+  const plan = document.getElementById("subscriptionPlan").value;
+  const status = document.getElementById("subscriptionStatus").value;
+  const limit = document.getElementById("companyLimit").value;
+
+  localStorage.setItem(
+    "tradeflowSubscription",
+    JSON.stringify({ plan, status, limit })
+  );
+
+  document.getElementById("planMetric").innerText = plan;
   alert("Subscription saved");
 }
-function saveMasterCompany(){
-  localStorage.setItem("tradeflowMasterCompany",JSON.stringify({
-    company:document.getElementById("masterCompany").value,
-    owner:document.getElementById("masterOwner").value,
-    email:document.getElementById("masterEmail").value
-  }));
+
+function saveMasterCompany() {
+  localStorage.setItem(
+    "tradeflowMasterCompany",
+    JSON.stringify({
+      company: document.getElementById("masterCompany").value,
+      owner: document.getElementById("masterOwner").value,
+      email: document.getElementById("masterEmail").value
+    })
+  );
+
   alert("Master company saved");
 }
+
 protectMaster();
 fetchWorkspaces();
 </script>
