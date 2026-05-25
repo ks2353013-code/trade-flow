@@ -2,31 +2,32 @@ const express = require("express");
 const Workspace = require("../models/Workspace");
 const { usageTracker } = require("../middleware/usageMiddleware");
 const { enforceLimit } = require("../middleware/planLimitMiddleware");
-const {
-  requirePlan
-} = require("../middleware/subscriptionMiddleware");
+const { requirePlan } = require("../middleware/subscriptionMiddleware");
 
 const router = express.Router();
 
+function getOwnerEmail(req) {
+  return (
+    req.tenant?.ownerEmail ||
+    req.user?.email ||
+    req.headers["x-user-email"] ||
+    "unknown@tradeflow.local"
+  );
+}
+
 function tenantFilter(req) {
   const filter = {
-    ownerEmail:
-      req.tenant?.ownerEmail ||
-      "unknown@tradeflow.local"
+    ownerEmail: getOwnerEmail(req)
   };
 
-  if (req.tenant?.companyId) {
-    filter.companyId = req.tenant.companyId;
-  }
-
-  if (req.tenant?.workspaceId) {
-    filter._id = req.tenant.workspaceId;
+  if (req.tenant?.companyId || req.headers["x-company-id"]) {
+    filter.companyId = req.tenant?.companyId || req.headers["x-company-id"];
   }
 
   return filter;
 }
 
-router.post("/", requirePlan("Pro"), enforceLimit("workspace_create"), usageTracker("workspace_create"), async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const workspaces = await Workspace.find(tenantFilter(req)).sort({
       createdAt: -1
@@ -34,34 +35,44 @@ router.post("/", requirePlan("Pro"), enforceLimit("workspace_create"), usageTrac
 
     res.json(workspaces);
   } catch (error) {
+    console.error("Workspace fetch error:", error.message);
+
     res.status(500).json({
       message: "Failed to fetch workspaces"
     });
   }
 });
 
-router.post("/", requirePlan("Pro"), async (req, res) => {
-  try {
-    const workspace = await Workspace.create({
-      ...req.body,
-      ownerEmail: req.tenant?.ownerEmail,
-      companyId: req.tenant?.companyId || req.body.companyId
-    });
+router.post(
+  "/",
+  requirePlan("Pro"),
+  enforceLimit("workspace_create"),
+  usageTracker("workspace_create"),
+  async (req, res) => {
+    try {
+      const workspace = await Workspace.create({
+        ...req.body,
+        ownerEmail: getOwnerEmail(req),
+        companyId: req.tenant?.companyId || req.body.companyId
+      });
 
-    res.status(201).json(workspace);
-  } catch (error) {
-    res.status(500).json({
-      message: "Failed to create workspace"
-    });
+      res.status(201).json(workspace);
+    } catch (error) {
+      console.error("Workspace create error:", error.message);
+
+      res.status(500).json({
+        message: "Failed to create workspace"
+      });
+    }
   }
-});
+);
 
-router.put("/:id", requirePlan("Pro"), async (req, res) => {
+router.put("/:id", async (req, res) => {
   try {
     const workspace = await Workspace.findOneAndUpdate(
       {
         _id: req.params.id,
-        ownerEmail: req.tenant?.ownerEmail || "unknown@tradeflow.local"
+        ownerEmail: getOwnerEmail(req)
       },
       req.body,
       { new: true }
@@ -75,17 +86,19 @@ router.put("/:id", requirePlan("Pro"), async (req, res) => {
 
     res.json(workspace);
   } catch (error) {
+    console.error("Workspace update error:", error.message);
+
     res.status(500).json({
       message: "Failed to update workspace"
     });
   }
 });
 
-router.delete("/:id", requirePlan("Pro"), async (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
     const workspace = await Workspace.findOneAndDelete({
       _id: req.params.id,
-      ownerEmail: req.tenant?.ownerEmail || "unknown@tradeflow.local"
+      ownerEmail: getOwnerEmail(req)
     });
 
     if (!workspace) {
@@ -98,6 +111,8 @@ router.delete("/:id", requirePlan("Pro"), async (req, res) => {
       message: "Workspace deleted"
     });
   } catch (error) {
+    console.error("Workspace delete error:", error.message);
+
     res.status(500).json({
       message: "Failed to delete workspace"
     });
