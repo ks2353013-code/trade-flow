@@ -187,10 +187,6 @@ app.use(
   onboardingRoutes
 );
 
-app.use(
-  "/api/real-supplier-discovery",
-  realSupplierDiscoveryRoutes
-);
 
 app.use(
   "/api/org-workspaces",
