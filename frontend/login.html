@@ -60,6 +60,12 @@
       </div>
     </section>
   </main>
+if (window.location.search.includes("reset=1")) {
+  localStorage.removeItem("tradeflowUser");
+  localStorage.removeItem("tradeflowMasterAdmin");
+  localStorage.removeItem("tradeflowIsOwner");
+}
+
 <script>
 const API_BASE = "https://trade-flow-lc1k.onrender.com";
 
