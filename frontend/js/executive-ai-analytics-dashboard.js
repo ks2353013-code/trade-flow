@@ -5,139 +5,277 @@
     return document.getElementById(id);
   }
 
-  function getBackendUrl() {
-    if (typeof BACKEND_URL !== "undefined") return BACKEND_URL;
-    return "https://trade-flow-lc1k.onrender.com";
-  }
-
-  function getUser() {
+  function readJson(key) {
     try {
-      return JSON.parse(localStorage.getItem("tradeflowUser") || "{}");
+      return JSON.parse(localStorage.getItem(key) || "[]");
     } catch {
-      return {};
+      return [];
     }
   }
 
-  function getHeaders() {
-    const user = getUser();
-
-    return {
-      "Content-Type": "application/json",
-      Authorization: user?.token ? `Bearer ${user.token}` : "",
-      "x-user-email": user?.email || "unknown@tradeflow.local",
-      "x-company-id": localStorage.getItem("tradeflowActiveCompany") || "",
-      "x-workspace-id": localStorage.getItem("tradeflowActiveWorkspace") || ""
-    };
+  function setText(id, value) {
+    const el = $(id);
+    if (el) el.innerText = value;
   }
 
-  function setStatus(text) {
-    const el = $("executiveAnalyticsStatus");
-    if (el) el.innerText = text;
+  function getSuppliers() {
+    const saved = readJson("suppliers");
+    const discovered = readJson("tradeflowRealSupplierResults");
+    return [...saved, ...discovered];
   }
 
-  async function loadAnalytics() {
-    try {
-      setStatus("Loading executive analytics...");
+  function getBuyers() {
+    const buyers = readJson("tradeflowBuyerResults");
+    const saved = readJson("tradeflowSavedBuyers");
+    return [...buyers, ...saved];
+  }
 
-      const res = await fetch(`${getBackendUrl()}/api/executive-analytics/overview`, {
-        headers: getHeaders()
-      });
+  function getDeals() {
+    const discoveredDeals = readJson("tradeflowDiscoveredDeals");
+    const localDeals = readJson("deals");
+    return [...localDeals, ...discoveredDeals];
+  }
 
-      const data = await res.json();
+  function averageScore(items) {
+    if (!items.length) return 0;
 
-      if (!res.ok) throw new Error(data.message || "Analytics failed");
+    const total = items.reduce((sum, item) => {
+      return sum + Number(item.score || item.aiScore || 0);
+    }, 0);
 
-      render(data.analytics);
-      setStatus("Executive analytics synced.");
-    } catch (error) {
-      setStatus(error.message || "Failed to load analytics.");
+    return Math.round(total / items.length);
+  }
+
+  function countHighQuality(items) {
+    return items.filter((item) => {
+      return Number(item.score || item.aiScore || 0) >= 80;
+    }).length;
+  }
+
+  function countEmails(items) {
+    return items.filter((item) => {
+      const email = item.email || "";
+      return email && email !== "Not Available";
+    }).length;
+  }
+
+  function topCountries(items) {
+    const map = {};
+
+    items.forEach((item) => {
+      const country =
+        item.country ||
+        item.location ||
+        "Unknown";
+
+      map[country] = (map[country] || 0) + 1;
+    });
+
+    return Object.entries(map)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+  }
+
+  function pipelineValue(deals) {
+    return deals.reduce((sum, deal) => {
+      return sum + Number(deal.value || deal.dealValue || 0);
+    }, 0);
+  }
+
+  function buildInsight(suppliers, buyers, deals) {
+    const totalLeads = suppliers.length + buyers.length;
+    const highQuality =
+      countHighQuality(suppliers) +
+      countHighQuality(buyers);
+
+    if (!totalLeads) {
+      return "Start by running Supplier Discovery and Buyer Discovery. TradeFlow will then calculate lead quality, outreach readiness, and CRM opportunities.";
     }
+
+    if (highQuality >= 5) {
+      return "Strong discovery quality detected. Focus on outreach automation, CRM follow-up, and converting high-score supplier/buyer leads first.";
+    }
+
+    if (buyers.length > suppliers.length) {
+      return "Buyer demand signals are stronger than supplier discovery. Prioritize supplier verification so you can match products with live import demand.";
+    }
+
+    if (suppliers.length > buyers.length) {
+      return "Supplier base is stronger than buyer pipeline. Run Buyer Discovery for target countries and start outreach from the best-matching leads.";
+    }
+
+    if (deals.length) {
+      return "CRM pipeline is active. Move hot leads to Contacted, schedule follow-ups, and use AI outreach templates for faster conversion.";
+    }
+
+    return "Lead discovery is active. Save the best leads, add them to CRM, and generate outreach messages for the highest-score companies.";
   }
 
-  function statCard(label, value, note) {
+  function renderMiniBar(label, value, max) {
+    const width = max ? Math.min((value / max) * 100, 100) : 0;
+
     return `
-      <div class="supplier-card">
-        <h2 style="color:white;margin:0 0 8px;">${value}</h2>
-        <p class="muted" style="margin:0;">${label}</p>
-        <div class="deal" style="margin-top:10px;">${note}</div>
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;gap:10px;">
+          <span class="muted">${label}</span>
+          <b>${value}</b>
+        </div>
+        <div style="height:9px;background:rgba(148,163,184,.16);border-radius:999px;overflow:hidden;margin-top:6px;">
+          <div style="height:100%;width:${width}%;background:linear-gradient(90deg,#38bdf8,#8b5cf6,#22c55e);"></div>
+        </div>
       </div>
     `;
   }
 
-  function render(a) {
-    const box = $("executiveAnalyticsContent");
-    if (!box) return;
+  function renderDashboard() {
+    const panel = $("executiveAiAnalyticsPanel");
+    if (!panel) return;
 
-    box.innerHTML = `
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">
-        ${statCard("Projected Monthly Revenue", `₹${a.revenueForecast.projectedMonthly}`, "AI projected monthly SaaS revenue")}
-        ${statCard("Projected Quarterly Revenue", `₹${a.revenueForecast.projectedQuarterly}`, "Quarterly forecast")}
-        ${statCard("Projected Yearly Revenue", `₹${a.revenueForecast.projectedYearly}`, "Annualized projection")}
-        ${statCard("CRM Conversion Rate", `${a.crmPerformance.conversionRate}%`, "Estimated pipeline conversion")}
-        ${statCard("Active Deals", a.crmPerformance.activeDeals, "Currently active CRM opportunities")}
-        ${statCard("High Probability Deals", a.crmPerformance.highProbabilityDeals, "AI-qualified hot opportunities")}
-        ${statCard("AI Requests", a.aiOperations.aiRequests, "AI operational usage volume")}
-        ${statCard("Automation Executions", a.aiOperations.automationExecutions, "Workflow execution count")}
-        ${statCard("Active Automations", a.aiOperations.activeAutomations, "Enabled workflows")}
-        ${statCard("Workflow Efficiency", `${a.operationalHealth.workflowEfficiency}%`, "Operational automation efficiency")}
-        ${statCard("Automation Success Rate", `${a.operationalHealth.automationSuccessRate}%`, "Execution reliability")}
-        ${statCard("Operational Risk", a.operationalHealth.operationalRisk, "Overall platform risk status")}
+    const suppliers = getSuppliers();
+    const buyers = getBuyers();
+    const deals = getDeals();
+
+    const totalLeads = suppliers.length + buyers.length;
+    const highQuality =
+      countHighQuality(suppliers) +
+      countHighQuality(buyers);
+
+    const enrichedEmails =
+      countEmails(suppliers) +
+      countEmails(buyers);
+
+    const avgSupplierScore = averageScore(suppliers);
+    const avgBuyerScore = averageScore(buyers);
+    const value = pipelineValue(deals);
+
+    const countries = topCountries([
+      ...suppliers,
+      ...buyers
+    ]);
+
+    const maxCountry =
+      countries.length
+        ? Math.max(...countries.map((c) => c[1]))
+        : 1;
+
+    panel.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;">
+        <div>
+          <div class="section-title">🧠 Executive AI Trade Intelligence</div>
+          <p class="muted">
+            Live command layer for supplier discovery, buyer discovery, CRM pipeline, outreach readiness, and lead quality.
+          </p>
+        </div>
+
+        <button class="btn" onclick="TradeFlowExecutiveAI.refresh()">
+          Refresh Intelligence
+        </button>
       </div>
 
-      <div class="supplier-card" style="margin-top:18px;">
-        <h2 style="color:white;margin:0 0 12px;">⚙️ Top Workflow Insights</h2>
-        ${
-          (a.workflowInsights || []).length
-            ? a.workflowInsights.map(w => `
-              <div class="deal" style="margin-bottom:8px;">
-                <b>${w.name}</b><br>
-                Executions: ${w.executions}<br>
-                Trigger: ${w.trigger}<br>
-                Action: ${w.action}
-              </div>
-            `).join("")
-            : `<div class="deal">No workflow insights yet.</div>`
-        }
+      <div class="grid grid-4" style="margin-top:18px;">
+        <div class="card metric">
+          <h3>Total Trade Leads</h3>
+          <p>${totalLeads}</p>
+          <span>Suppliers + buyers</span>
+        </div>
+
+        <div class="card metric">
+          <h3>High Quality Leads</h3>
+          <p>${highQuality}</p>
+          <span>Score 80+</span>
+        </div>
+
+        <div class="card metric">
+          <h3>Verified Emails</h3>
+          <p>${enrichedEmails}</p>
+          <span>Outreach ready</span>
+        </div>
+
+        <div class="card metric">
+          <h3>CRM Pipeline</h3>
+          <p>${deals.length}</p>
+          <span>Saved opportunities</span>
+        </div>
+      </div>
+
+      <div class="grid grid-3" style="margin-top:18px;">
+        <div class="card ai-panel">
+          <div class="section-title">📊 Lead Quality</div>
+          ${renderMiniBar("Supplier Score", avgSupplierScore, 100)}
+          ${renderMiniBar("Buyer Score", avgBuyerScore, 100)}
+          ${renderMiniBar("Outreach Readiness", enrichedEmails, Math.max(totalLeads, 1))}
+          ${renderMiniBar("CRM Conversion Base", deals.length, Math.max(totalLeads, 1))}
+        </div>
+
+        <div class="card">
+          <div class="section-title">🌍 Top Countries</div>
+          ${
+            countries.length
+              ? countries
+                  .map(([country, count]) =>
+                    renderMiniBar(country, count, maxCountry)
+                  )
+                  .join("")
+              : `<p class="muted">No country data yet. Run supplier and buyer discovery.</p>`
+          }
+        </div>
+
+        <div class="card ai-panel">
+          <div class="section-title">🤖 AI Executive Insight</div>
+          <p class="muted">${buildInsight(suppliers, buyers, deals)}</p>
+
+          <div class="deal">
+            Estimated Pipeline Value:
+            <b>${value}</b>
+          </div>
+
+          <div class="deal">
+            Recommended Action:
+            <b>Prioritize high-score leads</b>
+          </div>
+        </div>
       </div>
     `;
+
+    setText("analyticsTotalSuppliers", suppliers.length);
+    setText("analyticsTotalDeals", deals.length);
+    setText("analyticsPipelineValue", value);
+    setText(
+      "analyticsConversionRate",
+      totalLeads
+        ? `${Math.round((deals.length / totalLeads) * 100)}%`
+        : "0%"
+    );
   }
 
   function buildPanel() {
-    const dashboard = $("dashboardPage") || document.body;
-    if (!dashboard || $("executiveAnalyticsPanel")) return;
+    const dashboard = $("dashboardPage");
+
+    if (!dashboard || $("executiveAiAnalyticsPanel")) return;
 
     const panel = document.createElement("div");
-    panel.id = "executiveAnalyticsPanel";
+    panel.id = "executiveAiAnalyticsPanel";
     panel.className = "card ai-panel";
+    panel.style.marginBottom = "18px";
 
-    panel.innerHTML = `
-      <div class="section-title">📊 Executive AI Analytics Dashboard</div>
-      <p class="muted">
-        Founder/admin intelligence center for revenue, CRM, AI usage, workflow performance, and operational health.
-      </p>
+    const firstGrid = dashboard.querySelector(".grid.grid-4");
 
-      <button class="btn" onclick="TradeFlowExecutiveAnalytics.load()" style="margin-top:14px;">
-        Refresh Executive Analytics
-      </button>
-
-      <div id="executiveAnalyticsStatus" style="margin-top:14px;color:#7dd3fc;font-weight:900;">
-        Executive analytics ready.
-      </div>
-
-      <div id="executiveAnalyticsContent" style="margin-top:20px;"></div>
-    `;
-
-    dashboard.appendChild(panel);
+    if (firstGrid && firstGrid.parentNode) {
+      firstGrid.parentNode.insertBefore(panel, firstGrid.nextSibling);
+    } else {
+      dashboard.appendChild(panel);
+    }
   }
-
-  window.TradeFlowExecutiveAnalytics = {
-    load: loadAnalytics
-  };
 
   function boot() {
     buildPanel();
-    setTimeout(loadAnalytics, 1200);
+    setTimeout(renderDashboard, 1200);
+    setInterval(renderDashboard, 15000);
   }
+
+  window.TradeFlowExecutiveAI = {
+    refresh: renderDashboard
+  };
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);
