@@ -1,9 +1,12 @@
+/* TradeFlow Tenant Middleware */
+
 function tenantMiddleware(req, res, next) {
   const ownerEmail =
     req.user?.email ||
     req.headers["x-user-email"] ||
     req.body?.ownerEmail ||
-    req.query?.ownerEmail ||
+    req.body?.email ||
+    req.query?.email ||
     "unknown@tradeflow.local";
 
   const companyId =
@@ -19,7 +22,7 @@ function tenantMiddleware(req, res, next) {
     null;
 
   req.tenant = {
-    ownerEmail: ownerEmail.toString().toLowerCase().trim(),
+    ownerEmail: String(ownerEmail).toLowerCase().trim(),
     companyId,
     workspaceId
   };

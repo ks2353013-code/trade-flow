@@ -2,200 +2,128 @@ const express = require("express");
 const crypto = require("crypto");
 
 const Subscription = require("../models/Subscription");
-const BillingHistory = require("../models/BillingHistory");
+const User = require("../models/User");
+const { writeAuditLog } = require("../utils/auditLogger");
 
 const router = express.Router();
 
-/* =========================
-   RAZORPAY WEBHOOK
-========================= */
+function verifyWebhookSignature(req) {
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
-router.post(
-  "/webhook",
-  express.raw({ type: "application/json" }),
+  if (!secret) return false;
 
-  async (req, res) => {
+  const signature = req.headers["x-razorpay-signature"];
 
-    try {
+  const expectedSignature = crypto
+    .createHmac("sha256", secret)
+    .update(JSON.stringify(req.body))
+    .digest("hex");
 
-      const secret =
-        process.env.RAZORPAY_WEBHOOK_SECRET;
+  return expectedSignature === signature;
+}
 
-      const signature =
-        req.headers["x-razorpay-signature"];
+router.post("/webhook", async (req, res) => {
+  try {
+    const valid = verifyWebhookSignature(req);
 
-      const expectedSignature =
-        crypto
-          .createHmac("sha256", secret)
-          .update(req.body)
-          .digest("hex");
-
-      if (
-        signature !== expectedSignature
-      ) {
-
-        console.error(
-          "❌ Invalid Razorpay webhook signature"
-        );
-
-        return res.status(400).json({
-          message:
-            "Invalid webhook signature"
-        });
-
-      }
-
-      const payload =
-        JSON.parse(req.body.toString());
-
-      const event =
-        payload.event;
-
-      const payment =
-        payload.payload?.payment?.entity;
-
-      const email =
-        payment?.email ||
-        "unknown@tradeflow.local";
-
-      console.log(
-        "✅ Razorpay Event:",
-        event
-      );
-
-      /* =========================
-         PAYMENT SUCCESS
-      ========================= */
-
-      if (
-        event ===
-        "payment.captured"
-      ) {
-
-        const amount =
-          (payment.amount || 0) / 100;
-
-        const plan =
-          amount >= 9999
-            ? "Enterprise"
-            : "Pro";
-
-        await Subscription.findOneAndUpdate(
-          {
-            email:
-              email.toLowerCase()
-          },
-          {
-            email:
-              email.toLowerCase(),
-
-            plan,
-
-            status: "Active",
-
-            razorpayPaymentId:
-              payment.id,
-
-            lastPaymentAt:
-              new Date(),
-
-            expiresAt:
-              new Date(
-                Date.now() +
-                30 * 24 * 60 * 60 * 1000
-              )
-          },
-          {
-            upsert: true,
-            new: true
-          }
-        );
-
-        await BillingHistory.create({
-          email:
-            email.toLowerCase(),
-
-          amount,
-
-          currency:
-            payment.currency || "INR",
-
-          status: "Paid",
-
-          paymentId:
-            payment.id,
-
-          orderId:
-            payment.order_id,
-
-          provider: "Razorpay",
-
-          metadata: payload
-        });
-
-        console.log(
-          `✅ Subscription activated for ${email}`
-        );
-
-      }
-
-      /* =========================
-         PAYMENT FAILED
-      ========================= */
-
-      if (
-        event ===
-        "payment.failed"
-      ) {
-
-        await BillingHistory.create({
-          email:
-            email.toLowerCase(),
-
-          amount:
-            (payment.amount || 0) / 100,
-
-          currency:
-            payment.currency || "INR",
-
-          status: "Failed",
-
-          paymentId:
-            payment.id,
-
-          orderId:
-            payment.order_id,
-
-          provider: "Razorpay",
-
-          metadata: payload
-        });
-
-        console.log(
-          `❌ Payment failed for ${email}`
-        );
-
-      }
-
-      res.json({
-        success: true
+    if (!valid) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Razorpay webhook signature"
       });
-
-    } catch (error) {
-
-      console.error(
-        "Webhook Error:",
-        error.message
-      );
-
-      res.status(500).json({
-        message:
-          "Webhook processing failed"
-      });
-
     }
 
+    const event = req.body.event;
+    const payload = req.body.payload;
+
+    if (event === "payment.captured") {
+      const payment = payload.payment.entity;
+
+      const email = payment.notes?.email;
+      const plan = payment.notes?.plan;
+
+      if (!email || !plan) {
+        return res.status(400).json({
+          success: false,
+          message: "Missing email or plan in payment notes"
+        });
+      }
+
+      let price = 1999;
+      let approvalStatus = "Not Required";
+
+      if (plan === "Pro Exporter") {
+        price = 8999;
+      }
+
+      if (plan === "Enterprise AI OS") {
+        price = 49999;
+        approvalStatus = "Pending";
+      }
+
+      const subscription = await Subscription.create({
+        email: email.toLowerCase().trim(),
+        plan,
+        status: "Active",
+        price,
+        approvalStatus,
+        razorpayPaymentId: payment.id,
+        razorpayOrderId: payment.order_id
+      });
+
+      if (approvalStatus === "Not Required") {
+        await User.findOneAndUpdate(
+          { email: email.toLowerCase().trim() },
+          {
+            subscriptionPlan: plan,
+            subscriptionPrice: price,
+            subscriptionStatus: "Active"
+          },
+          { new: true }
+        );
+      }
+
+      await writeAuditLog(
+        {
+          headers: {
+            "x-user-email": email
+          },
+          body: {
+            email
+          },
+          tenant: {
+            ownerEmail: email
+          }
+        },
+        {
+          module: "Subscription",
+          action:
+            approvalStatus === "Pending"
+              ? "Webhook payment captured pending enterprise approval"
+              : "Webhook payment captured and subscription activated",
+          entityType: "Subscription",
+          entityId: String(subscription._id),
+          severity: approvalStatus === "Pending" ? "High" : "Medium",
+          metadata: {
+            paymentId: payment.id,
+            orderId: payment.order_id,
+            plan
+          }
+        }
+      );
+    }
+
+    res.json({
+      success: true,
+      message: "Webhook processed"
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Webhook processing failed",
+      error: error.message
+    });
   }
-);
+});
 
 module.exports = router;

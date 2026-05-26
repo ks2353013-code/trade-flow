@@ -37,6 +37,17 @@ const subscriptionSchema = new mongoose.Schema(
       default: "Active"
     },
 
+    approvalStatus: {
+      type: String,
+      enum: [
+        "Not Required",
+        "Pending",
+        "Approved",
+        "Rejected"
+      ],
+      default: "Not Required"
+    },
+
     price: {
       type: Number,
       default: 1999
@@ -98,6 +109,8 @@ subscriptionSchema.pre("save", function (next) {
 
     this.price = 1999;
 
+    this.approvalStatus = "Not Required";
+
     this.entitlements = {
       aiLimit: 20,
       supplierLimit: 200,
@@ -111,6 +124,8 @@ subscriptionSchema.pre("save", function (next) {
 
     this.price = 8999;
 
+    this.approvalStatus = "Not Required";
+
     this.entitlements = {
       aiLimit: 1000,
       supplierLimit: 2000,
@@ -123,6 +138,12 @@ subscriptionSchema.pre("save", function (next) {
   if (this.plan === "Enterprise AI OS") {
 
     this.price = 49999;
+
+    if (
+      this.approvalStatus !== "Approved"
+    ) {
+      this.approvalStatus = "Pending";
+    }
 
     this.entitlements = {
       aiLimit: 10000,

@@ -1,147 +1,152 @@
 const express = require("express");
 const AuditLog = require("../models/AuditLog");
 
-const {
-  requirePlan
-} = require("../middleware/subscriptionMiddleware");
-
 const router = express.Router();
+
+const MASTER_ADMIN_EMAIL = "ks2353013@gmail.com";
 
 function getOwnerEmail(req) {
   return (
+    req.tenant?.ownerEmail ||
     req.user?.email ||
     req.headers["x-user-email"] ||
     req.body?.ownerEmail ||
-    req.query?.ownerEmail ||
+    req.body?.email ||
+    req.query?.email ||
     "unknown@tradeflow.local"
   )
-    .toString()
     .toLowerCase()
     .trim();
 }
 
-function getTenant(req) {
-  return {
-    ownerEmail: getOwnerEmail(req),
-    companyId:
-      req.headers["x-company-id"] ||
-      req.body?.companyId ||
-      req.query?.companyId ||
-      undefined,
-    workspaceId:
-      req.headers["x-workspace-id"] ||
-      req.body?.workspaceId ||
-      req.query?.workspaceId ||
-      undefined
-  };
+function isMasterAdmin(req) {
+  return getOwnerEmail(req) === MASTER_ADMIN_EMAIL;
 }
 
-router.get("/", requirePlan("Enterprise"), async (req, res) => {
+function tenantFilter(req) {
+  if (isMasterAdmin(req)) {
+    return {};
+  }
+
+  const filter = {
+    ownerEmail: getOwnerEmail(req)
+  };
+
+  if (req.tenant?.companyId) {
+    filter.companyId = req.tenant.companyId;
+  }
+
+  if (req.tenant?.workspaceId) {
+    filter.workspaceId = req.tenant.workspaceId;
+  }
+
+  return filter;
+}
+
+router.get("/", async (req, res) => {
   try {
-    const tenant = getTenant(req);
+    const filter = tenantFilter(req);
 
-    const filter = {
-      ownerEmail: tenant.ownerEmail
-    };
+    if (req.query.module) {
+      filter.module = req.query.module;
+    }
 
-    if (tenant.companyId) filter.companyId = tenant.companyId;
-    if (tenant.workspaceId) filter.workspaceId = tenant.workspaceId;
-    if (req.query.module) filter.module = req.query.module;
-    if (req.query.severity) filter.severity = req.query.severity;
+    if (req.query.severity) {
+      filter.severity = req.query.severity;
+    }
+
+    if (req.query.action) {
+      filter.action = {
+        $regex: req.query.action,
+        $options: "i"
+      };
+    }
 
     const logs = await AuditLog.find(filter)
       .sort({ createdAt: -1 })
-      .limit(200);
+      .limit(Number(req.query.limit) || 100);
 
-    res.json(logs);
+    res.json({
+      success: true,
+      total: logs.length,
+      logs
+    });
   } catch (error) {
     res.status(500).json({
-      message: "Failed to fetch audit logs"
+      success: false,
+      message: "Failed to fetch audit logs",
+      error: error.message
     });
   }
 });
 
-router.post("/", requirePlan("Enterprise"), async (req, res) => {
+router.get("/summary", async (req, res) => {
   try {
-    const tenant = getTenant(req);
+    const logs = await AuditLog.find(tenantFilter(req));
 
-    const { action, module, severity, message, metadata } = req.body;
+    const summary = logs.reduce(
+      (acc, log) => {
+        acc.total += 1;
 
-    if (!action || !message) {
-      return res.status(400).json({
-        message: "Action and message are required"
+        acc.byModule[log.module] =
+          (acc.byModule[log.module] || 0) + 1;
+
+        acc.bySeverity[log.severity] =
+          (acc.bySeverity[log.severity] || 0) + 1;
+
+        acc.byAction[log.action] =
+          (acc.byAction[log.action] || 0) + 1;
+
+        return acc;
+      },
+      {
+        total: 0,
+        byModule: {},
+        bySeverity: {},
+        byAction: {}
+      }
+    );
+
+    res.json({
+      success: true,
+      summary
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch audit summary",
+      error: error.message
+    });
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    if (!isMasterAdmin(req)) {
+      return res.status(403).json({
+        success: false,
+        message: "Master Admin access required"
       });
     }
 
-    const log = await AuditLog.create({
-      ownerEmail: tenant.ownerEmail,
-      companyId: tenant.companyId,
-      workspaceId: tenant.workspaceId,
-      actorEmail: tenant.ownerEmail,
-      action,
-      module: module || "General",
-      severity: severity || "Info",
-      message,
-      metadata: metadata || {},
-      ipAddress:
-        req.headers["x-forwarded-for"] ||
-        req.socket?.remoteAddress ||
-        "",
-      userAgent: req.headers["user-agent"] || ""
-    });
-
-    res.status(201).json(log);
-  } catch (error) {
-    res.status(500).json({
-      message: "Failed to save audit log"
-    });
-  }
-});
-
-router.delete("/:id", requirePlan("Enterprise"), async (req, res) => {
-  try {
-    const ownerEmail = getOwnerEmail(req);
-
-    const log = await AuditLog.findOneAndDelete({
-      _id: req.params.id,
-      ownerEmail
-    });
+    const log = await AuditLog.findByIdAndDelete(req.params.id);
 
     if (!log) {
       return res.status(404).json({
+        success: false,
         message: "Audit log not found"
       });
     }
 
     res.json({
+      success: true,
       message: "Audit log deleted"
     });
   } catch (error) {
     res.status(500).json({
-      message: "Failed to delete audit log"
-    });
-  }
-});
-
-router.delete("/", requirePlan("Enterprise"), async (req, res) => {
-  try {
-    const tenant = getTenant(req);
-
-    const filter = {
-      ownerEmail: tenant.ownerEmail
-    };
-
-    if (tenant.companyId) filter.companyId = tenant.companyId;
-    if (tenant.workspaceId) filter.workspaceId = tenant.workspaceId;
-
-    await AuditLog.deleteMany(filter);
-
-    res.json({
-      message: "Audit logs cleared"
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Failed to clear audit logs"
+      success: false,
+      message: "Failed to delete audit log",
+      error: error.message
     });
   }
 });

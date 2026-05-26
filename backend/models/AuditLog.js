@@ -4,33 +4,33 @@ const auditLogSchema = new mongoose.Schema(
   {
     ownerEmail: {
       type: String,
+      required: true,
       lowercase: true,
-      trim: true,
-      default: "unknown@tradeflow.local"
+      trim: true
     },
 
     companyId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Company",
-      required: false
+      default: null
     },
 
     workspaceId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Workspace",
-      required: false
+      default: null
     },
 
-    actorEmail: {
-      type: String,
-      lowercase: true,
-      trim: true,
-      default: "unknown@tradeflow.local"
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null
     },
 
-    action: {
-      type: String,
-      required: true
+    employeeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Employee",
+      default: null
     },
 
     module: {
@@ -38,20 +38,30 @@ const auditLogSchema = new mongoose.Schema(
       default: "General"
     },
 
-    severity: {
-      type: String,
-      enum: ["Info", "Warning", "Critical"],
-      default: "Info"
-    },
-
-    message: {
+    action: {
       type: String,
       required: true
     },
 
-    metadata: {
-      type: Object,
-      default: {}
+    entityType: {
+      type: String,
+      default: ""
+    },
+
+    entityId: {
+      type: String,
+      default: ""
+    },
+
+    severity: {
+      type: String,
+      enum: [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      default: "Low"
     },
 
     ipAddress: {
@@ -62,9 +72,19 @@ const auditLogSchema = new mongoose.Schema(
     userAgent: {
       type: String,
       default: ""
+    },
+
+    metadata: {
+      type: Object,
+      default: {}
     }
   },
-  { timestamps: true }
+  {
+    timestamps: true
+  }
 );
 
-module.exports = mongoose.model("AuditLog", auditLogSchema);
+module.exports = mongoose.model(
+  "AuditLog",
+  auditLogSchema
+);

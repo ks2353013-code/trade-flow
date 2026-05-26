@@ -1,34 +1,40 @@
 const express = require("express");
 const Company = require("../models/Company");
-const Workspace = require("../models/Workspace");
-const Employee = require("../models/Employee");
+const { writeAuditLog } = require("../utils/auditLogger");
 
 const router = express.Router();
 
+const MASTER_ADMIN_EMAIL = "ks2353013@gmail.com";
+
 function getOwnerEmail(req) {
   return (
+    req.tenant?.ownerEmail ||
     req.user?.email ||
-    req.body?.ownerEmail ||
-    req.query?.ownerEmail ||
     req.headers["x-user-email"] ||
+    req.body?.ownerEmail ||
+    req.body?.email ||
+    req.query?.email ||
     "unknown@tradeflow.local"
   )
-    .toString()
     .toLowerCase()
     .trim();
 }
 
+function isMasterAdmin(req) {
+  return getOwnerEmail(req) === MASTER_ADMIN_EMAIL;
+}
+
+function tenantFilter(req) {
+  if (isMasterAdmin(req)) return {};
+  return { ownerEmail: getOwnerEmail(req) };
+}
+
 router.get("/", async (req, res) => {
   try {
-    const ownerEmail = getOwnerEmail(req);
-
-    const companies = await Company.find({ ownerEmail }).sort({
-      createdAt: -1
-    });
-
+    const companies = await Company.find(tenantFilter(req)).sort({ createdAt: -1 });
     res.json(companies);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch companies" });
+    res.status(500).json({ success: false, message: "Failed to fetch companies", error: error.message });
   }
 });
 
@@ -36,119 +42,142 @@ router.post("/", async (req, res) => {
   try {
     const ownerEmail = getOwnerEmail(req);
 
-    const {
-      companyName,
-      businessType,
-      country,
-      gstNumber,
-      iecCode,
-      industry,
-      defaultCurrency
-    } = req.body;
-
-    if (!companyName) {
-      return res.status(400).json({ message: "Company name is required" });
-    }
-
     const company = await Company.create({
+      ...req.body,
       ownerEmail,
-      companyName,
-      businessType,
-      country,
-      gstNumber,
-      iecCode,
-      industry,
-      defaultCurrency,
-      plan: "Free"
+      approvalStatus: req.body.approvalStatus || "Pending",
+      status: req.body.status || "Pending"
     });
 
-    const workspace = await Workspace.create({
-      companyId: company._id,
-      ownerEmail,
-      workspaceName: `${companyName} Main Workspace`,
-      type: "Management",
-      members: [
-        {
-          email: ownerEmail,
-          role: "Owner"
-        }
-      ]
-    });
-
-    await Employee.create({
-      companyId: company._id,
-      workspaceId: workspace._id,
-      ownerEmail,
-      name: "Owner",
-      email: ownerEmail,
-      role: "Owner",
-      status: "Active",
-      permissions: {
-        dashboard: true,
-        suppliers: true,
-        crm: true,
-        tasks: true,
-        analytics: true,
-        documents: true,
-        outreach: true,
-        ai: true,
-        billing: true,
-        admin: true
+    await writeAuditLog(req, {
+      module: "Companies",
+      action: "Created company",
+      entityType: "Company",
+      entityId: String(company._id),
+      severity: "Medium",
+      metadata: {
+        companyName: company.companyName || company.name || ""
       }
     });
 
-    res.status(201).json({
-      company,
-      workspace
-    });
+    res.status(201).json(company);
   } catch (error) {
-    console.error("Create company error:", error.message);
-    res.status(500).json({ message: "Failed to create company" });
+    res.status(500).json({ success: false, message: "Failed to create company", error: error.message });
   }
 });
 
 router.put("/:id", async (req, res) => {
   try {
-    const ownerEmail = getOwnerEmail(req);
-
     const company = await Company.findOneAndUpdate(
-      {
-        _id: req.params.id,
-        ownerEmail
-      },
+      { _id: req.params.id, ...tenantFilter(req) },
       req.body,
       { new: true }
     );
 
     if (!company) {
-      return res.status(404).json({ message: "Company not found" });
+      return res.status(404).json({ success: false, message: "Company not found" });
     }
+
+    await writeAuditLog(req, {
+      module: "Companies",
+      action: "Updated company",
+      entityType: "Company",
+      entityId: String(company._id),
+      severity: "Medium",
+      metadata: { updatedFields: Object.keys(req.body || {}) }
+    });
 
     res.json(company);
   } catch (error) {
-    res.status(500).json({ message: "Failed to update company" });
+    res.status(500).json({ success: false, message: "Failed to update company", error: error.message });
+  }
+});
+
+router.patch("/:id/approve", async (req, res) => {
+  try {
+    if (!isMasterAdmin(req)) {
+      return res.status(403).json({ success: false, message: "Master Admin access required" });
+    }
+
+    const company = await Company.findByIdAndUpdate(
+      req.params.id,
+      { approvalStatus: "Approved", status: "Active" },
+      { new: true }
+    );
+
+    if (!company) {
+      return res.status(404).json({ success: false, message: "Company not found" });
+    }
+
+    await writeAuditLog(req, {
+      module: "Companies",
+      action: "Approved company",
+      entityType: "Company",
+      entityId: String(company._id),
+      severity: "High",
+      metadata: { companyName: company.companyName || company.name || "" }
+    });
+
+    res.json(company);
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to approve company", error: error.message });
+  }
+});
+
+router.patch("/:id/reject", async (req, res) => {
+  try {
+    if (!isMasterAdmin(req)) {
+      return res.status(403).json({ success: false, message: "Master Admin access required" });
+    }
+
+    const company = await Company.findByIdAndUpdate(
+      req.params.id,
+      { approvalStatus: "Rejected", status: "Rejected" },
+      { new: true }
+    );
+
+    if (!company) {
+      return res.status(404).json({ success: false, message: "Company not found" });
+    }
+
+    await writeAuditLog(req, {
+      module: "Companies",
+      action: "Rejected company",
+      entityType: "Company",
+      entityId: String(company._id),
+      severity: "High",
+      metadata: { companyName: company.companyName || company.name || "" }
+    });
+
+    res.json(company);
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to reject company", error: error.message });
   }
 });
 
 router.delete("/:id", async (req, res) => {
   try {
-    const ownerEmail = getOwnerEmail(req);
-
     const company = await Company.findOneAndDelete({
       _id: req.params.id,
-      ownerEmail
+      ...tenantFilter(req)
     });
 
     if (!company) {
-      return res.status(404).json({ message: "Company not found" });
+      return res.status(404).json({ success: false, message: "Company not found" });
     }
 
-    await Workspace.deleteMany({ companyId: company._id });
-    await Employee.deleteMany({ companyId: company._id });
+    await writeAuditLog(req, {
+      module: "Companies",
+      action: "Deleted company",
+      entityType: "Company",
+      entityId: String(company._id),
+      severity: "Critical",
+      metadata: { companyName: company.companyName || company.name || "" }
+    });
 
-    res.json({ message: "Company deleted" });
+    res.json({ success: true, message: "Company deleted" });
   } catch (error) {
-    res.status(500).json({ message: "Failed to delete company" });
+    res.status(500).json({ success: false, message: "Failed to delete company", error: error.message });
   }
 });
 

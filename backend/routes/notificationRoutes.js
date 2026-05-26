@@ -3,9 +3,23 @@ const Notification = require("../models/Notification");
 
 const router = express.Router();
 
+function getOwnerEmail(req) {
+  return (
+    req.tenant?.ownerEmail ||
+    req.user?.email ||
+    req.headers["x-user-email"] ||
+    req.body?.ownerEmail ||
+    req.body?.email ||
+    req.query?.email ||
+    "unknown@tradeflow.local"
+  )
+    .toLowerCase()
+    .trim();
+}
+
 function tenantFilter(req) {
   const filter = {
-    ownerEmail: req.tenant?.ownerEmail || "unknown@tradeflow.local"
+    ownerEmail: getOwnerEmail(req)
   };
 
   if (req.tenant?.companyId) {
@@ -21,65 +35,68 @@ function tenantFilter(req) {
 
 router.get("/", async (req, res) => {
   try {
-    const notifications = await Notification.find(tenantFilter(req)).sort({
+    const notifications = await Notification.find(
+      tenantFilter(req)
+    ).sort({
       createdAt: -1
     });
 
     res.json(notifications);
   } catch (error) {
     res.status(500).json({
-      message: "Failed to fetch notifications"
-    });
-  }
-});
-
-router.get("/unread-count", async (req, res) => {
-  try {
-    const count = await Notification.countDocuments({
-      ...tenantFilter(req),
-      read: false
-    });
-
-    res.json({
-      count
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Failed to fetch unread count"
+      success: false,
+      message: "Failed to fetch notifications",
+      error: error.message
     });
   }
 });
 
 router.post("/", async (req, res) => {
   try {
+    const ownerEmail = getOwnerEmail(req);
+
     const notification = await Notification.create({
       ...req.body,
-      ownerEmail: req.tenant?.ownerEmail,
-      companyId: req.tenant?.companyId || req.body.companyId,
-      workspaceId: req.tenant?.workspaceId || req.body.workspaceId
+      ownerEmail,
+      companyId:
+        req.tenant?.companyId ||
+        req.body.companyId ||
+        null,
+      workspaceId:
+        req.tenant?.workspaceId ||
+        req.body.workspaceId ||
+        null
     });
 
     res.status(201).json(notification);
   } catch (error) {
     res.status(500).json({
-      message: "Failed to create notification"
+      success: false,
+      message: "Failed to create notification",
+      error: error.message
     });
   }
 });
 
-router.put("/:id/read", async (req, res) => {
+router.patch("/:id/read", async (req, res) => {
   try {
     const notification = await Notification.findOneAndUpdate(
       {
         _id: req.params.id,
         ...tenantFilter(req)
       },
-      { read: true },
-      { new: true }
+      {
+        read: true,
+        isRead: true
+      },
+      {
+        new: true
+      }
     );
 
     if (!notification) {
       return res.status(404).json({
+        success: false,
         message: "Notification not found"
       });
     }
@@ -87,23 +104,39 @@ router.put("/:id/read", async (req, res) => {
     res.json(notification);
   } catch (error) {
     res.status(500).json({
-      message: "Failed to mark notification as read"
+      success: false,
+      message: "Failed to mark notification as read",
+      error: error.message
     });
   }
 });
 
-router.put("/mark-all-read", async (req, res) => {
+router.put("/:id", async (req, res) => {
   try {
-    await Notification.updateMany(tenantFilter(req), {
-      read: true
-    });
+    const notification = await Notification.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        ...tenantFilter(req)
+      },
+      req.body,
+      {
+        new: true
+      }
+    );
 
-    res.json({
-      message: "All notifications marked as read"
-    });
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        message: "Notification not found"
+      });
+    }
+
+    res.json(notification);
   } catch (error) {
     res.status(500).json({
-      message: "Failed to mark all as read"
+      success: false,
+      message: "Failed to update notification",
+      error: error.message
     });
   }
 });
@@ -117,16 +150,20 @@ router.delete("/:id", async (req, res) => {
 
     if (!notification) {
       return res.status(404).json({
+        success: false,
         message: "Notification not found"
       });
     }
 
     res.json({
+      success: true,
       message: "Notification deleted"
     });
   } catch (error) {
     res.status(500).json({
-      message: "Failed to delete notification"
+      success: false,
+      message: "Failed to delete notification",
+      error: error.message
     });
   }
 });

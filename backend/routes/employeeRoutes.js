@@ -1,203 +1,134 @@
 const express = require("express");
 const Employee = require("../models/Employee");
-const { usageTracker } = require("../middleware/usageMiddleware");
-const { enforceLimit } = require("../middleware/planLimitMiddleware");
-const {
-  requirePlan
-} = require("../middleware/subscriptionMiddleware");
+const { writeAuditLog } = require("../utils/auditLogger");
 
 const router = express.Router();
 
-function tenantFilter(req) {
+function getOwnerEmail(req) {
+  return (
+    req.tenant?.ownerEmail ||
+    req.user?.email ||
+    req.headers["x-user-email"] ||
+    req.body?.ownerEmail ||
+    req.body?.email ||
+    req.query?.email ||
+    "unknown@tradeflow.local"
+  )
+    .toLowerCase()
+    .trim();
+}
 
+function tenantFilter(req) {
   const filter = {
-    ownerEmail:
-      req.tenant?.ownerEmail ||
-      "unknown@tradeflow.local"
+    ownerEmail: getOwnerEmail(req)
   };
 
   if (req.tenant?.companyId) {
-    filter.companyId =
-      req.tenant.companyId;
+    filter.companyId = req.tenant.companyId;
   }
 
   if (req.tenant?.workspaceId) {
-    filter.workspaceId =
-      req.tenant.workspaceId;
+    filter.workspaceId = req.tenant.workspaceId;
   }
 
   return filter;
-
 }
 
-/* =========================
-   GET EMPLOYEES
-========================= */
-
-router.post(
-  "/",
-  requirePlan("Pro"),
-enforceLimit("employee_create"),
-usageTracker("employee_create"),
-
-  async (req, res) => {
-
-    try {
-
-      const employees =
-        await Employee.find(
-          tenantFilter(req)
-        ).sort({
-          createdAt: -1
-        });
-
-      res.json(employees);
-
-    } catch (error) {
-
-      res.status(500).json({
-        message:
-          "Failed to fetch employees"
-      });
-
-    }
-
+router.get("/", async (req, res) => {
+  try {
+    const employees = await Employee.find(tenantFilter(req)).sort({ createdAt: -1 });
+    res.json(employees);
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to fetch employees", error: error.message });
   }
-);
+});
 
-/* =========================
-   CREATE EMPLOYEE
-========================= */
+router.post("/", async (req, res) => {
+  try {
+    const ownerEmail = getOwnerEmail(req);
 
-router.post(
-  "/",
-  requirePlan("Pro"),
+    const employee = await Employee.create({
+      ...req.body,
+      ownerEmail,
+      companyId: req.tenant?.companyId || req.body.companyId || null,
+      workspaceId: req.tenant?.workspaceId || req.body.workspaceId || null
+    });
 
-  async (req, res) => {
-
-    try {
-
-      const employee =
-        await Employee.create({
-          ...req.body,
-
-          ownerEmail:
-            req.tenant?.ownerEmail,
-
-          companyId:
-            req.tenant?.companyId ||
-            req.body.companyId,
-
-          workspaceId:
-            req.tenant?.workspaceId ||
-            req.body.workspaceId
-        });
-
-      res.status(201).json(
-        employee
-      );
-
-    } catch (error) {
-
-      res.status(500).json({
-        message:
-          "Failed to create employee"
-      });
-
-    }
-
-  }
-);
-
-/* =========================
-   UPDATE EMPLOYEE
-========================= */
-
-router.put(
-  "/:id",
-  requirePlan("Pro"),
-
-  async (req, res) => {
-
-    try {
-
-      const employee =
-        await Employee.findOneAndUpdate(
-          {
-            _id: req.params.id,
-            ...tenantFilter(req)
-          },
-          req.body,
-          {
-            new: true
-          }
-        );
-
-      if (!employee) {
-
-        return res.status(404).json({
-          message:
-            "Employee not found"
-        });
-
+    await writeAuditLog(req, {
+      module: "Employees",
+      action: "Created employee",
+      entityType: "Employee",
+      entityId: String(employee._id),
+      severity: "Medium",
+      metadata: {
+        name: employee.name || employee.employeeName || "",
+        email: employee.email || "",
+        role: employee.role || ""
       }
+    });
 
-      res.json(employee);
+    res.status(201).json(employee);
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to create employee", error: error.message });
+  }
+});
 
-    } catch (error) {
+router.put("/:id", async (req, res) => {
+  try {
+    const employee = await Employee.findOneAndUpdate(
+      { _id: req.params.id, ...tenantFilter(req) },
+      req.body,
+      { new: true }
+    );
 
-      res.status(500).json({
-        message:
-          "Failed to update employee"
-      });
-
+    if (!employee) {
+      return res.status(404).json({ success: false, message: "Employee not found" });
     }
 
-  }
-);
-
-/* =========================
-   DELETE EMPLOYEE
-========================= */
-
-router.delete(
-  "/:id",
-  requirePlan("Pro"),
-
-  async (req, res) => {
-
-    try {
-
-      const employee =
-        await Employee.findOneAndDelete({
-          _id: req.params.id,
-          ...tenantFilter(req)
-        });
-
-      if (!employee) {
-
-        return res.status(404).json({
-          message:
-            "Employee not found"
-        });
-
+    await writeAuditLog(req, {
+      module: "Employees",
+      action: "Updated employee",
+      entityType: "Employee",
+      entityId: String(employee._id),
+      severity: "Medium",
+      metadata: {
+        updatedFields: Object.keys(req.body || {})
       }
+    });
 
-      res.json({
-        message:
-          "Employee deleted"
-      });
+    res.json(employee);
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to update employee", error: error.message });
+  }
+});
 
-    } catch (error) {
+router.delete("/:id", async (req, res) => {
+  try {
+    const employee = await Employee.findOneAndDelete({
+      _id: req.params.id,
+      ...tenantFilter(req)
+    });
 
-      res.status(500).json({
-        message:
-          "Failed to delete employee"
-      });
-
+    if (!employee) {
+      return res.status(404).json({ success: false, message: "Employee not found" });
     }
 
+    await writeAuditLog(req, {
+      module: "Employees",
+      action: "Deleted employee",
+      entityType: "Employee",
+      entityId: String(employee._id),
+      severity: "High",
+      metadata: {
+        email: employee.email || "",
+        role: employee.role || ""
+      }
+    });
+
+    res.json({ success: true, message: "Employee deleted" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to delete employee", error: error.message });
   }
-);
+});
 
 module.exports = router;

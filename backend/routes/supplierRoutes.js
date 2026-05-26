@@ -2,11 +2,26 @@ const express = require("express");
 const Supplier = require("../models/Supplier");
 const { usageTracker } = require("../middleware/usageMiddleware");
 const { enforceLimit } = require("../middleware/planLimitMiddleware");
+const { writeAuditLog } = require("../utils/auditLogger");
+
 const router = express.Router();
+
+function getOwnerEmail(req) {
+  return (
+    req.tenant?.ownerEmail ||
+    req.user?.email ||
+    req.headers["x-user-email"] ||
+    req.body?.ownerEmail ||
+    req.body?.email ||
+    "unknown@tradeflow.local"
+  )
+    .toLowerCase()
+    .trim();
+}
 
 function tenantFilter(req) {
   const filter = {
-    ownerEmail: req.tenant?.ownerEmail || "unknown@tradeflow.local"
+    ownerEmail: getOwnerEmail(req)
   };
 
   if (req.tenant?.companyId) {
@@ -20,36 +35,86 @@ function tenantFilter(req) {
   return filter;
 }
 
-router.post("/", usageTracker("supplier_create"), async (req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const suppliers = await Supplier.find(tenantFilter(req)).sort({
+    const suppliers = await Supplier.find(
+      tenantFilter(req)
+    ).sort({
       createdAt: -1
     });
 
     res.json(suppliers);
   } catch (error) {
     res.status(500).json({
-      message: "Failed to fetch suppliers"
+      success: false,
+      message: "Failed to fetch suppliers",
+      error: error.message
     });
   }
 });
 
-router.post("/", enforceLimit("supplier_create"), usageTracker("supplier_create"), async (req, res) => {
+router.post("/list", async (req, res) => {
   try {
-    const supplier = await Supplier.create({
-      ...req.body,
-      ownerEmail: req.tenant?.ownerEmail,
-      companyId: req.tenant?.companyId || req.body.companyId,
-      workspaceId: req.tenant?.workspaceId || req.body.workspaceId
+    const suppliers = await Supplier.find(
+      tenantFilter(req)
+    ).sort({
+      createdAt: -1
     });
 
-    res.status(201).json(supplier);
+    res.json(suppliers);
   } catch (error) {
     res.status(500).json({
-      message: "Failed to create supplier"
+      success: false,
+      message: "Failed to fetch suppliers",
+      error: error.message
     });
   }
 });
+
+router.post(
+  "/",
+  enforceLimit("supplier_create"),
+  usageTracker("supplier_create"),
+  async (req, res) => {
+    try {
+      const ownerEmail = getOwnerEmail(req);
+
+      const supplier = await Supplier.create({
+        ...req.body,
+        ownerEmail,
+        companyId:
+          req.tenant?.companyId ||
+          req.body.companyId ||
+          null,
+        workspaceId:
+          req.tenant?.workspaceId ||
+          req.body.workspaceId ||
+          null
+      });
+
+      await writeAuditLog(req, {
+        module: "Suppliers",
+        action: "Created supplier",
+        entityType: "Supplier",
+        entityId: String(supplier._id),
+        severity: "Low",
+        metadata: {
+          supplierName: supplier.supplierName || supplier.name || "",
+          product: supplier.product || "",
+          country: supplier.country || ""
+        }
+      });
+
+      res.status(201).json(supplier);
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Failed to create supplier",
+        error: error.message
+      });
+    }
+  }
+);
 
 router.put("/:id", async (req, res) => {
   try {
@@ -59,19 +124,35 @@ router.put("/:id", async (req, res) => {
         ...tenantFilter(req)
       },
       req.body,
-      { new: true }
+      {
+        new: true
+      }
     );
 
     if (!supplier) {
       return res.status(404).json({
+        success: false,
         message: "Supplier not found"
       });
     }
 
+    await writeAuditLog(req, {
+      module: "Suppliers",
+      action: "Updated supplier",
+      entityType: "Supplier",
+      entityId: String(supplier._id),
+      severity: "Low",
+      metadata: {
+        updatedFields: Object.keys(req.body || {})
+      }
+    });
+
     res.json(supplier);
   } catch (error) {
     res.status(500).json({
-      message: "Failed to update supplier"
+      success: false,
+      message: "Failed to update supplier",
+      error: error.message
     });
   }
 });
@@ -85,16 +166,31 @@ router.delete("/:id", async (req, res) => {
 
     if (!supplier) {
       return res.status(404).json({
+        success: false,
         message: "Supplier not found"
       });
     }
 
+    await writeAuditLog(req, {
+      module: "Suppliers",
+      action: "Deleted supplier",
+      entityType: "Supplier",
+      entityId: String(supplier._id),
+      severity: "Medium",
+      metadata: {
+        supplierName: supplier.supplierName || supplier.name || ""
+      }
+    });
+
     res.json({
+      success: true,
       message: "Supplier deleted"
     });
   } catch (error) {
     res.status(500).json({
-      message: "Failed to delete supplier"
+      success: false,
+      message: "Failed to delete supplier",
+      error: error.message
     });
   }
 });

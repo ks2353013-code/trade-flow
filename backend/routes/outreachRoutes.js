@@ -1,17 +1,26 @@
 const express = require("express");
 const Outreach = require("../models/Outreach");
-
-const {
-  requirePlan
-} = require("../middleware/subscriptionMiddleware");
+const { writeAuditLog } = require("../utils/auditLogger");
 
 const router = express.Router();
 
+function getOwnerEmail(req) {
+  return (
+    req.tenant?.ownerEmail ||
+    req.user?.email ||
+    req.headers["x-user-email"] ||
+    req.body?.ownerEmail ||
+    req.body?.email ||
+    req.query?.email ||
+    "unknown@tradeflow.local"
+  )
+    .toLowerCase()
+    .trim();
+}
+
 function tenantFilter(req) {
   const filter = {
-    ownerEmail:
-      req.tenant?.ownerEmail ||
-      "unknown@tradeflow.local"
+    ownerEmail: getOwnerEmail(req)
   };
 
   if (req.tenant?.companyId) {
@@ -25,82 +34,125 @@ function tenantFilter(req) {
   return filter;
 }
 
-router.get("/", requirePlan("Pro"), async (req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const items = await Outreach.find(tenantFilter(req)).sort({
-      createdAt: -1
-    });
-
-    res.json(items);
+    const records = await Outreach.find(tenantFilter(req)).sort({ createdAt: -1 });
+    res.json(records);
   } catch (error) {
-    res.status(500).json({
-      message: "Failed to fetch outreach"
-    });
+    res.status(500).json({ success: false, message: "Failed to fetch outreach records", error: error.message });
   }
 });
 
-router.post("/", requirePlan("Pro"), async (req, res) => {
+router.post("/", async (req, res) => {
   try {
-    const item = await Outreach.create({
+    const ownerEmail = getOwnerEmail(req);
+
+    const record = await Outreach.create({
       ...req.body,
-      ownerEmail: req.tenant?.ownerEmail,
-      companyId: req.tenant?.companyId || req.body.companyId,
-      workspaceId: req.tenant?.workspaceId || req.body.workspaceId
+      ownerEmail,
+      companyId: req.tenant?.companyId || req.body.companyId || null,
+      workspaceId: req.tenant?.workspaceId || req.body.workspaceId || null
     });
 
-    res.status(201).json(item);
-  } catch (error) {
-    res.status(500).json({
-      message: "Failed to create outreach"
+    await writeAuditLog(req, {
+      module: "Outreach",
+      action: "Created outreach record",
+      entityType: "Outreach",
+      entityId: String(record._id),
+      severity: "Low",
+      metadata: {
+        contactName: record.contactName || record.outreachContactName || "",
+        phone: record.phone || record.outreachPhone || "",
+        status: record.status || ""
+      }
     });
+
+    res.status(201).json(record);
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to create outreach record", error: error.message });
   }
 });
 
-router.put("/:id", requirePlan("Pro"), async (req, res) => {
+router.put("/:id", async (req, res) => {
   try {
-    const item = await Outreach.findOneAndUpdate(
-      {
-        _id: req.params.id,
-        ...tenantFilter(req)
-      },
+    const record = await Outreach.findOneAndUpdate(
+      { _id: req.params.id, ...tenantFilter(req) },
       req.body,
       { new: true }
     );
 
-    if (!item) {
-      return res.status(404).json({
-        message: "Outreach not found"
-      });
+    if (!record) {
+      return res.status(404).json({ success: false, message: "Outreach record not found" });
     }
 
-    res.json(item);
-  } catch (error) {
-    res.status(500).json({
-      message: "Failed to update outreach"
+    await writeAuditLog(req, {
+      module: "Outreach",
+      action: "Updated outreach record",
+      entityType: "Outreach",
+      entityId: String(record._id),
+      severity: "Low",
+      metadata: {
+        updatedFields: Object.keys(req.body || {})
+      }
     });
+
+    res.json(record);
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to update outreach record", error: error.message });
   }
 });
 
-router.delete("/:id", requirePlan("Pro"), async (req, res) => {
+router.patch("/:id/status", async (req, res) => {
   try {
-    const item = await Outreach.findOneAndDelete({
+    const { status } = req.body;
+
+    const record = await Outreach.findOneAndUpdate(
+      { _id: req.params.id, ...tenantFilter(req) },
+      { status },
+      { new: true }
+    );
+
+    if (!record) {
+      return res.status(404).json({ success: false, message: "Outreach record not found" });
+    }
+
+    await writeAuditLog(req, {
+      module: "Outreach",
+      action: "Updated outreach status",
+      entityType: "Outreach",
+      entityId: String(record._id),
+      severity: "Low",
+      metadata: { status }
+    });
+
+    res.json(record);
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to update outreach status", error: error.message });
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    const record = await Outreach.findOneAndDelete({
       _id: req.params.id,
       ...tenantFilter(req)
     });
 
-    if (!item) {
-      return res.status(404).json({
-        message: "Outreach not found"
-      });
+    if (!record) {
+      return res.status(404).json({ success: false, message: "Outreach record not found" });
     }
 
-    res.json({
-      message: "Outreach deleted"
+    await writeAuditLog(req, {
+      module: "Outreach",
+      action: "Deleted outreach record",
+      entityType: "Outreach",
+      entityId: String(record._id),
+      severity: "Medium"
     });
+
+    res.json({ success: true, message: "Outreach record deleted" });
   } catch (error) {
-    res.status(500).json({
-      message: "Failed to delete outreach"
-    });
+    res.status(500).json({ success: false, message: "Failed to delete outreach record", error: error.message });
   }
 });
 

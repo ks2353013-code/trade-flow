@@ -34,8 +34,11 @@ const aiMemoryRoutes = require("./routes/aiMemoryRoutes");
 const auditRoutes = require("./routes/auditRoutes");
 const backupRoutes = require("./routes/backupRoutes");
 const tenantMiddleware = require("./middleware/tenantMiddleware");
+const razorpayRoutes = require("./routes/razorpayRoutes");
 const razorpayWebhookRoutes = require("./routes/razorpayWebhookRoutes");
 const usageRoutes = require("./routes/usageRoutes");
+const subscriptionAdminRoutes = require("./routes/subscriptionAdminRoutes");
+const subscriptionRoutes = require("./routes/subscriptionRoutes");
 
 const aiSupplierAgentRoutes = require("./routes/aiSupplierAgentRoutes");
 const aiOutreachAgentRoutes = require("./routes/aiOutreachAgentRoutes");
@@ -107,7 +110,7 @@ app.use("/api", apiLimiter);
 ========================= */
 
 app.use(
-  "/api/razorpay",
+  "/api/razorpay-webhook",
   razorpayWebhookRoutes
 );
 
@@ -187,6 +190,11 @@ app.use("/api/email-automation", emailAutomationRoutes);
 
 app.use("/api/whatsapp-automation", whatsappAutomationRoutes);
 
+app.use("/api/subscriptions", subscriptionAdminRoutes);
+
+app.use("/api/subscription", subscriptionRoutes);
+
+app.use("/api/razorpay-checkout", razorpayRoutes);
 /* =========================
    ENTERPRISE PROTECTED APIs
 ========================= */
