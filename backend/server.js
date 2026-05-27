@@ -273,12 +273,6 @@ app.use(
    FRONTEND SERVING
 ========================= */
 
-app.use(
-  express.static(
-    path.join(__dirname, "../frontend")
-  )
-);
-
 /* Public Landing Page */
 
 app.get("/", (req, res) => {
@@ -304,6 +298,35 @@ app.get("/onboarding", (req, res) => {
 /* SaaS Application */
 
 app.get("/app", (req, res) => {
+  res.sendFile(
+    path.join(
+      __dirname,
+      "../frontend/index.html"
+    )
+  );
+});
+
+/* Static Assets */
+
+app.use(
+  express.static(
+    path.join(__dirname, "../frontend"),
+    {
+      index: false
+    }
+  )
+);
+
+app.get("/login", (req, res) => {
+  res.sendFile(
+    path.join(
+      __dirname,
+      "../frontend/index.html"
+    )
+  );
+});
+
+app.get("/signup", (req, res) => {
   res.sendFile(
     path.join(
       __dirname,
