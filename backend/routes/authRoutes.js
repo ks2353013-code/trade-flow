@@ -1,151 +1,400 @@
 const express = require("express");
-const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
-const { getJwtSecret } = require("../middleware/authMiddleware");
+const User = require("../models/User");
+
+const {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyAccessToken,
+  verifyRefreshToken
+} = require("../utils/tokenService");
 
 const router = express.Router();
 
-function createToken(user) {
-  return jwt.sign(
-    {
-      id: user.id,
-      email: user.email,
-      role: user.role || "Owner",
-      permissions: user.permissions || {}
-    },
-    getJwtSecret(),
-    {
-      expiresIn: "7d"
-    }
-  );
-}
-
-function buildUser({ name, email, companyName }) {
+function buildPermissions(role = "Owner") {
   return {
-    id: Date.now().toString(),
-    name: name || "TradeFlow User",
-    companyName: companyName || "TradeFlow Workspace",
-    email: String(email || "").toLowerCase(),
-    role: "Owner",
-    permissions: {
-      dashboard: true,
-      suppliers: true,
-      crm: true,
-      tasks: true,
-      analytics: true,
-      documents: true,
-      outreach: true,
-      ai: true,
-      billing: true,
-      admin: true
-    }
+    dashboard: true,
+    suppliers: true,
+    crm: true,
+    tasks: true,
+    analytics: true,
+    documents: true,
+    outreach: true,
+    ai: true,
+    billing: true,
+    admin: role === "Owner" || role === "Founder"
   };
 }
 
-async function handleSignup(req, res) {
-  try {
-    const { name, email, password, companyName } = req.body;
+function sendAuthResponse(
+  res,
+  user,
+  message = "Authentication successful"
+) {
 
-    if (!email || !password) {
-      return res.status(400).json({
-        message: "Email and password are required"
-      });
+  const accessToken =
+    generateAccessToken(user);
+
+  const refreshToken =
+    generateRefreshToken(user);
+
+  res.cookie(
+    "tradeflow_refresh_token",
+    refreshToken,
+    {
+      httpOnly: true,
+      secure:
+        process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge:
+        30 * 24 * 60 * 60 * 1000
     }
+  );
 
-    await bcrypt.hash(password, 10);
+  res.json({
+    success: true,
+    message,
 
-    const user = buildUser({
+    token: accessToken,
+    accessToken,
+
+    user: {
+      id: user._id,
+      name: user.name || "TradeFlow User",
+      email: user.email,
+      companyName:
+        user.companyName ||
+        "TradeFlow Workspace",
+      role: user.role || "Owner",
+      permissions:
+        buildPermissions(
+          user.role || "Owner"
+        )
+    },
+
+    expiresIn: "15m"
+  });
+
+}
+
+async function handleSignup(req, res) {
+
+  try {
+
+    const {
       name,
       email,
+      password,
       companyName
-    });
+    } = req.body;
 
-    const token = createToken(user);
+    if (!email || !password) {
 
-    res.json({
-      success: true,
-      token,
-      ...user,
+      return res.status(400).json({
+        success: false,
+        message:
+          "Email and password are required"
+      });
+
+    }
+
+    const cleanEmail =
+      String(email)
+        .toLowerCase()
+        .trim();
+
+    const existingUser =
+      await User.findOne({
+        email: cleanEmail
+      });
+
+    if (existingUser) {
+
+      return res.status(409).json({
+        success: false,
+        message:
+          "User already exists. Please login."
+      });
+
+    }
+
+    const hashedPassword =
+      await bcrypt.hash(password, 10);
+
+    const user =
+      await User.create({
+
+        name:
+          name || "TradeFlow User",
+
+        email: cleanEmail,
+
+        password: hashedPassword,
+
+        companyName:
+          companyName ||
+          "TradeFlow Workspace",
+
+        role:
+          cleanEmail ===
+          "ks2353013@gmail.com"
+            ? "Founder"
+            : "Owner"
+
+      });
+
+    sendAuthResponse(
+      res,
       user,
-      expiresIn: "7d"
-    });
+      "Signup successful"
+    );
+
   } catch (error) {
-    console.error("Signup error:", error.message);
+
+    console.error(
+      "Signup error:",
+      error.message
+    );
 
     res.status(500).json({
-      message: "Signup failed"
+      success: false,
+      message: "Signup failed",
+      error: error.message
     });
+
   }
+
 }
 
 router.post("/signup", handleSignup);
 router.post("/register", handleSignup);
 
 router.post("/login", async (req, res) => {
-  try {
-    const { email } = req.body;
 
-    if (!email) {
+  try {
+
+    const {
+      email,
+      password
+    } = req.body;
+
+    if (!email || !password) {
+
       return res.status(400).json({
-        message: "Email is required"
+        success: false,
+        message:
+          "Email and password are required"
       });
+
     }
 
-    const user = buildUser({
-      email,
-      name: "TradeFlow User",
-      companyName: "TradeFlow Workspace"
-    });
+    const cleanEmail =
+      String(email)
+        .toLowerCase()
+        .trim();
 
-    const token = createToken(user);
+    const user =
+      await User.findOne({
+        email: cleanEmail
+      });
 
-    res.json({
-      success: true,
-      token,
-      ...user,
+    if (!user) {
+
+      return res.status(401).json({
+        success: false,
+        message:
+          "Invalid email or password"
+      });
+
+    }
+
+    const isMatch =
+      await bcrypt.compare(
+        password,
+        user.password
+      );
+
+    if (!isMatch) {
+
+      return res.status(401).json({
+        success: false,
+        message:
+          "Invalid email or password"
+      });
+
+    }
+
+    sendAuthResponse(
+      res,
       user,
-      expiresIn: "7d"
-    });
+      "Login successful"
+    );
+
   } catch (error) {
-    console.error("Login error:", error.message);
+
+    console.error(
+      "Login error:",
+      error.message
+    );
 
     res.status(500).json({
-      message: "Login failed"
+      success: false,
+      message: "Login failed",
+      error: error.message
     });
+
   }
+
 });
 
-router.get("/session", (req, res) => {
-  try {
-    const authHeader = req.headers.authorization;
+router.post("/refresh", async (req, res) => {
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  try {
+
+    const refreshToken =
+      req.cookies
+        ?.tradeflow_refresh_token ||
+      req.body?.refreshToken;
+
+    if (!refreshToken) {
+
+      return res.status(401).json({
+        success: false,
+        message:
+          "Refresh token missing"
+      });
+
+    }
+
+    const decoded =
+      verifyRefreshToken(
+        refreshToken
+      );
+
+    const user =
+      await User.findById(
+        decoded.id
+      );
+
+    if (!user) {
+
+      return res.status(401).json({
+        success: false,
+        message:
+          "User not found"
+      });
+
+    }
+
+    sendAuthResponse(
+      res,
+      user,
+      "Session refreshed"
+    );
+
+  } catch (error) {
+
+    res.status(401).json({
+      success: false,
+      message:
+        "Refresh session failed",
+      error: error.message
+    });
+
+  }
+
+});
+
+router.post("/logout", (req, res) => {
+
+  res.clearCookie(
+    "tradeflow_refresh_token",
+    {
+      httpOnly: true,
+      secure:
+        process.env.NODE_ENV === "production",
+      sameSite: "strict"
+    }
+  );
+
+  res.json({
+    success: true,
+    message:
+      "Logged out successfully"
+  });
+
+});
+
+router.get("/session", async (req, res) => {
+
+  try {
+
+    const authHeader =
+      req.headers.authorization;
+
+    if (
+      !authHeader ||
+      !authHeader.startsWith("Bearer ")
+    ) {
+
       return res.status(401).json({
         valid: false,
         message: "No token"
       });
+
     }
 
-    const token = authHeader.split(" ")[1];
+    const token =
+      authHeader.split(" ")[1];
 
-    const decoded = jwt.verify(token, getJwtSecret());
+    const decoded =
+      verifyAccessToken(token);
+
+    const user =
+      await User.findById(
+        decoded.id
+      ).select("-password");
+
+    if (!user) {
+
+      return res.status(401).json({
+        valid: false,
+        message:
+          "User not found"
+      });
+
+    }
 
     res.json({
       valid: true,
+
       user: {
-        id: decoded.id,
-        email: decoded.email,
-        role: decoded.role,
-        permissions: decoded.permissions || {}
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        companyName:
+          user.companyName,
+        role:
+          user.role || "Owner",
+
+        permissions:
+          buildPermissions(
+            user.role || "Owner"
+          )
       }
     });
+
   } catch {
+
     res.status(401).json({
       valid: false,
-      message: "Session expired"
+      message:
+        "Session expired"
     });
+
   }
+
 });
 
 module.exports = router;

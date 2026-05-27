@@ -11,8 +11,12 @@ const compression = require("compression");
 const http = require("http");
 const { Server } = require("socket.io");
 
-const connectDB = require("./config/db");
+const {
+  initSocketServer
+} = require("./socket/socketServer");
 
+const connectDB = require("./config/db");
+const cookieParser = require("cookie-parser");
 const supplierRoutes = require("./routes/supplierRoutes");
 const authRoutes = require("./routes/authRoutes");
 const dealRoutes = require("./routes/dealRoutes");
@@ -21,6 +25,7 @@ const taskRoutes = require("./routes/taskRoutes");
 const pdfRoutes = require("./routes/pdfRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
 const outreachRoutes = require("./routes/outreachRoutes");
+const outreachEmailRoutes = require("./routes/outreachEmailRoutes");
 const emailRoutes = require("./routes/emailRoutes");
 const employeeRoutes = require("./routes/employeeRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
@@ -40,12 +45,15 @@ const usageRoutes = require("./routes/usageRoutes");
 const subscriptionAdminRoutes = require("./routes/subscriptionAdminRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 
+const hunterRoutes = require("./routes/hunterRoutes");
 const aiSupplierAgentRoutes = require("./routes/aiSupplierAgentRoutes");
 const aiOutreachAgentRoutes = require("./routes/aiOutreachAgentRoutes");
 const aiFollowupAgentRoutes = require("./routes/aiFollowupAgentRoutes");
 const aiCrmForecastAgentRoutes = require("./routes/aiCrmForecastAgentRoutes");
 const aiTradeRiskAgentRoutes = require("./routes/aiTradeRiskAgentRoutes");
 
+const aiLeadEnrichmentRoutes = require("./routes/aiLeadEnrichmentRoutes");
+const aiAutonomousWorkflowRoutes = require("./routes/aiAutonomousWorkflowRoutes");
 const automationWorkflowRoutes = require("./routes/automationWorkflowRoutes2");
 const emailAutomationRoutes = require("./routes/emailAutomationRoutes");
 const whatsappAutomationRoutes = require("./routes/whatsappAutomationRoutes");
@@ -75,6 +83,10 @@ const {
 } = require("./services/workflowScheduler");
 
 const app = express();
+
+const {
+  startAIAutonomousScheduler
+} = require("./services/aiAutonomousScheduler");
 
 /* =========================
    SECURITY + PERFORMANCE
@@ -119,6 +131,7 @@ app.use(
 ========================= */
 
 app.use(express.json());
+app.use(cookieParser());
 
 /* =========================
    DATABASE
@@ -152,6 +165,8 @@ app.use("/api/analytics", analyticsRoutes);
 
 app.use("/api/outreach", outreachRoutes);
 
+app.use("/api/outreach-email", requirePro(), outreachEmailRoutes);
+
 app.use("/api/email", emailRoutes);
 
 app.use("/api/employees", employeeRoutes);
@@ -174,6 +189,8 @@ app.use("/api/backup", backupRoutes);
 
 app.use("/api/usage", usageRoutes);
 
+app.use("/api/ai-autonomous-workflows", requirePro(), aiAutonomousWorkflowRoutes);
+
 app.use("/api/ai-supplier-agent", aiSupplierAgentRoutes);
 
 app.use("/api/ai-outreach-agent", aiOutreachAgentRoutes);
@@ -195,6 +212,11 @@ app.use("/api/subscriptions", subscriptionAdminRoutes);
 app.use("/api/subscription", subscriptionRoutes);
 
 app.use("/api/razorpay-checkout", razorpayRoutes);
+
+app.use("/api/hunter", requirePro(), hunterRoutes);
+
+app.use("/api/ai-lead-enrichment", requirePro(), aiLeadEnrichmentRoutes);
+
 /* =========================
    ENTERPRISE PROTECTED APIs
 ========================= */
@@ -257,11 +279,46 @@ app.use(
   )
 );
 
-app.get("*", (req, res) => {
+/* Public Landing Page */
+
+app.get("/", (req, res) => {
+  res.sendFile(
+    path.join(
+      __dirname,
+      "../frontend/landing.html"
+    )
+  );
+});
+
+/* Onboarding */
+
+app.get("/onboarding", (req, res) => {
+  res.sendFile(
+    path.join(
+      __dirname,
+      "../frontend/onboarding.html"
+    )
+  );
+});
+
+/* SaaS Application */
+
+app.get("/app", (req, res) => {
   res.sendFile(
     path.join(
       __dirname,
       "../frontend/index.html"
+    )
+  );
+});
+
+/* Fallback */
+
+app.get("*", (req, res) => {
+  res.sendFile(
+    path.join(
+      __dirname,
+      "../frontend/landing.html"
     )
   );
 });
@@ -288,75 +345,8 @@ const io = new Server(server, {
   }
 });
 
-io.on("connection", (socket) => {
 
-  console.log(
-    "🟢 User connected:",
-    socket.id
-  );
-
-  socket.on(
-    "join-workspace",
-    (data) => {
-
-      const workspaceId =
-        data?.workspaceId || "global";
-
-      socket.join(workspaceId);
-
-      io.to(workspaceId).emit(
-        "workspace-activity",
-        {
-          type: "presence",
-
-          message:
-            `${data?.email || "A user"} joined workspace`,
-
-          time:
-            new Date().toISOString()
-        }
-      );
-    }
-  );
-
-  socket.on(
-    "tradeflow-activity",
-    (data) => {
-
-      const workspaceId =
-        data?.workspaceId || "global";
-
-      io.to(workspaceId).emit(
-        "workspace-activity",
-        {
-          type:
-            data?.type || "activity",
-
-          message:
-            data?.message ||
-            "New TradeFlow activity",
-
-          email:
-            data?.email || "",
-
-          time:
-            new Date().toISOString()
-        }
-      );
-    }
-  );
-
-  socket.on("disconnect", () => {
-
-    console.log(
-      "🔴 User disconnected:",
-      socket.id
-    );
-
-  });
-
-});
-
+initSocketServer(io);
 /* =========================
    SERVER START
 ========================= */
@@ -384,5 +374,7 @@ server.listen(PORT, () => {
   );
 
   startWorkflowScheduler();
+
+   startAIAutonomousScheduler();
 
 });
