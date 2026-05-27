@@ -1,4 +1,22 @@
-<!DOCTYPE html>
+const fs = require("fs");
+const path = require("path");
+
+const root = process.cwd();
+
+function file(p) {
+  return path.join(root, p);
+}
+
+function write(p, content) {
+  fs.writeFileSync(file(p), content, "utf8");
+  console.log("✅ Fixed:", p);
+}
+
+function read(p) {
+  return fs.readFileSync(file(p), "utf8");
+}
+
+const authHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -44,4 +62,67 @@
 
   <script src="/js/auth.js"></script>
 </body>
-</html>
+</html>`;
+
+write("frontend/auth.html", authHtml);
+
+let server = read("backend/server.js");
+
+server = server.replace(
+  /app\.get\("\/login"[\s\S]*?\}\);\s*app\.get\("\/signup"[\s\S]*?\}\);/,
+  `app.get("/login", (req, res) => {
+  res.sendFile(
+    path.join(
+      __dirname,
+      "../frontend/auth.html"
+    )
+  );
+});
+
+app.get("/signup", (req, res) => {
+  res.sendFile(
+    path.join(
+      __dirname,
+      "../frontend/auth.html"
+    )
+  );
+});`
+);
+
+write("backend/server.js", server);
+
+let landing = read("frontend/landing.html");
+landing = landing.replace(/href="\/app"/g, 'href="/signup"');
+landing = landing.replace(/<a class="ghost" href="\/signup">Login<\/a>/g, '<a class="ghost" href="/login">Login</a>');
+landing = landing.replace(/<a class="ghost" href="\/app">Login<\/a>/g, '<a class="ghost" href="/login">Login</a>');
+write("frontend/landing.html", landing);
+
+const filesToFix = [
+  "frontend/js/app.js",
+  "frontend/js/auth.js",
+  "frontend/index.html"
+];
+
+for (const f of filesToFix) {
+  if (!fs.existsSync(file(f))) continue;
+
+  let content = read(f);
+  content = content.replace(/login\.html/g, "/login");
+  content = content.replace(/signup\.html/g, "/signup");
+  content = content.replace(/master-login\.html/g, "/login");
+
+  write(f, content);
+}
+
+for (const oldFile of [
+  "frontend/login.html",
+  "frontend/signup.html",
+  "frontend/master-login.html"
+]) {
+  if (fs.existsSync(file(oldFile))) {
+    fs.unlinkSync(file(oldFile));
+    console.log("🗑️ Deleted:", oldFile);
+  }
+}
+
+console.log("✅ TradeFlow auth routing fixed completely.");

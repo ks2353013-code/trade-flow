@@ -29,7 +29,7 @@ function protectDashboard() {
 
   if (!user || !user.token) {
     localStorage.removeItem("tradeflowUser");
-    window.location.replace("login.html");
+    window.location.replace("/login");
     throw new Error("Not logged in");
   }
 
@@ -60,7 +60,7 @@ function getAuthHeaders() {
 
   if (!user || !user.token) {
     localStorage.removeItem("tradeflowUser");
-    window.location.replace("login.html");
+    window.location.replace("/login");
     throw new Error("Token missing");
   }
 
@@ -71,7 +71,7 @@ function getAuthHeaders() {
 }
 function logoutUser() {
   localStorage.removeItem("tradeflowUser");
-  window.location.href = "login.html";
+  window.location.href = "/login";
 }
 
 const pages = [
