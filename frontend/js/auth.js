@@ -149,12 +149,14 @@ async function signupUser(name, email, password, companyName) {
       companyName: finalCompanyName
     });
 
-    saveTradeflowUser({
-      ...data,
-      email: data.email || finalEmail
-    });
+   saveTradeflowUser({
+  ...data.user,
+  token: data.token,
+  accessToken: data.accessToken,
+  email: finalEmail
+});
 
-    window.location.href = "index.html";
+    window.location.href = "/onboarding";
   } catch (error) {
     alert(error.message || "Signup failed");
   } finally {
@@ -181,12 +183,14 @@ async function loginUser(email, password) {
       password: finalPassword
     });
 
-    saveTradeflowUser({
-      ...data,
-      email: data.email || finalEmail
-    });
+   saveTradeflowUser({
+  ...data.user,
+  token: data.token,
+  accessToken: data.accessToken,
+  email: finalEmail
+});
 
-    window.location.href = "index.html";
+    window.location.href = "/app";
   } catch (error) {
     alert(error.message || "Login failed");
   } finally {
@@ -229,7 +233,7 @@ async function loginMasterAdmin(email, password) {
       email: backendEmail
     });
 
-    window.location.href = "master-admin.html";
+    window.location.href = "/app";
   } catch (error) {
     alert(error.message || "Master admin login failed");
   } finally {
@@ -239,12 +243,12 @@ async function loginMasterAdmin(email, password) {
 
 function logoutUser() {
   clearTradeflowSession();
-  window.location.href = "login.html";
+  window.location.href = "/login";
 }
 
 function logoutMaster() {
   clearTradeflowSession();
-  window.location.href = "master-login.html";
+  window.location.href = "/login";
 }
 
 function protectDashboard() {
@@ -252,7 +256,7 @@ function protectDashboard() {
 
   if (!user || !user.token) {
     clearTradeflowSession();
-    window.location.replace("login.html");
+    window.location.replace("/login");
     return false;
   }
 
@@ -266,7 +270,7 @@ function protectMasterAdmin() {
   if (!admin || !admin.token || !isOwnerEmail(email)) {
     localStorage.removeItem("tradeflowMasterAdmin");
     alert("Master Admin is restricted to the owner email only.");
-    window.location.replace("master-login.html");
+    window.location.replace("/login");
     return false;
   }
 
@@ -277,7 +281,7 @@ function redirectAuthenticatedUser() {
   const user = getTradeflowUser();
 
   if (user?.token) {
-    window.location.replace("index.html");
+    window.location.replace("/app");
   }
 }
 
@@ -286,6 +290,6 @@ function redirectAuthenticatedMaster() {
   const email = normalizeEmail(admin?.email);
 
   if (admin?.token && isOwnerEmail(email)) {
-    window.location.replace("master-admin.html");
+    window.location.replace("/app");
   }
 }
