@@ -9,7 +9,7 @@ const TRADEFLOW_OWNER_EMAILS = [
   "ks2353013@gmail.com"
 ];
 
-const API_BASE = window.TRADEFLOW_API_BASE || "https://trade-flow-lc1k.onrender.com";
+const API_BASE = window.TRADEFLOW_API_BASE || "";
 
 function safeJsonParse(value, fallback = null) {
   try {
