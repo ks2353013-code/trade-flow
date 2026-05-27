@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TradeFlow™ — AI Export Import SaaS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(56,189,248,.18), transparent 30%),
+        radial-gradient(circle at top right, rgba(168,85,247,.18), transparent 30%),
+        linear-gradient(135deg, #020617, #0f172a);
+      color: #e5e7eb;
+      font-family: Inter, system-ui, Arial, sans-serif;
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 7%;
+    }
+
+    .brand h1 {
+      font-size: 28px;
+      font-weight: 900;
+      color: white;
+      margin: 0;
+    }
+
+    .brand p {
+      margin: 4px 0 0;
+      color: #94a3b8;
+      font-size: 13px;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #38bdf8, #8b5cf6);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 999px;
+      border: none;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .ghost {
+      border: 1px solid rgba(148,163,184,.3);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .hero {
+      padding: 80px 7% 60px;
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(56,189,248,.12);
+      border: 1px solid rgba(56,189,248,.25);
+      color: #7dd3fc;
+      font-weight: 800;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+
+    .hero h2 {
+      font-size: clamp(42px, 6vw, 78px);
+      line-height: .95;
+      margin: 0;
+      color: white;
+      letter-spacing: -2px;
+    }
+
+    .hero h2 span {
+      background: linear-gradient(135deg, #38bdf8, #a78bfa, #22c55e);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .hero p {
+      color: #cbd5e1;
+      font-size: 18px;
+      line-height: 1.8;
+      max-width: 680px;
+      margin: 24px 0;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 26px;
+    }
+
+    .mock {
+      background: rgba(15,23,42,.82);
+      border: 1px solid rgba(148,163,184,.18);
+      border-radius: 30px;
+      padding: 22px;
+      box-shadow: 0 30px 100px rgba(0,0,0,.35);
+    }
+
+    .mock-card {
+      background: rgba(2,6,23,.75);
+      border: 1px solid rgba(148,163,184,.14);
+      border-radius: 22px;
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+
+    .metric {
+      font-size: 30px;
+      font-weight: 950;
+      color: white;
+    }
+
+    .section {
+      padding: 70px 7%;
+    }
+
+    .section h3 {
+      color: white;
+      font-size: 38px;
+      margin-bottom: 14px;
+    }
+
+    .section > p {
+      color: #94a3b8;
+      max-width: 780px;
+      line-height: 1.7;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+      margin-top: 30px;
+    }
+
+    .card {
+      background: rgba(15,23,42,.76);
+      border: 1px solid rgba(148,163,184,.16);
+      border-radius: 26px;
+      padding: 24px;
+    }
+
+    .card h4 {
+      color: white;
+      font-size: 21px;
+      margin: 0 0 10px;
+    }
+
+    .card p, .card li {
+      color: #94a3b8;
+      line-height: 1.7;
+    }
+
+    .price {
+      font-size: 34px;
+      font-weight: 950;
+      color: white;
+      margin: 14px 0;
+    }
+
+    .popular {
+      border-color: rgba(56,189,248,.5);
+      box-shadow: 0 25px 80px rgba(56,189,248,.13);
+    }
+
+    footer {
+      padding: 35px 7%;
+      border-top: 1px solid rgba(148,163,184,.14);
+      color: #64748b;
+      text-align: center;
+    }
+
+    @media(max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding-top: 50px;
+      }
+
+      .nav {
+        flex-direction: column;
+        gap: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="nav">
+    <div class="brand">
+      <h1>TradeFlow™</h1>
+      <p>AI Export / Import SaaS Operating System</p>
+    </div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <a class="ghost" href="/onboarding">Login</a>
+      <a class="btn" href="/onboarding">Start Free</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div>
+      <div class="badge">Built for exporters, importers, sourcing teams & trade agencies</div>
+
+      <h2>
+        Run global trade with an <span>AI-powered operating system.</span>
+      </h2>
+
+      <p>
+        TradeFlow brings suppliers, CRM, outreach, analytics, documents, tasks,
+        AI trade intelligence, subscriptions, enterprise controls, and automation into one premium SaaS workspace.
+      </p>
+
+      <div class="hero-actions">
+        <a class="btn" href="/onboarding">Start Free Trial</a>
+        <a class="ghost" href="#pricing">View Pricing</a>
+      </div>
+    </div>
+
+    <div class="mock">
+      <div class="mock-card">
+        <div style="color:#94a3b8;">Pipeline Value</div>
+        <div class="metric">₹48,75,000</div>
+      </div>
+
+      <div class="mock-card">
+        <div style="color:#94a3b8;">AI Supplier Intelligence</div>
+        <div class="metric">2,000+ Leads</div>
+      </div>
+
+      <div class="mock-card">
+        <div style="color:#94a3b8;">Enterprise SaaS Controls</div>
+        <div class="metric">Active</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3>Everything your trade business needs.</h3>
+    <p>
+      Replace scattered spreadsheets, WhatsApp notes, manual follow-ups, and disconnected supplier lists with one AI-powered trade operations hub.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <h4>🌍 Supplier Intelligence</h4>
+        <p>Store, score, enrich, and manage suppliers across countries and product categories.</p>
+      </div>
+
+      <div class="card">
+        <h4>📈 CRM Pipeline</h4>
+        <p>Track buyers, deals, negotiations, stages, pipeline value, and conversions.</p>
+      </div>
+
+      <div class="card">
+        <h4>🤖 AI Command Center</h4>
+        <p>Generate outreach, negotiation strategies, follow-ups, task plans, and trade insights.</p>
+      </div>
+
+      <div class="card">
+        <h4>📧 Smart Outreach</h4>
+        <p>Manage WhatsApp and email outreach from one workspace with history and follow-up status.</p>
+      </div>
+
+      <div class="card">
+        <h4>📄 Export Documents</h4>
+        <p>Generate commercial invoices, export checklists, quotation templates, and documentation workflows.</p>
+      </div>
+
+      <div class="card">
+        <h4>🛡️ Enterprise Security</h4>
+        <p>Tenant isolation, audit logs, master admin controls, subscriptions, approvals, and role-based access.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="pricing">
+    <h3>Simple SaaS pricing.</h3>
+    <p>Start small, scale with AI, and unlock enterprise trade automation when your team grows.</p>
+
+    <div class="grid">
+      <div class="card">
+        <h4>Starter</h4>
+        <div class="price">₹1,999/mo</div>
+        <p>For solo exporters and early-stage businesses.</p>
+        <ul>
+          <li>Basic CRM</li>
+          <li>200 suppliers</li>
+          <li>50 buyer searches</li>
+          <li>3 employees</li>
+        </ul>
+        <a class="btn" href="/onboarding">Start Starter</a>
+      </div>
+
+      <div class="card popular">
+        <h4>Pro Exporter</h4>
+        <div class="price">₹8,999/mo</div>
+        <p>For active exporters, agencies, and trade teams.</p>
+        <ul>
+          <li>AI tools</li>
+          <li>Buyer discovery</li>
+          <li>Advanced analytics</li>
+          <li>Automation workflows</li>
+        </ul>
+        <a class="btn" href="/onboarding">Upgrade to Pro</a>
+      </div>
+
+      <div class="card">
+        <h4>Enterprise AI OS</h4>
+        <div class="price">₹49,999/mo</div>
+        <p>For enterprise teams needing AI operations and white-label control.</p>
+        <ul>
+          <li>Autonomous AI</li>
+          <li>Strategic control tower</li>
+          <li>White-label portal</li>
+          <li>Master approval workflow</li>
+        </ul>
+        <a class="btn" href="/onboarding">Request Enterprise</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3>Built like a real SaaS company.</h3>
+    <p>
+      TradeFlow includes subscriptions, Razorpay checkout, master approvals, investor dashboard,
+      audit logging, tenant isolation, enterprise modules, and controlled AI activation.
+    </p>
+
+    <div class="hero-actions">
+      <a class="btn" href="/onboarding">Launch TradeFlow</a>
+      <a class="ghost" href="#pricing">See Plans</a>
+    </div>
+  </section>
+
+  <footer>
+    © 2026 TradeFlow™ — AI Export / Import SaaS Operating System
+  </footer>
+
+</body>
+</html>
