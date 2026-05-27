@@ -295,6 +295,26 @@ app.get("/onboarding", (req, res) => {
   );
 });
 
+/* Authentication Page */
+
+app.get("/login", (req, res) => {
+  res.sendFile(
+    path.join(
+      __dirname,
+      "../frontend/auth.html"
+    )
+  );
+});
+
+app.get("/signup", (req, res) => {
+  res.sendFile(
+    path.join(
+      __dirname,
+      "../frontend/auth.html"
+    )
+  );
+});
+
 /* SaaS Application */
 
 app.get("/app", (req, res) => {
@@ -316,35 +336,6 @@ app.use(
     }
   )
 );
-
-app.get("/login", (req, res) => {
-  res.sendFile(
-    path.join(
-      __dirname,
-      "../frontend/index.html"
-    )
-  );
-});
-
-app.get("/signup", (req, res) => {
-  res.sendFile(
-    path.join(
-      __dirname,
-      "../frontend/index.html"
-    )
-  );
-});
-
-/* Fallback */
-
-app.get("*", (req, res) => {
-  res.sendFile(
-    path.join(
-      __dirname,
-      "../frontend/landing.html"
-    )
-  );
-});
 
 /* =========================
    REALTIME COLLABORATION
