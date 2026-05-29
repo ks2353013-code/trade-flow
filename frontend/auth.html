@@ -5,50 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TradeFlow Authentication</title>
   <script src="https://cdn.tailwindcss.com"></script>
-
   <style>
-    body{
-      background: radial-gradient(circle at top left,#1e293b,#020617 60%);
-    }
-    .glass{
-      backdrop-filter: blur(18px);
-      background: rgba(255,255,255,0.08);
-      border:1px solid rgba(255,255,255,0.1);
-    }
-    .input{
-      width:100%;
-      padding:14px 16px;
-      border-radius:14px;
-      background:#0f172a;
-      color:white;
-      border:1px solid #334155;
-      outline:none;
-    }
-    .input:focus{
-      border-color:#3b82f6;
-      box-shadow:0 0 0 3px rgba(59,130,246,0.2);
-    }
-    .btn{
-      width:100%;
-      padding:14px;
-      border-radius:14px;
-      font-weight:800;
-    }
-    .btn-primary{
-      background:linear-gradient(to right,#2563eb,#7c3aed);
-      color:white;
-    }
-    .tab-active{
-      background:white;
-      color:black;
-    }
+    body{background:radial-gradient(circle at top left,#1e293b,#020617 60%);}
+    .glass{backdrop-filter:blur(18px);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);}
+    .input{width:100%;padding:14px 16px;border-radius:14px;background:#0f172a;color:white;border:1px solid #334155;outline:none;}
+    .input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.2);}
+    .btn{width:100%;padding:14px;border-radius:14px;font-weight:800;}
+    .btn-primary{background:linear-gradient(to right,#2563eb,#7c3aed);color:white;}
+    .tab-active{background:white;color:black;}
   </style>
 </head>
 
 <body class="min-h-screen text-white flex items-center justify-center p-5">
-
   <div class="w-full max-w-6xl grid lg:grid-cols-2 gap-10 items-center">
-
     <div class="hidden lg:block">
       <h1 class="text-6xl font-black">TradeFlow</h1>
       <p class="mt-6 text-slate-300 text-lg leading-8">
@@ -58,19 +27,14 @@
     </div>
 
     <div class="glass rounded-[32px] p-8 lg:p-10 shadow-2xl">
-
       <div class="text-center mb-8">
         <h2 class="text-4xl font-black">Welcome Back</h2>
         <p class="text-slate-300 mt-3">Login or create your TradeFlow workspace</p>
       </div>
 
       <div class="bg-slate-900 p-1 rounded-2xl flex mb-8">
-        <button id="loginTab" class="flex-1 py-3 rounded-2xl font-bold tab-active">
-          Login
-        </button>
-        <button id="signupTab" class="flex-1 py-3 rounded-2xl font-bold text-white">
-          Create Account
-        </button>
+        <button id="loginTab" class="flex-1 py-3 rounded-2xl font-bold tab-active">Login</button>
+        <button id="signupTab" class="flex-1 py-3 rounded-2xl font-bold text-white">Create Account</button>
       </div>
 
       <form id="loginForm" class="space-y-5">
@@ -88,12 +52,17 @@
       </form>
 
       <div id="messageBox" class="hidden mt-6 p-4 rounded-2xl text-center font-bold"></div>
-
     </div>
   </div>
 
 <script>
-const API_BASE = window.location.origin;
+const RENDER_BACKEND_URL = "https://trade-flow-lc1k.onrender.com";
+
+const API_BASE =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1"
+    ? window.location.origin
+    : RENDER_BACKEND_URL;
 
 const loginTab = document.getElementById("loginTab");
 const signupTab = document.getElementById("signupTab");
@@ -110,12 +79,39 @@ function showMessage(message,type="error"){
 }
 
 function saveSession(data){
-  const user = data.user || data.data || data;
+  const rawUser = data.user || data.data || data;
   const token = data.token || data.accessToken || data.jwt || "local-testing-token";
 
+  const user = {
+    ...rawUser,
+    token,
+    accessToken: token,
+    role: rawUser.role || "master_admin",
+    plan: rawUser.plan || "enterprise",
+    subscription: rawUser.subscription || "enterprise",
+    isLoggedIn: true
+  };
+
   localStorage.setItem("tradeflowUser", JSON.stringify(user));
+  localStorage.setItem("user", JSON.stringify(user));
+  localStorage.setItem("currentUser", JSON.stringify(user));
   localStorage.setItem("tradeflowToken", token);
   localStorage.setItem("token", token);
+  localStorage.setItem("authToken", token);
+  localStorage.setItem("jwt", token);
+  localStorage.setItem("isLoggedIn", "true");
+  localStorage.setItem("tradeflowLoggedIn", "true");
+  localStorage.setItem("tradeflowSubscriptionPlan", "Enterprise");
+}
+
+async function safeJson(res) {
+  const text = await res.text();
+  if (!text) return {};
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error("Backend returned non-JSON response. Check Render backend/CORS.");
+  }
 }
 
 loginTab.onclick = () => {
@@ -146,7 +142,7 @@ loginForm.addEventListener("submit", async (e) => {
       })
     });
 
-    const data = await res.json();
+    const data = await safeJson(res);
 
     if(!res.ok || data.success === false){
       throw new Error(data.message || "Login failed");
@@ -181,7 +177,7 @@ signupForm.addEventListener("submit", async (e) => {
       })
     });
 
-    const data = await res.json();
+    const data = await safeJson(res);
 
     if(!res.ok || data.success === false){
       throw new Error(data.message || "Signup failed");
