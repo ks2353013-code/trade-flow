@@ -72,7 +72,9 @@ app.set("trust proxy", 1);
 const allowedOrigins = [
   "http://localhost:5000",
   "http://localhost:3000",
-  "https://trade-flow-lc1k.onrender.com"
+  "https://trade-flow-lc1k.onrender.com",
+  "https://tradeflowai.in",
+  "https://www.tradeflowai.in"
 ];
 
 app.use(
