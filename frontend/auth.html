@@ -1,47 +1,204 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TradeFlow Login / Signup</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TradeFlow Authentication</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
   <style>
-    body{margin:0;min-height:100vh;background:linear-gradient(135deg,#020617,#0f172a);color:white;font-family:Inter,Arial,sans-serif;display:flex;align-items:center;justify-content:center;padding:30px}
-    .box{width:100%;max-width:900px;display:grid;grid-template-columns:1fr 1fr;gap:24px}
-    .card{background:rgba(15,23,42,.9);border:1px solid rgba(148,163,184,.18);border-radius:26px;padding:28px;box-shadow:0 30px 80px rgba(0,0,0,.35)}
-    input{width:100%;padding:14px;border-radius:14px;border:1px solid rgba(148,163,184,.2);background:#020617;color:white;margin-bottom:14px}
-    .btn{width:100%;padding:14px;border-radius:999px;border:none;font-weight:900;color:white;cursor:pointer;background:linear-gradient(135deg,#38bdf8,#8b5cf6)}
-    .muted{color:#94a3b8;line-height:1.6}
-    a{color:#7dd3fc;text-decoration:none}
-    @media(max-width:800px){.box{grid-template-columns:1fr}}
+    body{
+      background: radial-gradient(circle at top left,#1e293b,#020617 60%);
+    }
+    .glass{
+      backdrop-filter: blur(18px);
+      background: rgba(255,255,255,0.08);
+      border:1px solid rgba(255,255,255,0.1);
+    }
+    .input{
+      width:100%;
+      padding:14px 16px;
+      border-radius:14px;
+      background:#0f172a;
+      color:white;
+      border:1px solid #334155;
+      outline:none;
+    }
+    .input:focus{
+      border-color:#3b82f6;
+      box-shadow:0 0 0 3px rgba(59,130,246,0.2);
+    }
+    .btn{
+      width:100%;
+      padding:14px;
+      border-radius:14px;
+      font-weight:800;
+    }
+    .btn-primary{
+      background:linear-gradient(to right,#2563eb,#7c3aed);
+      color:white;
+    }
+    .tab-active{
+      background:white;
+      color:black;
+    }
   </style>
 </head>
-<body>
-  <div class="box">
-    <div class="card">
-      <h1>TradeFlow™</h1>
-      <p class="muted">Login to your AI Export / Import SaaS workspace.</p>
-      <form onsubmit="return false;">
-        <input id="loginEmail" type="email" placeholder="Email">
-        <input id="loginPassword" type="password" placeholder="Password">
-        <button type="button" class="btn" onclick="loginUser(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value)">Login</button>
-      </form>
+
+<body class="min-h-screen text-white flex items-center justify-center p-5">
+
+  <div class="w-full max-w-6xl grid lg:grid-cols-2 gap-10 items-center">
+
+    <div class="hidden lg:block">
+      <h1 class="text-6xl font-black">TradeFlow</h1>
+      <p class="mt-6 text-slate-300 text-lg leading-8">
+        Advanced Export / Import SaaS platform for supplier discovery,
+        AI lead generation, outreach automation, CRM pipelines and analytics.
+      </p>
     </div>
 
-    <div class="card">
-      <h2>Create Account</h2>
-      <p class="muted">Start your TradeFlow workspace and complete onboarding.</p>
-      <form onsubmit="return false;">
-        <input id="name" type="text" placeholder="Your Name">
-        <input id="companyName" type="text" placeholder="Company Name">
-        <input id="email" type="email" placeholder="Email">
-        <input id="password" type="password" placeholder="Password">
-        <button type="button" class="btn" onclick="signupUser()">Create Account</button>
+    <div class="glass rounded-[32px] p-8 lg:p-10 shadow-2xl">
+
+      <div class="text-center mb-8">
+        <h2 class="text-4xl font-black">Welcome Back</h2>
+        <p class="text-slate-300 mt-3">Login or create your TradeFlow workspace</p>
+      </div>
+
+      <div class="bg-slate-900 p-1 rounded-2xl flex mb-8">
+        <button id="loginTab" class="flex-1 py-3 rounded-2xl font-bold tab-active">
+          Login
+        </button>
+        <button id="signupTab" class="flex-1 py-3 rounded-2xl font-bold text-white">
+          Create Account
+        </button>
+      </div>
+
+      <form id="loginForm" class="space-y-5">
+        <input id="loginEmail" type="email" required placeholder="Email" class="input"/>
+        <input id="loginPassword" type="password" required placeholder="Password" class="input"/>
+        <button type="submit" class="btn btn-primary">Login to TradeFlow</button>
       </form>
-      <p class="muted"><a href="/">Back to landing page</a></p>
+
+      <form id="signupForm" class="space-y-5 hidden">
+        <input id="signupName" type="text" required placeholder="Full name" class="input"/>
+        <input id="signupCompany" type="text" required placeholder="Company name" class="input"/>
+        <input id="signupEmail" type="email" required placeholder="Email" class="input"/>
+        <input id="signupPassword" type="password" required placeholder="Password" class="input"/>
+        <button type="submit" class="btn btn-primary">Create TradeFlow Account</button>
+      </form>
+
+      <div id="messageBox" class="hidden mt-6 p-4 rounded-2xl text-center font-bold"></div>
+
     </div>
   </div>
 
-  <script src="/js/auth.js"></script>
+<script>
+const API_BASE = window.location.origin;
+
+const loginTab = document.getElementById("loginTab");
+const signupTab = document.getElementById("signupTab");
+const loginForm = document.getElementById("loginForm");
+const signupForm = document.getElementById("signupForm");
+const messageBox = document.getElementById("messageBox");
+
+function showMessage(message,type="error"){
+  messageBox.classList.remove("hidden");
+  messageBox.className = type === "success"
+    ? "mt-6 p-4 rounded-2xl text-center font-bold bg-green-500/20 text-green-300"
+    : "mt-6 p-4 rounded-2xl text-center font-bold bg-red-500/20 text-red-300";
+  messageBox.innerText = message;
+}
+
+function saveSession(data){
+  const user = data.user || data.data || data;
+  const token = data.token || data.accessToken || data.jwt || "local-testing-token";
+
+  localStorage.setItem("tradeflowUser", JSON.stringify(user));
+  localStorage.setItem("tradeflowToken", token);
+  localStorage.setItem("token", token);
+}
+
+loginTab.onclick = () => {
+  loginForm.classList.remove("hidden");
+  signupForm.classList.add("hidden");
+  loginTab.classList.add("tab-active");
+  signupTab.classList.remove("tab-active");
+};
+
+signupTab.onclick = () => {
+  signupForm.classList.remove("hidden");
+  loginForm.classList.add("hidden");
+  signupTab.classList.add("tab-active");
+  loginTab.classList.remove("tab-active");
+};
+
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      credentials:"include",
+      body:JSON.stringify({
+        email:document.getElementById("loginEmail").value.trim(),
+        password:document.getElementById("loginPassword").value
+      })
+    });
+
+    const data = await res.json();
+
+    if(!res.ok || data.success === false){
+      throw new Error(data.message || "Login failed");
+    }
+
+    saveSession(data);
+    showMessage("Login successful. Opening onboarding guide...","success");
+
+    setTimeout(() => {
+      window.location.href = "/onboarding";
+    }, 800);
+
+  } catch(err) {
+    showMessage(err.message || "Server request failed");
+  }
+});
+
+signupForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/signup`, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      credentials:"include",
+      body:JSON.stringify({
+        name:document.getElementById("signupName").value.trim(),
+        company:document.getElementById("signupCompany").value.trim(),
+        email:document.getElementById("signupEmail").value.trim(),
+        password:document.getElementById("signupPassword").value,
+        role:"master_admin"
+      })
+    });
+
+    const data = await res.json();
+
+    if(!res.ok || data.success === false){
+      throw new Error(data.message || "Signup failed");
+    }
+
+    saveSession(data);
+    showMessage("Account created. Opening onboarding guide...","success");
+
+    setTimeout(() => {
+      window.location.href = "/onboarding";
+    }, 800);
+
+  } catch(err) {
+    showMessage(err.message || "Server request failed");
+  }
+});
+</script>
+
 </body>
 </html>

@@ -2,22 +2,26 @@
 
 (function () {
 
-  const CACHE_KEY =
-    "tradeflowNotifications";
+  const CACHE_KEY = "tradeflowNotifications";
 
   function $(id) {
     return document.getElementById(id);
   }
 
   function getBackendUrl() {
+
     if (
-      typeof BACKEND_URL !==
-      "undefined"
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1"
     ) {
+      return window.location.origin;
+    }
+
+    if (typeof BACKEND_URL !== "undefined") {
       return BACKEND_URL;
     }
 
-    return "https://trade-flow-lc1k.onrender.com";
+    return window.location.origin;
   }
 
   function getJson(key, fallback) {
@@ -50,8 +54,7 @@
     const user = getUser();
 
     return {
-      "Content-Type":
-        "application/json",
+      "Content-Type": "application/json",
 
       Authorization:
         user?.token
@@ -60,40 +63,8 @@
 
       "x-user-email":
         user?.email ||
-        "unknown@tradeflow.local",
-
-      "x-company-id":
-        localStorage.getItem(
-          "tradeflowActiveCompany"
-        ) || "",
-
-      "x-workspace-id":
-        localStorage.getItem(
-          "tradeflowActiveWorkspace"
-        ) || ""
+        "tradeflow@local.test"
     };
-  }
-
-  function getPriorityColor(
-    priority
-  ) {
-
-    switch (priority) {
-
-      case "Critical":
-        return "#ef4444";
-
-      case "High":
-        return "#f97316";
-
-      case "Medium":
-        return "#3b82f6";
-
-      default:
-        return "#10b981";
-
-    }
-
   }
 
   async function createNotification(
@@ -122,9 +93,7 @@
       );
 
       if (!res.ok) {
-        throw new Error(
-          "Notification failed"
-        );
+        throw new Error("Notification failed");
       }
 
       showToast(
@@ -138,7 +107,7 @@
     } catch (error) {
 
       console.warn(
-        "Notification failed:",
+        "Notification system offline:",
         error.message
       );
 
@@ -160,13 +129,10 @@
       );
 
       if (!res.ok) {
-        throw new Error(
-          "Fetch failed"
-        );
+        throw new Error("Fetch failed");
       }
 
-      const data =
-        await res.json();
+      const data = await res.json();
 
       setJson(
         CACHE_KEY,
@@ -177,12 +143,8 @@
 
       renderNotifications();
 
-      fetchUnreadCount();
-
       if (renderStatus) {
-        setStatus(
-          "Notifications synced."
-        );
+        setStatus("Notifications synced.");
       }
 
     } catch {
@@ -190,82 +152,10 @@
       renderNotifications();
 
       setStatus(
-        "Using cached notifications."
+        "Local notification mode active."
       );
 
     }
-
-  }
-
-  async function fetchUnreadCount() {
-
-    try {
-
-      const res = await fetch(
-        `${getBackendUrl()}/api/notifications/unread-count`,
-        {
-          headers: getHeaders()
-        }
-      );
-
-      if (!res.ok) return;
-
-      const data =
-        await res.json();
-
-      const badge = $(
-        "notificationUnreadBadge"
-      );
-
-      if (badge) {
-
-        badge.innerText =
-          data.count || 0;
-
-        badge.style.display =
-          data.count > 0
-            ? "inline-flex"
-            : "none";
-
-      }
-
-    } catch {}
-
-  }
-
-  async function markAsRead(id) {
-
-    try {
-
-      await fetch(
-        `${getBackendUrl()}/api/notifications/${id}/read`,
-        {
-          method: "PUT",
-          headers: getHeaders()
-        }
-      );
-
-      fetchNotifications(false);
-
-    } catch {}
-
-  }
-
-  async function markAllRead() {
-
-    try {
-
-      await fetch(
-        `${getBackendUrl()}/api/notifications/mark-all-read`,
-        {
-          method: "PUT",
-          headers: getHeaders()
-        }
-      );
-
-      fetchNotifications(false);
-
-    } catch {}
 
   }
 
@@ -288,9 +178,8 @@
       color:white;
       padding:16px;
       border-radius:14px;
-      border-left:5px solid ${getPriorityColor(priority)};
+      border-left:5px solid #3b82f6;
       box-shadow:0 10px 40px rgba(0,0,0,.45);
-      animation:tradeflowToast .35s ease;
     `;
 
     toast.innerHTML = `
@@ -309,23 +198,18 @@
 
     setTimeout(() => {
       toast.remove();
-    }, 4500);
+    }, 4000);
 
   }
 
   function renderNotifications() {
 
-    const container = $(
-      "notificationCenterList"
-    );
+    const container = $("notificationCenterList");
 
     if (!container) return;
 
     const notifications =
-      getJson(
-        CACHE_KEY,
-        []
-      );
+      getJson(CACHE_KEY, []);
 
     if (!notifications.length) {
 
@@ -346,83 +230,17 @@
         class="supplier-card"
         style="
           margin-bottom:12px;
-          border-left:4px solid ${getPriorityColor(n.priority)};
-          opacity:${n.read ? ".7" : "1"};
+          border-left:4px solid #3b82f6;
         "
       >
 
-        <div
-          style="
-            display:flex;
-            justify-content:space-between;
-            gap:10px;
-            align-items:center;
-          "
-        >
-
-          <h2
-            style="
-              margin:0;
-              font-size:16px;
-              color:white;
-            "
-          >
-            ${n.title}
-          </h2>
-
-          <span
-            class="status"
-            style="
-              background:${getPriorityColor(n.priority)};
-              color:white;
-            "
-          >
-            ${n.priority}
-          </span>
-
-        </div>
+        <h2 style="margin:0;color:white;">
+          ${n.title}
+        </h2>
 
         <p class="muted">
           ${n.message}
         </p>
-
-        <div
-          style="
-            display:flex;
-            gap:10px;
-            flex-wrap:wrap;
-            margin-top:10px;
-          "
-        >
-
-          <span class="status">
-            ${n.type}
-          </span>
-
-          <span class="status">
-            ${
-              n.createdAt
-                ? new Date(
-                    n.createdAt
-                  ).toLocaleString()
-                : "Now"
-            }
-          </span>
-
-          ${
-            !n.read
-              ? `
-            <button
-              class="btn"
-              onclick="TradeFlowNotifications.read('${n._id}')"
-            >
-              Mark Read
-            </button>
-          `
-              : ""
-          }
-
-        </div>
 
       </div>
 
@@ -432,9 +250,8 @@
 
   function setStatus(text) {
 
-    const el = $(
-      "notificationCenterStatus"
-    );
+    const el =
+      $("notificationCenterStatus");
 
     if (el) {
       el.innerText = text;
@@ -453,9 +270,7 @@
     ) return;
 
     const panel =
-      document.createElement(
-        "div"
-      );
+      document.createElement("div");
 
     panel.id =
       "notificationCenterPanel";
@@ -465,46 +280,12 @@
 
     panel.innerHTML = `
 
-      <div
-        style="
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-          gap:12px;
-          flex-wrap:wrap;
-        "
-      >
-
-        <div class="section-title">
-          🔔 Notification Center
-        </div>
-
-        <div
-          id="notificationUnreadBadge"
-          style="
-            display:none;
-            align-items:center;
-            justify-content:center;
-            min-width:28px;
-            height:28px;
-            border-radius:999px;
-            background:#ef4444;
-            color:white;
-            font-weight:900;
-            padding:0 10px;
-          "
-        >
-          0
-        </div>
-
+      <div class="section-title">
+        🔔 Notification Center
       </div>
 
       <p class="muted">
-        Workspace alerts,
-        billing alerts,
-        AI alerts,
-        security notifications,
-        and realtime updates.
+        Local enterprise notifications active.
       </p>
 
       <div
@@ -528,13 +309,6 @@
           onclick="TradeFlowNotifications.test()"
         >
           Generate Test Alert
-        </button>
-
-        <button
-          class="btn"
-          onclick="TradeFlowNotifications.markAll()"
-        >
-          Mark All Read
         </button>
 
       </div>
@@ -563,60 +337,38 @@
 
     dashboard.appendChild(panel);
 
-    const style =
-      document.createElement(
-        "style"
-      );
-
-    style.innerHTML = `
-      @keyframes tradeflowToast {
-        from {
-          transform:translateY(-10px);
-          opacity:0;
-        }
-
-        to {
-          transform:translateY(0);
-          opacity:1;
-        }
-      }
-    `;
-
-    document.head.appendChild(
-      style
-    );
-
   }
 
   function generateTestNotification() {
 
-    createNotification(
+    const notifications =
+      getJson(CACHE_KEY, []);
+
+    notifications.unshift({
+      title: "TradeFlow Alert",
+      message:
+        "Enterprise local notification system active."
+    });
+
+    setJson(
+      CACHE_KEY,
+      notifications
+    );
+
+    renderNotifications();
+
+    showToast(
       "TradeFlow Alert",
-      "Realtime notification system operational.",
-      "System",
-      "Medium",
-      {
-        test: true
-      }
+      "Enterprise local notification system active.",
+      "Medium"
     );
 
   }
 
   window.TradeFlowNotifications = {
-    create:
-      createNotification,
-
-    fetch:
-      fetchNotifications,
-
-    read:
-      markAsRead,
-
-    markAll:
-      markAllRead,
-
-    test:
-      generateTestNotification
+    create: createNotification,
+    fetch: fetchNotifications,
+    test: generateTestNotification
   };
 
   function boot() {
@@ -625,15 +377,14 @@
 
     fetchNotifications(false);
 
-    setInterval(() => {
-      fetchUnreadCount();
-    }, 30000);
+    console.log(
+      "✅ Notification Engine Active"
+    );
 
   }
 
   if (
-    document.readyState ===
-    "loading"
+    document.readyState === "loading"
   ) {
 
     document.addEventListener(

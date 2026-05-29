@@ -1,4 +1,4 @@
-const BACKEND_URL = "https://trade-flow-lc1k.onrender.com";
+const BACKEND_URL = window.location.origin;
 
 const API_URL = `${BACKEND_URL}/suppliers`;
 const AI_URL = `${BACKEND_URL}/api/ai`;

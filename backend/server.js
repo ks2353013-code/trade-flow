@@ -7,16 +7,13 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const morgan = require("morgan");
 const compression = require("compression");
-
 const http = require("http");
 const { Server } = require("socket.io");
-
-const {
-  initSocketServer
-} = require("./socket/socketServer");
-
-const connectDB = require("./config/db");
 const cookieParser = require("cookie-parser");
+
+const { initSocketServer } = require("./socket/socketServer");
+const connectDB = require("./config/db");
+
 const supplierRoutes = require("./routes/supplierRoutes");
 const authRoutes = require("./routes/authRoutes");
 const dealRoutes = require("./routes/dealRoutes");
@@ -38,7 +35,6 @@ const workspaceOrgRoutes = require("./routes/workspaceOrgRoutes");
 const aiMemoryRoutes = require("./routes/aiMemoryRoutes");
 const auditRoutes = require("./routes/auditRoutes");
 const backupRoutes = require("./routes/backupRoutes");
-const tenantMiddleware = require("./middleware/tenantMiddleware");
 const razorpayRoutes = require("./routes/razorpayRoutes");
 const razorpayWebhookRoutes = require("./routes/razorpayWebhookRoutes");
 const usageRoutes = require("./routes/usageRoutes");
@@ -51,7 +47,6 @@ const aiOutreachAgentRoutes = require("./routes/aiOutreachAgentRoutes");
 const aiFollowupAgentRoutes = require("./routes/aiFollowupAgentRoutes");
 const aiCrmForecastAgentRoutes = require("./routes/aiCrmForecastAgentRoutes");
 const aiTradeRiskAgentRoutes = require("./routes/aiTradeRiskAgentRoutes");
-
 const aiLeadEnrichmentRoutes = require("./routes/aiLeadEnrichmentRoutes");
 const aiAutonomousWorkflowRoutes = require("./routes/aiAutonomousWorkflowRoutes");
 const automationWorkflowRoutes = require("./routes/automationWorkflowRoutes2");
@@ -60,41 +55,24 @@ const whatsappAutomationRoutes = require("./routes/whatsappAutomationRoutes");
 
 const executiveAnalyticsRoutes = require("./routes/executiveAnalyticsRoutes");
 const whiteLabelRoutes = require("./routes/whiteLabelRoutes");
+const liveSupplierIntelligenceRoutes = require("./routes/liveSupplierIntelligenceRoutes");
+const onboardingRoutes = require("./routes/onboardingRoutes");
+const realSupplierDiscoveryRoutes = require("./routes/realSupplierDiscoveryRoutes");
+const buyerDiscoveryRoutes = require("./routes/buyerDiscoveryRoutes");
 
-const liveSupplierIntelligenceRoutes =
-require("./routes/liveSupplierIntelligenceRoutes");
+const tenantMiddleware = require("./middleware/tenantMiddleware");
 
-const onboardingRoutes =
-require("./routes/onboardingRoutes");
-
-const realSupplierDiscoveryRoutes =
-require("./routes/realSupplierDiscoveryRoutes");
-
-const buyerDiscoveryRoutes =
-require("./routes/buyerDiscoveryRoutes");
-
-const {
-  requirePro,
-  requireEnterprise
-} = require("./middleware/subscriptionMiddleware");
-
-const {
-  startWorkflowScheduler
-} = require("./services/workflowScheduler");
+const { startWorkflowScheduler } = require("./services/workflowScheduler");
+const { startAIAutonomousScheduler } = require("./services/aiAutonomousScheduler");
 
 const app = express();
 
-const {
-  startAIAutonomousScheduler
-} = require("./services/aiAutonomousScheduler");
-
-/* =========================
-   SECURITY + PERFORMANCE
-========================= */
-
 app.set("trust proxy", 1);
 
-app.use(cors());
+app.use(cors({
+  origin: "*",
+  credentials: true
+}));
 
 app.use(
   helmet({
@@ -103,292 +81,158 @@ app.use(
 );
 
 app.use(compression());
-
 app.use(morgan("combined"));
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 300,
+  max: 500,
   message: {
-    message:
-      "Too many requests. Please try again later."
+    success: false,
+    message: "Too many requests. Please try again later."
   }
 });
 
 app.use("/api", apiLimiter);
 
-/* =========================
-   RAZORPAY WEBHOOK RAW BODY
-========================= */
+/* Razorpay webhook must stay before JSON parser */
+app.use("/api/razorpay-webhook", razorpayWebhookRoutes);
 
-app.use(
-  "/api/razorpay-webhook",
-  razorpayWebhookRoutes
-);
-
-/* =========================
-   JSON BODY PARSER
-========================= */
-
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
-/* =========================
-   DATABASE
-========================= */
 
 connectDB();
 
-/* =========================
-   TENANT MIDDLEWARE
-========================= */
-
 app.use(tenantMiddleware);
 
-/* =========================
-   API ROUTES
-========================= */
+/* Health check */
+app.get("/api/health", (req, res) => {
+  res.json({
+    success: true,
+    message: "TradeFlow backend working",
+    port: process.env.PORT || 5000,
+    mode: process.env.NODE_ENV || "local"
+  });
+});
 
+/* API Routes */
 app.use("/suppliers", supplierRoutes);
-
 app.use("/api/auth", authRoutes);
-
 app.use("/api/deals", dealRoutes);
-
 app.use("/api/ai", aiRoutes);
-
 app.use("/api/tasks", taskRoutes);
-
 app.use("/api/pdf", pdfRoutes);
-
 app.use("/api/analytics", analyticsRoutes);
-
 app.use("/api/outreach", outreachRoutes);
 
-app.use("/api/outreach-email", requirePro(), outreachEmailRoutes);
-
+/*
+  LOCAL TEST MODE:
+  Pro / Enterprise locks removed here so your buttons and modules open during testing.
+  Later, before final paid launch, we can re-enable requirePro() / requireEnterprise().
+*/
+app.use("/api/outreach-email", outreachEmailRoutes);
 app.use("/api/email", emailRoutes);
-
 app.use("/api/employees", employeeRoutes);
-
 app.use("/api/notifications", notificationRoutes);
-
 app.use("/api/workspaces", workspaceRoutes);
-
 app.use("/api/activity", activityRoutes);
-
 app.use("/api/payment", paymentRoutes);
-
 app.use("/api/billing", billingRoutes);
-
 app.use("/api/companies", companyRoutes);
-
 app.use("/api/audit", auditRoutes);
-
 app.use("/api/backup", backupRoutes);
-
 app.use("/api/usage", usageRoutes);
-
-app.use("/api/ai-autonomous-workflows", requirePro(), aiAutonomousWorkflowRoutes);
-
+app.use("/api/ai-autonomous-workflows", aiAutonomousWorkflowRoutes);
 app.use("/api/ai-supplier-agent", aiSupplierAgentRoutes);
-
 app.use("/api/ai-outreach-agent", aiOutreachAgentRoutes);
-
 app.use("/api/ai-followup-agent", aiFollowupAgentRoutes);
-
 app.use("/api/ai-crm-forecast-agent", aiCrmForecastAgentRoutes);
-
 app.use("/api/ai-trade-risk-agent", aiTradeRiskAgentRoutes);
-
 app.use("/api/automation-workflows", automationWorkflowRoutes);
-
 app.use("/api/email-automation", emailAutomationRoutes);
-
 app.use("/api/whatsapp-automation", whatsappAutomationRoutes);
-
 app.use("/api/subscriptions", subscriptionAdminRoutes);
-
 app.use("/api/subscription", subscriptionRoutes);
-
 app.use("/api/razorpay-checkout", razorpayRoutes);
+app.use("/api/hunter", hunterRoutes);
+app.use("/api/ai-lead-enrichment", aiLeadEnrichmentRoutes);
+app.use("/api/executive-analytics", executiveAnalyticsRoutes);
+app.use("/api/white-label", whiteLabelRoutes);
+app.use("/api/buyer-discovery", buyerDiscoveryRoutes);
+app.use("/api/live-supplier-intelligence", liveSupplierIntelligenceRoutes);
+app.use("/api/real-supplier-discovery", realSupplierDiscoveryRoutes);
+app.use("/api/onboarding", onboardingRoutes);
+app.use("/api/org-workspaces", workspaceOrgRoutes);
+app.use("/api/ai-memory", aiMemoryRoutes);
 
-app.use("/api/hunter", requirePro(), hunterRoutes);
-
-app.use("/api/ai-lead-enrichment", requirePro(), aiLeadEnrichmentRoutes);
-
-/* =========================
-   ENTERPRISE PROTECTED APIs
-========================= */
-
-app.use(
-  "/api/executive-analytics",
-  requireEnterprise(),
-  executiveAnalyticsRoutes
-);
-
-app.use(
-  "/api/white-label",
-  requireEnterprise(),
-  whiteLabelRoutes
-);
-
-app.use(
-  "/api/buyer-discovery",
-  requirePro(),
-  buyerDiscoveryRoutes
-);
-
-app.use(
-  "/api/live-supplier-intelligence",
-  requireEnterprise(),
-  liveSupplierIntelligenceRoutes
-);
-
-/* =========================
-   ADVANCED SaaS APIs
-========================= */
-
-app.use(
-  "/api/real-supplier-discovery",
-  realSupplierDiscoveryRoutes
-);
-
-app.use(
-  "/api/onboarding",
-  onboardingRoutes
-);
-
-app.use(
-  "/api/org-workspaces",
-  workspaceOrgRoutes
-);
-
-app.use(
-  "/api/ai-memory",
-  aiMemoryRoutes
-);
-
-/* =========================
-   FRONTEND SERVING
-========================= */
-
-/* Public Landing Page */
-
+/* Frontend Pages */
 app.get("/", (req, res) => {
-  res.sendFile(
-    path.join(
-      __dirname,
-      "../frontend/landing.html"
-    )
-  );
+  res.sendFile(path.join(__dirname, "../frontend/landing.html"));
 });
 
-/* Onboarding */
-
-app.get("/onboarding", (req, res) => {
-  res.sendFile(
-    path.join(
-      __dirname,
-      "../frontend/onboarding.html"
-    )
-  );
+app.get("/landing", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/landing.html"));
 });
-
-/* Authentication Page */
 
 app.get("/login", (req, res) => {
-  res.sendFile(
-    path.join(
-      __dirname,
-      "../frontend/auth.html"
-    )
-  );
+  res.sendFile(path.join(__dirname, "../frontend/auth.html"));
 });
 
 app.get("/signup", (req, res) => {
-  res.sendFile(
-    path.join(
-      __dirname,
-      "../frontend/auth.html"
-    )
-  );
+  res.sendFile(path.join(__dirname, "../frontend/auth.html"));
 });
 
-/* SaaS Application */
+app.get("/master/login", (req, res) => {
+  res.redirect("/login");
+});
+
+app.get("/onboarding", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/onboarding.html"));
+});
 
 app.get("/app", (req, res) => {
-  res.sendFile(
-    path.join(
-      __dirname,
-      "../frontend/index.html"
-    )
-  );
+  res.sendFile(path.join(__dirname, "../frontend/index.html"));
 });
 
-/* Static Assets */
-
 app.use(
-  express.static(
-    path.join(__dirname, "../frontend"),
-    {
-      index: false
-    }
-  )
+  express.static(path.join(__dirname, "../frontend"), {
+    index: false
+  })
 );
 
-/* =========================
-   REALTIME COLLABORATION
-========================= */
+/* Fallback */
+app.use((req, res) => {
+  if (req.path.startsWith("/api")) {
+    return res.status(404).json({
+      success: false,
+      message: "API route not found",
+      path: req.path
+    });
+  }
 
-const PORT =
-  process.env.PORT || 5000;
+  return res.redirect("/login");
+});
 
-const server =
-  http.createServer(app);
+const PORT = process.env.PORT || 5000;
+const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
     origin: "*",
-    methods: [
-      "GET",
-      "POST",
-      "PUT",
-      "DELETE"
-    ]
+    methods: ["GET", "POST", "PUT", "DELETE"]
   }
 });
 
-
 initSocketServer(io);
-/* =========================
-   SERVER START
-========================= */
 
 server.listen(PORT, () => {
-
-  console.log(
-    `✅ TradeFlow Server running on port ${PORT}`
-  );
-
-  console.log(
-    "✅ MongoDB Connected"
-  );
-
-  console.log(
-    "✅ Real-time collaboration engine active"
-  );
-
-  console.log(
-    "✅ SaaS subscription security active"
-  );
-
-  console.log(
-    "✅ Enterprise access control active"
-  );
+  console.log(`✅ TradeFlow Server running on port ${PORT}`);
+  console.log("✅ MongoDB Connected");
+  console.log("✅ Real-time collaboration engine active");
+  console.log("✅ SaaS subscription security temporarily unlocked for local testing");
+  console.log("✅ Enterprise access control temporarily unlocked for local testing");
+  console.log("✅ Workflow scheduler engine active");
 
   startWorkflowScheduler();
-
-   startAIAutonomousScheduler();
-
+  startAIAutonomousScheduler();
 });
