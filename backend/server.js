@@ -69,10 +69,29 @@ const app = express();
 
 app.set("trust proxy", 1);
 
-app.use(cors({
-  origin: "*",
-  credentials: true
-}));
+const allowedOrigins = [
+  "http://localhost:5000",
+  "http://localhost:3000",
+  "https://trade-flow-lc1k.onrender.com"
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app")
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(null, false);
+    },
+    credentials: true
+  })
+);
 
 app.use(
   helmet({
@@ -105,7 +124,6 @@ connectDB();
 
 app.use(tenantMiddleware);
 
-/* Health check */
 app.get("/api/health", (req, res) => {
   res.json({
     success: true,
@@ -125,11 +143,6 @@ app.use("/api/pdf", pdfRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/outreach", outreachRoutes);
 
-/*
-  LOCAL TEST MODE:
-  Pro / Enterprise locks removed here so your buttons and modules open during testing.
-  Later, before final paid launch, we can re-enable requirePro() / requireEnterprise().
-*/
 app.use("/api/outreach-email", outreachEmailRoutes);
 app.use("/api/email", emailRoutes);
 app.use("/api/employees", employeeRoutes);
@@ -200,7 +213,6 @@ app.use(
   })
 );
 
-/* Fallback */
 app.use((req, res) => {
   if (req.path.startsWith("/api")) {
     return res.status(404).json({
@@ -218,8 +230,20 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE"]
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app")
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(null, false);
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
   }
 });
 
@@ -229,8 +253,7 @@ server.listen(PORT, () => {
   console.log(`✅ TradeFlow Server running on port ${PORT}`);
   console.log("✅ MongoDB Connected");
   console.log("✅ Real-time collaboration engine active");
-  console.log("✅ SaaS subscription security temporarily unlocked for local testing");
-  console.log("✅ Enterprise access control temporarily unlocked for local testing");
+  console.log("✅ CORS enabled for localhost, Render, and Vercel");
   console.log("✅ Workflow scheduler engine active");
 
   startWorkflowScheduler();
