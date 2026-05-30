@@ -3,24 +3,21 @@ const Usage = require("../models/Usage");
 
 const router = express.Router();
 
-const MASTER_ADMIN_EMAIL = "ks2353013@gmail.com";
+const MASTER_ADMIN_EMAILS = [
+  "ks2353013@gmail.com",
+  "contact@tradeflowai.in"
+];
 
 function getOwnerEmail(req) {
-  return (
-    req.tenant?.ownerEmail ||
-    req.user?.email ||
-    req.headers["x-user-email"] ||
-    req.body?.ownerEmail ||
-    req.body?.email ||
-    req.query?.email ||
-    "unknown@tradeflow.local"
-  )
-    .toLowerCase()
-    .trim();
+  if (!req.user?.email) {
+    throw new Error("Authenticated user email missing");
+  }
+
+  return String(req.user.email).toLowerCase().trim();
 }
 
 function isMasterAdmin(req) {
-  return getOwnerEmail(req) === MASTER_ADMIN_EMAIL;
+  return MASTER_ADMIN_EMAILS.includes(getOwnerEmail(req));
 }
 
 function tenantFilter(req) {
@@ -45,13 +42,14 @@ function tenantFilter(req) {
 
 router.get("/", async (req, res) => {
   try {
-    const usage = await Usage.find(
-      tenantFilter(req)
-    ).sort({
+    const usage = await Usage.find(tenantFilter(req)).sort({
       createdAt: -1
     });
 
-    res.json(usage);
+    res.json({
+      success: true,
+      usage
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -68,17 +66,14 @@ router.post("/", async (req, res) => {
     const usage = await Usage.create({
       ...req.body,
       ownerEmail,
-      companyId:
-        req.tenant?.companyId ||
-        req.body.companyId ||
-        null,
-      workspaceId:
-        req.tenant?.workspaceId ||
-        req.body.workspaceId ||
-        null
+      companyId: req.tenant?.companyId || req.body.companyId || null,
+      workspaceId: req.tenant?.workspaceId || req.body.workspaceId || null
     });
 
-    res.status(201).json(usage);
+    res.status(201).json({
+      success: true,
+      usage
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -90,17 +85,11 @@ router.post("/", async (req, res) => {
 
 router.get("/summary", async (req, res) => {
   try {
-    const filter = tenantFilter(req);
-
-    const usage = await Usage.find(filter);
+    const usage = await Usage.find(tenantFilter(req));
 
     const summary = usage.reduce(
       (acc, item) => {
-        const type =
-          item.type ||
-          item.action ||
-          item.event ||
-          "unknown";
+        const type = item.type || item.action || item.event || "unknown";
 
         acc.total += 1;
         acc.byType[type] = (acc.byType[type] || 0) + 1;
