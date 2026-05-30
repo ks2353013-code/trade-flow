@@ -7,7 +7,10 @@ const User = require("../models/User");
 
 const router = express.Router();
 
-const MASTER_ADMIN_EMAIL = "ks2353013@gmail.com";
+const MASTER_ADMIN_EMAILS = [
+  "ks2353013@gmail.com",
+  "contact@tradeflowai.in"
+];
 
 const PLAN_CONFIG = {
   Starter: {
@@ -51,19 +54,11 @@ const PLAN_CONFIG = {
 };
 
 function getEmail(req) {
-  return (
-    req.user?.email ||
-    req.headers["x-user-email"] ||
-    req.body?.email ||
-    req.query?.email ||
-    ""
-  )
-    .toLowerCase()
-    .trim();
+  return String(req.user?.email || "").toLowerCase().trim();
 }
 
 function isMaster(req) {
-  return getEmail(req) === MASTER_ADMIN_EMAIL;
+  return MASTER_ADMIN_EMAILS.includes(getEmail(req));
 }
 
 function getRazorpay() {
@@ -93,15 +88,15 @@ router.get("/me", async (req, res) => {
     const email = getEmail(req);
 
     if (!email) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
-        message: "Email is required"
+        message: "Authentication required"
       });
     }
 
-    let subscription = await Subscription.findOne({
-      email
-    }).sort({ createdAt: -1 });
+    let subscription = await Subscription.findOne({ email }).sort({
+      createdAt: -1
+    });
 
     if (!subscription) {
       subscription = await createDefaultSubscription(email);
@@ -128,7 +123,7 @@ router.post("/request-upgrade", async (req, res) => {
     if (!email || !PLAN_CONFIG[plan]) {
       return res.status(400).json({
         success: false,
-        message: "Valid email and plan are required"
+        message: "Valid authenticated user and plan are required"
       });
     }
 
@@ -137,27 +132,17 @@ router.post("/request-upgrade", async (req, res) => {
     const subscription = await Subscription.create({
       email,
       plan,
-      status: "Active",
+      status: config.approvalRequired ? "Pending Approval" : "Payment Required",
       price: config.price,
-      approvalStatus: config.approvalRequired ? "Pending" : "Not Required",
+      approvalStatus: config.approvalRequired ? "Pending" : "Payment Required",
       entitlements: config.entitlements
     });
-
-    await User.findOneAndUpdate(
-      { email },
-      {
-        subscriptionPlan: plan,
-        subscriptionPrice: config.price,
-        subscriptionStatus: "Active"
-      },
-      { new: true }
-    );
 
     res.json({
       success: true,
       message: config.approvalRequired
-        ? "Upgrade requested. Waiting for Master Admin approval."
-        : "Plan upgraded successfully.",
+        ? "Enterprise upgrade request received. Payment and Master Admin approval are required before activation."
+        : "Upgrade request created. Payment verification is required before activation.",
       subscription
     });
   } catch (error) {
@@ -177,7 +162,7 @@ router.post("/create-order", async (req, res) => {
     if (!email || !PLAN_CONFIG[plan]) {
       return res.status(400).json({
         success: false,
-        message: "Valid email and plan are required"
+        message: "Valid authenticated user and plan are required"
       });
     }
 
@@ -186,7 +171,7 @@ router.post("/create-order", async (req, res) => {
     if (!razorpay) {
       return res.status(400).json({
         success: false,
-        message: "Razorpay keys are missing in .env"
+        message: "Razorpay keys are missing"
       });
     }
 
@@ -230,7 +215,14 @@ router.post("/verify-payment", async (req, res) => {
     if (!email || !PLAN_CONFIG[plan]) {
       return res.status(400).json({
         success: false,
-        message: "Valid email and plan are required"
+        message: "Valid authenticated user and plan are required"
+      });
+    }
+
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({
+        success: false,
+        message: "Payment details are required"
       });
     }
 
@@ -251,7 +243,7 @@ router.post("/verify-payment", async (req, res) => {
     const subscription = await Subscription.create({
       email,
       plan,
-      status: "Active",
+      status: config.approvalRequired ? "Pending Approval" : "Active",
       price: config.price,
       razorpayPaymentId: razorpay_payment_id,
       razorpayOrderId: razorpay_order_id,
@@ -274,7 +266,7 @@ router.post("/verify-payment", async (req, res) => {
     res.json({
       success: true,
       message: config.approvalRequired
-        ? "Payment successful. Enterprise activation is pending Master Admin approval."
+        ? "Payment verified. Enterprise activation is pending Master Admin approval."
         : "Payment verified. Plan upgraded successfully.",
       subscription
     });
@@ -384,6 +376,13 @@ router.post("/reject-enterprise", async (req, res) => {
       },
       { new: true }
     );
+
+    if (!subscription) {
+      return res.status(404).json({
+        success: false,
+        message: "Subscription not found"
+      });
+    }
 
     res.json({
       success: true,

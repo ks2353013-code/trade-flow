@@ -14,6 +14,9 @@ const cookieParser = require("cookie-parser");
 const { initSocketServer } = require("./socket/socketServer");
 const connectDB = require("./config/db");
 
+const authMiddleware = require("./middleware/authMiddleware");
+const tenantMiddleware = require("./middleware/tenantMiddleware");
+
 const supplierRoutes = require("./routes/supplierRoutes");
 const authRoutes = require("./routes/authRoutes");
 const dealRoutes = require("./routes/dealRoutes");
@@ -60,8 +63,6 @@ const onboardingRoutes = require("./routes/onboardingRoutes");
 const realSupplierDiscoveryRoutes = require("./routes/realSupplierDiscoveryRoutes");
 const buyerDiscoveryRoutes = require("./routes/buyerDiscoveryRoutes");
 
-const tenantMiddleware = require("./middleware/tenantMiddleware");
-
 const { startWorkflowScheduler } = require("./services/workflowScheduler");
 const { startAIAutonomousScheduler } = require("./services/aiAutonomousScheduler");
 
@@ -89,7 +90,7 @@ app.use(
         return callback(null, true);
       }
 
-      return callback(null, false);
+      return callback(new Error("Not allowed by CORS"));
     },
     credentials: true
   })
@@ -115,17 +116,14 @@ const apiLimiter = rateLimit({
 
 app.use("/api", apiLimiter);
 
-/* Razorpay webhook must stay before JSON parser */
+/* Razorpay webhook must stay before JSON parser and auth */
 app.use("/api/razorpay-webhook", razorpayWebhookRoutes);
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-connectDB();
-
-app.use(tenantMiddleware);
-
+/* Health check */
 app.get("/api/health", (req, res) => {
   res.json({
     success: true,
@@ -135,50 +133,54 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-/* API Routes */
-app.use("/suppliers", supplierRoutes);
+/* Public Auth Routes */
 app.use("/api/auth", authRoutes);
-app.use("/api/deals", dealRoutes);
-app.use("/api/ai", aiRoutes);
-app.use("/api/tasks", taskRoutes);
-app.use("/api/pdf", pdfRoutes);
-app.use("/api/analytics", analyticsRoutes);
-app.use("/api/outreach", outreachRoutes);
 
-app.use("/api/outreach-email", outreachEmailRoutes);
-app.use("/api/email", emailRoutes);
-app.use("/api/employees", employeeRoutes);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/workspaces", workspaceRoutes);
-app.use("/api/activity", activityRoutes);
-app.use("/api/payment", paymentRoutes);
-app.use("/api/billing", billingRoutes);
-app.use("/api/companies", companyRoutes);
-app.use("/api/audit", auditRoutes);
-app.use("/api/backup", backupRoutes);
-app.use("/api/usage", usageRoutes);
-app.use("/api/ai-autonomous-workflows", aiAutonomousWorkflowRoutes);
-app.use("/api/ai-supplier-agent", aiSupplierAgentRoutes);
-app.use("/api/ai-outreach-agent", aiOutreachAgentRoutes);
-app.use("/api/ai-followup-agent", aiFollowupAgentRoutes);
-app.use("/api/ai-crm-forecast-agent", aiCrmForecastAgentRoutes);
-app.use("/api/ai-trade-risk-agent", aiTradeRiskAgentRoutes);
-app.use("/api/automation-workflows", automationWorkflowRoutes);
-app.use("/api/email-automation", emailAutomationRoutes);
-app.use("/api/whatsapp-automation", whatsappAutomationRoutes);
-app.use("/api/subscriptions", subscriptionAdminRoutes);
-app.use("/api/subscription", subscriptionRoutes);
-app.use("/api/razorpay-checkout", razorpayRoutes);
-app.use("/api/hunter", hunterRoutes);
-app.use("/api/ai-lead-enrichment", aiLeadEnrichmentRoutes);
-app.use("/api/executive-analytics", executiveAnalyticsRoutes);
-app.use("/api/white-label", whiteLabelRoutes);
-app.use("/api/buyer-discovery", buyerDiscoveryRoutes);
-app.use("/api/live-supplier-intelligence", liveSupplierIntelligenceRoutes);
-app.use("/api/real-supplier-discovery", realSupplierDiscoveryRoutes);
-app.use("/api/onboarding", onboardingRoutes);
-app.use("/api/org-workspaces", workspaceOrgRoutes);
-app.use("/api/ai-memory", aiMemoryRoutes);
+/* Protected API Routes */
+const protectedStack = [authMiddleware, tenantMiddleware];
+
+app.use("/suppliers", protectedStack, supplierRoutes);
+app.use("/api/deals", protectedStack, dealRoutes);
+app.use("/api/ai", protectedStack, aiRoutes);
+app.use("/api/tasks", protectedStack, taskRoutes);
+app.use("/api/pdf", protectedStack, pdfRoutes);
+app.use("/api/analytics", protectedStack, analyticsRoutes);
+app.use("/api/outreach", protectedStack, outreachRoutes);
+
+app.use("/api/outreach-email", protectedStack, outreachEmailRoutes);
+app.use("/api/email", protectedStack, emailRoutes);
+app.use("/api/employees", protectedStack, employeeRoutes);
+app.use("/api/notifications", protectedStack, notificationRoutes);
+app.use("/api/workspaces", protectedStack, workspaceRoutes);
+app.use("/api/activity", protectedStack, activityRoutes);
+app.use("/api/payment", protectedStack, paymentRoutes);
+app.use("/api/billing", protectedStack, billingRoutes);
+app.use("/api/companies", protectedStack, companyRoutes);
+app.use("/api/audit", protectedStack, auditRoutes);
+app.use("/api/backup", protectedStack, backupRoutes);
+app.use("/api/usage", protectedStack, usageRoutes);
+app.use("/api/ai-autonomous-workflows", protectedStack, aiAutonomousWorkflowRoutes);
+app.use("/api/ai-supplier-agent", protectedStack, aiSupplierAgentRoutes);
+app.use("/api/ai-outreach-agent", protectedStack, aiOutreachAgentRoutes);
+app.use("/api/ai-followup-agent", protectedStack, aiFollowupAgentRoutes);
+app.use("/api/ai-crm-forecast-agent", protectedStack, aiCrmForecastAgentRoutes);
+app.use("/api/ai-trade-risk-agent", protectedStack, aiTradeRiskAgentRoutes);
+app.use("/api/automation-workflows", protectedStack, automationWorkflowRoutes);
+app.use("/api/email-automation", protectedStack, emailAutomationRoutes);
+app.use("/api/whatsapp-automation", protectedStack, whatsappAutomationRoutes);
+app.use("/api/subscriptions", protectedStack, subscriptionAdminRoutes);
+app.use("/api/subscription", protectedStack, subscriptionRoutes);
+app.use("/api/razorpay-checkout", protectedStack, razorpayRoutes);
+app.use("/api/hunter", protectedStack, hunterRoutes);
+app.use("/api/ai-lead-enrichment", protectedStack, aiLeadEnrichmentRoutes);
+app.use("/api/executive-analytics", protectedStack, executiveAnalyticsRoutes);
+app.use("/api/white-label", protectedStack, whiteLabelRoutes);
+app.use("/api/buyer-discovery", protectedStack, buyerDiscoveryRoutes);
+app.use("/api/live-supplier-intelligence", protectedStack, liveSupplierIntelligenceRoutes);
+app.use("/api/real-supplier-discovery", protectedStack, realSupplierDiscoveryRoutes);
+app.use("/api/onboarding", protectedStack, onboardingRoutes);
+app.use("/api/org-workspaces", protectedStack, workspaceOrgRoutes);
+app.use("/api/ai-memory", protectedStack, aiMemoryRoutes);
 
 /* Frontend Pages */
 app.get("/", (req, res) => {
@@ -215,6 +217,7 @@ app.use(
   })
 );
 
+/* Fallback */
 app.use((req, res) => {
   if (req.path.startsWith("/api")) {
     return res.status(404).json({
@@ -242,7 +245,7 @@ const io = new Server(server, {
         return callback(null, true);
       }
 
-      return callback(null, false);
+      return callback(new Error("Not allowed by CORS"));
     },
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
@@ -251,13 +254,30 @@ const io = new Server(server, {
 
 initSocketServer(io);
 
-server.listen(PORT, () => {
-  console.log(`✅ TradeFlow Server running on port ${PORT}`);
-  console.log("✅ MongoDB Connected");
-  console.log("✅ Real-time collaboration engine active");
-  console.log("✅ CORS enabled for localhost, Render, and Vercel");
-  console.log("✅ Workflow scheduler engine active");
+async function startServer() {
+  try {
+    await connectDB();
 
-  startWorkflowScheduler();
-  startAIAutonomousScheduler();
-});
+    server.listen(PORT, () => {
+      console.log(`✅ TradeFlow Server running on port ${PORT}`);
+      console.log("✅ MongoDB Connected");
+      console.log("✅ Real-time collaboration engine active");
+      console.log("✅ CORS enabled for localhost, Render, Vercel, and custom domain");
+      console.log("✅ JWT auth mounted on protected API routes");
+      console.log("✅ Tenant middleware uses verified JWT identity only");
+
+      if (process.env.ENABLE_SCHEDULERS === "true") {
+        console.log("✅ Workflow schedulers enabled");
+        startWorkflowScheduler();
+        startAIAutonomousScheduler();
+      } else {
+        console.log("ℹ️ Workflow schedulers disabled. Set ENABLE_SCHEDULERS=true to enable.");
+      }
+    });
+  } catch (error) {
+    console.error("❌ Server startup failed:", error);
+    process.exit(1);
+  }
+}
+
+startServer();

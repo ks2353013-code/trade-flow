@@ -1,13 +1,16 @@
-/* TradeFlow Tenant Middleware */
+/* TradeFlow Production Tenant Middleware
+   Identity comes ONLY from verified JWT req.user.
+*/
 
 function tenantMiddleware(req, res, next) {
-  const ownerEmail =
-    req.user?.email ||
-    req.headers["x-user-email"] ||
-    req.body?.ownerEmail ||
-    req.body?.email ||
-    req.query?.email ||
-    "unknown@tradeflow.local";
+  if (!req.user || !req.user.email) {
+    return res.status(401).json({
+      success: false,
+      message: "Authentication required before tenant resolution"
+    });
+  }
+
+  const ownerEmail = String(req.user.email).toLowerCase().trim();
 
   const companyId =
     req.headers["x-company-id"] ||
@@ -21,8 +24,10 @@ function tenantMiddleware(req, res, next) {
     req.query?.workspaceId ||
     null;
 
+  req.ownerEmail = ownerEmail;
+
   req.tenant = {
-    ownerEmail: String(ownerEmail).toLowerCase().trim(),
+    ownerEmail,
     companyId,
     workspaceId
   };
