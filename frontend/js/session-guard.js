@@ -1,55 +1,51 @@
+/* TradeFlow Production Session Guard */
+
 (function () {
-  console.log("✅ TradeFlow session guard active");
+  console.log("✅ TradeFlow production session guard active");
 
-  const localUser = {
-    name: "TradeFlow Admin",
-    email: "ks2353013@gmail.com",
-    role: "master_admin",
-    plan: "enterprise",
-    subscription: "enterprise",
-    isLoggedIn: true
-  };
-
-  function saveSession() {
-    localStorage.setItem("tradeflowUser", JSON.stringify(localUser));
-    localStorage.setItem("user", JSON.stringify(localUser));
-    localStorage.setItem("currentUser", JSON.stringify(localUser));
-
-    localStorage.setItem("tradeflowToken", "local-testing-token");
-    localStorage.setItem("token", "local-testing-token");
-    localStorage.setItem("authToken", "local-testing-token");
-    localStorage.setItem("jwt", "local-testing-token");
-
-    localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("loggedIn", "true");
-    localStorage.setItem("tradeflowLoggedIn", "true");
-
-    localStorage.setItem("role", "master_admin");
-    localStorage.setItem("tradeflowRole", "master_admin");
-    localStorage.setItem("plan", "enterprise");
-    localStorage.setItem("subscription", "enterprise");
-    localStorage.setItem("tradeflowOnboardingDone", "true");
+  function getToken() {
+    return (
+      localStorage.getItem("tradeflowToken") ||
+      localStorage.getItem("token") ||
+      localStorage.getItem("authToken") ||
+      localStorage.getItem("jwt") ||
+      ""
+    );
   }
 
-  saveSession();
+  function getUser() {
+    try {
+      return JSON.parse(localStorage.getItem("tradeflowUser") || "null");
+    } catch {
+      return null;
+    }
+  }
+
+  function isAuthenticated() {
+    const user = getUser();
+    const token = getToken();
+    return !!(user && token);
+  }
+
+  function requireLogin() {
+    if (!isAuthenticated()) {
+      localStorage.clear();
+      window.location.href = "/login";
+      return false;
+    }
+    return true;
+  }
 
   window.logoutUser = function () {
     localStorage.clear();
     window.location.href = "/login";
   };
 
-  window.checkSession = function () {
-    saveSession();
-    return true;
-  };
+  window.checkSession = isAuthenticated;
+  window.requireLogin = requireLogin;
+  window.isAuthenticated = isAuthenticated;
 
-  window.requireLogin = function () {
-    saveSession();
-    return true;
-  };
-
-  window.isAuthenticated = function () {
-    saveSession();
-    return true;
-  };
+  if (window.location.pathname === "/app") {
+    requireLogin();
+  }
 })();

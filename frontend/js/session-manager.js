@@ -1,87 +1,118 @@
-/* TradeFlow Enterprise Session Manager
-   Local-stable version — stops login loop and preserves modules
-*/
+/* TradeFlow Production Session Manager */
 
 (function () {
   if (window.TradeFlowSessionManager) return;
 
-  const TOKEN_KEY = "tradeflowAccessToken";
-  const LEGACY_TOKEN_KEY = "token";
-
-  const LOCAL_TOKEN = "local-testing-token";
-
-  const LOCAL_USER = {
-    name: "TradeFlow Admin",
-    email: "ks2353013@gmail.com",
-    role: "master_admin",
-    plan: "enterprise",
-    subscription: "enterprise",
-    isLoggedIn: true
-  };
-
-  function saveFullSession(token = LOCAL_TOKEN) {
-    const finalUser = {
-      ...LOCAL_USER,
-      token,
-      accessToken: token
-    };
-
-    localStorage.setItem(TOKEN_KEY, token);
-    localStorage.setItem(LEGACY_TOKEN_KEY, token);
-    localStorage.setItem("tradeflowToken", token);
-    localStorage.setItem("authToken", token);
-    localStorage.setItem("jwt", token);
-
-    localStorage.setItem("tradeflowUser", JSON.stringify(finalUser));
-    localStorage.setItem("user", JSON.stringify(finalUser));
-    localStorage.setItem("currentUser", JSON.stringify(finalUser));
-
-    localStorage.setItem("userEmail", LOCAL_USER.email);
-    localStorage.setItem("tradeflowUserEmail", LOCAL_USER.email);
-
-    localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("loggedIn", "true");
-    localStorage.setItem("tradeflowLoggedIn", "true");
-
-    localStorage.setItem("role", "master_admin");
-    localStorage.setItem("tradeflowRole", "master_admin");
-
-    localStorage.setItem("plan", "enterprise");
-    localStorage.setItem("subscription", "enterprise");
-    localStorage.setItem("tradeflowSubscriptionPlan", "Enterprise");
-
-    localStorage.setItem("tradeflowOnboardingDone", "true");
-  }
+  const TOKEN_KEYS = [
+    "tradeflowAccessToken",
+    "tradeflowToken",
+    "token",
+    "authToken",
+    "jwt"
+  ];
 
   function getToken() {
-    const token =
-      localStorage.getItem(TOKEN_KEY) ||
-      localStorage.getItem("tradeflowToken") ||
-      localStorage.getItem("authToken") ||
-      localStorage.getItem("jwt") ||
-      localStorage.getItem(LEGACY_TOKEN_KEY) ||
-      LOCAL_TOKEN;
-
-    saveFullSession(token);
-    return token;
+    for (const key of TOKEN_KEYS) {
+      const value = localStorage.getItem(key);
+      if (value) return value;
+    }
+    return "";
   }
 
   function saveToken(token) {
-    saveFullSession(token || LOCAL_TOKEN);
+    if (!token) return;
+    TOKEN_KEYS.forEach((key) => localStorage.setItem(key, token));
+  }
+
+  function getUser() {
+    try {
+      return JSON.parse(localStorage.getItem("tradeflowUser") || "null");
+    } catch {
+      return null;
+    }
+  }
+
+  function saveUser(user) {
+    if (!user) return;
+    localStorage.setItem("tradeflowUser", JSON.stringify(user));
+    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("currentUser", JSON.stringify(user));
   }
 
   async function refreshSession() {
-    saveFullSession(getToken());
-    console.log("✅ TradeFlow local session refreshed");
-    return true;
+    try {
+      const res = await fetch("/api/auth/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({})
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success || !data.accessToken) {
+        return false;
+      }
+
+      const user = {
+        ...(data.user || {}),
+        token: data.accessToken,
+        accessToken: data.accessToken,
+        isLoggedIn: true
+      };
+
+      saveToken(data.accessToken);
+      saveUser(user);
+
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async function validateSession() {
-    saveFullSession(getToken());
-    return true;
+    const token = getToken();
+
+    if (!token) {
+      return false;
+    }
+
+    try {
+      const res = await fetch("/api/auth/session", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        credentials: "include"
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.valid) {
+        return false;
+      }
+
+      const user = {
+        ...(data.user || getUser() || {}),
+        token,
+        accessToken: token,
+        isLoggedIn: true
+      };
+
+      saveUser(user);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async function logout() {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include"
+      });
+    } catch {}
+
     localStorage.clear();
     window.location.href = "/login";
   }
@@ -92,7 +123,7 @@
 
     const originalFetch = window.fetch;
 
-    window.fetch = async function (url, options = {}) {
+    window.fetch = function (url, options = {}) {
       options.headers = options.headers || {};
 
       const token = getToken();
@@ -100,7 +131,7 @@
       if (
         token &&
         typeof url === "string" &&
-        url.startsWith("/api")
+        (url.startsWith("/api") || url.includes("/api/"))
       ) {
         options.headers.Authorization =
           options.headers.Authorization || `Bearer ${token}`;
@@ -111,27 +142,22 @@
       return originalFetch(url, options);
     };
 
-    console.log("✅ TradeFlow secure fetch patched");
+    console.log("✅ TradeFlow production fetch patched");
   }
 
   function boot() {
-    saveFullSession();
     patchFetchWithToken();
-
-    setTimeout(validateSession, 300);
-
-    setInterval(refreshSession, 10 * 60 * 1000);
-
-    console.log("✅ Enterprise Session Manager active");
+    console.log("✅ TradeFlow production session manager active");
   }
 
   window.TradeFlowSessionManager = {
     getToken,
     saveToken,
+    getUser,
+    saveUser,
     refreshSession,
     validateSession,
-    logout,
-    saveFullSession
+    logout
   };
 
   if (document.readyState === "loading") {

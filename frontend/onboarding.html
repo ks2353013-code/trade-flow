@@ -11,36 +11,18 @@
 
   <div class="max-w-6xl w-full bg-white/10 border border-white/10 rounded-3xl p-8 shadow-2xl">
 
-    <h1 class="text-4xl font-black mb-3">
-      Welcome to TradeFlow Guide
-    </h1>
+    <h1 class="text-4xl font-black mb-3">Welcome to TradeFlow Guide</h1>
 
     <p class="text-slate-300 mb-8">
       Select your business type so TradeFlow can prepare the right workspace view.
     </p>
 
     <div class="grid md:grid-cols-5 gap-4 mb-8">
-
-      <button onclick="selectBusinessType('Supplier')" class="type-card">
-        🌾 Supplier
-      </button>
-
-      <button onclick="selectBusinessType('Manufacturer')" class="type-card">
-        🏭 Manufacturer
-      </button>
-
-      <button onclick="selectBusinessType('Buyer')" class="type-card">
-        🛒 Buyer
-      </button>
-
-      <button onclick="selectBusinessType('Trading Company')" class="type-card">
-        🌍 Trading Company
-      </button>
-
-      <button onclick="selectBusinessType('Buying House')" class="type-card">
-        🏢 Buying House
-      </button>
-
+      <button onclick="selectBusinessType('Supplier')" class="type-card">🌾 Supplier</button>
+      <button onclick="selectBusinessType('Manufacturer')" class="type-card">🏭 Manufacturer</button>
+      <button onclick="selectBusinessType('Buyer')" class="type-card">🛒 Buyer</button>
+      <button onclick="selectBusinessType('Trading Company')" class="type-card">🌍 Trading Company</button>
+      <button onclick="selectBusinessType('Buying House')" class="type-card">🏢 Buying House</button>
     </div>
 
     <div id="selectedBox" class="hidden bg-blue-500/20 border border-blue-400/30 rounded-2xl p-5 mb-8">
@@ -51,7 +33,6 @@
     </div>
 
     <div class="grid md:grid-cols-3 gap-5 mb-8">
-
       <div class="bg-white/10 rounded-2xl p-5">
         <h2 class="font-bold text-xl mb-2">1. Dashboard</h2>
         <p class="text-slate-300 text-sm">
@@ -72,11 +53,14 @@
           Your selected type is saved and used inside the TradeFlow workspace.
         </p>
       </div>
-
     </div>
 
     <button onclick="enterDashboard()" class="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 font-black text-lg">
       Continue to TradeFlow Dashboard
+    </button>
+
+    <button onclick="logoutUser()" class="w-full mt-4 py-3 rounded-2xl bg-red-600 hover:bg-red-700 font-black">
+      Logout
     </button>
 
   </div>
@@ -114,38 +98,49 @@
     "Buying House": "Your workspace will focus on supplier sourcing, vendor verification, buyer requirements, inspections and deal coordination."
   };
 
-  function ensureSession() {
-    const user = {
-      name: "TradeFlow Admin",
-      email: "ks2353013@gmail.com",
-      role: "master_admin",
-      plan: "enterprise",
-      subscription: "enterprise",
-      businessType: selectedBusinessType || "Trading Company",
-      token: "local-testing-token",
-      isLoggedIn: true
-    };
+  function getUser() {
+    try {
+      return JSON.parse(localStorage.getItem("tradeflowUser") || "null");
+    } catch {
+      return null;
+    }
+  }
 
-    localStorage.setItem("tradeflowUser", JSON.stringify(user));
-    localStorage.setItem("user", JSON.stringify(user));
-    localStorage.setItem("currentUser", JSON.stringify(user));
-    localStorage.setItem("tradeflowToken", "local-testing-token");
-    localStorage.setItem("token", "local-testing-token");
-    localStorage.setItem("authToken", "local-testing-token");
-    localStorage.setItem("jwt", "local-testing-token");
-    localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("tradeflowLoggedIn", "true");
-    localStorage.setItem("tradeflowRole", "master_admin");
-    localStorage.setItem("role", "master_admin");
-    localStorage.setItem("tradeflowSubscriptionPlan", "Enterprise");
-    localStorage.setItem("plan", "enterprise");
-    localStorage.setItem("subscription", "enterprise");
+  function getToken() {
+    return (
+      localStorage.getItem("tradeflowToken") ||
+      localStorage.getItem("token") ||
+      localStorage.getItem("authToken") ||
+      localStorage.getItem("jwt") ||
+      ""
+    );
+  }
+
+  function requireLogin() {
+    const user = getUser();
+    const token = getToken();
+
+    if (!user || !token) {
+      localStorage.clear();
+      window.location.href = "/login";
+      return false;
+    }
+
+    return true;
   }
 
   function selectBusinessType(type) {
     selectedBusinessType = type;
 
     localStorage.setItem("tradeflowBusinessType", type);
+
+    const user = getUser();
+    if (user) {
+      user.businessType = type;
+      localStorage.setItem("tradeflowUser", JSON.stringify(user));
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("currentUser", JSON.stringify(user));
+    }
 
     document.querySelectorAll(".type-card").forEach(btn => {
       btn.classList.remove("active");
@@ -160,20 +155,22 @@
   }
 
   function enterDashboard() {
+    if (!requireLogin()) return;
+
     if (!selectedBusinessType) {
       selectBusinessType("Trading Company");
     }
 
-    ensureSession();
-
     localStorage.setItem("tradeflowOnboardingDone", "true");
-
     window.location.href = "/app";
   }
 
-  ensureSession();
+  function logoutUser() {
+    localStorage.clear();
+    window.location.href = "/login";
+  }
 
-  if (selectedBusinessType) {
+  if (requireLogin() && selectedBusinessType) {
     setTimeout(() => selectBusinessType(selectedBusinessType), 200);
   }
 </script>

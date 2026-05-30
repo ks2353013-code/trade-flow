@@ -2,7 +2,13 @@ const jwt = require("jsonwebtoken");
 const Employee = require("../models/Employee");
 
 function getJwtSecret() {
-  return process.env.JWT_SECRET || "tradeflow_secret_change_this";
+  const secret = process.env.JWT_SECRET || process.env.JWT_REFRESH_SECRET;
+
+  if (!secret) {
+    throw new Error("JWT_SECRET or JWT_REFRESH_SECRET is missing");
+  }
+
+  return secret;
 }
 
 async function authMiddleware(req, res, next) {
@@ -10,25 +16,6 @@ async function authMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      const fallbackEmail =
-        req.headers["x-user-email"] ||
-        req.body?.ownerEmail ||
-        req.body?.email ||
-        req.query?.email;
-
-      if (fallbackEmail) {
-        req.user = {
-          id: null,
-          email: String(fallbackEmail).toLowerCase().trim(),
-          role: "Owner",
-          permissions: {},
-          employee: null,
-          authMode: "development-fallback"
-        };
-
-        return next();
-      }
-
       return res.status(401).json({
         success: false,
         message: "Authentication required"
@@ -48,9 +35,7 @@ async function authMiddleware(req, res, next) {
 
     const email = decoded.email.toLowerCase().trim();
 
-    const employee = await Employee.findOne({
-      email
-    });
+    const employee = await Employee.findOne({ email });
 
     req.user = {
       id: decoded.id,
@@ -76,27 +61,11 @@ function optionalAuth(req, res, next) {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      const fallbackEmail =
-        req.headers["x-user-email"] ||
-        req.body?.ownerEmail ||
-        req.body?.email ||
-        req.query?.email;
-
-      if (fallbackEmail) {
-        req.user = {
-          id: null,
-          email: String(fallbackEmail).toLowerCase().trim(),
-          role: "Owner",
-          permissions: {},
-          authMode: "development-fallback"
-        };
-      }
-
+      req.user = null;
       return next();
     }
 
     const token = authHeader.split(" ")[1];
-
     const decoded = jwt.verify(token, getJwtSecret());
 
     req.user = {
@@ -107,21 +76,19 @@ function optionalAuth(req, res, next) {
       authMode: "jwt"
     };
 
-    next();
+    return next();
   } catch {
-    next();
+    req.user = null;
+    return next();
   }
 }
 
 function masterOnly(req, res, next) {
-  const email =
-    req.user?.email ||
-    req.headers["x-user-email"] ||
-    "";
+  const email = String(req.user?.email || "").toLowerCase().trim();
 
   if (
-    String(email).toLowerCase().trim() !==
-    "ks2353013@gmail.com"
+    email !== "ks2353013@gmail.com" &&
+    email !== "contact@tradeflowai.in"
   ) {
     return res.status(403).json({
       success: false,
