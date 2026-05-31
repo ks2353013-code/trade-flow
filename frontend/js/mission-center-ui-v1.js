@@ -11,8 +11,20 @@
     (window.location.hostname.includes("localhost")
       ? "http://localhost:5000"
       : "https://trade-flow-lc1k.onrender.com");
+  const leadPushCache = new Map();
+  let leadPushCounter = 0;
 
   function getToken() {
+    try {
+      const storedUser = JSON.parse(localStorage.getItem("tradeflowUser") || "null");
+
+      if (storedUser?.token) {
+        return storedUser.token;
+      }
+    } catch {
+      // Fall through to legacy token keys.
+    }
+
     return (
       localStorage.getItem("tradeflowToken") ||
       localStorage.getItem("token") ||
@@ -24,11 +36,18 @@
 
   function authHeaders() {
     const token = getToken();
+    const headers = window.getAuthHeaders
+      ? window.getAuthHeaders()
+      : {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : ""
+        };
 
-    return {
-      "Content-Type": "application/json",
-      Authorization: token ? `Bearer ${token}` : ""
-    };
+    if (!headers.Authorization && token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    return headers;
   }
 
   function formatCurrency(value) {
@@ -51,6 +70,47 @@
       <span class="status" style="font-weight:900;">
         ${safeText(label)}: ${Number(value || 0)}
       </span>
+    `;
+  }
+
+  function hasNumericValue(value) {
+    return value !== undefined && value !== null && value !== "" && Number.isFinite(Number(value));
+  }
+
+  function renderOptionalScoreBadge(label, value) {
+    return hasNumericValue(value) ? renderScoreBadge(label, value) : "";
+  }
+
+  function canPushLeadToCRM(lead) {
+    return Number(lead?.verificationScore || 0) >= 70;
+  }
+
+  function cacheLeadForPush(missionId, lead, sourceAgent, leadType) {
+    const cacheId = `crm_push_${++leadPushCounter}`;
+
+    leadPushCache.set(cacheId, {
+      missionId,
+      lead: {
+        ...lead,
+        leadType,
+        sourceAgent
+      }
+    });
+
+    return cacheId;
+  }
+
+  function renderPushToCRMButton(missionId, lead, sourceAgent, leadType) {
+    if (!missionId || !canPushLeadToCRM(lead)) {
+      return "";
+    }
+
+    const cacheId = cacheLeadForPush(missionId, lead, sourceAgent, leadType);
+
+    return `
+      <button class="mini-btn" onclick="TradeFlowMissionCenterUIV1.pushLeadToCRM('${cacheId}')">
+        Push To CRM
+      </button>
     `;
   }
 
@@ -118,6 +178,31 @@
     alert("Mission approved.");
   }
 
+  async function pushLeadToCRM(cacheId) {
+    const cached = leadPushCache.get(cacheId);
+
+    if (!cached) {
+      alert("Lead data is no longer available. Refresh Mission Center and try again.");
+      return;
+    }
+
+    const res = await fetch(`${API_BASE}/api/crm/push`, {
+      method: "POST",
+      headers: authHeaders(),
+      credentials: "include",
+      body: JSON.stringify(cached)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      alert(data.message || "CRM push failed");
+      return;
+    }
+
+    alert(data.duplicate ? "Lead already exists in CRM." : "Lead added to CRM");
+  }
+
   function renderAgentReports(mission) {
     const reports = mission.agentReports || {};
 
@@ -158,7 +243,7 @@
     `;
   }
 
-  function renderBuyerCard(buyer) {
+  function renderBuyerCard(buyer, missionId) {
     return `
       <div class="deal">
         <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
@@ -169,15 +254,19 @@
             </p>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            ${renderScoreBadge("Score", buyer.confidenceScore)}
+            ${renderScoreBadge("Confidence", buyer.confidenceScore)}
+            ${renderOptionalScoreBadge("Verification", buyer.verificationScore)}
             <span class="status">${safeText(buyer.verificationStatus || "Unverified")}</span>
           </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+          ${renderPushToCRMButton(missionId, buyer, "Buyer Discovery Agent", "Buyer")}
         </div>
       </div>
     `;
   }
 
-  function renderSupplierCard(supplier) {
+  function renderSupplierCard(supplier, missionId) {
     return `
       <div class="deal">
         <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
@@ -190,8 +279,12 @@
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
             ${renderScoreBadge("Confidence", supplier.confidenceScore)}
             ${renderScoreBadge("Risk", supplier.riskScore)}
+            ${renderOptionalScoreBadge("Verification", supplier.verificationScore)}
             <span class="status">${safeText(supplier.verificationStatus || "Unverified")}</span>
           </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+          ${renderPushToCRMButton(missionId, supplier, "Supplier Discovery Agent", "Supplier")}
         </div>
       </div>
     `;
@@ -204,7 +297,12 @@
 
     const discoveredBuyers = safeArray(report.discoveredBuyers);
     const buyerLeaderboard = safeArray(report.buyerLeaderboard).slice(0, 5);
-    const crmReadyBuyers = safeArray(report.crmReadyBuyers);
+    const crmReadyBuyers = Array.isArray(report.crmReadyVerifiedBuyers)
+      ? report.crmReadyVerifiedBuyers
+      : safeArray(report.crmReadyBuyers);
+    const verifiedBuyerLeads = safeArray(report.verifiedBuyerLeads);
+    const rejectedBuyerLeads = safeArray(report.rejectedBuyerLeads);
+    const buyerCards = (verifiedBuyerLeads.length ? verifiedBuyerLeads : buyerLeaderboard).slice(0, 5);
 
     return `
       <div style="margin-top:14px;">
@@ -219,12 +317,20 @@
             <div class="muted">CRM Ready Buyers</div>
             <h3>${crmReadyBuyers.length}</h3>
           </div>
+          <div class="deal">
+            <div class="muted">Verified Buyer Leads</div>
+            <h3>${verifiedBuyerLeads.length}</h3>
+          </div>
+          <div class="deal">
+            <div class="muted">Rejected Buyer Leads</div>
+            <h3>${rejectedBuyerLeads.length}</h3>
+          </div>
         </div>
 
         <div style="display:grid;grid-template-columns:1fr;gap:10px;">
           ${
-            buyerLeaderboard.length
-              ? buyerLeaderboard.map(renderBuyerCard).join("")
+            buyerCards.length
+              ? buyerCards.map((buyer) => renderBuyerCard(buyer, mission._id)).join("")
               : `<div class="deal">No buyer leaderboard available yet.</div>`
           }
         </div>
@@ -239,7 +345,12 @@
 
     const discoveredSuppliers = safeArray(report.discoveredSuppliers);
     const supplierLeaderboard = safeArray(report.supplierLeaderboard).slice(0, 5);
-    const networkReadySuppliers = safeArray(report.networkReadySuppliers);
+    const networkReadySuppliers = Array.isArray(report.networkReadyVerifiedSuppliers)
+      ? report.networkReadyVerifiedSuppliers
+      : safeArray(report.networkReadySuppliers);
+    const verifiedSupplierLeads = safeArray(report.verifiedSupplierLeads);
+    const rejectedSupplierLeads = safeArray(report.rejectedSupplierLeads);
+    const supplierCards = (verifiedSupplierLeads.length ? verifiedSupplierLeads : supplierLeaderboard).slice(0, 5);
 
     return `
       <div style="margin-top:14px;">
@@ -254,12 +365,20 @@
             <div class="muted">Network Ready Suppliers</div>
             <h3>${networkReadySuppliers.length}</h3>
           </div>
+          <div class="deal">
+            <div class="muted">Verified Supplier Leads</div>
+            <h3>${verifiedSupplierLeads.length}</h3>
+          </div>
+          <div class="deal">
+            <div class="muted">Rejected Supplier Leads</div>
+            <h3>${rejectedSupplierLeads.length}</h3>
+          </div>
         </div>
 
         <div style="display:grid;grid-template-columns:1fr;gap:10px;">
           ${
-            supplierLeaderboard.length
-              ? supplierLeaderboard.map(renderSupplierCard).join("")
+            supplierCards.length
+              ? supplierCards.map((supplier) => renderSupplierCard(supplier, mission._id)).join("")
               : `<div class="deal">No supplier leaderboard available yet.</div>`
           }
         </div>
@@ -412,6 +531,8 @@
 
     try {
       const missions = await fetchMissions();
+      leadPushCache.clear();
+      leadPushCounter = 0;
 
       list.innerHTML = missions.length
         ? `<div style="display:grid;grid-template-columns:1fr;gap:16px;">${missions.map(renderMissionCard).join("")}</div>`
@@ -434,7 +555,8 @@
   window.TradeFlowMissionCenterUIV1 = {
     render,
     runMission,
-    approveMission
+    approveMission,
+    pushLeadToCRM
   };
 
   if (document.readyState === "loading") {

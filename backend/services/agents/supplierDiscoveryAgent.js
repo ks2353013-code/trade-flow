@@ -3,6 +3,7 @@
 */
 
 const { discoverSuppliers } = require("../connectors/supplierSourceConnector");
+const { verifyLeads } = require("../leadVerificationEngine");
 
 const SUPPLIER_TYPES = [
   "Manufacturers",
@@ -240,8 +241,9 @@ function buildSupplierLeaderboard(suppliers = []) {
   return [...suppliers]
     .sort(
       (a, b) =>
-        b.confidenceScore - a.confidenceScore ||
-        a.riskScore - b.riskScore
+        Number(b.verificationScore || b.confidenceScore || 0) -
+          Number(a.verificationScore || a.confidenceScore || 0) ||
+        Number(a.riskScore || 0) - Number(b.riskScore || 0)
     )
     .map((supplier, index) => ({
       rank: index + 1,
@@ -250,8 +252,37 @@ function buildSupplierLeaderboard(suppliers = []) {
       supplierType: supplier.supplierType,
       confidenceScore: supplier.confidenceScore,
       riskScore: supplier.riskScore,
+      verificationScore: supplier.verificationScore,
       verificationStatus: supplier.verificationStatus
     }));
+}
+
+function isNetworkReadyVerifiedSupplier(supplier = {}) {
+  return (
+    Number(supplier.verificationScore || 0) >= 70 &&
+    Number(supplier.riskScore || 0) <= 40
+  );
+}
+
+function buildVerificationSummary(verification = {}, discoveredCount = 0) {
+  const verifiedSupplierLeads = Array.isArray(verification.verifiedLeads)
+    ? verification.verifiedLeads
+    : [];
+  const networkReadyVerifiedSuppliers = verifiedSupplierLeads.filter(
+    isNetworkReadyVerifiedSupplier
+  );
+  const rejectedSupplierLeads = Array.isArray(verification.rejectedLeads)
+    ? verification.rejectedLeads
+    : [];
+
+  return {
+    totalDiscovered: discoveredCount,
+    verifiedSupplierLeads: verifiedSupplierLeads.length,
+    networkReadyVerifiedSuppliers: networkReadyVerifiedSuppliers.length,
+    rejectedSupplierLeads: rejectedSupplierLeads.length,
+    humanApprovalRequired: true,
+    outreachAllowed: false
+  };
 }
 
 async function run(input = {}) {
@@ -264,12 +295,18 @@ async function run(input = {}) {
 
   const supplierTypes = SUPPLIER_TYPES;
   const discoveredSuppliers = await getDiscoveredSuppliers(ctx);
-  const supplierLeaderboard = buildSupplierLeaderboard(discoveredSuppliers);
-  const networkReadySuppliers = supplierLeaderboard.filter(
-    (supplier) =>
-      supplier.confidenceScore >= 70 &&
-      supplier.riskScore <= 40
+  const verification = verifyLeads(discoveredSuppliers, ctx);
+  const verifiedSupplierLeads = verification.verifiedLeads;
+  const networkReadyVerifiedSuppliers = verifiedSupplierLeads.filter(
+    isNetworkReadyVerifiedSupplier
   );
+  const rejectedSupplierLeads = verification.rejectedLeads;
+  const supplierVerificationSummary = buildVerificationSummary(
+    verification,
+    discoveredSuppliers.length
+  );
+  const supplierLeaderboard = buildSupplierLeaderboard(verifiedSupplierLeads);
+  const networkReadySuppliers = networkReadyVerifiedSuppliers;
 
   return {
     agent: "Supplier Discovery Agent",
@@ -317,6 +354,13 @@ async function run(input = {}) {
     discoveredSuppliers,
     supplierLeaderboard,
     networkReadySuppliers,
+    verifiedSupplierLeads,
+    networkReadyVerifiedSuppliers,
+    rejectedSupplierLeads,
+    supplierVerificationSummary,
+
+    humanApprovalRequired: true,
+    outreachAllowed: false,
 
     recommendedNextActions: [
       "Build supplier shortlist",

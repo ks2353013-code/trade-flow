@@ -37,6 +37,14 @@
       .replaceAll(">", "&gt;");
   }
 
+  function safeArray(value) {
+    return Array.isArray(value) ? value : [];
+  }
+
+  function hasNumericValue(value) {
+    return value !== undefined && value !== null && value !== "" && Number.isFinite(Number(value));
+  }
+
   async function fetchMissions() {
     const res = await fetch(`${API_BASE}/api/trade-agent/missions`, {
       headers: headers(),
@@ -65,8 +73,32 @@
     const compliance = reports.compliance || {};
     const crm = reports.crm || {};
 
-    const buyers = buyer.discoveredBuyers || [];
-    const suppliers = supplier.discoveredSuppliers || [];
+    const discoveredBuyers = safeArray(buyer.discoveredBuyers);
+    const discoveredSuppliers = safeArray(supplier.discoveredSuppliers);
+    const verifiedBuyersAvailable = Array.isArray(buyer.verifiedBuyerLeads);
+    const verifiedSuppliersAvailable = Array.isArray(supplier.verifiedSupplierLeads);
+    const buyers = verifiedBuyersAvailable
+      ? buyer.verifiedBuyerLeads
+      : discoveredBuyers;
+    const suppliers = verifiedSuppliersAvailable
+      ? supplier.verifiedSupplierLeads
+      : discoveredSuppliers;
+    const crmReadyBuyers = Array.isArray(buyer.crmReadyVerifiedBuyers)
+      ? buyer.crmReadyVerifiedBuyers
+      : safeArray(buyer.crmReadyBuyers);
+    const networkReadySuppliers = Array.isArray(supplier.networkReadyVerifiedSuppliers)
+      ? supplier.networkReadyVerifiedSuppliers
+      : safeArray(supplier.networkReadySuppliers);
+    const rejectedBuyerLeads = safeArray(buyer.rejectedBuyerLeads);
+    const rejectedSupplierLeads = safeArray(supplier.rejectedSupplierLeads);
+    const leadRejectionRisks = [
+      rejectedBuyerLeads.length
+        ? `${rejectedBuyerLeads.length} rejected buyer leads require review`
+        : "",
+      rejectedSupplierLeads.length
+        ? `${rejectedSupplierLeads.length} rejected supplier leads require review`
+        : ""
+    ].filter(Boolean);
 
     return {
       missionScore: mission?.opportunityScore || 0,
@@ -77,11 +109,14 @@
         0,
       buyerCount: buyers.length,
       supplierCount: suppliers.length,
-      crmReadyBuyers: (buyer.crmReadyBuyers || []).length,
-      networkReadySuppliers: (supplier.networkReadySuppliers || []).length,
+      crmReadyBuyers: crmReadyBuyers.length,
+      networkReadySuppliers: networkReadySuppliers.length,
+      rejectedBuyerLeads: rejectedBuyerLeads.length,
+      rejectedSupplierLeads: rejectedSupplierLeads.length,
       topBuyers: buyer.buyerLeaderboard || [],
       topSuppliers: supplier.supplierLeaderboard || [],
       risks: [
+        ...leadRejectionRisks,
         ...(research.riskAnalysis || []),
         ...(compliance.complianceRisks || [])
       ].slice(0, 8),
@@ -114,6 +149,11 @@
                 </p>
                 <p>
                   Confidence: <b>${item.confidenceScore || 0}/100</b>
+                  ${
+                    hasNumericValue(item.verificationScore)
+                      ? ` â€¢ Verification: <b>${item.verificationScore}/100</b>`
+                      : ""
+                  }
                   ${type === "supplier" ? ` • Risk: <b>${item.riskScore || 0}/100</b>` : ""}
                 </p>
                 <p class="muted">${safe(item.verificationStatus)}</p>
@@ -160,6 +200,8 @@
           <div class="deal"><div class="muted">Suppliers Found</div><h3>${intel.supplierCount}</h3></div>
           <div class="deal"><div class="muted">CRM Ready Buyers</div><h3>${intel.crmReadyBuyers}</h3></div>
           <div class="deal"><div class="muted">Network Ready Suppliers</div><h3>${intel.networkReadySuppliers}</h3></div>
+          <div class="deal"><div class="muted">Rejected Buyer Leads</div><h3>${intel.rejectedBuyerLeads}</h3></div>
+          <div class="deal"><div class="muted">Rejected Supplier Leads</div><h3>${intel.rejectedSupplierLeads}</h3></div>
         </div>
 
         <div style="margin-top:18px;" class="deal">

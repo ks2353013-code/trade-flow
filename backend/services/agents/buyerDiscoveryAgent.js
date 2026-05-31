@@ -4,6 +4,7 @@
 */
 
 const { discoverBuyers } = require("../connectors/buyerSourceConnector");
+const { verifyLeads } = require("../leadVerificationEngine");
 
 function normalizeInput(input = {}) {
   return {
@@ -126,15 +127,41 @@ async function getDiscoveredBuyers(ctx) {
 function buildLeaderboard(buyers = []) {
   return buyers
     .slice()
-    .sort((a, b) => Number(b.confidenceScore || 0) - Number(a.confidenceScore || 0))
+    .sort(
+      (a, b) =>
+        Number(b.verificationScore || b.confidenceScore || 0) -
+        Number(a.verificationScore || a.confidenceScore || 0)
+    )
     .map((buyer, index) => ({
       rank: index + 1,
       companyName: buyer.companyName,
       country: buyer.country,
       buyerType: buyer.buyerType,
       confidenceScore: buyer.confidenceScore,
+      verificationScore: buyer.verificationScore,
       verificationStatus: buyer.verificationStatus
     }));
+}
+
+function buildVerificationSummary(verification = {}, discoveredCount = 0) {
+  const verifiedBuyerLeads = Array.isArray(verification.verifiedLeads)
+    ? verification.verifiedLeads
+    : [];
+  const crmReadyVerifiedBuyers = Array.isArray(verification.crmReadyLeads)
+    ? verification.crmReadyLeads
+    : [];
+  const rejectedBuyerLeads = Array.isArray(verification.rejectedLeads)
+    ? verification.rejectedLeads
+    : [];
+
+  return {
+    totalDiscovered: discoveredCount,
+    verifiedBuyerLeads: verifiedBuyerLeads.length,
+    crmReadyVerifiedBuyers: crmReadyVerifiedBuyers.length,
+    rejectedBuyerLeads: rejectedBuyerLeads.length,
+    humanApprovalRequired: true,
+    outreachAllowed: false
+  };
 }
 
 async function run(input = {}) {
@@ -142,10 +169,16 @@ async function run(input = {}) {
   const targetBuyerTypes = getBuyerTypes(ctx);
 
   const discoveredBuyers = await getDiscoveredBuyers(ctx);
-  const buyerLeaderboard = buildLeaderboard(discoveredBuyers);
-  const crmReadyBuyers = discoveredBuyers.filter(
-    buyer => Number(buyer.confidenceScore || 0) >= 70
+  const verification = verifyLeads(discoveredBuyers, ctx);
+  const verifiedBuyerLeads = verification.verifiedLeads;
+  const crmReadyVerifiedBuyers = verification.crmReadyLeads;
+  const rejectedBuyerLeads = verification.rejectedLeads;
+  const buyerVerificationSummary = buildVerificationSummary(
+    verification,
+    discoveredBuyers.length
   );
+  const buyerLeaderboard = buildLeaderboard(verifiedBuyerLeads);
+  const crmReadyBuyers = crmReadyVerifiedBuyers;
 
   const estimatedBuyerFitScore =
     discoveredBuyers.length
@@ -195,6 +228,10 @@ async function run(input = {}) {
     discoveredBuyers,
     buyerLeaderboard,
     crmReadyBuyers,
+    verifiedBuyerLeads,
+    crmReadyVerifiedBuyers,
+    rejectedBuyerLeads,
+    buyerVerificationSummary,
 
     humanApprovalRequired: true,
     outreachAllowed: false,
