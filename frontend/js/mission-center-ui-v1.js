@@ -42,6 +42,18 @@
       .replaceAll(">", "&gt;");
   }
 
+  function safeArray(value) {
+    return Array.isArray(value) ? value : [];
+  }
+
+  function renderScoreBadge(label, value) {
+    return `
+      <span class="status" style="font-weight:900;">
+        ${safeText(label)}: ${Number(value || 0)}
+      </span>
+    `;
+  }
+
   async function fetchMissions() {
     const res = await fetch(`${API_BASE}/api/trade-agent/missions`, {
       headers: authHeaders(),
@@ -146,6 +158,115 @@
     `;
   }
 
+  function renderBuyerCard(buyer) {
+    return `
+      <div class="deal">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
+          <div>
+            <b style="color:white;">${safeText(buyer.companyName || "Unknown buyer")}</b>
+            <p class="muted" style="margin-top:4px;">
+              ${safeText(buyer.country || "Unknown country")} &bull; ${safeText(buyer.buyerType || "Buyer")}
+            </p>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            ${renderScoreBadge("Score", buyer.confidenceScore)}
+            <span class="status">${safeText(buyer.verificationStatus || "Unverified")}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderSupplierCard(supplier) {
+    return `
+      <div class="deal">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
+          <div>
+            <b style="color:white;">${safeText(supplier.companyName || "Unknown supplier")}</b>
+            <p class="muted" style="margin-top:4px;">
+              ${safeText(supplier.country || "Unknown country")} &bull; ${safeText(supplier.supplierType || "Supplier")}
+            </p>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            ${renderScoreBadge("Confidence", supplier.confidenceScore)}
+            ${renderScoreBadge("Risk", supplier.riskScore)}
+            <span class="status">${safeText(supplier.verificationStatus || "Unverified")}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderBuyerDiscoveryIntelligence(mission) {
+    const report = mission.agentReports?.buyerDiscovery;
+
+    if (!report) return "";
+
+    const discoveredBuyers = safeArray(report.discoveredBuyers);
+    const buyerLeaderboard = safeArray(report.buyerLeaderboard).slice(0, 5);
+    const crmReadyBuyers = safeArray(report.crmReadyBuyers);
+
+    return `
+      <div style="margin-top:14px;">
+        <h4 style="color:white;font-weight:900;margin-bottom:10px;">Buyer Discovery Intelligence</h4>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:12px;">
+          <div class="deal">
+            <div class="muted">Discovered Buyers</div>
+            <h3>${discoveredBuyers.length}</h3>
+          </div>
+          <div class="deal">
+            <div class="muted">CRM Ready Buyers</div>
+            <h3>${crmReadyBuyers.length}</h3>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr;gap:10px;">
+          ${
+            buyerLeaderboard.length
+              ? buyerLeaderboard.map(renderBuyerCard).join("")
+              : `<div class="deal">No buyer leaderboard available yet.</div>`
+          }
+        </div>
+      </div>
+    `;
+  }
+
+  function renderSupplierDiscoveryIntelligence(mission) {
+    const report = mission.agentReports?.supplierDiscovery;
+
+    if (!report) return "";
+
+    const discoveredSuppliers = safeArray(report.discoveredSuppliers);
+    const supplierLeaderboard = safeArray(report.supplierLeaderboard).slice(0, 5);
+    const networkReadySuppliers = safeArray(report.networkReadySuppliers);
+
+    return `
+      <div style="margin-top:14px;">
+        <h4 style="color:white;font-weight:900;margin-bottom:10px;">Supplier Discovery Intelligence</h4>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:12px;">
+          <div class="deal">
+            <div class="muted">Discovered Suppliers</div>
+            <h3>${discoveredSuppliers.length}</h3>
+          </div>
+          <div class="deal">
+            <div class="muted">Network Ready Suppliers</div>
+            <h3>${networkReadySuppliers.length}</h3>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr;gap:10px;">
+          ${
+            supplierLeaderboard.length
+              ? supplierLeaderboard.map(renderSupplierCard).join("")
+              : `<div class="deal">No supplier leaderboard available yet.</div>`
+          }
+        </div>
+      </div>
+    `;
+  }
+
   function renderMissionCard(mission) {
     return `
       <div style="
@@ -196,6 +317,8 @@
         </div>
 
         ${renderAgentReports(mission)}
+        ${renderBuyerDiscoveryIntelligence(mission)}
+        ${renderSupplierDiscoveryIntelligence(mission)}
 
         <div style="margin-top:14px;">
           <h4 style="color:white;font-weight:900;margin-bottom:10px;">Timeline</h4>
