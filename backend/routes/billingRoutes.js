@@ -1,25 +1,26 @@
 const express = require("express");
 const Subscription = require("../models/Subscription");
 const Payment = require("../models/Payment");
+const { requireMasterAdmin } = require("../middleware/permissionMiddleware");
 
 const router = express.Router();
 
 const PLAN_ENTITLEMENTS = {
-  Free: {
+  Starter: {
     aiLimit: 20,
-    supplierLimit: 25,
-    dealLimit: 20,
+    supplierLimit: 200,
+    dealLimit: 50,
     workspaceLimit: 1,
-    employeeLimit: 1
+    employeeLimit: 3
   },
-  Pro: {
-    aiLimit: 500,
-    supplierLimit: 500,
-    dealLimit: 300,
+  "Pro Exporter": {
+    aiLimit: 1000,
+    supplierLimit: 2000,
+    dealLimit: 1000,
     workspaceLimit: 5,
-    employeeLimit: 10
+    employeeLimit: 25
   },
-  Enterprise: {
+  "Enterprise AI OS": {
     aiLimit: 10000,
     supplierLimit: 10000,
     dealLimit: 5000,
@@ -29,21 +30,7 @@ const PLAN_ENTITLEMENTS = {
 };
 
 function getEmail(req) {
-  return (
-    req.body?.email ||
-    req.query?.email ||
-    req.headers["x-user-email"] ||
-    "unknown@tradeflow.local"
-  )
-    .toString()
-    .toLowerCase()
-    .trim();
-}
-
-function getExpiryDate(months = 1) {
-  const date = new Date();
-  date.setMonth(date.getMonth() + months);
-  return date;
+  return String(req.user?.email || "").toLowerCase().trim();
 }
 
 router.get("/subscription", async (req, res) => {
@@ -57,9 +44,9 @@ router.get("/subscription", async (req, res) => {
     if (!subscription) {
       subscription = await Subscription.create({
         email,
-        plan: "Free",
+        plan: "Starter",
         status: "Active",
-        entitlements: PLAN_ENTITLEMENTS.Free
+        entitlements: PLAN_ENTITLEMENTS.Starter
       });
     }
 
@@ -83,72 +70,32 @@ router.get("/payments", async (req, res) => {
   }
 });
 
-router.post("/activate", async (req, res) => {
-  try {
-    const {
-      email,
-      plan,
-      razorpayPaymentId,
-      razorpayOrderId,
-      razorpaySignature,
-      amount,
-      currency
-    } = req.body;
-
-    if (!email || !plan || !["Pro", "Enterprise"].includes(plan)) {
-      return res.status(400).json({ message: "Invalid activation request" });
-    }
-
-    await Payment.create({
-      email: email.toLowerCase().trim(),
-      plan,
-      amount: amount || (plan === "Pro" ? 199900 : 999900),
-      currency: currency || "INR",
-      razorpayOrderId: razorpayOrderId || "",
-      razorpayPaymentId: razorpayPaymentId || "",
-      razorpaySignature: razorpaySignature || "",
-      status: "Success"
-    });
-
-    const subscription = await Subscription.findOneAndUpdate(
-      { email: email.toLowerCase().trim() },
-      {
-        email: email.toLowerCase().trim(),
-        plan,
-        status: "Active",
-        razorpayPaymentId: razorpayPaymentId || "",
-        razorpayOrderId: razorpayOrderId || "",
-        startsAt: new Date(),
-        expiresAt: getExpiryDate(1),
-        entitlements: PLAN_ENTITLEMENTS[plan]
-      },
-      { new: true, upsert: true }
-    );
-
-    res.json({
-      success: true,
-      message: `${plan} subscription activated`,
-      subscription
-    });
-  } catch (error) {
-    console.error("Billing activation error:", error.message);
-    res.status(500).json({ message: "Failed to activate subscription" });
-  }
+router.post("/activate", (req, res) => {
+  res.status(403).json({
+    success: false,
+    message: "Direct billing activation is disabled. Use verified Razorpay payment routes."
+  });
 });
 
-router.post("/set-free", async (req, res) => {
+router.post("/set-free", requireMasterAdmin, async (req, res) => {
   try {
-    const email = getEmail(req);
+    const email = String(req.body?.email || req.user?.email || "")
+      .toLowerCase()
+      .trim();
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
 
     const subscription = await Subscription.findOneAndUpdate(
       { email },
       {
         email,
-        plan: "Free",
+        plan: "Starter",
         status: "Active",
         startsAt: new Date(),
         expiresAt: null,
-        entitlements: PLAN_ENTITLEMENTS.Free
+        entitlements: PLAN_ENTITLEMENTS.Starter
       },
       { new: true, upsert: true }
     );

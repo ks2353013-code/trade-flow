@@ -9,19 +9,27 @@
   }
 
   function getBackendUrl() {
-
-    if (
-      window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1"
-    ) {
-      return window.location.origin;
+    if (window.TradeFlowSessionManager?.getBackendUrl) {
+      return window.TradeFlowSessionManager.getBackendUrl();
     }
 
     if (typeof BACKEND_URL !== "undefined") {
       return BACKEND_URL;
     }
 
-    return window.location.origin;
+    if (window.BACKEND_URL) {
+      return window.BACKEND_URL;
+    }
+
+    if (
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1" ||
+      window.location.hostname === "::1"
+    ) {
+      return window.location.origin;
+    }
+
+    return "https://trade-flow-lc1k.onrender.com";
   }
 
   function getJson(key, fallback) {

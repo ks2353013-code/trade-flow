@@ -3,6 +3,8 @@
 (function () {
   if (window.TradeFlowSessionManager) return;
 
+  const PRODUCTION_BACKEND_URL = "https://trade-flow-lc1k.onrender.com";
+
   const TOKEN_KEYS = [
     "tradeflowAccessToken",
     "tradeflowToken",
@@ -18,6 +20,33 @@
     }
     return "";
   }
+
+  function isLocalHost(hostname) {
+    return (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "::1"
+    );
+  }
+
+  function getBackendUrl() {
+    const configured =
+      window.TRADEFLOW_API_BASE_URL ||
+      window.BACKEND_URL ||
+      "";
+
+    if (configured) {
+      return String(configured).replace(/\/$/, "");
+    }
+
+    if (isLocalHost(window.location.hostname)) {
+      return window.location.origin;
+    }
+
+    return PRODUCTION_BACKEND_URL;
+  }
+
+  window.BACKEND_URL = getBackendUrl();
 
   function saveToken(token) {
     if (!token) return;
@@ -127,11 +156,24 @@
       options.headers = options.headers || {};
 
       const token = getToken();
+      const backendUrl = getBackendUrl();
+      let finalUrl = url;
+
+      if (
+        typeof url === "string" &&
+        (url.startsWith("/api") || url.startsWith("/suppliers"))
+      ) {
+        finalUrl = `${backendUrl}${url}`;
+      }
 
       if (
         token &&
-        typeof url === "string" &&
-        (url.startsWith("/api") || url.includes("/api/"))
+        typeof finalUrl === "string" &&
+        (
+          finalUrl.includes("/api/") ||
+          finalUrl.endsWith("/api") ||
+          finalUrl.includes("/suppliers")
+        )
       ) {
         options.headers.Authorization =
           options.headers.Authorization || `Bearer ${token}`;
@@ -139,7 +181,7 @@
 
       options.credentials = options.credentials || "include";
 
-      return originalFetch(url, options);
+      return originalFetch(finalUrl, options);
     };
 
     console.log("✅ TradeFlow production fetch patched");
@@ -155,6 +197,7 @@
     saveToken,
     getUser,
     saveUser,
+    getBackendUrl,
     refreshSession,
     validateSession,
     logout

@@ -29,15 +29,7 @@ const PLAN_CONFIG = {
 };
 
 function getEmail(req) {
-  return (
-    req.user?.email ||
-    req.headers["x-user-email"] ||
-    req.body?.email ||
-    req.query?.email ||
-    ""
-  )
-    .toLowerCase()
-    .trim();
+  return String(req.user?.email || "").toLowerCase().trim();
 }
 
 function getRazorpay() {
@@ -179,7 +171,7 @@ router.post("/verify-payment", async (req, res) => {
     const subscription = await Subscription.create({
       email,
       plan,
-      status: "Active",
+      status: config.approvalRequired ? "Pending Approval" : "Active",
       price: config.price,
       approvalStatus: config.approvalRequired ? "Pending" : "Not Required",
       razorpayPaymentId: razorpay_payment_id,

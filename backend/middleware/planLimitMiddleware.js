@@ -51,7 +51,7 @@ const PLAN_LIMITS = {
 };
 
 function getOwnerEmail(req) {
-  const email = req.user?.email;
+  const email = req.tenant?.ownerEmail || req.user?.email;
 
   if (!email) {
     throw new Error("Authenticated user email missing");

@@ -35,11 +35,12 @@ function buildPermissions(role = "Founder") {
 function sendAuthResponse(res, user, message = "Authentication successful") {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
+  const production = process.env.NODE_ENV === "production";
 
   res.cookie("tradeflow_refresh_token", refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    secure: production,
+    sameSite: production ? "none" : "lax",
     maxAge: 30 * 24 * 60 * 60 * 1000
   });
 
@@ -190,10 +191,12 @@ router.post("/refresh", async (req, res) => {
 });
 
 router.post("/logout", (req, res) => {
+  const production = process.env.NODE_ENV === "production";
+
   res.clearCookie("tradeflow_refresh_token", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict"
+    secure: production,
+    sameSite: production ? "none" : "lax"
   });
 
   res.json({

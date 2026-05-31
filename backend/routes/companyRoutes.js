@@ -1,27 +1,25 @@
 const express = require("express");
 const Company = require("../models/Company");
 const { writeAuditLog } = require("../utils/auditLogger");
+const {
+  isMasterAdmin,
+  requireAdminAccess,
+  requireMasterAdmin
+} = require("../middleware/permissionMiddleware");
 
 const router = express.Router();
 
-const MASTER_ADMIN_EMAIL = "ks2353013@gmail.com";
-
 function getOwnerEmail(req) {
-  return (
-    req.tenant?.ownerEmail ||
-    req.user?.email ||
-    req.headers["x-user-email"] ||
-    req.body?.ownerEmail ||
-    req.body?.email ||
-    req.query?.email ||
-    "unknown@tradeflow.local"
-  )
-    .toLowerCase()
-    .trim();
+  if (!req.tenant?.ownerEmail) {
+    throw new Error("Tenant owner email missing");
+  }
+
+  return req.tenant.ownerEmail;
 }
 
-function isMasterAdmin(req) {
-  return getOwnerEmail(req) === MASTER_ADMIN_EMAIL;
+function safeBody(body = {}) {
+  const { ownerEmail, companyId, workspaceId, ...safe } = body;
+  return safe;
 }
 
 function tenantFilter(req) {
@@ -43,10 +41,10 @@ router.post("/", async (req, res) => {
     const ownerEmail = getOwnerEmail(req);
 
     const company = await Company.create({
-      ...req.body,
+      ...safeBody(req.body),
       ownerEmail,
-      approvalStatus: req.body.approvalStatus || "Pending",
-      status: req.body.status || "Pending"
+      approvalStatus: isMasterAdmin(req) ? req.body.approvalStatus || "Approved" : "Pending",
+      status: isMasterAdmin(req) ? req.body.status || "Active" : "Pending"
     });
 
     await writeAuditLog(req, {
@@ -66,11 +64,11 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireAdminAccess, async (req, res) => {
   try {
     const company = await Company.findOneAndUpdate(
       { _id: req.params.id, ...tenantFilter(req) },
-      req.body,
+      safeBody(req.body),
       { new: true }
     );
 
@@ -93,12 +91,8 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-router.patch("/:id/approve", async (req, res) => {
+router.patch("/:id/approve", requireMasterAdmin, async (req, res) => {
   try {
-    if (!isMasterAdmin(req)) {
-      return res.status(403).json({ success: false, message: "Master Admin access required" });
-    }
-
     const company = await Company.findByIdAndUpdate(
       req.params.id,
       { approvalStatus: "Approved", status: "Active" },
@@ -124,12 +118,8 @@ router.patch("/:id/approve", async (req, res) => {
   }
 });
 
-router.patch("/:id/reject", async (req, res) => {
+router.patch("/:id/reject", requireMasterAdmin, async (req, res) => {
   try {
-    if (!isMasterAdmin(req)) {
-      return res.status(403).json({ success: false, message: "Master Admin access required" });
-    }
-
     const company = await Company.findByIdAndUpdate(
       req.params.id,
       { approvalStatus: "Rejected", status: "Rejected" },
@@ -155,7 +145,7 @@ router.patch("/:id/reject", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireAdminAccess, async (req, res) => {
   try {
     const company = await Company.findOneAndDelete({
       _id: req.params.id,

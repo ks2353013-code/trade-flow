@@ -9,17 +9,11 @@ const Notification = require("../models/Notification");
 const router = express.Router();
 
 function getOwnerEmail(req) {
-  return (
-    req.tenant?.ownerEmail ||
-    req.user?.email ||
-    req.headers["x-user-email"] ||
-    req.body?.ownerEmail ||
-    req.body?.email ||
-    req.query?.email ||
-    "unknown@tradeflow.local"
-  )
-    .toLowerCase()
-    .trim();
+  if (!req.tenant?.ownerEmail) {
+    throw new Error("Tenant owner email missing");
+  }
+
+  return req.tenant.ownerEmail;
 }
 
 function tenantFilter(req) {

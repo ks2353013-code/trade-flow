@@ -23,13 +23,21 @@ function startAIAutonomousScheduler() {
 
   schedulerStarted = true;
 
-  console.log("✅ AI Autonomous Scheduler ready");
+  if (process.env.ENABLE_AI_AUTONOMOUS_HTTP_SCHEDULER !== "true") {
+    console.log("AI Autonomous Scheduler HTTP runner disabled. Set ENABLE_AI_AUTONOMOUS_HTTP_SCHEDULER=true only after secure internal auth is configured.");
+    return;
+  }
+
+  if (!process.env.AI_WORKER_BEARER_TOKEN) {
+    console.log("AI Autonomous Scheduler disabled because AI_WORKER_BEARER_TOKEN is not configured.");
+    return;
+  }
+
+  console.log("AI Autonomous Scheduler ready");
 
   cron.schedule("*/30 * * * *", async () => {
     try {
       const baseUrl = getBaseUrl();
-      const email = getSystemEmail();
-
       console.log("🤖 Running scheduled AI autonomous workflow...");
 
       const response = await axios.post(
@@ -38,7 +46,7 @@ function startAIAutonomousScheduler() {
         {
           headers: {
             "Content-Type": "application/json",
-            "x-user-email": email
+            Authorization: `Bearer ${process.env.AI_WORKER_BEARER_TOKEN}`
           },
           timeout: 20000
         }

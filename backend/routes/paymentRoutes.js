@@ -8,26 +8,26 @@ const Payment = require("../models/Payment");
 const router = express.Router();
 
 const PLAN_PRICES = {
-  Pro: 199900,
-  Enterprise: 999900
+  "Pro Exporter": 899900,
+  "Enterprise AI OS": 4999900
 };
 
 const PLAN_ENTITLEMENTS = {
-  Free: {
+  Starter: {
     aiLimit: 20,
-    supplierLimit: 25,
-    dealLimit: 20,
+    supplierLimit: 200,
+    dealLimit: 50,
     workspaceLimit: 1,
-    employeeLimit: 1
+    employeeLimit: 3
   },
-  Pro: {
-    aiLimit: 500,
-    supplierLimit: 500,
-    dealLimit: 300,
+  "Pro Exporter": {
+    aiLimit: 1000,
+    supplierLimit: 2000,
+    dealLimit: 1000,
     workspaceLimit: 5,
-    employeeLimit: 10
+    employeeLimit: 25
   },
-  Enterprise: {
+  "Enterprise AI OS": {
     aiLimit: 10000,
     supplierLimit: 10000,
     dealLimit: 5000,
@@ -54,14 +54,21 @@ function getExpiryDate(months = 1) {
 }
 
 function normalizeEmail(value) {
-  return (value || "unknown@tradeflow.local").toString().toLowerCase().trim();
+  return String(value || "").toLowerCase().trim();
+}
+
+function normalizePlan(plan) {
+  if (plan === "Pro") return "Pro Exporter";
+  if (plan === "Enterprise") return "Enterprise AI OS";
+  return plan;
 }
 
 router.post("/create-order", async (req, res) => {
   try {
-    const { plan, email } = req.body;
+    const email = normalizeEmail(req.user?.email);
+    const plan = normalizePlan(req.body.plan);
 
-    if (!plan || !PLAN_PRICES[plan]) {
+    if (!email || !plan || !PLAN_PRICES[plan]) {
       return res.status(400).json({ message: "Invalid plan selected" });
     }
 
@@ -79,7 +86,7 @@ router.post("/create-order", async (req, res) => {
       receipt: `tradeflow_${plan}_${Date.now()}`,
       notes: {
         plan,
-        email: normalizeEmail(email),
+        email,
         product: "TradeFlow AI OS"
       }
     });
@@ -103,11 +110,10 @@ router.post("/verify", async (req, res) => {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-      plan,
-      email,
       amount,
       currency
     } = req.body;
+    const plan = normalizePlan(req.body.plan);
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return res.status(400).json({ message: "Missing Razorpay verification data" });
@@ -132,7 +138,12 @@ router.post("/verify", async (req, res) => {
       return res.status(400).json({ message: "Payment verification failed" });
     }
 
-    const userEmail = normalizeEmail(email);
+    const userEmail = normalizeEmail(req.user?.email);
+
+    if (!userEmail) {
+      return res.status(401).json({ message: "Authenticated user email missing" });
+    }
+    const approvalRequired = plan === "Enterprise AI OS";
 
     const payment = await Payment.create({
       email: userEmail,
@@ -150,7 +161,8 @@ router.post("/verify", async (req, res) => {
       {
         email: userEmail,
         plan,
-        status: "Active",
+        status: approvalRequired ? "Pending Approval" : "Active",
+        approvalStatus: approvalRequired ? "Pending" : "Not Required",
         razorpayPaymentId: razorpay_payment_id,
         razorpayOrderId: razorpay_order_id,
         startsAt: new Date(),
@@ -162,7 +174,9 @@ router.post("/verify", async (req, res) => {
 
     res.json({
       success: true,
-      message: "Payment verified and subscription activated",
+      message: approvalRequired
+        ? "Payment verified. Enterprise activation is pending Master Admin approval."
+        : "Payment verified and subscription activated",
       plan,
       paymentId: razorpay_payment_id,
       payment,

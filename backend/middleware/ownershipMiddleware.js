@@ -1,10 +1,7 @@
 function getRequestEmail(req) {
   return (
+    req.tenant?.ownerEmail ||
     req.user?.email ||
-    req.headers["x-user-email"] ||
-    req.body?.ownerEmail ||
-    req.body?.email ||
-    req.query?.email ||
     ""
   )
     .toLowerCase()
@@ -37,7 +34,6 @@ function forceOwnerOnCreate(req, res, next) {
 
   req.ownerEmail = email;
   req.body.ownerEmail = email;
-  req.body.email = req.body.email || email;
 
   next();
 }

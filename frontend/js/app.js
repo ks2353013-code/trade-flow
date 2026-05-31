@@ -1,4 +1,13 @@
-const BACKEND_URL = window.location.origin;
+const TRADEFLOW_RENDER_BACKEND_URL = "https://trade-flow-lc1k.onrender.com";
+const BACKEND_URL =
+  window.TradeFlowSessionManager?.getBackendUrl?.() ||
+  window.BACKEND_URL ||
+  (
+    ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)
+      ? window.location.origin
+      : TRADEFLOW_RENDER_BACKEND_URL
+  );
+window.BACKEND_URL = BACKEND_URL;
 
 const API_URL = `${BACKEND_URL}/suppliers`;
 const AI_URL = `${BACKEND_URL}/api/ai`;

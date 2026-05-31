@@ -1,26 +1,20 @@
 const express = require("express");
 const Workspace = require("../models/Workspace");
+const { isMasterAdmin, requireAdminAccess } = require("../middleware/permissionMiddleware");
 
 const router = express.Router();
 
-const MASTER_ADMIN_EMAIL = "ks2353013@gmail.com";
-
 function getOwnerEmail(req) {
-  return (
-    req.tenant?.ownerEmail ||
-    req.user?.email ||
-    req.headers["x-user-email"] ||
-    req.body?.ownerEmail ||
-    req.body?.email ||
-    req.query?.email ||
-    "unknown@tradeflow.local"
-  )
-    .toLowerCase()
-    .trim();
+  if (!req.tenant?.ownerEmail) {
+    throw new Error("Tenant owner email missing");
+  }
+
+  return req.tenant.ownerEmail;
 }
 
-function isMasterAdmin(req) {
-  return getOwnerEmail(req) === MASTER_ADMIN_EMAIL;
+function safeBody(body = {}) {
+  const { ownerEmail, companyId, workspaceId, ...safe } = body;
+  return safe;
 }
 
 function tenantFilter(req) {
@@ -57,17 +51,14 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", requireAdminAccess, async (req, res) => {
   try {
     const ownerEmail = getOwnerEmail(req);
 
     const workspace = await Workspace.create({
-      ...req.body,
+      ...safeBody(req.body),
       ownerEmail,
-      companyId:
-        req.tenant?.companyId ||
-        req.body.companyId ||
-        null
+      companyId: req.tenant?.companyId || null
     });
 
     res.status(201).json(workspace);
@@ -80,14 +71,14 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireAdminAccess, async (req, res) => {
   try {
     const workspace = await Workspace.findOneAndUpdate(
       {
         _id: req.params.id,
         ...tenantFilter(req)
       },
-      req.body,
+      safeBody(req.body),
       {
         new: true
       }
@@ -110,7 +101,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireAdminAccess, async (req, res) => {
   try {
     const workspace = await Workspace.findOneAndDelete({
       _id: req.params.id,

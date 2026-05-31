@@ -3,6 +3,10 @@ require("dotenv").config();
 const { Worker } = require("bullmq");
 const axios = require("axios");
 
+if (process.env.NODE_ENV === "production" && !process.env.REDIS_URL) {
+  throw new Error("REDIS_URL is required for the AI worker in production");
+}
+
 function getBaseUrl() {
   return (
     process.env.APP_BASE_URL ||
@@ -14,10 +18,9 @@ function getBaseUrl() {
 const worker = new Worker(
   "tradeflow-ai-queue",
   async (job) => {
-    const email =
-      job.data.email ||
-      process.env.AI_SYSTEM_EMAIL ||
-      "ks2353013@gmail.com";
+    if (!process.env.AI_WORKER_BEARER_TOKEN) {
+      throw new Error("AI_WORKER_BEARER_TOKEN is required before AI worker can call protected APIs");
+    }
 
     const baseUrl = getBaseUrl();
 
@@ -27,7 +30,7 @@ const worker = new Worker(
       {
         headers: {
           "Content-Type": "application/json",
-          "x-user-email": email
+          Authorization: `Bearer ${process.env.AI_WORKER_BEARER_TOKEN}`
         },
         timeout: 30000
       }

@@ -2,6 +2,7 @@ const express = require("express");
 const Employee = require("../models/Employee");
 const { writeAuditLog } = require("../utils/auditLogger");
 const { enforceCountLimit } = require("../middleware/planLimitMiddleware");
+const { requireAdminAccess } = require("../middleware/permissionMiddleware");
 
 const router = express.Router();
 
@@ -29,6 +30,11 @@ function tenantFilter(req) {
   return filter;
 }
 
+function safeBody(body = {}) {
+  const { ownerEmail, companyId, workspaceId, ...safe } = body;
+  return safe;
+}
+
 async function countEmployees(req) {
   return await Employee.countDocuments(tenantFilter(req));
 }
@@ -54,16 +60,17 @@ router.get("/", async (req, res) => {
 
 router.post(
   "/",
+  requireAdminAccess,
   enforceCountLimit("employee_create", countEmployees),
   async (req, res) => {
     try {
       const ownerEmail = getOwnerEmail(req);
 
       const employee = await Employee.create({
-        ...req.body,
+        ...safeBody(req.body),
         ownerEmail,
-        companyId: req.tenant?.companyId || req.body.companyId || null,
-        workspaceId: req.tenant?.workspaceId || req.body.workspaceId || null
+        companyId: req.tenant?.companyId || null,
+        workspaceId: req.tenant?.workspaceId || null
       });
 
       await writeAuditLog(req, {
@@ -93,14 +100,14 @@ router.post(
   }
 );
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireAdminAccess, async (req, res) => {
   try {
     const employee = await Employee.findOneAndUpdate(
       {
         _id: req.params.id,
         ...tenantFilter(req)
       },
-      req.body,
+      safeBody(req.body),
       { new: true }
     );
 
@@ -135,7 +142,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireAdminAccess, async (req, res) => {
   try {
     const employee = await Employee.findOneAndDelete({
       _id: req.params.id,

@@ -8,21 +8,19 @@ const { usageTracker } = require("../middleware/usageMiddleware");
 const router = express.Router();
 
 function tenant(req) {
+  if (!req.tenant?.ownerEmail) {
+    throw new Error("Tenant owner email missing");
+  }
+
   return {
-    ownerEmail:
-      req.tenant?.ownerEmail ||
-      req.user?.email ||
-      req.headers["x-user-email"] ||
-      "unknown@tradeflow.local",
+    ownerEmail: req.tenant.ownerEmail,
 
     companyId:
       req.tenant?.companyId ||
-      req.headers["x-company-id"] ||
       undefined,
 
     workspaceId:
       req.tenant?.workspaceId ||
-      req.headers["x-workspace-id"] ||
       undefined
   };
 }
@@ -131,9 +129,10 @@ router.post(
     try {
 
       const workflow =
-        await AutomationWorkflow.findById(
-          req.params.id
-        );
+        await AutomationWorkflow.findOne({
+          _id: req.params.id,
+          ...tenant(req)
+        });
 
       if (!workflow) {
 

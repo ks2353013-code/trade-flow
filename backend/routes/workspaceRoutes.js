@@ -2,6 +2,7 @@ const express = require("express");
 const Workspace = require("../models/Workspace");
 const { writeAuditLog } = require("../utils/auditLogger");
 const { enforceCountLimit } = require("../middleware/planLimitMiddleware");
+const { requireAdminAccess } = require("../middleware/permissionMiddleware");
 
 const router = express.Router();
 
@@ -23,6 +24,11 @@ function tenantFilter(req) {
   }
 
   return filter;
+}
+
+function safeBody(body = {}) {
+  const { ownerEmail, companyId, workspaceId, ...safe } = body;
+  return safe;
 }
 
 async function countWorkspaces(req) {
@@ -50,15 +56,16 @@ router.get("/", async (req, res) => {
 
 router.post(
   "/",
+  requireAdminAccess,
   enforceCountLimit("workspace_create", countWorkspaces),
   async (req, res) => {
     try {
       const ownerEmail = getOwnerEmail(req);
 
       const workspace = await Workspace.create({
-        ...req.body,
+        ...safeBody(req.body),
         ownerEmail,
-        companyId: req.tenant?.companyId || req.body.companyId || null
+        companyId: req.tenant?.companyId || null
       });
 
       await writeAuditLog(req, {
@@ -87,14 +94,14 @@ router.post(
   }
 );
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireAdminAccess, async (req, res) => {
   try {
     const workspace = await Workspace.findOneAndUpdate(
       {
         _id: req.params.id,
         ...tenantFilter(req)
       },
-      req.body,
+      safeBody(req.body),
       { new: true }
     );
 
@@ -129,7 +136,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireAdminAccess, async (req, res) => {
   try {
     const workspace = await Workspace.findOneAndDelete({
       _id: req.params.id,

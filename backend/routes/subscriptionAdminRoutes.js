@@ -1,37 +1,11 @@
 const express = require("express");
 const Subscription = require("../models/Subscription");
+const { requireMasterAdmin } = require("../middleware/permissionMiddleware");
 
 const router = express.Router();
 
-const MASTER_ADMIN_EMAIL = "ks2353013@gmail.com";
-
-function getOwnerEmail(req) {
-  return (
-    req.tenant?.ownerEmail ||
-    req.user?.email ||
-    req.headers["x-user-email"] ||
-    req.body?.ownerEmail ||
-    req.body?.email ||
-    req.query?.email ||
-    "unknown@tradeflow.local"
-  )
-    .toLowerCase()
-    .trim();
-}
-
-function isMasterAdmin(req) {
-  return getOwnerEmail(req) === MASTER_ADMIN_EMAIL;
-}
-
-router.get("/", async (req, res) => {
+router.get("/", requireMasterAdmin, async (req, res) => {
   try {
-    if (!isMasterAdmin(req)) {
-      return res.status(403).json({
-        success: false,
-        message: "Master Admin access required"
-      });
-    }
-
     const subscriptions = await Subscription.find({})
       .sort({ createdAt: -1 })
       .limit(500);

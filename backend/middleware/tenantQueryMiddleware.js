@@ -3,13 +3,13 @@
 */
 
 function getOwnerEmail(req) {
-  return (
-    req.ownerEmail ||
-    req.user?.email ||
-    req.headers["x-user-email"] ||
-    req.body?.ownerEmail ||
-    "ks2353013@gmail.com"
-  );
+  const email = req.tenant?.ownerEmail || req.ownerEmail || req.user?.email || "";
+
+  if (!email) {
+    throw new Error("Authenticated tenant email missing");
+  }
+
+  return String(email).toLowerCase().trim();
 }
 
 function secureFind(Model) {

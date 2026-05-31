@@ -1,14 +1,8 @@
-const jwt = require("jsonwebtoken");
 const Employee = require("../models/Employee");
+const { verifyAccessToken, accessSecret } = require("../utils/tokenService");
 
 function getJwtSecret() {
-  const secret = process.env.JWT_SECRET || process.env.JWT_REFRESH_SECRET;
-
-  if (!secret) {
-    throw new Error("JWT_SECRET or JWT_REFRESH_SECRET is missing");
-  }
-
-  return secret;
+  return accessSecret();
 }
 
 async function authMiddleware(req, res, next) {
@@ -24,7 +18,7 @@ async function authMiddleware(req, res, next) {
 
     const token = authHeader.split(" ")[1];
 
-    const decoded = jwt.verify(token, getJwtSecret());
+    const decoded = verifyAccessToken(token);
 
     if (!decoded?.email) {
       return res.status(401).json({
@@ -35,11 +29,17 @@ async function authMiddleware(req, res, next) {
 
     const email = decoded.email.toLowerCase().trim();
 
-    const employee = await Employee.findOne({ email });
+    const employee = await Employee.findOne({
+      email,
+      status: { $ne: "Removed" }
+    }).sort({ updatedAt: -1 });
 
     req.user = {
       id: decoded.id,
       email,
+      ownerEmail: employee?.ownerEmail || email,
+      companyId: employee?.companyId || null,
+      workspaceId: employee?.workspaceId || null,
       role: employee?.role || decoded.role || "Owner",
       permissions: employee?.permissions || decoded.permissions || {},
       employee: employee || null,
@@ -66,11 +66,12 @@ function optionalAuth(req, res, next) {
     }
 
     const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, getJwtSecret());
+    const decoded = verifyAccessToken(token);
 
     req.user = {
       id: decoded.id,
       email: decoded.email?.toLowerCase().trim(),
+      ownerEmail: decoded.email?.toLowerCase().trim(),
       role: decoded.role || "Owner",
       permissions: decoded.permissions || {},
       authMode: "jwt"

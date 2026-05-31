@@ -77,6 +77,7 @@ const allowedOrigins = [
   "https://tradeflowai.in",
   "https://www.tradeflowai.in"
 ];
+const allowVercelPreviews = process.env.ALLOW_VERCEL_PREVIEWS === "true";
 
 app.use(
   cors({
@@ -85,7 +86,7 @@ app.use(
 
       if (
         allowedOrigins.includes(origin) ||
-        origin.endsWith(".vercel.app")
+        (allowVercelPreviews && origin.endsWith(".vercel.app"))
       ) {
         return callback(null, true);
       }
@@ -240,7 +241,7 @@ const io = new Server(server, {
 
       if (
         allowedOrigins.includes(origin) ||
-        origin.endsWith(".vercel.app")
+        (allowVercelPreviews && origin.endsWith(".vercel.app"))
       ) {
         return callback(null, true);
       }

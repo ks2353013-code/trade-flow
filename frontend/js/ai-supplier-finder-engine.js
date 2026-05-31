@@ -6,7 +6,16 @@
   if (window.TradeFlowAISupplierFinderEngine) return;
 
   function getBackendUrl() {
-    return window.location.origin;
+    if (window.TradeFlowSessionManager?.getBackendUrl) {
+      return window.TradeFlowSessionManager.getBackendUrl();
+    }
+
+    if (typeof BACKEND_URL !== "undefined") return BACKEND_URL;
+    if (window.BACKEND_URL) return window.BACKEND_URL;
+
+    return ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)
+      ? window.location.origin
+      : "https://trade-flow-lc1k.onrender.com";
   }
 
   function getToken() {

@@ -58,6 +58,12 @@ const companySchema = new mongoose.Schema(
       default: "Active"
     },
 
+    approvalStatus: {
+      type: String,
+      enum: ["Pending", "Approved", "Rejected"],
+      default: "Pending"
+    },
+
     plan: {
       type: String,
       enum: ["Free", "Pro", "Enterprise"],

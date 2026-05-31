@@ -37,10 +37,13 @@ const PLAN_ENTITLEMENTS = {
 
 async function getUserSubscription(req) {
   const email =
+    req.tenant?.ownerEmail ||
     req.user?.email ||
-    req.headers["x-user-email"] ||
-    req.body?.email ||
-    "unknown@tradeflow.local";
+    "";
+
+  if (!email) {
+    throw new Error("Authenticated user email missing");
+  }
 
   const cleanEmail = email.toLowerCase().trim();
 

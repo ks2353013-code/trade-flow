@@ -7,16 +7,16 @@ const { writeAuditLog } = require("../utils/auditLogger");
 const router = express.Router();
 
 function getOwnerEmail(req) {
-  return (
-    req.tenant?.ownerEmail ||
-    req.user?.email ||
-    req.headers["x-user-email"] ||
-    req.body?.ownerEmail ||
-    req.body?.email ||
-    "unknown@tradeflow.local"
-  )
-    .toLowerCase()
-    .trim();
+  if (!req.tenant?.ownerEmail) {
+    throw new Error("Tenant owner email missing");
+  }
+
+  return req.tenant.ownerEmail;
+}
+
+function safeBody(body = {}) {
+  const { ownerEmail, companyId, workspaceId, user, ...safe } = body;
+  return safe;
 }
 
 function tenantFilter(req) {
@@ -80,16 +80,11 @@ router.post(
       const ownerEmail = getOwnerEmail(req);
 
       const supplier = await Supplier.create({
-        ...req.body,
+        ...safeBody(req.body),
+        user: req.user?.id || null,
         ownerEmail,
-        companyId:
-          req.tenant?.companyId ||
-          req.body.companyId ||
-          null,
-        workspaceId:
-          req.tenant?.workspaceId ||
-          req.body.workspaceId ||
-          null
+        companyId: req.tenant?.companyId || null,
+        workspaceId: req.tenant?.workspaceId || null
       });
 
       await writeAuditLog(req, {
@@ -123,7 +118,7 @@ router.put("/:id", async (req, res) => {
         _id: req.params.id,
         ...tenantFilter(req)
       },
-      req.body,
+      safeBody(req.body),
       {
         new: true
       }

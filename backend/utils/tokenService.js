@@ -1,17 +1,25 @@
 const jwt = require("jsonwebtoken");
 
+function requiredSecret(name, developmentFallback) {
+  const secret = process.env[name];
+
+  if (secret) {
+    return secret;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(`${name} is required in production`);
+  }
+
+  return developmentFallback;
+}
+
 function accessSecret() {
-  return (
-    process.env.JWT_SECRET ||
-    "tradeflow_access_secret"
-  );
+  return requiredSecret("JWT_SECRET", "tradeflow_dev_access_secret");
 }
 
 function refreshSecret() {
-  return (
-    process.env.JWT_REFRESH_SECRET ||
-    "tradeflow_refresh_secret"
-  );
+  return requiredSecret("JWT_REFRESH_SECRET", "tradeflow_dev_refresh_secret");
 }
 
 function generateAccessToken(user) {
@@ -67,5 +75,7 @@ module.exports = {
   generateAccessToken,
   generateRefreshToken,
   verifyAccessToken,
-  verifyRefreshToken
+  verifyRefreshToken,
+  accessSecret,
+  refreshSecret
 };

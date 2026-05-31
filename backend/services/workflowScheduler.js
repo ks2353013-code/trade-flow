@@ -5,6 +5,20 @@ const Notification = require("../models/Notification");
 
 let schedulerStarted = false;
 
+const MIN_INTERVAL_MS = {
+  scheduled: 30 * 60 * 1000,
+  inactive_deal: 24 * 60 * 60 * 1000,
+  daily_summary: 24 * 60 * 60 * 1000,
+  weekly_summary: 7 * 24 * 60 * 60 * 1000
+};
+
+function isWorkflowDue(workflow) {
+  if (!workflow.lastExecutedAt) return true;
+
+  const interval = MIN_INTERVAL_MS[workflow.triggerType] || MIN_INTERVAL_MS.scheduled;
+  return Date.now() - new Date(workflow.lastExecutedAt).getTime() >= interval;
+}
+
 async function executeScheduledWorkflow(workflow) {
   try {
     workflow.executionCount = (workflow.executionCount || 0) + 1;
@@ -53,7 +67,9 @@ function startWorkflowScheduler() {
       }).limit(50);
 
       for (const workflow of workflows) {
-        await executeScheduledWorkflow(workflow);
+        if (isWorkflowDue(workflow)) {
+          await executeScheduledWorkflow(workflow);
+        }
       }
     } catch (error) {
       console.error("Workflow scheduler loop error:", error.message);

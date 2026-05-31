@@ -29,6 +29,8 @@ const subscriptionSchema = new mongoose.Schema(
       type: String,
       enum: [
         "Active",
+        "Payment Required",
+        "Pending Approval",
         "Expired",
         "Cancelled",
         "Trial",
@@ -41,6 +43,7 @@ const subscriptionSchema = new mongoose.Schema(
       type: String,
       enum: [
         "Not Required",
+        "Payment Required",
         "Pending",
         "Approved",
         "Rejected"

@@ -5,17 +5,14 @@ function getTenant(req) {
     ownerEmail:
       req.tenant?.ownerEmail ||
       req.user?.email ||
-      req.headers["x-user-email"] ||
       "unknown@tradeflow.local",
 
     companyId:
       req.tenant?.companyId ||
-      req.headers["x-company-id"] ||
       undefined,
 
     workspaceId:
       req.tenant?.workspaceId ||
-      req.headers["x-workspace-id"] ||
       undefined
   };
 }

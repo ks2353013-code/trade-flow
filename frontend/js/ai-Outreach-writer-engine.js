@@ -6,6 +6,10 @@
   }
 
   function getBackendUrl() {
+    if (window.TradeFlowSessionManager?.getBackendUrl) {
+      return window.TradeFlowSessionManager.getBackendUrl();
+    }
+
     if (typeof BACKEND_URL !== "undefined") return BACKEND_URL;
     return "https://trade-flow-lc1k.onrender.com";
   }
@@ -24,7 +28,6 @@
     return {
       "Content-Type": "application/json",
       Authorization: user?.token ? `Bearer ${user.token}` : "",
-      "x-user-email": user?.email || "unknown@tradeflow.local",
       "x-company-id": localStorage.getItem("tradeflowActiveCompany") || "",
       "x-workspace-id": localStorage.getItem("tradeflowActiveWorkspace") || ""
     };
