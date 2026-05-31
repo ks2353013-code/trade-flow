@@ -18,6 +18,15 @@ const tradeMissionSchema = new mongoose.Schema(
     },
 
     agents: { type: Array, default: [] },
+    agentReports: {
+      research: { type: mongoose.Schema.Types.Mixed, default: null },
+      buyerDiscovery: { type: mongoose.Schema.Types.Mixed, default: null },
+      supplierDiscovery: { type: mongoose.Schema.Types.Mixed, default: null },
+      crm: { type: mongoose.Schema.Types.Mixed, default: null },
+      compliance: { type: mongoose.Schema.Types.Mixed, default: null },
+      revenue: { type: mongoose.Schema.Types.Mixed, default: null },
+      outreach: { type: mongoose.Schema.Types.Mixed, default: null }
+    },
     opportunities: { type: Array, default: [] },
     risks: { type: Array, default: [] },
     actions: { type: Array, default: [] },
