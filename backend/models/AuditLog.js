@@ -43,6 +43,11 @@ const auditLogSchema = new mongoose.Schema(
       required: true
     },
 
+    message: {
+      type: String,
+      default: ""
+    },
+
     entityType: {
       type: String,
       default: ""
@@ -56,6 +61,8 @@ const auditLogSchema = new mongoose.Schema(
     severity: {
       type: String,
       enum: [
+        "Info",
+        "Warning",
         "Low",
         "Medium",
         "High",

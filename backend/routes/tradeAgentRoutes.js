@@ -4,6 +4,16 @@ const { runTradeMission } = require("../services/tradeflowAgentOrchestrator");
 
 const router = express.Router();
 
+const AGENT_REPORT_KEYS = [
+  "research",
+  "buyerDiscovery",
+  "supplierDiscovery",
+  "crm",
+  "compliance",
+  "revenue",
+  "outreach"
+];
+
 function getOwnerEmail(req) {
   if (!req.user?.email) {
     throw new Error("Authenticated user email missing");
@@ -23,11 +33,108 @@ function tenantFilter(req) {
   return filter;
 }
 
+function hasReportValue(agentReports, key) {
+  return Boolean(
+    agentReports &&
+    Object.prototype.hasOwnProperty.call(agentReports, key) &&
+    agentReports[key]
+  );
+}
+
+function missingAgentReportKeys(mission) {
+  return AGENT_REPORT_KEYS.filter(
+    (key) => !hasReportValue(mission.agentReports, key)
+  );
+}
+
+function buildAgentReportPatch(mission) {
+  const missingKeys = missingAgentReportKeys(mission);
+
+  if (!missingKeys.length || !mission.missionText) {
+    return null;
+  }
+
+  const result = runTradeMission(mission.missionText, {
+    ownerEmail: mission.ownerEmail,
+    companyId: mission.companyId || null,
+    workspaceId: mission.workspaceId || null
+  });
+
+  const set = {};
+
+  missingKeys.forEach((key) => {
+    if (result.agentReports?.[key]) {
+      set[`agentReports.${key}`] = result.agentReports[key];
+    }
+  });
+
+  if (!Object.keys(set).length) {
+    return null;
+  }
+
+  return {
+    set,
+    filledKeys: Object.keys(set).map((key) =>
+      key.replace("agentReports.", "")
+    )
+  };
+}
+
+async function backfillMissionAgentReports(mission, filter) {
+  const patch = buildAgentReportPatch(mission);
+
+  if (!patch) {
+    return {
+      mission,
+      updated: false,
+      filledKeys: []
+    };
+  }
+
+  const updatedMission = await TradeMission.findOneAndUpdate(
+    {
+      _id: mission._id,
+      ...filter
+    },
+    {
+      $set: patch.set
+    },
+    {
+      new: true
+    }
+  );
+
+  return {
+    mission: updatedMission || mission,
+    updated: Boolean(updatedMission),
+    filledKeys: patch.filledKeys
+  };
+}
+
+async function backfillMissionsForTenant(filter) {
+  const missions = await TradeMission.find(filter).sort({
+    createdAt: -1
+  });
+
+  const results = [];
+  const hydratedMissions = [];
+
+  for (const mission of missions) {
+    const result = await backfillMissionAgentReports(mission, filter);
+    results.push(result);
+    hydratedMissions.push(result.mission);
+  }
+
+  return {
+    missions: hydratedMissions,
+    updatedCount: results.filter((result) => result.updated).length,
+    results
+  };
+}
+
 router.get("/missions", async (req, res) => {
   try {
-    const missions = await TradeMission.find(tenantFilter(req)).sort({
-      createdAt: -1
-    });
+    const { missions } = await backfillMissionsForTenant(tenantFilter(req));
 
     res.json({
       success: true,
@@ -72,6 +179,29 @@ router.post("/run", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Trade agent mission failed",
+      error: error.message
+    });
+  }
+});
+
+router.post("/missions/backfill-agent-reports", async (req, res) => {
+  try {
+    const backfill = await backfillMissionsForTenant(tenantFilter(req));
+
+    res.json({
+      success: true,
+      updatedCount: backfill.updatedCount,
+      totalMissions: backfill.missions.length,
+      results: backfill.results.map((result) => ({
+        missionId: result.mission?._id,
+        updated: result.updated,
+        filledKeys: result.filledKeys
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Trade mission agent report backfill failed",
       error: error.message
     });
   }

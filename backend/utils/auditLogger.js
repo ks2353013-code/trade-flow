@@ -45,6 +45,11 @@ async function writeAuditLog(req, data = {}) {
         data.action ||
         "Unknown Action",
 
+      message:
+        data.message ||
+        data.action ||
+        "Audit event recorded",
+
       entityType:
         data.entityType ||
         "",

@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const AuditLog = require("../models/AuditLog");
 
 const router = express.Router();
@@ -42,6 +43,77 @@ function tenantFilter(req) {
 
   return filter;
 }
+
+function normalizeOptionalObjectId(value) {
+  if (!value) return null;
+
+  const id = String(value).trim();
+  return mongoose.isValidObjectId(id) ? id : null;
+}
+
+function normalizeSeverity(value) {
+  const severity = String(value || "Info").trim();
+  const allowed = new Set([
+    "Info",
+    "Warning",
+    "Low",
+    "Medium",
+    "High",
+    "Critical"
+  ]);
+
+  return allowed.has(severity) ? severity : "Info";
+}
+
+function cleanMetadata(metadata) {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return {};
+  }
+
+  return metadata;
+}
+
+router.post("/", async (req, res) => {
+  try {
+    const {
+      action,
+      message,
+      module,
+      severity,
+      metadata,
+      entityType,
+      entityId
+    } = req.body || {};
+
+    const log = await AuditLog.create({
+      ownerEmail: getOwnerEmail(req),
+      companyId: normalizeOptionalObjectId(req.tenant?.companyId),
+      workspaceId: normalizeOptionalObjectId(req.tenant?.workspaceId),
+      userId: normalizeOptionalObjectId(req.user?.id),
+      employeeId: normalizeOptionalObjectId(req.user?.employee?._id),
+      module: String(module || "General").trim(),
+      action: String(action || "API Activity").trim(),
+      message: String(message || action || "Audit event recorded").trim(),
+      entityType: String(entityType || "").trim(),
+      entityId: String(entityId || "").trim(),
+      severity: normalizeSeverity(severity),
+      ipAddress: req.ip || req.headers["x-forwarded-for"] || "",
+      userAgent: req.headers["user-agent"] || "",
+      metadata: cleanMetadata(metadata)
+    });
+
+    res.status(201).json({
+      success: true,
+      log
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to write audit log",
+      error: error.message
+    });
+  }
+});
 
 router.get("/", async (req, res) => {
   try {

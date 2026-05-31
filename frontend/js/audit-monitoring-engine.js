@@ -45,6 +45,27 @@
     );
   }
 
+  function isMongoObjectId(value) {
+    return /^[a-f\d]{24}$/i.test(
+      String(value || "").trim()
+    );
+  }
+
+  function getStoredObjectId(key) {
+    const value =
+      localStorage.getItem(key);
+
+    return isMongoObjectId(value)
+      ? String(value).trim()
+      : "";
+  }
+
+  function auditDebugEnabled() {
+    return localStorage.getItem(
+      "tradeflowAuditDebug"
+    ) === "true";
+  }
+
   function getHeaders() {
 
     const user = getUser();
@@ -63,14 +84,14 @@
         "unknown@tradeflow.local",
 
       "x-company-id":
-        localStorage.getItem(
+        getStoredObjectId(
           "tradeflowActiveCompany"
-        ) || "",
+        ),
 
       "x-workspace-id":
-        localStorage.getItem(
+        getStoredObjectId(
           "tradeflowActiveWorkspace"
-        ) || ""
+        )
     };
   }
 
@@ -100,19 +121,19 @@
       );
 
       if (!res.ok) {
-        throw new Error(
-          "Audit logging failed"
-        );
+        return;
       }
 
       fetchLogs(false);
 
     } catch (error) {
 
-      console.warn(
-        "Audit log failed:",
-        error.message
-      );
+      if (auditDebugEnabled()) {
+        console.debug(
+          "Audit log skipped:",
+          error.message
+        );
+      }
 
     }
 
@@ -137,14 +158,17 @@
         );
       }
 
-      const logs =
+      const payload =
         await res.json();
+
+      const logs =
+        Array.isArray(payload)
+          ? payload
+          : payload.logs || [];
 
       setJson(
         CACHE_KEY,
-        Array.isArray(logs)
-          ? logs
-          : []
+        logs
       );
 
       renderLogs();
@@ -462,11 +486,24 @@
             "GET"
           ).toUpperCase();
 
+        const requestUrl =
+          typeof url === "string"
+            ? url
+            : url?.url || "";
+
         const response =
           await originalFetch(
             url,
             options
           );
+
+        if (
+          requestUrl.includes(
+            "/api/audit"
+          )
+        ) {
+          return response;
+        }
 
         if (
           response.ok &&
