@@ -180,6 +180,21 @@
     return data.approvals || [];
   }
 
+  async function fetchEmailDeliveries() {
+    const res = await fetch(`${API_BASE}/api/email-deliveries`, {
+      headers: authHeaders(),
+      credentials: "include"
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || "Failed to fetch email deliveries");
+    }
+
+    return data.deliveries || [];
+  }
+
   async function runMission() {
     const input = document.getElementById("missionCenterInput");
     const missionText = input?.value?.trim();
@@ -356,6 +371,27 @@
     alert(`Approval Audit Trail\n\n${lines.join("\n\n")}`);
   }
 
+  async function sendApprovedEmail(id) {
+    const ok = confirm("Send this approved email draft now?");
+    if (!ok) return;
+
+    const res = await fetch(`${API_BASE}/api/email-deliveries/send-approved/${id}`, {
+      method: "POST",
+      headers: authHeaders(),
+      credentials: "include"
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      alert(data.message || "Email sending failed");
+      return;
+    }
+
+    await render();
+    alert(data.message || "Approved email sent successfully.");
+  }
+
   function renderAgentReports(mission) {
     const reports = mission.agentReports || {};
 
@@ -447,6 +483,9 @@
 
   function renderApprovalDraftCard(approval, showActions) {
     const id = safeText(approval._id);
+    const canSendEmail =
+      approval.status === "Approved" &&
+      approval.channel === "Email Draft";
 
     return `
       <div class="deal">
@@ -478,6 +517,13 @@
           <button class="mini-btn" onclick="TradeFlowMissionCenterUIV1.viewOutreachAudit('${id}')">
             View Audit
           </button>
+          ${
+            canSendEmail
+              ? `<button class="mini-btn" onclick="TradeFlowMissionCenterUIV1.sendApprovedEmail('${id}')">
+                  Send Email
+                </button>`
+              : ""
+          }
         </div>
       </div>
     `;
@@ -512,6 +558,43 @@
           ${renderApprovalDraftGroup("Pending Drafts", pending, true)}
           ${renderApprovalDraftGroup("Approved Drafts", approved, false)}
           ${renderApprovalDraftGroup("Rejected Drafts", rejected, false)}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderEmailDeliveryCenter(deliveries = []) {
+    return `
+      <div style="margin-top:18px;">
+        <h4 style="color:white;font-weight:900;margin-bottom:10px;">Email Delivery Center</h4>
+        <div style="display:grid;grid-template-columns:1fr;gap:10px;">
+          ${
+            deliveries.length
+              ? deliveries.map((delivery) => {
+                  const sentTime = delivery.sentAt || delivery.createdAt;
+                  const displayTime = sentTime
+                    ? new Date(sentTime).toLocaleString()
+                    : "Not sent yet";
+
+                  return `
+                    <div class="deal">
+                      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
+                        <div>
+                          <b style="color:white;">${safeText(delivery.to || "Unknown recipient")}</b>
+                          <p class="muted" style="margin-top:4px;">
+                            ${safeText(delivery.subject || "Untitled email")}
+                          </p>
+                        </div>
+                        <span class="status">${safeText(delivery.status || "Queued")}</span>
+                      </div>
+                      <p class="muted" style="margin-top:8px;">
+                        Sent Time: ${safeText(displayTime)}
+                      </p>
+                    </div>
+                  `;
+                }).join("")
+              : `<div class="deal">No email deliveries yet.</div>`
+          }
         </div>
       </div>
     `;
@@ -755,11 +838,16 @@
         <div id="missionOutreachApprovalQueue" style="margin-top:22px;">
           <div class="deal">Loading outreach approval queue...</div>
         </div>
+
+        <div id="missionEmailDeliveryCenter" style="margin-top:22px;">
+          <div class="deal">Loading email delivery center...</div>
+        </div>
       </div>
     `;
 
     const list = document.getElementById("missionCenterList");
     const queue = document.getElementById("missionOutreachApprovalQueue");
+    const deliveryCenter = document.getElementById("missionEmailDeliveryCenter");
 
     try {
       const missions = await fetchMissions();
@@ -786,6 +874,18 @@
         </div>
       `;
     }
+
+    try {
+      const deliveries = await fetchEmailDeliveries();
+      deliveryCenter.innerHTML = renderEmailDeliveryCenter(deliveries);
+    } catch (error) {
+      deliveryCenter.innerHTML = `
+        <div style="margin-top:18px;">
+          <h4 style="color:white;font-weight:900;margin-bottom:10px;">Email Delivery Center</h4>
+          <div class="deal">Email delivery error: ${safeText(error.message)}</div>
+        </div>
+      `;
+    }
   }
 
   function boot() {
@@ -806,7 +906,8 @@
     createOutreachDraft,
     approveOutreachDraft,
     rejectOutreachDraft,
-    viewOutreachAudit
+    viewOutreachAudit,
+    sendApprovedEmail
   };
 
   if (document.readyState === "loading") {
