@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const OutreachApproval = require("../models/OutreachApproval");
+const ApprovalAuditLog = require("../models/ApprovalAuditLog");
 const CRMLead = require("../models/CRMLead");
 const TradeMission = require("../models/TradeMission");
 
@@ -201,6 +202,38 @@ function validateVerifiedLead(lead = {}) {
   return true;
 }
 
+function snapshotApproval(approval = {}) {
+  return {
+    status: approval.status || "",
+    subject: approval.subject || "",
+    message: approval.message || ""
+  };
+}
+
+async function appendApprovalAudit(req, approval, action, oldSnapshot = {}) {
+  const current = snapshotApproval(approval);
+
+  await ApprovalAuditLog.create({
+    ownerEmail: getOwnerEmail(req),
+    companyId: req.tenant?.companyId || null,
+    workspaceId: requireWorkspace(req),
+    outreachApprovalId: approval._id,
+    action,
+    actorEmail: getUserEmail(req),
+    oldStatus: oldSnapshot.status || "",
+    newStatus: current.status,
+    oldSubject: oldSnapshot.subject || "",
+    newSubject: current.subject,
+    oldMessage: oldSnapshot.message || "",
+    newMessage: current.message,
+    timestamp: new Date()
+  });
+}
+
+function ensureValidApprovalId(id) {
+  return mongoose.isValidObjectId(id);
+}
+
 router.post("/create", async (req, res) => {
   try {
     if (!requireActiveWorkspace(req, res)) return;
@@ -238,6 +271,8 @@ router.post("/create", async (req, res) => {
       buildApprovalPayload(req, input, lead, crmLead?._id || null)
     );
 
+    await appendApprovalAudit(req, approval, "Create Draft");
+
     return res.status(201).json({
       success: true,
       message: "Draft created. Human approval required before sending.",
@@ -273,21 +308,63 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/:id/audit", async (req, res) => {
+  try {
+    if (!requireActiveWorkspace(req, res)) return;
+
+    if (!ensureValidApprovalId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid outreach approval id is required"
+      });
+    }
+
+    const approval = await OutreachApproval.findOne({
+      _id: req.params.id,
+      ...tenantFilter(req)
+    }).select("_id");
+
+    if (!approval) {
+      return res.status(404).json({
+        success: false,
+        message: "Outreach approval not found"
+      });
+    }
+
+    const audit = await ApprovalAuditLog.find({
+      outreachApprovalId: approval._id,
+      ...tenantFilter(req)
+    }).sort({ timestamp: -1 });
+
+    return res.json({
+      success: true,
+      audit
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch approval audit trail",
+      error: error.message
+    });
+  }
+});
+
 router.post("/:id/approve", async (req, res) => {
   try {
     if (!requireActiveWorkspace(req, res)) return;
 
-    const approval = await OutreachApproval.findOneAndUpdate(
+    if (!ensureValidApprovalId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid outreach approval id is required"
+      });
+    }
+
+    const approval = await OutreachApproval.findOne(
       {
         _id: req.params.id,
         ...tenantFilter(req)
-      },
-      {
-        status: "Approved",
-        approvedBy: getUserEmail(req),
-        approvedAt: new Date()
-      },
-      { new: true }
+      }
     );
 
     if (!approval) {
@@ -296,6 +373,15 @@ router.post("/:id/approve", async (req, res) => {
         message: "Outreach approval not found"
       });
     }
+
+    const oldSnapshot = snapshotApproval(approval);
+
+    approval.status = "Approved";
+    approval.approvedBy = getUserEmail(req);
+    approval.approvedAt = new Date();
+
+    await approval.save();
+    await appendApprovalAudit(req, approval, "Approve", oldSnapshot);
 
     return res.json({
       success: true,
@@ -315,17 +401,18 @@ router.post("/:id/reject", async (req, res) => {
   try {
     if (!requireActiveWorkspace(req, res)) return;
 
-    const approval = await OutreachApproval.findOneAndUpdate(
+    if (!ensureValidApprovalId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid outreach approval id is required"
+      });
+    }
+
+    const approval = await OutreachApproval.findOne(
       {
         _id: req.params.id,
         ...tenantFilter(req)
-      },
-      {
-        status: "Rejected",
-        rejectedBy: getUserEmail(req),
-        rejectedAt: new Date()
-      },
-      { new: true }
+      }
     );
 
     if (!approval) {
@@ -334,6 +421,15 @@ router.post("/:id/reject", async (req, res) => {
         message: "Outreach approval not found"
       });
     }
+
+    const oldSnapshot = snapshotApproval(approval);
+
+    approval.status = "Rejected";
+    approval.rejectedBy = getUserEmail(req);
+    approval.rejectedAt = new Date();
+
+    await approval.save();
+    await appendApprovalAudit(req, approval, "Reject", oldSnapshot);
 
     return res.json({
       success: true,
@@ -353,6 +449,13 @@ router.put("/:id/edit", async (req, res) => {
   try {
     if (!requireActiveWorkspace(req, res)) return;
 
+    if (!ensureValidApprovalId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid outreach approval id is required"
+      });
+    }
+
     const subject = normalizeText(req.body?.subject);
     const message = normalizeText(req.body?.message);
     const requestedStatus = normalizeText(req.body?.status);
@@ -367,18 +470,11 @@ router.put("/:id/edit", async (req, res) => {
       });
     }
 
-    const update = { status };
-
-    if (subject) update.subject = subject;
-    if (message) update.message = message;
-
-    const approval = await OutreachApproval.findOneAndUpdate(
+    const approval = await OutreachApproval.findOne(
       {
         _id: req.params.id,
         ...tenantFilter(req)
-      },
-      update,
-      { new: true }
+      }
     );
 
     if (!approval) {
@@ -387,6 +483,15 @@ router.put("/:id/edit", async (req, res) => {
         message: "Outreach approval not found"
       });
     }
+
+    const oldSnapshot = snapshotApproval(approval);
+
+    approval.status = status;
+    if (subject) approval.subject = subject;
+    if (message) approval.message = message;
+
+    await approval.save();
+    await appendApprovalAudit(req, approval, "Edit", oldSnapshot);
 
     return res.json({
       success: true,

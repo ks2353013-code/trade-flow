@@ -322,6 +322,40 @@
     alert("Draft rejected. No message was sent.");
   }
 
+  async function viewOutreachAudit(id) {
+    const res = await fetch(`${API_BASE}/api/outreach-approvals/${id}/audit`, {
+      headers: authHeaders(),
+      credentials: "include"
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      alert(data.message || "Failed to load audit trail");
+      return;
+    }
+
+    const auditRows = safeArray(data.audit);
+
+    if (!auditRows.length) {
+      alert("No audit records found for this draft.");
+      return;
+    }
+
+    const lines = auditRows.map((row) => {
+      const timestamp = row.timestamp
+        ? new Date(row.timestamp).toLocaleString()
+        : "Unknown time";
+      const actor = row.actorEmail || "Unknown actor";
+      const oldStatus = row.oldStatus || "None";
+      const newStatus = row.newStatus || "None";
+
+      return `${timestamp}\n${actor}\n${row.action || "Action"}: ${oldStatus} -> ${newStatus}`;
+    });
+
+    alert(`Approval Audit Trail\n\n${lines.join("\n\n")}`);
+  }
+
   function renderAgentReports(mission) {
     const reports = mission.agentReports || {};
 
@@ -428,18 +462,23 @@
         <p class="muted" style="margin-top:8px;">
           ${safeText(approval.message || "").slice(0, 220)}
         </p>
-        ${
-          showActions
-            ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+          ${
+            showActions
+              ? `
                 <button class="mini-btn" onclick="TradeFlowMissionCenterUIV1.approveOutreachDraft('${id}')">
                   Approve
                 </button>
                 <button class="mini-btn" onclick="TradeFlowMissionCenterUIV1.rejectOutreachDraft('${id}')">
                   Reject
                 </button>
-              </div>`
-            : ""
-        }
+              `
+              : ""
+          }
+          <button class="mini-btn" onclick="TradeFlowMissionCenterUIV1.viewOutreachAudit('${id}')">
+            View Audit
+          </button>
+        </div>
       </div>
     `;
   }
@@ -766,7 +805,8 @@
     pushLeadToCRM,
     createOutreachDraft,
     approveOutreachDraft,
-    rejectOutreachDraft
+    rejectOutreachDraft,
+    viewOutreachAudit
   };
 
   if (document.readyState === "loading") {
