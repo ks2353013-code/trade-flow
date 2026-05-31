@@ -1,6 +1,9 @@
 /* TradeFlow Buyer Discovery Agent V2
-   Analysis and strategy only. No external outreach.
+   Uses Buyer Source Connector when available.
+   Discovery only. No outreach. No auto-contact.
 */
+
+const { discoverBuyers } = require("../connectors/buyerSourceConnector");
 
 function normalizeInput(input = {}) {
   return {
@@ -34,203 +37,137 @@ function getBuyerTypes(ctx) {
   ];
 }
 
-function slugify(value = "") {
-  return String(value)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "") || "trade-buyer";
+function scoreBuyer(buyer = {}, ctx = {}) {
+  let score = 0;
+
+  if (buyer.companyName) score += 10;
+  if (buyer.website) score += 20;
+  if (buyer.email) score += 20;
+  if (buyer.phone) score += 15;
+  if (buyer.country) score += 15;
+
+  const productMatch =
+    buyer.product &&
+    ctx.product &&
+    buyer.product
+      .toLowerCase()
+      .includes(ctx.product.toLowerCase().split(" ")[0]);
+
+  if (productMatch) score += 20;
+
+  return Math.min(score, 100);
 }
 
-function marketCountry(market = "") {
-  const normalized = String(market).trim();
-
-  if (!normalized || normalized === "Global Market") {
-    return "Global";
-  }
-
-  return normalized;
-}
-
-function marketDialingCode(market = "") {
-  const normalized = String(market).toLowerCase();
-
-  if (normalized.includes("uae") || normalized.includes("dubai")) {
-    return "+971";
-  }
-
-  if (normalized.includes("usa") || normalized.includes("america")) {
-    return "+1";
-  }
-
-  if (normalized.includes("europe")) {
-    return "+44";
-  }
-
-  if (normalized.includes("africa")) {
-    return "+27";
-  }
-
-  return "+00";
-}
-
-function getPrimaryBuyerTypes(targetBuyerTypes = []) {
-  return targetBuyerTypes.slice(0, 3);
-}
-
-function scoreBuyerConfidence(buyer, ctx, targetBuyerTypes) {
-  let score = 30;
-
-  if (ctx.product !== "General Product") score += 10;
-  if (ctx.market !== "Global Market") score += 10;
-  if (buyer.country === marketCountry(ctx.market)) score += 8;
-  if (buyer.website) score += 7;
-  if (buyer.email) score += 8;
-  if (buyer.phone) score += 5;
-
-  const priorityIndex = targetBuyerTypes.indexOf(buyer.buyerType);
-
-  if (priorityIndex === 0) score += 10;
-  else if (priorityIndex === 1) score += 8;
-  else if (priorityIndex === 2) score += 6;
-  else if (priorityIndex >= 0) score += 4;
-
-  if (getPrimaryBuyerTypes(targetBuyerTypes).includes(buyer.buyerType)) {
-    score += 5;
-  }
-
-  return Math.min(score, 95);
-}
-
-function getVerificationStatus(confidenceScore) {
-  if (confidenceScore >= 85) return "Verified";
-  if (confidenceScore >= 70) return "Needs Review";
+function getVerificationStatus(score) {
+  if (score >= 85) return "Verified";
+  if (score >= 70) return "CRM Ready";
+  if (score >= 50) return "Needs Verification";
   return "Unverified";
 }
 
-function createBuyer({
-  companyName,
-  country,
-  website,
-  email,
-  phone,
-  buyerType
-}, ctx, targetBuyerTypes) {
-  const buyer = {
-    companyName,
-    country,
-    website,
-    email,
-    phone,
-    buyerType
-  };
+function createFallbackBuyers(ctx) {
+  const buyerTypes = getBuyerTypes(ctx);
 
-  const confidenceScore = scoreBuyerConfidence(
-    buyer,
-    ctx,
-    targetBuyerTypes
-  );
+  return buyerTypes.slice(0, 5).map((type, index) => {
+    const companyName =
+      index === 0
+        ? `${ctx.market} ${ctx.product} Import Network`
+        : index === 1
+        ? `${ctx.market} Food Distribution Group`
+        : index === 2
+        ? `${ctx.market} Wholesale Trade Desk`
+        : index === 3
+        ? `${ctx.market} Retail Sourcing House`
+        : `${ctx.market} Buying House`;
 
-  return {
-    ...buyer,
-    confidenceScore,
-    verificationStatus: getVerificationStatus(confidenceScore)
-  };
-}
+    const buyer = {
+      companyName,
+      country: ctx.market,
+      website: `https://${companyName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.example`,
+      email:
+        index < 4
+          ? `sourcing.${ctx.product.toLowerCase().replace(/\s+/g, "-")}@${companyName
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "-")}.example`
+          : "",
+      phone: index < 4 ? `+971-50-000-01${index + 10}` : "",
+      buyerType: type,
+      product: ctx.product,
+      source: "Buyer Discovery Agent",
+      sourceUrl: "",
+      outreachAllowed: false,
+      humanApprovalRequired: true
+    };
 
-function generateSampleBuyers(ctx, targetBuyerTypes) {
-  const country = marketCountry(ctx.market);
-  const productSlug = slugify(ctx.product);
-  const marketSlug = slugify(ctx.market);
-  const dialCode = marketDialingCode(ctx.market);
+    const confidenceScore = scoreBuyer(buyer, ctx);
 
-  const [
-    primaryType,
-    secondaryType,
-    tertiaryType,
-    fourthType,
-    fifthType
-  ] = targetBuyerTypes;
-
-  const templates = [
-    {
-      companyName: `${country} ${ctx.product} Import Network`,
-      buyerType: primaryType,
-      hasEmail: true,
-      hasPhone: true
-    },
-    {
-      companyName: `${country} Food Distribution Group`,
-      buyerType: secondaryType || primaryType,
-      hasEmail: true,
-      hasPhone: true
-    },
-    {
-      companyName: `${country} Wholesale Trade House`,
-      buyerType: tertiaryType || secondaryType || primaryType,
-      hasEmail: true,
-      hasPhone: false
-    },
-    {
-      companyName: `${country} Retail Sourcing Co`,
-      buyerType: fourthType || tertiaryType || primaryType,
-      hasEmail: true,
-      hasPhone: true
-    },
-    {
-      companyName: `${country} Global Agro Buyers`,
-      buyerType: fifthType || secondaryType || primaryType,
-      hasEmail: false,
-      hasPhone: true
-    }
-  ];
-
-  return templates.map((template, index) => {
-    const companySlug = slugify(template.companyName);
-    const website = `https://${companySlug}.example`;
-    const email = template.hasEmail
-      ? `sourcing.${productSlug}@${companySlug}.example`
-      : "";
-    const phone = template.hasPhone
-      ? `${dialCode}-50-000-01${index + 1}${marketSlug.length % 10}`
-      : "";
-
-    return createBuyer(
-      {
-        companyName: template.companyName,
-        country,
-        website,
-        email,
-        phone,
-        buyerType: template.buyerType
-      },
-      ctx,
-      targetBuyerTypes
-    );
+    return {
+      ...buyer,
+      confidenceScore,
+      verificationStatus: getVerificationStatus(confidenceScore)
+    };
   });
 }
 
-function run(input = {}) {
-  const ctx = normalizeInput(input);
+async function getDiscoveredBuyers(ctx) {
+  try {
+    const result = await discoverBuyers(ctx);
 
+    if (Array.isArray(result?.buyers) && result.buyers.length) {
+      return result.buyers;
+    }
+  } catch (error) {
+    console.warn("Buyer source connector failed:", error.message);
+  }
+
+  return createFallbackBuyers(ctx);
+}
+
+function buildLeaderboard(buyers = []) {
+  return buyers
+    .slice()
+    .sort((a, b) => Number(b.confidenceScore || 0) - Number(a.confidenceScore || 0))
+    .map((buyer, index) => ({
+      rank: index + 1,
+      companyName: buyer.companyName,
+      country: buyer.country,
+      buyerType: buyer.buyerType,
+      confidenceScore: buyer.confidenceScore,
+      verificationStatus: buyer.verificationStatus
+    }));
+}
+
+async function run(input = {}) {
+  const ctx = normalizeInput(input);
   const targetBuyerTypes = getBuyerTypes(ctx);
-  const discoveredBuyers = generateSampleBuyers(ctx, targetBuyerTypes);
-  const buyerLeaderboard = [...discoveredBuyers].sort(
-    (a, b) => b.confidenceScore - a.confidenceScore
-  );
-  const crmReadyBuyers = buyerLeaderboard.filter(
-    (buyer) => buyer.confidenceScore >= 70
+
+  const discoveredBuyers = await getDiscoveredBuyers(ctx);
+  const buyerLeaderboard = buildLeaderboard(discoveredBuyers);
+  const crmReadyBuyers = discoveredBuyers.filter(
+    buyer => Number(buyer.confidenceScore || 0) >= 70
   );
 
   const estimatedBuyerFitScore =
-    ctx.product !== "General Product" && ctx.market !== "Global Market"
+    discoveredBuyers.length
+      ? Math.round(
+          discoveredBuyers.reduce(
+            (sum, buyer) => sum + Number(buyer.confidenceScore || 0),
+            0
+          ) / discoveredBuyers.length
+        )
+      : ctx.product !== "General Product" && ctx.market !== "Global Market"
       ? 86
       : 62;
 
   return {
     agent: "Buyer Discovery Agent",
+    version: "V2",
     status: "Completed",
+
     buyerProfile: `Ideal buyers for ${ctx.product} in ${ctx.market} are companies already importing, distributing, wholesaling, or sourcing similar products.`,
+
     targetBuyerTypes,
+
     buyerSearchStrategy: [
       `Search importers and distributors of ${ctx.product} in ${ctx.market}`,
       "Prioritize companies with active websites and trade contact details",
@@ -238,6 +175,7 @@ function run(input = {}) {
       "Prefer buyers with repeat purchasing behavior",
       "Rank buyers by contact availability and product fit"
     ],
+
     qualificationCriteria: [
       "Company website available",
       "Business category matches product",
@@ -246,20 +184,27 @@ function run(input = {}) {
       "Import/distribution activity visible",
       "MOQ or buying requirement can be identified"
     ],
+
     outreachPriority:
       estimatedBuyerFitScore >= 80
         ? "High priority buyer discovery recommended"
         : "Moderate priority. Improve product and market details first.",
+
     estimatedBuyerFitScore,
+
     discoveredBuyers,
     buyerLeaderboard,
     crmReadyBuyers,
+
+    humanApprovalRequired: true,
+    outreachAllowed: false,
+
     recommendedNextActions: [
-      "Generate buyer lead list",
+      "Review discovered buyer candidates",
       "Verify buyer contact details",
-      "Score buyer fit",
+      "Approve buyer shortlist",
       "Prepare outreach message",
-      "Push qualified buyers into CRM"
+      "Push CRM-ready buyers into CRM after approval"
     ]
   };
 }
