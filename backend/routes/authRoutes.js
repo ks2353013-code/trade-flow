@@ -55,6 +55,10 @@ function sendAuthResponse(res, user, message = "Authentication successful") {
       email: user.email,
       companyName: user.companyName || "TradeFlow Workspace",
       role: user.role || "Founder",
+      subscriptionPlan: user.subscriptionPlan || "Starter",
+      subscriptionStatus: user.subscriptionStatus || "Active",
+      features: user.features || {},
+      limits: user.limits || {},
       permissions: buildPermissions(user.role || "Founder")
     },
     expiresIn: "15m"

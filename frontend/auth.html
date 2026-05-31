@@ -81,14 +81,20 @@ function showMessage(message,type="error"){
 function saveSession(data){
   const rawUser = data.user || data.data || data;
   const token = data.token || data.accessToken || data.jwt || "local-testing-token";
+  const subscriptionPlan =
+    rawUser.subscriptionPlan ||
+    rawUser.plan ||
+    data.subscriptionPlan ||
+    "Starter";
 
   const user = {
     ...rawUser,
     token,
     accessToken: token,
-    role: rawUser.role || "master_admin",
-    plan: rawUser.plan || "enterprise",
-    subscription: rawUser.subscription || "enterprise",
+    role: rawUser.role || "Founder",
+    plan: subscriptionPlan,
+    subscriptionPlan,
+    subscription: rawUser.subscription || subscriptionPlan,
     isLoggedIn: true
   };
 
@@ -101,7 +107,7 @@ function saveSession(data){
   localStorage.setItem("jwt", token);
   localStorage.setItem("isLoggedIn", "true");
   localStorage.setItem("tradeflowLoggedIn", "true");
-  localStorage.setItem("tradeflowSubscriptionPlan", "Enterprise");
+  localStorage.setItem("tradeflowSubscriptionPlan", subscriptionPlan);
 }
 
 async function safeJson(res) {
@@ -149,10 +155,20 @@ loginForm.addEventListener("submit", async (e) => {
     }
 
     saveSession(data);
-    showMessage("Login successful. Opening onboarding guide...","success");
+    const destination =
+      localStorage.getItem("tradeflowOnboardingDone") === "true"
+        ? "/app"
+        : "/onboarding";
+
+    showMessage(
+      destination === "/app"
+        ? "Login successful. Opening dashboard..."
+        : "Login successful. Opening onboarding guide...",
+      "success"
+    );
 
     setTimeout(() => {
-      window.location.href = "/onboarding";
+      window.location.href = destination;
     }, 800);
 
   } catch(err) {
@@ -170,7 +186,7 @@ signupForm.addEventListener("submit", async (e) => {
       credentials:"include",
       body:JSON.stringify({
         name:document.getElementById("signupName").value.trim(),
-        company:document.getElementById("signupCompany").value.trim(),
+        companyName:document.getElementById("signupCompany").value.trim(),
         email:document.getElementById("signupEmail").value.trim(),
         password:document.getElementById("signupPassword").value,
         role:"master_admin"

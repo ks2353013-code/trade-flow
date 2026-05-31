@@ -31,6 +31,55 @@ function safeBody(body = {}) {
   return safe;
 }
 
+function normalizeWorkspaceType(value) {
+  const normalized = String(value || "").trim();
+  const allowed = [
+    "Sales",
+    "Export",
+    "Import",
+    "Marketing",
+    "Operations",
+    "Finance",
+    "Management"
+  ];
+
+  if (allowed.includes(normalized)) return normalized;
+
+  const lower = normalized.toLowerCase();
+
+  if (lower.includes("export")) return "Export";
+  if (lower.includes("import")) return "Import";
+  if (lower.includes("market")) return "Marketing";
+  if (lower.includes("finance")) return "Finance";
+  if (lower.includes("operation")) return "Operations";
+  if (lower.includes("sale")) return "Sales";
+
+  return "Management";
+}
+
+function normalizeWorkspaceStatus(value) {
+  if (value === "Archived" || value === "Active") return value;
+  if (value === "Inactive") return "Archived";
+  return "Active";
+}
+
+function normalizeWorkspaceBody(body = {}) {
+  const safe = safeBody(body);
+  const workspaceName = safe.workspaceName || safe.companyName || safe.name;
+  const type = safe.type || safe.businessType;
+  const status = safe.status;
+
+  delete safe.companyName;
+  delete safe.businessType;
+  delete safe.name;
+
+  if (workspaceName) safe.workspaceName = workspaceName;
+  if (type !== undefined) safe.type = normalizeWorkspaceType(type);
+  if (status !== undefined) safe.status = normalizeWorkspaceStatus(status);
+
+  return safe;
+}
+
 async function countWorkspaces(req) {
   return await Workspace.countDocuments(tenantFilter(req));
 }
@@ -61,9 +110,20 @@ router.post(
   async (req, res) => {
     try {
       const ownerEmail = getOwnerEmail(req);
+      const body = normalizeWorkspaceBody(req.body);
+
+      if (!body.workspaceName) {
+        return res.status(400).json({
+          success: false,
+          message: "Workspace name is required"
+        });
+      }
+
+      body.type = body.type || "Management";
+      body.status = body.status || "Active";
 
       const workspace = await Workspace.create({
-        ...safeBody(req.body),
+        ...body,
         ownerEmail,
         companyId: req.tenant?.companyId || null
       });
@@ -96,12 +156,14 @@ router.post(
 
 router.put("/:id", requireAdminAccess, async (req, res) => {
   try {
+    const body = normalizeWorkspaceBody(req.body);
+
     const workspace = await Workspace.findOneAndUpdate(
       {
         _id: req.params.id,
         ...tenantFilter(req)
       },
-      safeBody(req.body),
+      body,
       { new: true }
     );
 

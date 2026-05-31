@@ -36,13 +36,36 @@
     return getJson("tradeflowUser", {});
   }
 
+  function isMongoObjectId(value) {
+    return /^[a-f\d]{24}$/i.test(String(value || "").trim());
+  }
+
+  function getValidStoredId(keys) {
+    for (const key of keys) {
+      const value = localStorage.getItem(key);
+      if (isMongoObjectId(value)) return value;
+    }
+
+    return "";
+  }
+
   function getHeaders() {
     const user = getUser();
-    return {
+    const headers = {
       "Content-Type": "application/json",
       Authorization: user?.token ? `Bearer ${user.token}` : "",
       "x-user-email": user?.email || "unknown@tradeflow.local"
     };
+
+    const workspaceId = getValidStoredId([
+      "tradeflowActiveWorkspace",
+      "tradeflowActiveWorkspaceId",
+      "tradeflowActiveWorkspaceV1"
+    ]);
+
+    if (workspaceId) headers["x-workspace-id"] = workspaceId;
+
+    return headers;
   }
 
   function toast(message) {
@@ -58,9 +81,10 @@
       const res = await fetch(`${getBackendUrl()}/api/employees`, { headers: getHeaders() });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to fetch employees");
-      setJson(EMPLOYEE_CACHE, Array.isArray(data) ? data : []);
+      const employees = Array.isArray(data) ? data : data.employees || [];
+      setJson(EMPLOYEE_CACHE, employees);
       renderEmployees();
-      return data;
+      return employees;
     } catch (error) {
       console.error("Employee engine fetch error:", error.message);
       renderEmployees();
@@ -97,8 +121,12 @@
       return;
     }
 
-    const activeCompany = localStorage.getItem("tradeflowActiveCompany") || "";
-    const activeWorkspace = localStorage.getItem("tradeflowActiveWorkspace") || "";
+    const activeCompany = getValidStoredId(["tradeflowActiveCompany"]);
+    const activeWorkspace = getValidStoredId([
+      "tradeflowActiveWorkspace",
+      "tradeflowActiveWorkspaceId",
+      "tradeflowActiveWorkspaceV1"
+    ]);
     const user = getUser();
 
     try {
@@ -119,7 +147,7 @@
 
       const data = await res.json();
 
-      if (!res.ok) {
+      if (!res.ok || data.success === false) {
         alert(data.message || "Failed to create employee");
         return;
       }
@@ -134,7 +162,7 @@
       toast(`✅ Employee added: <b>${name}</b>`);
     } catch (error) {
       console.error("Create employee error:", error.message);
-      alert("Employee creation failed.");
+      alert(error.message || "Employee creation failed.");
     }
   }
 

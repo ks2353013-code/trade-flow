@@ -100,9 +100,13 @@
     });
   }
 
-  function saveUsage(usage) {
+  let isRendering = false;
+
+  function saveUsage(usage, options = {}) {
     setJson(USAGE_KEY, usage);
-    renderSubscriptionPanels();
+    if (options.render) {
+      renderSubscriptionPanels();
+    }
   }
 
   function readNumber(id) {
@@ -119,13 +123,14 @@
     usage.workspacesUsed = readNumber("dashboardWorkspaceCount") || usage.workspacesUsed || 0;
     usage.employeesUsed = readNumber("employeeCount") || usage.employeesUsed || 0;
 
-    saveUsage(usage);
+    setJson(USAGE_KEY, usage);
+    return usage;
   }
 
   function incrementAIUsage() {
     const usage = getUsage();
     usage.aiUsed = Number(usage.aiUsed || 0) + 1;
-    saveUsage(usage);
+    saveUsage(usage, { render: true });
   }
 
   function percent(used, limit) {
@@ -362,41 +367,48 @@
   }
 
   function renderSubscriptionPanels() {
-    syncUsageFromDashboard();
+    if (isRendering) return;
+    isRendering = true;
 
-    const plan = getPlan();
-    const usage = getUsage();
+    try {
+      syncUsageFromDashboard();
 
-    const summary = `
-      <div class="subscription-grid">
-        <div class="plan-card active">
-          <h2 style="color:white;margin:0;">Current Plan: ${plan.label}</h2>
-          <div class="plan-price">${plan.price}</div>
-          <p class="muted">Upgrade controls are ready for payment integration.</p>
+      const plan = getPlan();
+      const usage = getUsage();
+
+      const summary = `
+        <div class="subscription-grid">
+          <div class="plan-card active">
+            <h2 style="color:white;margin:0;">Current Plan: ${plan.label}</h2>
+            <div class="plan-price">${plan.price}</div>
+            <p class="muted">Upgrade controls are ready for payment integration.</p>
+          </div>
+
+          <div>
+            ${usageRow("AI Usage", usage.aiUsed, plan.aiLimit, "aiUsageBar")}
+            ${usageRow("Suppliers", usage.suppliersUsed, plan.supplierLimit, "supplierUsageBar")}
+          </div>
+
+          <div>
+            ${usageRow("CRM Deals", usage.dealsUsed, plan.dealLimit, "dealUsageBar")}
+            ${usageRow("Workspaces", usage.workspacesUsed, plan.workspaceLimit, "workspaceUsageBar")}
+          </div>
         </div>
+      `;
 
-        <div>
-          ${usageRow("AI Usage", usage.aiUsed, plan.aiLimit, "aiUsageBar")}
-          ${usageRow("Suppliers", usage.suppliersUsed, plan.supplierLimit, "supplierUsageBar")}
-        </div>
+      const dash = $("subscriptionUsageSummary");
+      if (dash) dash.innerHTML = summary;
 
-        <div>
-          ${usageRow("CRM Deals", usage.dealsUsed, plan.dealLimit, "dealUsageBar")}
-          ${usageRow("Workspaces", usage.workspacesUsed, plan.workspaceLimit, "workspaceUsageBar")}
-        </div>
-      </div>
-    `;
+      const admin = $("adminSubscriptionSummary");
+      if (admin) admin.innerHTML = summary;
 
-    const dash = $("subscriptionUsageSummary");
-    if (dash) dash.innerHTML = summary;
+      const selector = $("subscriptionPlanSelector");
+      if (selector) selector.value = getPlanName();
 
-    const admin = $("adminSubscriptionSummary");
-    if (admin) admin.innerHTML = summary;
-
-    const selector = $("subscriptionPlanSelector");
-    if (selector) selector.value = getPlanName();
-
-    renderPlanCards();
+      renderPlanCards();
+    } finally {
+      isRendering = false;
+    }
   }
 
   function openUpgrade() {

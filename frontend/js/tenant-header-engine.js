@@ -23,24 +23,41 @@
     return getJson("tradeflowUser", {});
   }
 
+  function isMongoObjectId(value) {
+    return /^[a-f\d]{24}$/i.test(String(value || "").trim());
+  }
+
+  function getValidStoredId(keys) {
+    for (const key of keys) {
+      const value = localStorage.getItem(key);
+      if (isMongoObjectId(value)) return value;
+    }
+
+    return "";
+  }
+
   function getTenantHeaders() {
     const user = getUser();
-
-    return {
+    const headers = {
       "x-user-email":
         user?.email ||
-        "unknown@tradeflow.local",
-
-      "x-company-id":
-        localStorage.getItem(
-          "tradeflowActiveCompany"
-        ) || "",
-
-      "x-workspace-id":
-        localStorage.getItem(
-          "tradeflowActiveWorkspace"
-        ) || ""
+        "unknown@tradeflow.local"
     };
+
+    const companyId = getValidStoredId([
+      "tradeflowActiveCompany"
+    ]);
+
+    const workspaceId = getValidStoredId([
+      "tradeflowActiveWorkspace",
+      "tradeflowActiveWorkspaceId",
+      "tradeflowActiveWorkspaceV1"
+    ]);
+
+    if (companyId) headers["x-company-id"] = companyId;
+    if (workspaceId) headers["x-workspace-id"] = workspaceId;
+
+    return headers;
   }
 
   function patchFetch() {
@@ -57,8 +74,8 @@
     ) {
 
       options.headers = {
-        ...(options.headers || {}),
-        ...getTenantHeaders()
+        ...getTenantHeaders(),
+        ...(options.headers || {})
       };
 
       return originalFetch(url, options);

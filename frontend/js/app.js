@@ -33,6 +33,57 @@ function getUser() {
     return null;
   }
 }
+
+function isMongoObjectId(value) {
+  return /^[a-f\d]{24}$/i.test(String(value || "").trim());
+}
+
+function getStoredActiveWorkspaceId() {
+  const candidates = [
+    localStorage.getItem("tradeflowActiveWorkspaceId"),
+    localStorage.getItem("tradeflowActiveWorkspace"),
+    localStorage.getItem("tradeflowActiveWorkspaceV1")
+  ];
+
+  return candidates.find(isMongoObjectId) || "";
+}
+
+function rememberActiveWorkspace(id, name) {
+  const safeName = name || "None";
+
+  localStorage.setItem("tradeflowActiveWorkspaceId", id || "");
+  localStorage.setItem("tradeflowActiveWorkspaceName", safeName);
+  localStorage.setItem("tradeflowActiveWorkspace", isMongoObjectId(id) ? id : "");
+
+  if (id) {
+    localStorage.setItem("tradeflowActiveWorkspaceV1", id);
+  }
+}
+
+function workspaceDisplayName(workspace = {}) {
+  return (
+    workspace.companyName ||
+    workspace.workspaceName ||
+    workspace.name ||
+    "Workspace"
+  );
+}
+
+function normalizeApiList(data, key) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.[key])) return data[key];
+  return [];
+}
+
+function sanitizeWorkspaceHeaderState() {
+  const activeWorkspace = localStorage.getItem("tradeflowActiveWorkspace");
+
+  if (activeWorkspace && !isMongoObjectId(activeWorkspace)) {
+    localStorage.removeItem("tradeflowActiveWorkspace");
+  }
+}
+
+sanitizeWorkspaceHeaderState();
 function protectDashboard() {
   const user = getUser();
 
@@ -73,10 +124,17 @@ function getAuthHeaders() {
     throw new Error("Token missing");
   }
 
-  return {
+  const headers = {
     "Content-Type": "application/json",
     "Authorization": `Bearer ${user.token}`
   };
+
+  const workspaceId = getStoredActiveWorkspaceId();
+  if (workspaceId) {
+    headers["x-workspace-id"] = workspaceId;
+  }
+
+  return headers;
 }
 function logoutUser() {
   localStorage.removeItem("tradeflowUser");
@@ -116,6 +174,20 @@ function showPage(page) {
   }
 
   targetPage.classList.remove("hidden");
+
+  document.querySelectorAll(".nav-btn").forEach((btn) => {
+    btn.classList.remove("active-nav");
+    const onclick = (btn.getAttribute("onclick") || "").toLowerCase();
+    if (onclick.includes(`showpage('${page}')`) || onclick.includes(`showpage("${page}")`)) {
+      btn.classList.add("active-nav");
+    }
+  });
+
+  document.dispatchEvent(
+    new CustomEvent("tradeflow:page-change", {
+      detail: { page }
+    })
+  );
 
   // Fast dashboard: only lightweight summary calls.
   if (page === "dashboard") {
@@ -240,7 +312,8 @@ async function fetchEmployees() {
       return;
     }
 
-    const employees = await res.json();
+    const data = await res.json();
+    const employees = normalizeApiList(data, "employees");
 
     renderEmployees(employees);
   } catch (error) {
@@ -340,8 +413,9 @@ async function addEmployee() {
     return;
   }
 
-  if (!res.ok) {
-    const data = await res.json();
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok || data.success === false) {
     alert(data.message || "Failed to save employee.");
     return;
   }
@@ -377,7 +451,7 @@ async function deleteEmployee(id) {
 
 
 function getActiveWorkspaceId() {
-  return localStorage.getItem("tradeflowActiveWorkspaceId") || "";
+  return getStoredActiveWorkspaceId() || localStorage.getItem("tradeflowActiveWorkspaceId") || "";
 }
 
 function getActiveWorkspaceName() {
@@ -386,13 +460,15 @@ function getActiveWorkspaceName() {
 
 function setActiveWorkspace() {
   const select = document.getElementById("activeWorkspaceSelect");
-  const selectedOption = select.options[select.selectedIndex];
+  if (!select) return;
 
-  localStorage.setItem("tradeflowActiveWorkspaceId", select.value);
-  localStorage.setItem("tradeflowActiveWorkspaceName", selectedOption.text || "None");
+  const selectedOption = select.options[select.selectedIndex];
+  const selectedName = selectedOption?.text || "None";
+
+  rememberActiveWorkspace(select.value, selectedName);
 
   const currentWorkspaceName = document.getElementById("currentWorkspaceName");
-  if (currentWorkspaceName) currentWorkspaceName.innerText = selectedOption.text || "None";
+  if (currentWorkspaceName) currentWorkspaceName.innerText = selectedName;
 
   document.getElementById("workspaceName").innerText =
     `${selectedOption.text || "TradeFlow Company"} • Active Workspace`;
@@ -403,6 +479,10 @@ function setActiveWorkspace() {
     "System",
     "Low"
   );
+
+  fetchSuppliers();
+  fetchDeals();
+  fetchEmployees();
 }
 
 async function fetchWorkspaces() {
@@ -416,7 +496,8 @@ async function fetchWorkspaces() {
       return;
     }
 
-    const workspaces = await res.json();
+    const data = await res.json();
+    const workspaces = normalizeApiList(data, "workspaces");
 
     renderWorkspaces(workspaces);
   } catch (error) {
@@ -424,7 +505,35 @@ async function fetchWorkspaces() {
   }
 }
 
+function syncWorkspaceState(workspaces) {
+  const mapped = (Array.isArray(workspaces) ? workspaces : [])
+    .filter((workspace) => (workspace.status || "Active") === "Active")
+    .map((workspace) => ({
+      id: String(workspace._id || workspace.id || ""),
+      name: workspaceDisplayName(workspace),
+      product: workspace.industry || workspace.product || "",
+      targetMarket: workspace.country || workspace.targetMarket || "",
+      businessType: workspace.businessType || workspace.type || "Trading Company",
+      status: workspace.status || "Active",
+      backend: true,
+      createdAt: workspace.createdAt || new Date().toISOString()
+    }))
+    .filter((workspace) => workspace.id);
+
+  if (!mapped.length) return;
+
+  localStorage.setItem("tradeflowWorkspacesV1", JSON.stringify(mapped));
+
+  const currentId = getStoredActiveWorkspaceId();
+  const activeWorkspace = mapped.find((workspace) => workspace.id === currentId) || mapped[0];
+
+  rememberActiveWorkspace(activeWorkspace.id, activeWorkspace.name);
+}
+
 function renderWorkspaces(workspaces) {
+  workspaces = Array.isArray(workspaces) ? workspaces : normalizeApiList(workspaces, "workspaces");
+  syncWorkspaceState(workspaces);
+
   const list = document.getElementById("workspaceList");
   const select = document.getElementById("activeWorkspaceSelect");
   const approvalList = document.getElementById("masterCompanyApprovalList");
@@ -437,7 +546,9 @@ function renderWorkspaces(workspaces) {
   if (select) select.innerHTML = `<option value="">Select Workspace</option>`;
 
   workspaces.forEach((workspace) => {
-    const isApproved = workspace.status === "Active";
+    const workspaceId = String(workspace._id || workspace.id || "");
+    const workspaceName = workspaceDisplayName(workspace);
+    const isApproved = (workspace.status || "Active") === "Active";
     const statusLabel = isApproved ? "Approved" : "Rejected";
     const statusClass = isApproved ? "status-approved" : "status-rejected";
 
@@ -445,23 +556,23 @@ function renderWorkspaces(workspaces) {
     if (!isApproved) rejectedCount++;
 
     if (select && isApproved) {
-      const selected = getActiveWorkspaceId() === workspace._id ? "selected" : "";
+      const selected = getActiveWorkspaceId() === workspaceId ? "selected" : "";
       select.innerHTML += `
-        <option value="${workspace._id}" ${selected}>
-          ${workspace.companyName}
+        <option value="${workspaceId}" ${selected}>
+          ${workspaceName}
         </option>
       `;
     }
 
-    const companyNameSafe = (workspace.companyName || "Company").replace(/'/g, "\\'");
+    const companyNameSafe = workspaceName.replace(/'/g, "\\'");
 
     const companyCard = `
       <div class="supplier-card">
         <h2 style="font-size:20px;font-weight:900;color:white;">
-          ${workspace.companyName}
+          ${workspaceName}
         </h2>
 
-        <p class="muted">Business Type: ${workspace.businessType}</p>
+        <p class="muted">Business Type: ${workspace.businessType || workspace.type || "N/A"}</p>
         <p class="muted">Country: ${workspace.country || "N/A"}</p>
         <p class="muted">GST: ${workspace.gstNumber || "N/A"}</p>
         <p class="muted">IEC: ${workspace.iecCode || "N/A"}</p>
@@ -473,20 +584,20 @@ function renderWorkspaces(workspaces) {
         </span>
 
         <div class="approval-actions">
-          <button class="approve-btn" onclick="approveWorkspace('${workspace._id}')">
+          <button class="approve-btn" onclick="approveWorkspace('${workspaceId}')">
             Approve
           </button>
 
-          <button class="reject-btn" onclick="rejectWorkspace('${workspace._id}')">
+          <button class="reject-btn" onclick="rejectWorkspace('${workspaceId}')">
             Reject
           </button>
         </div>
 
-        <button class="mini-btn" onclick="activateWorkspace('${workspace._id}', '${companyNameSafe}')">
+        <button class="mini-btn" onclick="activateWorkspace('${workspaceId}', '${companyNameSafe}')">
           Set Active Workspace
         </button>
 
-        <button class="danger-btn" onclick="deleteWorkspace('${workspace._id}')">
+        <button class="danger-btn" onclick="deleteWorkspace('${workspaceId}')">
           Delete Workspace
         </button>
       </div>
@@ -510,6 +621,10 @@ function renderWorkspaces(workspaces) {
   setText("masterApprovedCompanies", activeCount);
   setText("masterRejectedCompanies", rejectedCount);
 
+  if (select && getActiveWorkspaceId()) {
+    select.value = getActiveWorkspaceId();
+  }
+
   if (getActiveWorkspaceName() !== "None") {
     const user = getUser();
     document.getElementById("workspaceName").innerText =
@@ -517,6 +632,14 @@ function renderWorkspaces(workspaces) {
 
     const adminActiveCompany = document.getElementById("adminActiveCompany");
     if (adminActiveCompany) adminActiveCompany.innerText = getActiveWorkspaceName();
+  }
+
+  if (window.TradeFlowWorkspaceEngineV1?.render) {
+    setTimeout(() => window.TradeFlowWorkspaceEngineV1.render(), 0);
+  }
+
+  if (window.TradeFlowWorkspaceDataIsolationV2?.updateIsolationStatus) {
+    window.TradeFlowWorkspaceDataIsolationV2.updateIsolationStatus();
   }
 }
 
@@ -589,8 +712,7 @@ function saveSubscriptionSettings() {
 }
 
 function activateWorkspace(id, name) {
-  localStorage.setItem("tradeflowActiveWorkspaceId", id);
-  localStorage.setItem("tradeflowActiveWorkspaceName", name);
+  rememberActiveWorkspace(id, name);
 
   const select = document.getElementById("activeWorkspaceSelect");
   if (select) select.value = id;
@@ -608,6 +730,14 @@ function activateWorkspace(id, name) {
     "System",
     "Low"
   );
+
+  fetchSuppliers();
+  fetchDeals();
+  fetchEmployees();
+
+  if (window.TradeFlowWorkspaceEngineV1?.render) {
+    window.TradeFlowWorkspaceEngineV1.render();
+  }
 }
 
 async function addWorkspace() {
@@ -629,14 +759,14 @@ async function addWorkspace() {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify({
-      companyName,
-      businessType,
+      workspaceName: companyName,
+      type: businessType || "Management",
       country,
       gstNumber,
       iecCode,
       industry,
       defaultCurrency,
-      status
+      status: status === "Inactive" ? "Archived" : status
     })
   });
 
@@ -645,7 +775,16 @@ async function addWorkspace() {
     return;
   }
 
-  const workspace = await res.json();
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok || data.success === false) {
+    alert(data.message || "Failed to create workspace.");
+    return;
+  }
+
+  const workspace = data.workspace || data;
+  const workspaceId = String(workspace._id || workspace.id || "");
+  const workspaceName = workspaceDisplayName(workspace);
 
   document.getElementById("workspaceCompanyName").value = "";
   document.getElementById("workspaceCountry").value = "";
@@ -653,7 +792,9 @@ async function addWorkspace() {
   document.getElementById("workspaceIecCode").value = "";
   document.getElementById("workspaceIndustry").value = "";
 
-  activateWorkspace(workspace._id, workspace.companyName);
+  if (workspaceId) {
+    activateWorkspace(workspaceId, workspaceName);
+  }
 
   fetchWorkspaces();
 }
@@ -667,8 +808,7 @@ async function deleteWorkspace(id) {
   });
 
   if (activeId === id) {
-    localStorage.removeItem("tradeflowActiveWorkspaceId");
-    localStorage.removeItem("tradeflowActiveWorkspaceName");
+    rememberActiveWorkspace("", "None");
   }
 
   fetchWorkspaces();
@@ -835,7 +975,13 @@ async function fetchSuppliers() {
       return;
     }
 
-    const suppliers = await res.json();
+    const data = await res.json().catch(() => ([]));
+
+    if (!res.ok || data.success === false) {
+      throw new Error(data.message || "Supplier request failed.");
+    }
+
+    const suppliers = normalizeApiList(data, "suppliers");
 
     document.getElementById("supplierCount").innerText = suppliers.length;
 
@@ -879,7 +1025,7 @@ async function fetchSuppliers() {
     });
 
   } catch (error) {
-    console.warn("API request failed but session preserved.");
+    console.warn("API request failed but session preserved:", error.message);
   }
 }
 
@@ -896,7 +1042,7 @@ async function addSupplier() {
     return;
   }
 
-  await fetch(API_URL, {
+  const res = await fetch(API_URL, {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify({
@@ -911,6 +1057,18 @@ async function addSupplier() {
       status: "Verified Lead"
     })
   });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (res.status === 401) {
+    logoutUser();
+    return;
+  }
+
+  if (!res.ok || data.success === false) {
+    alert(data.message || "Failed to save supplier.");
+    return;
+  }
 
   document.getElementById("supplierName").value = "";
   document.getElementById("product").value = "";
@@ -942,7 +1100,13 @@ async function fetchDeals() {
       return;
     }
 
-    const deals = await res.json();
+    const data = await res.json().catch(() => ([]));
+
+    if (!res.ok || data.success === false) {
+      throw new Error(data.message || "CRM request failed.");
+    }
+
+    const deals = normalizeApiList(data, "deals");
 
     renderDeals(deals);
   } catch (error) {
@@ -1068,7 +1232,7 @@ async function addDeal() {
     return;
   }
 
-  await fetch(DEAL_URL, {
+  const res = await fetch(DEAL_URL, {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify({
@@ -1084,6 +1248,18 @@ async function addDeal() {
       notes
     })
   });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (res.status === 401) {
+    logoutUser();
+    return;
+  }
+
+  if (!res.ok || data.success === false) {
+    alert(data.message || "Failed to save CRM deal.");
+    return;
+  }
 
   document.getElementById("dealCompanyName").value = "";
   document.getElementById("dealContactPerson").value = "";

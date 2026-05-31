@@ -14,12 +14,12 @@
     "ai",
     "suppliers",
     "crm",
-    "notifications"
+    "notifications",
+    "workspaces",
+    "employees"
   ];
 
   const PRO_PAGES = [
-    "workspaces",
-    "employees",
     "negotiation",
     "tasks",
     "marketing",
@@ -70,15 +70,31 @@
     return OWNER_EMAILS.includes(email);
   }
 
+  function normalizePlan(plan) {
+    const value = String(plan || "")
+      .trim()
+      .toLowerCase();
+
+    if (value.includes("enterprise")) return "Enterprise";
+    if (value.includes("growth")) return "Growth";
+    if (value.includes("pro") || value.includes("professional")) return "Pro";
+
+    return "Starter";
+  }
+
   function getPlan() {
 
     if (isMasterAdmin()) {
       return "Enterprise";
     }
 
-    return (
-      localStorage.getItem(PLAN_KEY)
-      || "Pro"
+    const user = getUser() || {};
+
+    return normalizePlan(
+      user.subscriptionPlan ||
+      user.plan ||
+      localStorage.getItem(PLAN_KEY) ||
+      "Starter"
     );
   }
 
@@ -88,6 +104,7 @@
 
     return (
       plan === "Pro" ||
+      plan === "Growth" ||
       plan === "Enterprise"
     );
   }
@@ -102,7 +119,7 @@
 
       localStorage.setItem(
         PLAN_KEY,
-        "Enterprise"
+        "Enterprise AI OS"
       );
 
       return;
@@ -117,7 +134,7 @@
 
       localStorage.setItem(
         PLAN_KEY,
-        "Pro"
+        "Starter"
       );
 
     }

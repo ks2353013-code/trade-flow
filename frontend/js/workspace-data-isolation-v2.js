@@ -45,8 +45,22 @@
     }
   }
 
+  function isMongoObjectId(value) {
+    return /^[a-f\d]{24}$/i.test(String(value || "").trim());
+  }
+
+  function getBackendWorkspaceId() {
+    const candidates = [
+      localStorage.getItem("tradeflowActiveWorkspace"),
+      localStorage.getItem("tradeflowActiveWorkspaceId"),
+      localStorage.getItem(ACTIVE_KEY)
+    ];
+
+    return candidates.find(isMongoObjectId) || "";
+  }
+
   function getActiveWorkspaceId() {
-    return localStorage.getItem(ACTIVE_KEY) || "";
+    return localStorage.getItem(ACTIVE_KEY) || localStorage.getItem("tradeflowActiveWorkspaceId") || "";
   }
 
   function getActiveWorkspace() {
@@ -62,7 +76,7 @@
     const active = getActiveWorkspace();
 
     return {
-      workspaceId: active?.id || "",
+      workspaceId: getBackendWorkspaceId(),
       workspaceName: active?.name || "",
       workspaceBusinessType: active?.businessType || "",
       workspaceProduct: active?.product || "",
@@ -105,7 +119,12 @@
       const context = getWorkspaceContext();
 
       if (shouldAttachWorkspace(url)) {
-        options.headers["x-workspace-id"] = context.workspaceId;
+        if (context.workspaceId) {
+          options.headers["x-workspace-id"] = context.workspaceId;
+        } else {
+          delete options.headers["x-workspace-id"];
+        }
+
         options.headers["x-workspace-name"] = context.workspaceName;
         options.headers["x-workspace-business-type"] = context.workspaceBusinessType;
 
@@ -123,7 +142,6 @@
 
             const enrichedBody = {
               ...body,
-              workspaceId: body.workspaceId || context.workspaceId,
               workspaceName: body.workspaceName || context.workspaceName,
               workspaceBusinessType:
                 body.workspaceBusinessType || context.workspaceBusinessType,
@@ -132,6 +150,10 @@
               workspaceTargetMarket:
                 body.workspaceTargetMarket || context.workspaceTargetMarket
             };
+
+            if (context.workspaceId) {
+              enrichedBody.workspaceId = body.workspaceId || context.workspaceId;
+            }
 
             options.body = JSON.stringify(enrichedBody);
             options.headers["Content-Type"] =
@@ -151,12 +173,14 @@
   function filterByWorkspace(items) {
     if (!Array.isArray(items)) return items;
 
-    const activeId = getActiveWorkspaceId();
+    const backendId = getBackendWorkspaceId();
+    const activeId = backendId || getActiveWorkspaceId();
 
     if (!activeId) return items;
 
     return items.filter(item => {
       if (!item.workspaceId) return true;
+      if (!backendId && isMongoObjectId(item.workspaceId)) return true;
       return item.workspaceId === activeId;
     });
   }
