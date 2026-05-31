@@ -49,14 +49,37 @@
     return /^[a-f\d]{24}$/i.test(String(value || "").trim());
   }
 
+  function getSelectWorkspaceId(id) {
+    const select = document.getElementById(id);
+    return select?.value || "";
+  }
+
   function getBackendWorkspaceId() {
     const candidates = [
+      getSelectWorkspaceId("activeWorkspaceSelect"),
+      getSelectWorkspaceId("workspaceAccessSelect"),
       localStorage.getItem("tradeflowActiveWorkspace"),
       localStorage.getItem("tradeflowActiveWorkspaceId"),
       localStorage.getItem(ACTIVE_KEY)
     ];
 
     return candidates.find(isMongoObjectId) || "";
+  }
+
+  function clearWorkspaceHeaders(headers) {
+    Object.keys(headers).forEach((key) => {
+      if (key.toLowerCase() === "x-workspace-id") {
+        delete headers[key];
+      }
+    });
+  }
+
+  function getWorkspaceHeader(headers) {
+    const key = Object.keys(headers).find(
+      (header) => header.toLowerCase() === "x-workspace-id"
+    );
+
+    return key ? { key, value: headers[key] } : null;
   }
 
   function getActiveWorkspaceId() {
@@ -120,9 +143,16 @@
 
       if (shouldAttachWorkspace(url)) {
         if (context.workspaceId) {
+          clearWorkspaceHeaders(options.headers);
           options.headers["x-workspace-id"] = context.workspaceId;
         } else {
-          delete options.headers["x-workspace-id"];
+          const existingWorkspaceHeader = getWorkspaceHeader(options.headers);
+          if (
+            existingWorkspaceHeader &&
+            !isMongoObjectId(existingWorkspaceHeader.value)
+          ) {
+            delete options.headers[existingWorkspaceHeader.key];
+          }
         }
 
         options.headers["x-workspace-name"] = context.workspaceName;

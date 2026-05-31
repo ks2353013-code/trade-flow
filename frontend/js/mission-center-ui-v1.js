@@ -15,6 +15,8 @@
   const outreachDraftCache = new Map();
   let leadPushCounter = 0;
   let outreachDraftCounter = 0;
+  const WORKSPACE_REQUIRED_MESSAGE =
+    "Select or create a workspace before using Outreach Approval Queue";
 
   function getToken() {
     try {
@@ -36,20 +38,92 @@
     );
   }
 
-  function authHeaders() {
+  function isMongoObjectId(value) {
+    return /^[a-f\d]{24}$/i.test(String(value || "").trim());
+  }
+
+  function normalizeHeaderObject(input) {
+    const headers = {};
+
+    if (typeof Headers !== "undefined" && input instanceof Headers) {
+      input.forEach((value, key) => {
+        headers[key] = value;
+      });
+
+      return headers;
+    }
+
+    return {
+      ...headers,
+      ...(input || {})
+    };
+  }
+
+  function getSelectWorkspaceId(id) {
+    const select = document.getElementById(id);
+    return select?.value || "";
+  }
+
+  function getActiveWorkspaceId() {
+    const candidates = [
+      getSelectWorkspaceId("activeWorkspaceSelect"),
+      getSelectWorkspaceId("workspaceAccessSelect"),
+      localStorage.getItem("tradeflowActiveWorkspaceId"),
+      localStorage.getItem("tradeflowActiveWorkspace"),
+      localStorage.getItem("tradeflowActiveWorkspaceV1")
+    ];
+
+    return candidates.find(isMongoObjectId) || "";
+  }
+
+  function clearWorkspaceHeader(headers) {
+    Object.keys(headers).forEach((key) => {
+      if (key.toLowerCase() === "x-workspace-id") {
+        delete headers[key];
+      }
+    });
+  }
+
+  function missionHeaders() {
     const token = getToken();
-    const headers = window.getAuthHeaders
-      ? window.getAuthHeaders()
-      : {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : ""
-        };
+    const headers = normalizeHeaderObject(
+      window.getAuthHeaders
+        ? window.getAuthHeaders()
+        : {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : ""
+          }
+    );
 
     if (!headers.Authorization && token) {
       headers.Authorization = `Bearer ${token}`;
     }
 
+    headers["Content-Type"] = headers["Content-Type"] || "application/json";
+
+    clearWorkspaceHeader(headers);
+
+    const workspaceId = getActiveWorkspaceId();
+    if (workspaceId) {
+      headers["x-workspace-id"] = workspaceId;
+    }
+
     return headers;
+  }
+
+  function authHeaders() {
+    return missionHeaders();
+  }
+
+  function hasActiveWorkspace() {
+    return Boolean(getActiveWorkspaceId());
+  }
+
+  function requireActiveWorkspace() {
+    if (hasActiveWorkspace()) return true;
+
+    alert(WORKSPACE_REQUIRED_MESSAGE);
+    return false;
   }
 
   function formatCurrency(value) {
@@ -252,6 +326,8 @@
       return;
     }
 
+    if (!requireActiveWorkspace()) return;
+
     const res = await fetch(`${API_BASE}/api/crm/push`, {
       method: "POST",
       headers: authHeaders(),
@@ -277,6 +353,8 @@
       return;
     }
 
+    if (!requireActiveWorkspace()) return;
+
     const res = await fetch(`${API_BASE}/api/outreach-approvals/create`, {
       method: "POST",
       headers: authHeaders(),
@@ -296,6 +374,8 @@
   }
 
   async function approveOutreachDraft(id) {
+    if (!requireActiveWorkspace()) return;
+
     const ok = confirm("Approve this stored draft? No message will be sent.");
     if (!ok) return;
 
@@ -317,6 +397,8 @@
   }
 
   async function rejectOutreachDraft(id) {
+    if (!requireActiveWorkspace()) return;
+
     const ok = confirm("Reject this stored draft? No message will be sent.");
     if (!ok) return;
 
@@ -338,6 +420,8 @@
   }
 
   async function viewOutreachAudit(id) {
+    if (!requireActiveWorkspace()) return;
+
     const res = await fetch(`${API_BASE}/api/outreach-approvals/${id}/audit`, {
       headers: authHeaders(),
       credentials: "include"
@@ -372,6 +456,8 @@
   }
 
   async function sendApprovedEmail(id) {
+    if (!requireActiveWorkspace()) return;
+
     const ok = confirm("Send this approved email draft now?");
     if (!ok) return;
 
@@ -559,6 +645,15 @@
           ${renderApprovalDraftGroup("Approved Drafts", approved, false)}
           ${renderApprovalDraftGroup("Rejected Drafts", rejected, false)}
         </div>
+      </div>
+    `;
+  }
+
+  function renderWorkspaceRequiredSection(title) {
+    return `
+      <div style="margin-top:18px;">
+        <h4 style="color:white;font-weight:900;margin-bottom:10px;">${safeText(title)}</h4>
+        <div class="deal">${safeText(WORKSPACE_REQUIRED_MESSAGE)}</div>
       </div>
     `;
   }
@@ -861,6 +956,12 @@
         : `<div class="deal">No missions yet. Launch your first trade mission.</div>`;
     } catch (error) {
       list.innerHTML = `<div class="deal">Mission Center error: ${safeText(error.message)}</div>`;
+    }
+
+    if (!hasActiveWorkspace()) {
+      queue.innerHTML = renderWorkspaceRequiredSection("Outreach Approval Queue");
+      deliveryCenter.innerHTML = renderWorkspaceRequiredSection("Email Delivery Center");
+      return;
     }
 
     try {
