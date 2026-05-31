@@ -43,7 +43,7 @@ function buildTimeline() {
   ];
 }
 
-function runTradeMission(missionText = "", context = {}) {
+async function runTradeMission(missionText = "", context = {}) {
   const detected = detectMission(missionText);
 
   const input = {
@@ -54,8 +54,8 @@ function runTradeMission(missionText = "", context = {}) {
   };
 
   const research = researchAgent.run(input);
-  const buyerDiscovery = buyerDiscoveryAgent.run(input);
-  const supplierDiscovery = supplierDiscoveryAgent.run(input);
+  const buyerDiscovery = await buyerDiscoveryAgent.run(input);
+  const supplierDiscovery = await supplierDiscoveryAgent.run(input);
   const crm = crmAgent.run(input);
   const compliance = complianceAgent.run(input);
   const revenue = revenueAgent.run(input);

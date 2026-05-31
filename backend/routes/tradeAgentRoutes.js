@@ -47,14 +47,14 @@ function missingAgentReportKeys(mission) {
   );
 }
 
-function buildAgentReportPatch(mission) {
+async function buildAgentReportPatch(mission) {
   const missingKeys = missingAgentReportKeys(mission);
 
   if (!missingKeys.length || !mission.missionText) {
     return null;
   }
 
-  const result = runTradeMission(mission.missionText, {
+  const result = await runTradeMission(mission.missionText, {
     ownerEmail: mission.ownerEmail,
     companyId: mission.companyId || null,
     workspaceId: mission.workspaceId || null
@@ -81,7 +81,7 @@ function buildAgentReportPatch(mission) {
 }
 
 async function backfillMissionAgentReports(mission, filter) {
-  const patch = buildAgentReportPatch(mission);
+  const patch = await buildAgentReportPatch(mission);
 
   if (!patch) {
     return {
@@ -161,7 +161,7 @@ router.post("/run", async (req, res) => {
       });
     }
 
-    const result = runTradeMission(missionText);
+    const result = await runTradeMission(missionText);
 
     const mission = await TradeMission.create({
       ownerEmail,

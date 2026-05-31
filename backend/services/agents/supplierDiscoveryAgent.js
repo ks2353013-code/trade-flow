@@ -2,6 +2,16 @@
    Supplier strategy and verification only. No external outreach.
 */
 
+const { discoverSuppliers } = require("../connectors/supplierSourceConnector");
+
+const SUPPLIER_TYPES = [
+  "Manufacturers",
+  "Exporters",
+  "Wholesale suppliers",
+  "Trading companies",
+  "Authorized distributors"
+];
+
 function normalizeInput(input = {}) {
   return {
     direction: input.direction || "Export",
@@ -55,6 +65,18 @@ function scoreSupplierConfidence(supplier) {
   return Math.min(score, 100);
 }
 
+function isProductMatch(supplier = {}, ctx = {}) {
+  if (typeof supplier.productMatch === "boolean") {
+    return supplier.productMatch;
+  }
+
+  const product = String(supplier.product || "").toLowerCase();
+  const target = String(ctx.product || "").toLowerCase();
+  const primaryTerm = target.split(" ")[0];
+
+  return Boolean(product && target && product.includes(primaryTerm));
+}
+
 function scoreSupplierRisk(supplier) {
   let score = 0;
 
@@ -65,6 +87,38 @@ function scoreSupplierRisk(supplier) {
   if (!supplier.productMatch) score += 20;
 
   return Math.min(score, 100);
+}
+
+function normalizeSupplierRecord(supplier = {}, ctx = {}) {
+  const productMatch = isProductMatch(supplier, ctx);
+  const baseSupplier = {
+    companyName: supplier.companyName || "Unknown Supplier",
+    country: supplier.country || "Unknown",
+    website: supplier.website || "",
+    email: supplier.email || "",
+    phone: supplier.phone || "",
+    supplierType: supplier.supplierType || "Supplier",
+    productMatch
+  };
+
+  const confidenceScore =
+    Number.isFinite(Number(supplier.confidenceScore))
+      ? Number(supplier.confidenceScore)
+      : scoreSupplierConfidence(baseSupplier);
+
+  const riskScore =
+    Number.isFinite(Number(supplier.riskScore))
+      ? Number(supplier.riskScore)
+      : scoreSupplierRisk(baseSupplier);
+
+  return {
+    ...baseSupplier,
+    confidenceScore,
+    riskScore,
+    verificationStatus:
+      supplier.verificationStatus ||
+      getVerificationStatus(confidenceScore, riskScore)
+  };
 }
 
 function getVerificationStatus(confidenceScore, riskScore) {
@@ -166,7 +220,41 @@ function generateSampleSuppliers(ctx, supplierTypes) {
   });
 }
 
-function run(input = {}) {
+async function getDiscoveredSuppliers(ctx) {
+  try {
+    const result = await discoverSuppliers(ctx);
+
+    if (Array.isArray(result?.suppliers) && result.suppliers.length) {
+      return result.suppliers.map((supplier) =>
+        normalizeSupplierRecord(supplier, ctx)
+      );
+    }
+  } catch {
+    // Discovery is non-blocking. Mission generation must continue with local samples.
+  }
+
+  return generateSampleSuppliers(ctx, SUPPLIER_TYPES);
+}
+
+function buildSupplierLeaderboard(suppliers = []) {
+  return [...suppliers]
+    .sort(
+      (a, b) =>
+        b.confidenceScore - a.confidenceScore ||
+        a.riskScore - b.riskScore
+    )
+    .map((supplier, index) => ({
+      rank: index + 1,
+      companyName: supplier.companyName,
+      country: supplier.country,
+      supplierType: supplier.supplierType,
+      confidenceScore: supplier.confidenceScore,
+      riskScore: supplier.riskScore,
+      verificationStatus: supplier.verificationStatus
+    }));
+}
+
+async function run(input = {}) {
   const ctx = normalizeInput(input);
 
   const estimatedSupplierFitScore =
@@ -174,19 +262,9 @@ function run(input = {}) {
       ? 84
       : 60;
 
-  const supplierTypes = [
-    "Manufacturers",
-    "Exporters",
-    "Wholesale suppliers",
-    "Trading companies",
-    "Authorized distributors"
-  ];
-  const discoveredSuppliers = generateSampleSuppliers(ctx, supplierTypes);
-  const supplierLeaderboard = [...discoveredSuppliers].sort(
-    (a, b) =>
-      b.confidenceScore - a.confidenceScore ||
-      a.riskScore - b.riskScore
-  );
+  const supplierTypes = SUPPLIER_TYPES;
+  const discoveredSuppliers = await getDiscoveredSuppliers(ctx);
+  const supplierLeaderboard = buildSupplierLeaderboard(discoveredSuppliers);
   const networkReadySuppliers = supplierLeaderboard.filter(
     (supplier) =>
       supplier.confidenceScore >= 70 &&
@@ -252,5 +330,6 @@ function run(input = {}) {
 }
 
 module.exports = {
+  getDiscoveredSuppliers,
   run
 };
