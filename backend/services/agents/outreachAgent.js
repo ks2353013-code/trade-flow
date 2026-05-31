@@ -1,4 +1,4 @@
-a/* TradeFlow Outreach Agent V1
+/* TradeFlow Outreach Agent V1
    Drafts only. No email/WhatsApp sending. Human approval required.
 */
 
