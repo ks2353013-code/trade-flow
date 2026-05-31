@@ -64,6 +64,7 @@ const realSupplierDiscoveryRoutes = require("./routes/realSupplierDiscoveryRoute
 const buyerDiscoveryRoutes = require("./routes/buyerDiscoveryRoutes");
 const tradeAgentRoutes = require("./routes/tradeAgentRoutes");
 const crmPushRoutes = require("./routes/crmPushRoutes");
+const outreachApprovalRoutes = require("./routes/outreachApprovalRoutes");
 
 const { startWorkflowScheduler } = require("./services/workflowScheduler");
 const { startAIAutonomousScheduler } = require("./services/aiAutonomousScheduler");
@@ -186,6 +187,7 @@ app.use("/api/org-workspaces", protectedStack, workspaceOrgRoutes);
 app.use("/api/ai-memory", protectedStack, aiMemoryRoutes);
 app.use("/api/trade-agent", protectedStack, tradeAgentRoutes);
 app.use("/api/crm", protectedStack, crmPushRoutes);
+app.use("/api/outreach-approvals", protectedStack, outreachApprovalRoutes);
 
 /* Frontend Pages */
 app.get("/", (req, res) => {

@@ -12,7 +12,9 @@
       ? "http://localhost:5000"
       : "https://trade-flow-lc1k.onrender.com");
   const leadPushCache = new Map();
+  const outreachDraftCache = new Map();
   let leadPushCounter = 0;
+  let outreachDraftCounter = 0;
 
   function getToken() {
     try {
@@ -85,6 +87,10 @@
     return Number(lead?.verificationScore || 0) >= 70;
   }
 
+  function canCreateOutreachDraft(lead) {
+    return Number(lead?.verificationScore || 0) >= 70;
+  }
+
   function cacheLeadForPush(missionId, lead, sourceAgent, leadType) {
     const cacheId = `crm_push_${++leadPushCounter}`;
 
@@ -114,6 +120,36 @@
     `;
   }
 
+  function cacheLeadForOutreach(missionId, lead, sourceAgent, leadType) {
+    const cacheId = `outreach_draft_${++outreachDraftCounter}`;
+
+    outreachDraftCache.set(cacheId, {
+      missionId,
+      channel: "Email Draft",
+      lead: {
+        ...lead,
+        leadType,
+        sourceAgent
+      }
+    });
+
+    return cacheId;
+  }
+
+  function renderCreateOutreachDraftButton(missionId, lead, sourceAgent, leadType) {
+    if (!missionId || !canCreateOutreachDraft(lead)) {
+      return "";
+    }
+
+    const cacheId = cacheLeadForOutreach(missionId, lead, sourceAgent, leadType);
+
+    return `
+      <button class="mini-btn" onclick="TradeFlowMissionCenterUIV1.createOutreachDraft('${cacheId}')">
+        Create Outreach Draft
+      </button>
+    `;
+  }
+
   async function fetchMissions() {
     const res = await fetch(`${API_BASE}/api/trade-agent/missions`, {
       headers: authHeaders(),
@@ -127,6 +163,21 @@
     }
 
     return data.missions || [];
+  }
+
+  async function fetchOutreachApprovals() {
+    const res = await fetch(`${API_BASE}/api/outreach-approvals`, {
+      headers: authHeaders(),
+      credentials: "include"
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || "Failed to fetch outreach approvals");
+    }
+
+    return data.approvals || [];
   }
 
   async function runMission() {
@@ -203,6 +254,74 @@
     alert(data.duplicate ? "Lead already exists in CRM." : "Lead added to CRM");
   }
 
+  async function createOutreachDraft(cacheId) {
+    const cached = outreachDraftCache.get(cacheId);
+
+    if (!cached) {
+      alert("Lead data is no longer available. Refresh Mission Center and try again.");
+      return;
+    }
+
+    const res = await fetch(`${API_BASE}/api/outreach-approvals/create`, {
+      method: "POST",
+      headers: authHeaders(),
+      credentials: "include",
+      body: JSON.stringify(cached)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      alert(data.message || "Outreach draft creation failed");
+      return;
+    }
+
+    await render();
+    alert("Draft created. Human approval required before sending.");
+  }
+
+  async function approveOutreachDraft(id) {
+    const ok = confirm("Approve this stored draft? No message will be sent.");
+    if (!ok) return;
+
+    const res = await fetch(`${API_BASE}/api/outreach-approvals/${id}/approve`, {
+      method: "POST",
+      headers: authHeaders(),
+      credentials: "include"
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      alert(data.message || "Draft approval failed");
+      return;
+    }
+
+    await render();
+    alert("Draft approved. No message was sent.");
+  }
+
+  async function rejectOutreachDraft(id) {
+    const ok = confirm("Reject this stored draft? No message will be sent.");
+    if (!ok) return;
+
+    const res = await fetch(`${API_BASE}/api/outreach-approvals/${id}/reject`, {
+      method: "POST",
+      headers: authHeaders(),
+      credentials: "include"
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      alert(data.message || "Draft rejection failed");
+      return;
+    }
+
+    await render();
+    alert("Draft rejected. No message was sent.");
+  }
+
   function renderAgentReports(mission) {
     const reports = mission.agentReports || {};
 
@@ -261,6 +380,7 @@
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
           ${renderPushToCRMButton(missionId, buyer, "Buyer Discovery Agent", "Buyer")}
+          ${renderCreateOutreachDraftButton(missionId, buyer, "Buyer Discovery Agent", "Buyer")}
         </div>
       </div>
     `;
@@ -285,6 +405,74 @@
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
           ${renderPushToCRMButton(missionId, supplier, "Supplier Discovery Agent", "Supplier")}
+          ${renderCreateOutreachDraftButton(missionId, supplier, "Supplier Discovery Agent", "Supplier")}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderApprovalDraftCard(approval, showActions) {
+    const id = safeText(approval._id);
+
+    return `
+      <div class="deal">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
+          <div>
+            <b style="color:white;">${safeText(approval.subject || "Untitled draft")}</b>
+            <p class="muted" style="margin-top:4px;">
+              ${safeText(approval.leadName || "Unknown lead")} &bull; ${safeText(approval.channel || "Draft")} &bull; ${safeText(approval.status || "Pending Approval")}
+            </p>
+          </div>
+          <span class="status">${safeText(approval.priority || "Medium")}</span>
+        </div>
+        <p class="muted" style="margin-top:8px;">
+          ${safeText(approval.message || "").slice(0, 220)}
+        </p>
+        ${
+          showActions
+            ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                <button class="mini-btn" onclick="TradeFlowMissionCenterUIV1.approveOutreachDraft('${id}')">
+                  Approve
+                </button>
+                <button class="mini-btn" onclick="TradeFlowMissionCenterUIV1.rejectOutreachDraft('${id}')">
+                  Reject
+                </button>
+              </div>`
+            : ""
+        }
+      </div>
+    `;
+  }
+
+  function renderApprovalDraftGroup(title, approvals, showActions) {
+    return `
+      <div class="deal">
+        <h4 style="color:white;font-weight:900;margin-bottom:10px;">${safeText(title)} (${approvals.length})</h4>
+        <div style="display:grid;grid-template-columns:1fr;gap:10px;">
+          ${
+            approvals.length
+              ? approvals.map((approval) => renderApprovalDraftCard(approval, showActions)).join("")
+              : `<p class="muted">No drafts.</p>`
+          }
+        </div>
+      </div>
+    `;
+  }
+
+  function renderOutreachApprovalQueue(approvals = []) {
+    const pending = approvals.filter((approval) =>
+      ["Draft", "Pending Approval", "Needs Edit"].includes(approval.status)
+    );
+    const approved = approvals.filter((approval) => approval.status === "Approved");
+    const rejected = approvals.filter((approval) => approval.status === "Rejected");
+
+    return `
+      <div style="margin-top:18px;">
+        <h4 style="color:white;font-weight:900;margin-bottom:10px;">Outreach Approval Queue</h4>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;">
+          ${renderApprovalDraftGroup("Pending Drafts", pending, true)}
+          ${renderApprovalDraftGroup("Approved Drafts", approved, false)}
+          ${renderApprovalDraftGroup("Rejected Drafts", rejected, false)}
         </div>
       </div>
     `;
@@ -524,21 +712,40 @@
         <div id="missionCenterList" style="margin-top:22px;">
           <div class="deal">Loading missions...</div>
         </div>
+
+        <div id="missionOutreachApprovalQueue" style="margin-top:22px;">
+          <div class="deal">Loading outreach approval queue...</div>
+        </div>
       </div>
     `;
 
     const list = document.getElementById("missionCenterList");
+    const queue = document.getElementById("missionOutreachApprovalQueue");
 
     try {
       const missions = await fetchMissions();
       leadPushCache.clear();
+      outreachDraftCache.clear();
       leadPushCounter = 0;
+      outreachDraftCounter = 0;
 
       list.innerHTML = missions.length
         ? `<div style="display:grid;grid-template-columns:1fr;gap:16px;">${missions.map(renderMissionCard).join("")}</div>`
         : `<div class="deal">No missions yet. Launch your first trade mission.</div>`;
     } catch (error) {
       list.innerHTML = `<div class="deal">Mission Center error: ${safeText(error.message)}</div>`;
+    }
+
+    try {
+      const approvals = await fetchOutreachApprovals();
+      queue.innerHTML = renderOutreachApprovalQueue(approvals);
+    } catch (error) {
+      queue.innerHTML = `
+        <div style="margin-top:18px;">
+          <h4 style="color:white;font-weight:900;margin-bottom:10px;">Outreach Approval Queue</h4>
+          <div class="deal">Outreach queue error: ${safeText(error.message)}</div>
+        </div>
+      `;
     }
   }
 
@@ -556,7 +763,10 @@
     render,
     runMission,
     approveMission,
-    pushLeadToCRM
+    pushLeadToCRM,
+    createOutreachDraft,
+    approveOutreachDraft,
+    rejectOutreachDraft
   };
 
   if (document.readyState === "loading") {
