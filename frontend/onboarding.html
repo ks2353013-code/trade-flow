@@ -88,6 +88,13 @@
 </style>
 
 <script>
+  const RENDER_BACKEND_URL = "https://trade-flow-lc1k.onrender.com";
+  const API_BASE =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+      ? window.location.origin
+      : RENDER_BACKEND_URL;
+
   let selectedBusinessType = localStorage.getItem("tradeflowBusinessType") || "";
 
   const descriptions = {
@@ -114,6 +121,12 @@
       localStorage.getItem("jwt") ||
       ""
     );
+  }
+
+  function saveUser(user) {
+    localStorage.setItem("tradeflowUser", JSON.stringify(user));
+    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("currentUser", JSON.stringify(user));
   }
 
   function requireLogin() {
@@ -154,7 +167,41 @@
     document.getElementById("selectedDescription").innerText = descriptions[type];
   }
 
-  function enterDashboard() {
+  async function saveOnboardingComplete() {
+    const user = getUser();
+    const token = getToken();
+
+    if (!user || !token) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/api/onboarding/complete`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          businessType: selectedBusinessType
+        })
+      });
+
+      if (!res.ok) {
+        console.warn("Onboarding completion sync failed.");
+        return;
+      }
+
+      const data = await res.json().catch(() => ({}));
+
+      if (data.onboardingCompleted === true) {
+        user.onboardingCompleted = true;
+        saveUser(user);
+      }
+    } catch (error) {
+      console.warn("Onboarding completion sync failed:", error.message);
+    }
+  }
+
+  async function enterDashboard() {
     if (!requireLogin()) return;
 
     if (!selectedBusinessType) {
@@ -162,6 +209,7 @@
     }
 
     localStorage.setItem("tradeflowOnboardingDone", "true");
+    await saveOnboardingComplete();
     window.location.href = "/app";
   }
 

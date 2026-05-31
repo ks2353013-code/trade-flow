@@ -77,6 +77,11 @@ const userSchema = new mongoose.Schema(
       default: false
     },
 
+    onboardingCompleted: {
+      type: Boolean,
+      default: false
+    },
+
     features: {
       aiTools: {
         type: Boolean,

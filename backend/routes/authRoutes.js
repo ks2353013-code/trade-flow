@@ -49,6 +49,7 @@ function sendAuthResponse(res, user, message = "Authentication successful") {
     message,
     token: accessToken,
     accessToken,
+    onboardingCompleted: user.onboardingCompleted === true,
     user: {
       id: user._id,
       name: user.name || "TradeFlow User",
@@ -57,6 +58,7 @@ function sendAuthResponse(res, user, message = "Authentication successful") {
       role: user.role || "Founder",
       subscriptionPlan: user.subscriptionPlan || "Starter",
       subscriptionStatus: user.subscriptionStatus || "Active",
+      onboardingCompleted: user.onboardingCompleted === true,
       features: user.features || {},
       limits: user.limits || {},
       permissions: buildPermissions(user.role || "Founder")

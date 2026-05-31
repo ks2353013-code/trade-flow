@@ -95,6 +95,9 @@ function saveSession(data){
     plan: subscriptionPlan,
     subscriptionPlan,
     subscription: rawUser.subscription || subscriptionPlan,
+    onboardingCompleted:
+      rawUser.onboardingCompleted === true ||
+      data.onboardingCompleted === true,
     isLoggedIn: true
   };
 
@@ -108,6 +111,12 @@ function saveSession(data){
   localStorage.setItem("isLoggedIn", "true");
   localStorage.setItem("tradeflowLoggedIn", "true");
   localStorage.setItem("tradeflowSubscriptionPlan", subscriptionPlan);
+
+  if (user.onboardingCompleted === true) {
+    localStorage.setItem("tradeflowOnboardingDone", "true");
+  }
+
+  return user;
 }
 
 async function safeJson(res) {
@@ -154,9 +163,13 @@ loginForm.addEventListener("submit", async (e) => {
       throw new Error(data.message || "Login failed");
     }
 
-    saveSession(data);
+    const user = saveSession(data);
+    const onboardingDone =
+      user.onboardingCompleted === true ||
+      localStorage.getItem("tradeflowOnboardingDone") === "true";
+
     const destination =
-      localStorage.getItem("tradeflowOnboardingDone") === "true"
+      onboardingDone
         ? "/app"
         : "/onboarding";
 
