@@ -1,3 +1,11 @@
+const researchAgent = require("./agents/researchAgent");
+const buyerDiscoveryAgent = require("./agents/buyerDiscoveryAgent");
+const supplierDiscoveryAgent = require("./agents/supplierDiscoveryAgent");
+const crmAgent = require("./agents/crmAgent");
+const complianceAgent = require("./agents/complianceAgent");
+const revenueAgent = require("./agents/revenueAgent");
+const outreachAgent = require("./agents/outreachAgent");
+
 function detectMission(text = "") {
   const t = String(text).toLowerCase();
 
@@ -19,110 +27,101 @@ function detectMission(text = "") {
   return { direction, product, market };
 }
 
-function buildAgents({ direction, product, market }) {
+function buildTimeline() {
+  const now = new Date().toISOString();
+
   return [
-    {
-      name: "Research Agent",
-      status: "Completed",
-      output: `Analyzed ${direction.toLowerCase()} opportunity for ${product} in ${market}.`
-    },
-    {
-      name: "Buyer Discovery Agent",
-      status: direction === "Export" ? "Ready" : "Secondary",
-      output: `Prepare buyer/importer discovery for ${product} in ${market}.`
-    },
-    {
-      name: "Supplier Discovery Agent",
-      status: "Ready",
-      output: `Find verified suppliers/manufacturers for ${product}.`
-    },
-    {
-      name: "Outreach Agent",
-      status: "Needs Approval",
-      output: "Draft outreach emails and WhatsApp messages. Human approval required before sending."
-    },
-    {
-      name: "CRM Agent",
-      status: "Ready",
-      output: "Create CRM pipeline, deal stage, follow-up tasks and notes."
-    },
-    {
-      name: "Compliance Agent",
-      status: "Ready",
-      output: "Prepare export/import document checklist and compliance reminders."
-    }
+    { title: "Mission created", status: "Completed", at: now },
+    { title: "Research Agent Completed", status: "Completed", at: now },
+    { title: "Buyer Discovery Agent Completed", status: "Completed", at: now },
+    { title: "Supplier Discovery Agent Completed", status: "Completed", at: now },
+    { title: "CRM Agent Completed", status: "Completed", at: now },
+    { title: "Compliance Agent Completed", status: "Completed", at: now },
+    { title: "Revenue Agent Completed", status: "Completed", at: now },
+    { title: "Outreach Agent Drafted Messages", status: "Needs Approval", at: now },
+    { title: "Human approval required before external communication", status: "Pending", at: now }
   ];
 }
 
-function buildDocuments(product) {
-  const docs = [
-    "Commercial Invoice",
-    "Packing List",
-    "Certificate of Origin",
-    "Shipping Bill",
-    "Bill of Lading / Airway Bill",
-    "Insurance Certificate"
-  ];
-
-  if (product.toLowerCase().includes("rice")) {
-    docs.push("FSSAI / Food Safety Documentation");
-    docs.push("Phytosanitary Certificate");
-  }
-
-  if (product.toLowerCase().includes("medicine")) {
-    docs.push("Drug License / Pharma Export Compliance");
-    docs.push("COA / Product Certificate of Analysis");
-  }
-
-  return docs;
-}
-
-function estimateRevenue(product, market) {
-  let base = 500000;
-
-  if (product.includes("Rice")) base += 750000;
-  if (product.includes("Medicine")) base += 1500000;
-  if (market === "UAE") base += 500000;
-  if (market === "Europe" || market === "USA") base += 900000;
-
-  return base;
-}
-
-function runTradeMission(missionText = "") {
+function runTradeMission(missionText = "", context = {}) {
   const detected = detectMission(missionText);
-  const revenueEstimate = estimateRevenue(detected.product, detected.market);
 
-  const opportunityScore = Math.min(
-    95,
-    55 +
-      (detected.product !== "General Product" ? 15 : 0) +
-      (detected.market !== "Global Market" ? 15 : 0) +
-      10
+  const input = {
+    ...detected,
+    ownerEmail: context.ownerEmail || "",
+    workspaceId: context.workspaceId || null,
+    companyId: context.companyId || null
+  };
+
+  const research = researchAgent.run(input);
+  const buyerDiscovery = buyerDiscoveryAgent.run(input);
+  const supplierDiscovery = supplierDiscoveryAgent.run(input);
+  const crm = crmAgent.run(input);
+  const compliance = complianceAgent.run(input);
+  const revenue = revenueAgent.run(input);
+  const outreach = outreachAgent.run(input);
+
+  const opportunityScore = Math.max(
+    research.opportunityScore || 0,
+    revenue.riskAdjustedScore || 0,
+    buyerDiscovery.estimatedBuyerFitScore || 0,
+    supplierDiscovery.estimatedSupplierFitScore || 0
   );
+
+  const revenueEstimate =
+    revenue.revenueScenarioBase ||
+    revenue.estimatedDealValue ||
+    0;
 
   return {
     ...detected,
+
     status: "Needs Approval",
-    agents: buildAgents(detected),
+
+    agentReports: {
+      research,
+      buyerDiscovery,
+      supplierDiscovery,
+      crm,
+      compliance,
+      revenue,
+      outreach
+    },
+
+    agents: [
+      { name: "Research Agent", status: "Completed", output: research.executiveSummary },
+      { name: "Buyer Discovery Agent", status: "Completed", output: buyerDiscovery.buyerProfile },
+      { name: "Supplier Discovery Agent", status: "Completed", output: supplierDiscovery.supplierProfile },
+      { name: "CRM Agent", status: "Completed", output: crm.dealStrategy },
+      { name: "Compliance Agent", status: "Completed", output: "Compliance checklist generated." },
+      { name: "Revenue Agent", status: "Completed", output: revenue.executiveSummary },
+      { name: "Outreach Agent", status: "Needs Approval", output: "Outreach drafts prepared. Human approval required." }
+    ],
+
     opportunities: [
-      `${detected.direction} opportunity detected for ${detected.product} in ${detected.market}.`,
-      `Estimated revenue potential: ₹${revenueEstimate.toLocaleString("en-IN")}.`,
-      "Recommended to begin verified lead discovery and outreach preparation."
+      research.executiveSummary,
+      buyerDiscovery.outreachPriority,
+      revenue.executiveSummary
     ],
+
     risks: [
-      "Supplier/buyer verification required before outreach.",
-      "Pricing, compliance and shipment terms need human approval.",
-      "Do not send messages automatically without owner approval."
+      ...research.riskAnalysis,
+      ...compliance.complianceRisks,
+      "External communication requires human approval."
     ],
+
     actions: [
-      "Create or select matching workspace.",
-      "Find verified suppliers and buyers.",
-      "Generate outreach drafts.",
-      "Create CRM deal pipeline.",
-      "Create follow-up task sequence.",
-      "Prepare required trade documents."
+      ...research.nextActions,
+      ...buyerDiscovery.recommendedNextActions,
+      ...supplierDiscovery.recommendedNextActions,
+      ...crm.recommendedNextActions,
+      ...compliance.recommendedNextActions,
+      ...revenue.recommendedNextActions,
+      ...outreach.recommendedNextActions
     ],
-    documents: buildDocuments(detected.product),
+
+    documents: compliance.requiredDocuments,
+
     approvalsRequired: [
       "Sending emails",
       "Sending WhatsApp messages",
@@ -131,20 +130,10 @@ function runTradeMission(missionText = "") {
       "Signing contracts",
       "Making payments"
     ],
+
     revenueEstimate,
     opportunityScore,
-    timeline: [
-      {
-        title: "Mission created",
-        status: "Completed",
-        at: new Date().toISOString()
-      },
-      {
-        title: "Human approval required before external communication",
-        status: "Pending",
-        at: new Date().toISOString()
-      }
-    ]
+    timeline: buildTimeline()
   };
 }
 
