@@ -62,6 +62,7 @@ const liveSupplierIntelligenceRoutes = require("./routes/liveSupplierIntelligenc
 const onboardingRoutes = require("./routes/onboardingRoutes");
 const realSupplierDiscoveryRoutes = require("./routes/realSupplierDiscoveryRoutes");
 const buyerDiscoveryRoutes = require("./routes/buyerDiscoveryRoutes");
+const tradeAgentRoutes = require("./routes/tradeAgentRoutes");
 
 const { startWorkflowScheduler } = require("./services/workflowScheduler");
 const { startAIAutonomousScheduler } = require("./services/aiAutonomousScheduler");
@@ -182,6 +183,7 @@ app.use("/api/real-supplier-discovery", protectedStack, realSupplierDiscoveryRou
 app.use("/api/onboarding", protectedStack, onboardingRoutes);
 app.use("/api/org-workspaces", protectedStack, workspaceOrgRoutes);
 app.use("/api/ai-memory", protectedStack, aiMemoryRoutes);
+app.use("/api/trade-agent", protectedStack, tradeAgentRoutes);
 
 /* Frontend Pages */
 app.get("/", (req, res) => {
