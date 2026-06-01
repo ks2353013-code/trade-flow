@@ -48,10 +48,17 @@
 
   function getWorkspaces() {
     try {
-      return JSON.parse(localStorage.getItem(WORKSPACES_KEY) || "[]");
+      const workspaces = JSON.parse(localStorage.getItem(WORKSPACES_KEY) || "[]");
+      return Array.isArray(workspaces)
+        ? workspaces.filter((workspace) => isMongoObjectId(workspace._id || workspace.id))
+        : [];
     } catch {
       return [];
     }
+  }
+
+  function isMongoObjectId(value) {
+    return /^[a-f\d]{24}$/i.test(String(value || "").trim());
   }
 
   function getAccessMap() {
@@ -102,7 +109,9 @@
   }
 
   function protectActiveWorkspace() {
-    const activeId = localStorage.getItem(ACTIVE_KEY);
+    const activeId =
+      window.getCanonicalActiveWorkspaceId?.() ||
+      localStorage.getItem(ACTIVE_KEY);
     const accessible = getAccessibleWorkspaces();
 
     if (!accessible.length) {
@@ -110,7 +119,11 @@
     }
 
     if (!activeId || !canAccessWorkspace(activeId)) {
-      localStorage.setItem(ACTIVE_KEY, accessible[0].id);
+      if (typeof window.setCanonicalActiveWorkspace === "function") {
+        window.setCanonicalActiveWorkspace(accessible[0]);
+      } else {
+        localStorage.setItem(ACTIVE_KEY, accessible[0].id);
+      }
     }
 
     return true;

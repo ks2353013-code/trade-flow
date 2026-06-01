@@ -38,26 +38,135 @@ function isMongoObjectId(value) {
   return /^[a-f\d]{24}$/i.test(String(value || "").trim());
 }
 
-function getStoredActiveWorkspaceId() {
+function getJsonStorage(key, fallback = null) {
+  try {
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function getWorkspaceIdFromObject(workspace = {}) {
+  const id = String(
+    workspace._id ||
+    workspace.id ||
+    workspace.workspaceId ||
+    ""
+  ).trim();
+
+  return isMongoObjectId(id) ? id : "";
+}
+
+function getWorkspaceSelectValue(id) {
+  const select = document.getElementById(id);
+  return select?.value || "";
+}
+
+function getCanonicalActiveWorkspaceId() {
+  const storedWorkspace = getJsonStorage("tradeflowActiveWorkspaceObject", {});
   const candidates = [
+    getWorkspaceSelectValue("activeWorkspaceSelect"),
+    getWorkspaceSelectValue("workspaceAccessSelect"),
     localStorage.getItem("tradeflowActiveWorkspaceId"),
     localStorage.getItem("tradeflowActiveWorkspace"),
-    localStorage.getItem("tradeflowActiveWorkspaceV1")
+    localStorage.getItem("tradeflowActiveWorkspaceV1"),
+    localStorage.getItem("activeWorkspaceId"),
+    localStorage.getItem("activeWorkspace"),
+    localStorage.getItem("workspaceId"),
+    getWorkspaceIdFromObject(storedWorkspace)
   ];
 
   return candidates.find(isMongoObjectId) || "";
 }
 
-function rememberActiveWorkspace(id, name) {
-  const safeName = name || "None";
+function clearCanonicalActiveWorkspace() {
+  [
+    "tradeflowActiveWorkspaceId",
+    "tradeflowActiveWorkspace",
+    "tradeflowActiveWorkspaceV1",
+    "tradeflowActiveWorkspaceName",
+    "tradeflowActiveWorkspaceObject",
+    "activeWorkspaceId",
+    "activeWorkspace",
+    "activeWorkspaceName",
+    "workspaceId"
+  ].forEach((key) => localStorage.removeItem(key));
+}
 
-  localStorage.setItem("tradeflowActiveWorkspaceId", id || "");
-  localStorage.setItem("tradeflowActiveWorkspaceName", safeName);
-  localStorage.setItem("tradeflowActiveWorkspace", isMongoObjectId(id) ? id : "");
+function updateWorkspaceSelectValue(id, workspaceId) {
+  const select = document.getElementById(id);
+  if (!select || !workspaceId) return;
 
-  if (id) {
-    localStorage.setItem("tradeflowActiveWorkspaceV1", id);
+  const hasOption = Array.from(select.options || []).some(
+    (option) => option.value === workspaceId
+  );
+
+  if (hasOption) {
+    select.value = workspaceId;
   }
+}
+
+function setCanonicalActiveWorkspace(workspace = {}) {
+  const workspaceId = getWorkspaceIdFromObject(workspace);
+
+  if (!workspaceId) {
+    clearCanonicalActiveWorkspace();
+    return "";
+  }
+
+  const workspaceName = workspaceDisplayName(workspace);
+  const canonicalWorkspace = {
+    ...workspace,
+    _id: workspaceId,
+    id: workspaceId,
+    name: workspace.name || workspace.workspaceName || workspaceName,
+    workspaceName: workspace.workspaceName || workspace.name || workspaceName
+  };
+
+  localStorage.setItem("tradeflowActiveWorkspaceId", workspaceId);
+  localStorage.setItem("tradeflowActiveWorkspace", workspaceId);
+  localStorage.setItem("tradeflowActiveWorkspaceV1", workspaceId);
+  localStorage.setItem("tradeflowActiveWorkspaceName", workspaceName);
+  localStorage.setItem("tradeflowActiveWorkspaceObject", JSON.stringify(canonicalWorkspace));
+  localStorage.setItem("activeWorkspaceId", workspaceId);
+  localStorage.setItem("activeWorkspace", workspaceId);
+  localStorage.setItem("activeWorkspaceName", workspaceName);
+  localStorage.setItem("workspaceId", workspaceId);
+
+  updateWorkspaceSelectValue("activeWorkspaceSelect", workspaceId);
+  updateWorkspaceSelectValue("workspaceAccessSelect", workspaceId);
+
+  const currentWorkspaceName = document.getElementById("currentWorkspaceName");
+  if (currentWorkspaceName) currentWorkspaceName.innerText = workspaceName;
+
+  const adminActiveCompany = document.getElementById("adminActiveCompany");
+  if (adminActiveCompany) adminActiveCompany.innerText = workspaceName;
+
+  if (window.TradeFlowWorkspaceDataIsolationV2?.updateIsolationStatus) {
+    window.TradeFlowWorkspaceDataIsolationV2.updateIsolationStatus();
+  }
+
+  document.dispatchEvent(
+    new CustomEvent("tradeflow:workspace-change", {
+      detail: { workspace: canonicalWorkspace }
+    })
+  );
+
+  return workspaceId;
+}
+
+function getStoredActiveWorkspaceId() {
+  return getCanonicalActiveWorkspaceId();
+}
+
+function rememberActiveWorkspace(id, name) {
+  return setCanonicalActiveWorkspace({
+    _id: id,
+    id,
+    name,
+    workspaceName: name
+  });
 }
 
 function workspaceDisplayName(workspace = {}) {
@@ -76,14 +185,36 @@ function normalizeApiList(data, key) {
 }
 
 function sanitizeWorkspaceHeaderState() {
-  const activeWorkspace = localStorage.getItem("tradeflowActiveWorkspace");
+  [
+    "tradeflowActiveWorkspace",
+    "tradeflowActiveWorkspaceId",
+    "tradeflowActiveWorkspaceV1",
+    "activeWorkspace",
+    "activeWorkspaceId",
+    "workspaceId"
+  ].forEach((key) => {
+    const value = localStorage.getItem(key);
 
-  if (activeWorkspace && !isMongoObjectId(activeWorkspace)) {
-    localStorage.removeItem("tradeflowActiveWorkspace");
+    if (value && !isMongoObjectId(value)) {
+      localStorage.removeItem(key);
+    }
+  });
+
+  const cachedWorkspaces = getJsonStorage("tradeflowWorkspacesV1", []);
+  if (Array.isArray(cachedWorkspaces)) {
+    const backendWorkspaces = cachedWorkspaces.filter((workspace) =>
+      isMongoObjectId(workspace?._id || workspace?.id)
+    );
+
+    localStorage.setItem("tradeflowWorkspacesV1", JSON.stringify(backendWorkspaces));
   }
 }
 
 sanitizeWorkspaceHeaderState();
+
+window.getCanonicalActiveWorkspaceId = getCanonicalActiveWorkspaceId;
+window.setCanonicalActiveWorkspace = setCanonicalActiveWorkspace;
+window.clearCanonicalActiveWorkspace = clearCanonicalActiveWorkspace;
 function protectDashboard() {
   const user = getUser();
 
@@ -451,7 +582,7 @@ async function deleteEmployee(id) {
 
 
 function getActiveWorkspaceId() {
-  return getStoredActiveWorkspaceId() || localStorage.getItem("tradeflowActiveWorkspaceId") || "";
+  return getCanonicalActiveWorkspaceId();
 }
 
 function getActiveWorkspaceName() {
@@ -464,8 +595,19 @@ function setActiveWorkspace() {
 
   const selectedOption = select.options[select.selectedIndex];
   const selectedName = selectedOption?.text || "None";
+  const workspaceId = select.value || "";
 
-  rememberActiveWorkspace(select.value, selectedName);
+  if (!isMongoObjectId(workspaceId)) {
+    clearCanonicalActiveWorkspace();
+    alert("Select a valid backend workspace first.");
+    return;
+  }
+
+  setCanonicalActiveWorkspace({
+    _id: workspaceId,
+    workspaceName: selectedName,
+    name: selectedName
+  });
 
   const currentWorkspaceName = document.getElementById("currentWorkspaceName");
   if (currentWorkspaceName) currentWorkspaceName.innerText = selectedName;
@@ -510,7 +652,9 @@ function syncWorkspaceState(workspaces) {
     .filter((workspace) => (workspace.status || "Active") === "Active")
     .map((workspace) => ({
       id: String(workspace._id || workspace.id || ""),
+      _id: String(workspace._id || workspace.id || ""),
       name: workspaceDisplayName(workspace),
+      workspaceName: workspace.workspaceName || workspaceDisplayName(workspace),
       product: workspace.industry || workspace.product || "",
       targetMarket: workspace.country || workspace.targetMarket || "",
       businessType: workspace.businessType || workspace.type || "Trading Company",
@@ -518,21 +662,28 @@ function syncWorkspaceState(workspaces) {
       backend: true,
       createdAt: workspace.createdAt || new Date().toISOString()
     }))
-    .filter((workspace) => workspace.id);
-
-  if (!mapped.length) return;
+    .filter((workspace) => isMongoObjectId(workspace.id));
 
   localStorage.setItem("tradeflowWorkspacesV1", JSON.stringify(mapped));
+
+  if (!mapped.length) {
+    clearCanonicalActiveWorkspace();
+    return;
+  }
 
   const currentId = getStoredActiveWorkspaceId();
   const activeWorkspace = mapped.find((workspace) => workspace.id === currentId) || mapped[0];
 
-  rememberActiveWorkspace(activeWorkspace.id, activeWorkspace.name);
+  setCanonicalActiveWorkspace(activeWorkspace);
 }
 
 function renderWorkspaces(workspaces) {
   workspaces = Array.isArray(workspaces) ? workspaces : normalizeApiList(workspaces, "workspaces");
   syncWorkspaceState(workspaces);
+
+  const backendWorkspaces = workspaces.filter((workspace) =>
+    isMongoObjectId(String(workspace._id || workspace.id || ""))
+  );
 
   const list = document.getElementById("workspaceList");
   const select = document.getElementById("activeWorkspaceSelect");
@@ -545,7 +696,7 @@ function renderWorkspaces(workspaces) {
   if (approvalList) approvalList.innerHTML = "";
   if (select) select.innerHTML = `<option value="">Select Workspace</option>`;
 
-  workspaces.forEach((workspace) => {
+  backendWorkspaces.forEach((workspace) => {
     const workspaceId = String(workspace._id || workspace.id || "");
     const workspaceName = workspaceDisplayName(workspace);
     const isApproved = (workspace.status || "Active") === "Active";
@@ -612,12 +763,12 @@ function renderWorkspaces(workspaces) {
     if (el) el.innerText = value;
   };
 
-  setText("workspaceCount", workspaces.length);
+  setText("workspaceCount", backendWorkspaces.length);
   setText("activeWorkspaceCount", activeCount);
-  setText("dashboardWorkspaceCount", workspaces.length);
+  setText("dashboardWorkspaceCount", backendWorkspaces.length);
   setText("currentWorkspaceName", getActiveWorkspaceName());
 
-  setText("masterTotalCompanies", workspaces.length);
+  setText("masterTotalCompanies", backendWorkspaces.length);
   setText("masterApprovedCompanies", activeCount);
   setText("masterRejectedCompanies", rejectedCount);
 
@@ -712,10 +863,15 @@ function saveSubscriptionSettings() {
 }
 
 function activateWorkspace(id, name) {
-  rememberActiveWorkspace(id, name);
+  const workspaceId = rememberActiveWorkspace(id, name);
+
+  if (!workspaceId) {
+    alert("This workspace is not connected to the backend. Create or select a saved workspace first.");
+    return;
+  }
 
   const select = document.getElementById("activeWorkspaceSelect");
-  if (select) select.value = id;
+  if (select) select.value = workspaceId;
 
   const currentWorkspaceName = document.getElementById("currentWorkspaceName");
   if (currentWorkspaceName) currentWorkspaceName.innerText = name;
@@ -737,6 +893,10 @@ function activateWorkspace(id, name) {
 
   if (window.TradeFlowWorkspaceEngineV1?.render) {
     window.TradeFlowWorkspaceEngineV1.render();
+  }
+
+  if (window.TradeFlowMissionCenterUIV1?.render) {
+    window.TradeFlowMissionCenterUIV1.render();
   }
 }
 
@@ -792,8 +952,14 @@ async function addWorkspace() {
   document.getElementById("workspaceIecCode").value = "";
   document.getElementById("workspaceIndustry").value = "";
 
-  if (workspaceId) {
-    activateWorkspace(workspaceId, workspaceName);
+  if (isMongoObjectId(workspaceId)) {
+    setCanonicalActiveWorkspace({
+      ...workspace,
+      _id: workspaceId,
+      id: workspaceId,
+      name: workspaceName,
+      workspaceName
+    });
   }
 
   fetchWorkspaces();
@@ -808,7 +974,7 @@ async function deleteWorkspace(id) {
   });
 
   if (activeId === id) {
-    rememberActiveWorkspace("", "None");
+    clearCanonicalActiveWorkspace();
   }
 
   fetchWorkspaces();

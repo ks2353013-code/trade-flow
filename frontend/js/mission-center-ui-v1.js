@@ -65,12 +65,20 @@
   }
 
   function getActiveWorkspaceId() {
+    if (typeof window.getCanonicalActiveWorkspaceId === "function") {
+      const canonicalId = window.getCanonicalActiveWorkspaceId();
+      if (isMongoObjectId(canonicalId)) return canonicalId;
+    }
+
     const candidates = [
       getSelectWorkspaceId("activeWorkspaceSelect"),
       getSelectWorkspaceId("workspaceAccessSelect"),
       localStorage.getItem("tradeflowActiveWorkspaceId"),
       localStorage.getItem("tradeflowActiveWorkspace"),
-      localStorage.getItem("tradeflowActiveWorkspaceV1")
+      localStorage.getItem("tradeflowActiveWorkspaceV1"),
+      localStorage.getItem("activeWorkspaceId"),
+      localStorage.getItem("activeWorkspace"),
+      localStorage.getItem("workspaceId")
     ];
 
     return candidates.find(isMongoObjectId) || "";
@@ -993,6 +1001,10 @@
     setTimeout(render, 1200);
 
     document.addEventListener("tradeflow:page-change", function () {
+      setTimeout(render, 250);
+    });
+
+    document.addEventListener("tradeflow:workspace-change", function () {
       setTimeout(render, 250);
     });
 

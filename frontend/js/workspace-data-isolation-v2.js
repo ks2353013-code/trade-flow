@@ -55,12 +55,20 @@
   }
 
   function getBackendWorkspaceId() {
+    if (typeof window.getCanonicalActiveWorkspaceId === "function") {
+      const canonicalId = window.getCanonicalActiveWorkspaceId();
+      if (isMongoObjectId(canonicalId)) return canonicalId;
+    }
+
     const candidates = [
       getSelectWorkspaceId("activeWorkspaceSelect"),
       getSelectWorkspaceId("workspaceAccessSelect"),
       localStorage.getItem("tradeflowActiveWorkspace"),
       localStorage.getItem("tradeflowActiveWorkspaceId"),
-      localStorage.getItem(ACTIVE_KEY)
+      localStorage.getItem(ACTIVE_KEY),
+      localStorage.getItem("activeWorkspace"),
+      localStorage.getItem("activeWorkspaceId"),
+      localStorage.getItem("workspaceId")
     ];
 
     return candidates.find(isMongoObjectId) || "";
@@ -83,14 +91,16 @@
   }
 
   function getActiveWorkspaceId() {
-    return localStorage.getItem(ACTIVE_KEY) || localStorage.getItem("tradeflowActiveWorkspaceId") || "";
+    return getBackendWorkspaceId();
   }
 
   function getActiveWorkspace() {
     const workspaces = getWorkspaces();
+    const activeId = getActiveWorkspaceId();
+
     return (
-      workspaces.find(w => w.id === getActiveWorkspaceId()) ||
-      workspaces[0] ||
+      workspaces.find(w => (w._id || w.id) === activeId) ||
+      workspaces.find(w => isMongoObjectId(w._id || w.id)) ||
       null
     );
   }
@@ -115,6 +125,9 @@
       url.includes("/api/deals") ||
       url.includes("/api/tasks") ||
       url.includes("/api/outreach") ||
+      url.includes("/api/crm") ||
+      url.includes("/api/email-deliveries") ||
+      url.includes("/api/trade-agent") ||
       url.includes("/api/pdf") ||
       url.includes("/api/analytics") ||
       url.includes("/api/notifications")

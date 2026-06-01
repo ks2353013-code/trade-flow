@@ -36,6 +36,31 @@
     return "";
   }
 
+  function getSelectWorkspaceId(id) {
+    const select = document.getElementById(id);
+    return select?.value || "";
+  }
+
+  function getWorkspaceId() {
+    if (typeof window.getCanonicalActiveWorkspaceId === "function") {
+      const canonicalId = window.getCanonicalActiveWorkspaceId();
+      if (isMongoObjectId(canonicalId)) return canonicalId;
+    }
+
+    const candidates = [
+      getSelectWorkspaceId("activeWorkspaceSelect"),
+      getSelectWorkspaceId("workspaceAccessSelect"),
+      localStorage.getItem("tradeflowActiveWorkspace"),
+      localStorage.getItem("tradeflowActiveWorkspaceId"),
+      localStorage.getItem("tradeflowActiveWorkspaceV1"),
+      localStorage.getItem("activeWorkspace"),
+      localStorage.getItem("activeWorkspaceId"),
+      localStorage.getItem("workspaceId")
+    ];
+
+    return candidates.find(isMongoObjectId) || "";
+  }
+
   function getTenantHeaders() {
     const user = getUser();
     const headers = {
@@ -48,11 +73,7 @@
       "tradeflowActiveCompany"
     ]);
 
-    const workspaceId = getValidStoredId([
-      "tradeflowActiveWorkspace",
-      "tradeflowActiveWorkspaceId",
-      "tradeflowActiveWorkspaceV1"
-    ]);
+    const workspaceId = getWorkspaceId();
 
     if (companyId) headers["x-company-id"] = companyId;
     if (workspaceId) headers["x-workspace-id"] = workspaceId;

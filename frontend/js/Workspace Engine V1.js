@@ -30,6 +30,12 @@
   }
 
   function getToken() {
+    const user = getUser();
+
+    if (user?.token) {
+      return user.token;
+    }
+
     return (
       localStorage.getItem("tradeflowToken") ||
       localStorage.getItem("token") ||
@@ -71,7 +77,10 @@
 
   function getWorkspaces() {
     try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      const workspaces = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      return Array.isArray(workspaces)
+        ? workspaces.filter((workspace) => isMongoObjectId(workspace._id || workspace.id))
+        : [];
     } catch {
       return [];
     }
@@ -81,8 +90,24 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(workspaces));
   }
 
+  function isMongoObjectId(value) {
+    return /^[a-f\d]{24}$/i.test(String(value || "").trim());
+  }
+
   function getActiveWorkspaceId() {
-    return localStorage.getItem(ACTIVE_KEY) || "";
+    if (typeof window.getCanonicalActiveWorkspaceId === "function") {
+      return window.getCanonicalActiveWorkspaceId();
+    }
+
+    const candidates = [
+      localStorage.getItem("tradeflowActiveWorkspace"),
+      localStorage.getItem("tradeflowActiveWorkspaceId"),
+      localStorage.getItem(ACTIVE_KEY),
+      localStorage.getItem("activeWorkspaceId"),
+      localStorage.getItem("workspaceId")
+    ];
+
+    return candidates.find(isMongoObjectId) || "";
   }
 
   function getActiveWorkspace() {
@@ -94,28 +119,45 @@
     );
   }
 
-  function createId() {
-    return "ws_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+  function getWorkspaceName(workspace = {}) {
+    return workspace.workspaceName || workspace.name || "Workspace";
+  }
+
+  function setActiveWorkspace(workspace) {
+    const workspaceId = String(workspace?._id || workspace?.id || "");
+
+    if (!isMongoObjectId(workspaceId)) {
+      alert("Create or select a saved backend workspace before activating it.");
+      return "";
+    }
+
+    if (typeof window.setCanonicalActiveWorkspace === "function") {
+      return window.setCanonicalActiveWorkspace({
+        ...workspace,
+        _id: workspaceId,
+        id: workspaceId,
+        name: getWorkspaceName(workspace),
+        workspaceName: getWorkspaceName(workspace)
+      });
+    }
+
+    localStorage.setItem("tradeflowActiveWorkspace", workspaceId);
+    localStorage.setItem("tradeflowActiveWorkspaceId", workspaceId);
+    localStorage.setItem(ACTIVE_KEY, workspaceId);
+    localStorage.setItem("activeWorkspaceId", workspaceId);
+    localStorage.setItem("workspaceId", workspaceId);
+    localStorage.setItem("tradeflowActiveWorkspaceName", getWorkspaceName(workspace));
+
+    return workspaceId;
   }
 
   function seedDefaultWorkspace() {
-    const existing = getWorkspaces();
-    if (existing.length) return;
+    const workspaces = getWorkspaces();
+    const activeId = getActiveWorkspaceId();
 
-    const businessType = getBusinessType();
-
-    const workspace = {
-      id: createId(),
-      name: `${businessType} Main Workspace`,
-      product: "",
-      targetMarket: "",
-      businessType,
-      status: "Active",
-      createdAt: new Date().toISOString()
-    };
-
-    saveWorkspaces([workspace]);
-    localStorage.setItem(ACTIVE_KEY, workspace.id);
+    if (!activeId && workspaces.length) {
+      setActiveWorkspace(workspaces[0]);
+    }
   }
 
   function createWorkspace() {
@@ -135,22 +177,64 @@
     const product = prompt("Main product/category? Example: Rice, Medicine, Jaggery") || "";
     const targetMarket = prompt("Target market/country? Example: UAE, Africa, Europe") || "";
 
-    const workspace = {
-      id: createId(),
-      name,
-      product,
-      targetMarket,
-      businessType: getBusinessType(),
-      status: "Active",
-      createdAt: new Date().toISOString()
-    };
+    const user = getUser() || {};
+    const backendUrl =
+      window.BACKEND_URL ||
+      (window.location.hostname.includes("localhost")
+        ? window.location.origin
+        : "https://trade-flow-lc1k.onrender.com");
+    const token = user.token || getToken();
 
-    workspaces.unshift(workspace);
-    saveWorkspaces(workspaces);
-    localStorage.setItem(ACTIVE_KEY, workspace.id);
+    fetch(`${backendUrl}/api/workspaces`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token ? `Bearer ${token}` : ""
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        workspaceName: name,
+        type: getBusinessType(),
+        industry: product,
+        country: targetMarket,
+        status: "Active"
+      })
+    })
+      .then((res) => res.json().then((data) => ({ res, data })))
+      .then(({ res, data }) => {
+        if (!res.ok || data.success === false || !data.workspace) {
+          throw new Error(data.message || "Workspace creation failed");
+        }
 
-    render();
-    alert("Workspace created and activated.");
+        const workspaceId = String(data.workspace._id || "");
+        if (!isMongoObjectId(workspaceId)) {
+          throw new Error("Backend workspace id missing");
+        }
+
+        const workspace = {
+          ...data.workspace,
+          _id: workspaceId,
+          id: workspaceId,
+          name: getWorkspaceName(data.workspace),
+          workspaceName: getWorkspaceName(data.workspace),
+          product: data.workspace.industry || product,
+          targetMarket: data.workspace.country || targetMarket,
+          businessType: data.workspace.businessType || data.workspace.type || getBusinessType(),
+          status: data.workspace.status || "Active",
+          backend: true
+        };
+
+        const next = [workspace, ...workspaces.filter((item) => item.id !== workspaceId)];
+        saveWorkspaces(next);
+        setActiveWorkspace(workspace);
+        render();
+        alert("Workspace created and activated.");
+      })
+      .catch((error) => {
+        alert(error.message || "Workspace creation failed");
+      });
+
+    return;
   }
 
   function activateWorkspace(id) {
@@ -162,7 +246,9 @@
       return;
     }
 
-    localStorage.setItem(ACTIVE_KEY, id);
+    const workspaceId = setActiveWorkspace(workspace);
+    if (!workspaceId) return;
+
     render();
 
     alert(`${workspace.name} is now active.`);
@@ -183,7 +269,11 @@
     saveWorkspaces(next);
 
     if (getActiveWorkspaceId() === id) {
-      localStorage.setItem(ACTIVE_KEY, next[0]?.id || "");
+      if (next[0]) {
+        setActiveWorkspace(next[0]);
+      } else if (typeof window.clearCanonicalActiveWorkspace === "function") {
+        window.clearCanonicalActiveWorkspace();
+      }
     }
 
     render();
@@ -220,7 +310,7 @@
         <div>
           <div class="section-title">🏢 Workspace Engine V1</div>
           <h2 style="font-size:28px;font-weight:900;color:white;margin:6px 0;">
-            ${active ? active.name : "No Active Workspace"}
+            ${active ? getWorkspaceName(active) : "No Backend Workspace Selected"}
           </h2>
           <p class="muted">
             Workspaces separate your products, markets, CRM, suppliers, documents and analytics.
@@ -247,7 +337,7 @@
             border:1px solid ${ws.id === getActiveWorkspaceId() ? "rgba(147,197,253,.55)" : "rgba(148,163,184,.16)"};
           ">
             <h3 style="font-size:18px;font-weight:900;color:white;margin:0 0 8px;">
-              ${ws.name}
+              ${getWorkspaceName(ws)}
             </h3>
 
             <p class="muted">Product: ${ws.product || "Not set"}</p>
@@ -277,11 +367,11 @@
     const userBadge = $("userBadge");
 
     if (workspaceName && active) {
-      workspaceName.innerText = `${active.name} • ${user?.name || "User"}`;
+      workspaceName.innerText = `${getWorkspaceName(active)} • ${user?.name || "User"}`;
     }
 
     if (userBadge && active) {
-      userBadge.innerText = `${getBusinessType()} • ${active.name}`;
+      userBadge.innerText = `${getBusinessType()} • ${getWorkspaceName(active)}`;
     }
   }
 
@@ -292,7 +382,7 @@
     if (!box || !active) return;
 
     if (!box.value || box.value.includes("TradeFlow AI Copilot ready")) {
-      box.value = `TradeFlow AI Copilot ready for workspace: ${active.name}
+      box.value = `TradeFlow AI Copilot ready for workspace: ${getWorkspaceName(active)}
 
 Business Type:
 ${getBusinessType()}
