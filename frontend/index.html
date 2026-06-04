@@ -33,7 +33,7 @@
     <button class="nav-btn" onclick="showPage('notifications')">🔔 Notifications Center <span id="sidebarUnreadCount"></span></button>
     <button class="nav-btn" onclick="contactSupport()">📩 Contact Support</button>
     <button class="nav-btn" onclick="window.location.href='master-/login'">👑 Master Admin</button>
-    <button class="nav-btn logout" onclick="logoutUser()">🚪 Logout</button>
+    <button class="nav-btn logout" onclick="logoutUser({ explicit: true })">🚪 Logout</button>
   </aside>
 
   <main class="main">
@@ -1097,11 +1097,11 @@ Choose any quick action or use the advanced tools below.</textarea>
 
 <script src="./js/auth.js"></script>
 <script src="./js/session-manager.js"></script>
+<script src="./js/app.js"></script>
 <script src="./js/realtime-client.js"></script>
 <script src="./js/outreach-email-sender.js"></script>
 <script src="./js/ai-notification-center.js"></script>
 <script src="./js/hunter-intelligence-ui.js"></script>
-<script src="./js/app.js"></script>
 <script src="./js/tradeflow-performance-guard.js"></script>
 <script src="./js/tradeflow-enterprise-module-loader.js"></script>
 <script src="./js/tradeflow-executive-safe-loader.js"></script>

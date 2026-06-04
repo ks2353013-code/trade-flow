@@ -5,6 +5,9 @@
   const WORKSPACE_CACHE = "tradeflowOrgWorkspaces";
   const ACTIVE_COMPANY = "tradeflowActiveCompany";
   const ACTIVE_WORKSPACE = "tradeflowActiveWorkspace";
+  let companiesLoading = false;
+  let workspacesLoading = false;
+  let refreshLoading = false;
 
   function $(id) {
     return document.getElementById(id);
@@ -37,16 +40,25 @@
 
   function getHeaders() {
     const user = getUser();
+    const token =
+      window.getAuthToken?.() ||
+      window.TradeFlowSessionManager?.getToken?.() ||
+      user?.token ||
+      "";
 
     return {
       "Content-Type": "application/json",
-      Authorization: user?.token ? `Bearer ${user.token}` : "",
+      Authorization: token ? `Bearer ${token}` : "",
       "x-user-email":
         user?.email || "unknown@tradeflow.local"
     };
   }
 
   async function fetchCompanies() {
+    if (companiesLoading) return getJson(COMPANY_CACHE, []);
+
+    companiesLoading = true;
+
     try {
       const res = await fetch(
         `${getBackendUrl()}/api/companies`,
@@ -70,6 +82,8 @@
       console.error(error);
       renderCompanies();
       return getJson(COMPANY_CACHE, []);
+    } finally {
+      companiesLoading = false;
     }
   }
 
@@ -130,6 +144,10 @@
   }
 
   async function fetchWorkspaces() {
+    if (workspacesLoading) return getJson(WORKSPACE_CACHE, []);
+
+    workspacesLoading = true;
+
     try {
       const res = await fetch(
         `${getBackendUrl()}/api/org-workspaces`,
@@ -153,6 +171,8 @@
       console.error(error);
       renderWorkspaces();
       return getJson(WORKSPACE_CACHE, []);
+    } finally {
+      workspacesLoading = false;
     }
   }
 
@@ -470,8 +490,16 @@
   }
 
   async function refresh() {
-    await fetchCompanies();
-    await fetchWorkspaces();
+    if (refreshLoading) return;
+
+    refreshLoading = true;
+
+    try {
+      await fetchCompanies();
+      await fetchWorkspaces();
+    } finally {
+      refreshLoading = false;
+    }
   }
 
   window.TradeFlowCompanyEngine = {
@@ -484,12 +512,20 @@
     refresh
   };
 
-  function boot() {
+  async function boot() {
     injectStyles();
     buildPanel();
 
     setTimeout(() => {
-      refresh();
+      (async () => {
+        if (window.TradeFlowBootstrap?.whenReady) {
+          await window.TradeFlowBootstrap.whenReady();
+        }
+
+        if (window.getAuthToken?.() || window.TradeFlowSessionManager?.getToken?.()) {
+          refresh();
+        }
+      })();
     }, 1200);
   }
 

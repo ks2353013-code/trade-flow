@@ -6,7 +6,6 @@
 (function () {
   if (window.TradeFlowWorkspaceDataIsolationV2) return;
 
-  const ACTIVE_KEY = "tradeflowActiveWorkspaceV1";
   const WORKSPACES_KEY = "tradeflowWorkspacesV1";
 
   function getUser() {
@@ -18,7 +17,12 @@
   }
 
   function getToken() {
+    const user = getUser();
+    if (user?.token) return user.token;
+    if (user?.accessToken) return user.accessToken;
+
     return (
+      localStorage.getItem("tradeflowAccessToken") ||
       localStorage.getItem("tradeflowToken") ||
       localStorage.getItem("token") ||
       localStorage.getItem("authToken") ||
@@ -29,7 +33,10 @@
 
   function requireLogin() {
     if (!getUser() || !getToken()) {
-      localStorage.clear();
+      if (window.location.pathname === "/app") {
+        return false;
+      }
+
       window.location.href = "/login";
       return false;
     }
@@ -49,29 +56,13 @@
     return /^[a-f\d]{24}$/i.test(String(value || "").trim());
   }
 
-  function getSelectWorkspaceId(id) {
-    const select = document.getElementById(id);
-    return select?.value || "";
-  }
-
   function getBackendWorkspaceId() {
-    if (typeof window.getCanonicalActiveWorkspaceId === "function") {
-      const canonicalId = window.getCanonicalActiveWorkspaceId();
-      if (isMongoObjectId(canonicalId)) return canonicalId;
+    if (window.TradeFlowWorkspace?.getActiveWorkspaceId) {
+      const workspaceId = window.TradeFlowWorkspace.getActiveWorkspaceId();
+      if (isMongoObjectId(workspaceId)) return workspaceId;
     }
 
-    const candidates = [
-      getSelectWorkspaceId("activeWorkspaceSelect"),
-      getSelectWorkspaceId("workspaceAccessSelect"),
-      localStorage.getItem("tradeflowActiveWorkspace"),
-      localStorage.getItem("tradeflowActiveWorkspaceId"),
-      localStorage.getItem(ACTIVE_KEY),
-      localStorage.getItem("activeWorkspace"),
-      localStorage.getItem("activeWorkspaceId"),
-      localStorage.getItem("workspaceId")
-    ];
-
-    return candidates.find(isMongoObjectId) || "";
+    return "";
   }
 
   function clearWorkspaceHeaders(headers) {
@@ -210,7 +201,9 @@
       return originalFetch(url, options);
     };
 
-    console.log("✅ Workspace Data Isolation V2 fetch context active");
+    if (window.TRADEFLOW_DEBUG === true || localStorage.getItem("tradeflowDebug") === "true") {
+      console.log("Workspace Data Isolation V2 fetch context active");
+    }
   }
 
   function filterByWorkspace(items) {
@@ -314,13 +307,29 @@
     }
   }
 
-  function boot() {
-    if (!requireLogin()) return;
+  async function boot() {
+    if (!requireLogin()) {
+      document.addEventListener("tradeflow:session-ready", boot, { once: true });
+      return;
+    }
+
+    if (window.TradeFlowBootstrap?.whenReady) {
+      await window.TradeFlowBootstrap.whenReady();
+    }
 
     patchFetch();
     patchRenderers();
     patchWorkspaceActivation();
     updateIsolationStatus();
+
+    if (window.TradeFlowWorkspace?.subscribe) {
+      window.TradeFlowWorkspace.subscribe(function (state) {
+        updateIsolationStatus();
+        if (state.loaded && window.TradeFlowBootstrap?.getState?.().completed) {
+          refreshCurrentPage();
+        }
+      });
+    }
 
     setInterval(() => {
       patchRenderers();
@@ -328,7 +337,9 @@
       updateIsolationStatus();
     }, 4000);
 
-    console.log("✅ Workspace Data Isolation V2 active");
+    if (window.TRADEFLOW_DEBUG === true || localStorage.getItem("tradeflowDebug") === "true") {
+      console.log("Workspace Data Isolation V2 active");
+    }
   }
 
   window.TradeFlowWorkspaceDataIsolationV2 = {

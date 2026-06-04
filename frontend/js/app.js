@@ -22,15 +22,188 @@ const NOTIFICATION_URL = `${BACKEND_URL}/api/notifications`;
 const WORKSPACE_URL = `${BACKEND_URL}/api/workspaces`;
 
 let appReady = false;
+let workspaceWaiters = [];
+let bootstrapPromise = null;
+const workspaceSubscribers = new Set();
+const bootstrapState = {
+  status: "idle",
+  step: "idle",
+  completed: false,
+  error: "",
+  sessionRestored: false,
+  userLoaded: false,
+  companyLoaded: false,
+  workspacesLoaded: false,
+  workspaceVerified: false,
+  modulesInitialized: false
+};
+const requestLoading = {
+  workspaces: false,
+  analytics: false,
+  notifications: false,
+  suppliers: false,
+  deals: false
+};
+let dashboardPollingStarted = false;
+const WORKSPACE_ID_KEYS = [
+  "tradeflowActiveWorkspace",
+  "tradeflowActiveWorkspaceId",
+  "tradeflowActiveWorkspaceV1",
+  "activeWorkspace",
+  "activeWorkspaceId",
+  "workspaceId"
+];
+const workspaceState = {
+  workspaceId: "",
+  workspaceName: "",
+  companyId: "",
+  loaded: false
+};
+
+function isDebugMode() {
+  return (
+    window.TRADEFLOW_DEBUG === true ||
+    localStorage.getItem("tradeflowDebug") === "true"
+  );
+}
+
+function debugLog(...args) {
+  if (isDebugMode()) console.log(...args);
+}
+
+function bootstrapDebug(message) {
+  console.log(`[BOOTSTRAP] ${message}`);
+}
 
 
 function getUser() {
+  const keys = ["tradeflowUser", "user", "currentUser"];
+
+  for (const key of keys) {
+    try {
+      const user = localStorage.getItem(key);
+      if (user) return JSON.parse(user);
+    } catch (error) {
+      localStorage.removeItem(key);
+    }
+  }
+
   try {
-    const user = localStorage.getItem("tradeflowUser");
+    const user = sessionStorage.getItem("tradeflowUser");
     return user ? JSON.parse(user) : null;
   } catch (error) {
-    localStorage.removeItem("tradeflowUser");
+    sessionStorage.removeItem("tradeflowUser");
     return null;
+  }
+}
+
+function getStoredToken() {
+  const user = getUser();
+
+  return (
+    user?.token ||
+    user?.accessToken ||
+    localStorage.getItem("tradeflowAccessToken") ||
+    localStorage.getItem("tradeflowToken") ||
+    localStorage.getItem("token") ||
+    localStorage.getItem("authToken") ||
+    localStorage.getItem("jwt") ||
+    sessionStorage.getItem("tradeflowAccessToken") ||
+    sessionStorage.getItem("tradeflowToken") ||
+    sessionStorage.getItem("token") ||
+    sessionStorage.getItem("authToken") ||
+    sessionStorage.getItem("jwt") ||
+    ""
+  );
+}
+
+window.getAuthToken = getStoredToken;
+
+function storeAuthSession(data = {}) {
+  const rawData = data?.data && typeof data.data === "object" ? data.data : data;
+  const rawUser = rawData.user || data.user || {};
+  const token =
+    rawData.token ||
+    rawData.accessToken ||
+    rawUser.token ||
+    rawUser.accessToken ||
+    "";
+
+  if (token) {
+    localStorage.setItem("tradeflowAccessToken", token);
+    localStorage.setItem("tradeflowToken", token);
+    localStorage.setItem("token", token);
+    localStorage.setItem("authToken", token);
+    localStorage.setItem("jwt", token);
+  }
+
+  if (rawUser && Object.keys(rawUser).length) {
+    const existingUser = getUser() || {};
+    const user = {
+      ...existingUser,
+      ...rawUser,
+      id: rawUser.id || rawUser._id || existingUser.id,
+      _id: rawUser._id || rawUser.id || existingUser._id,
+      token: token || existingUser.token,
+      accessToken: token || existingUser.accessToken,
+      isLoggedIn: true
+    };
+
+    localStorage.setItem("tradeflowUser", JSON.stringify(user));
+    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("currentUser", JSON.stringify(user));
+    localStorage.setItem("isLoggedIn", "true");
+    localStorage.setItem("tradeflowLoggedIn", "true");
+  }
+
+  return Boolean(token || Object.keys(rawUser || {}).length);
+}
+
+async function validateStoredSession() {
+  const token = getStoredToken();
+  if (!token) return false;
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/auth/session`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      credentials: "include"
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.valid === true) {
+        storeAuthSession(data);
+        return true;
+      }
+    }
+
+    if (!isConfirmedAuthFailureStatus(res.status)) {
+      logAuthDebug("session validation deferred", `status ${res.status}`);
+      return "deferred";
+    }
+  } catch (error) {
+    logAuthDebug("session validation deferred", error.message);
+    return "deferred";
+  }
+
+  try {
+    const refreshRes = await fetch(`${BACKEND_URL}/api/auth/refresh`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "include"
+    });
+
+    if (!refreshRes.ok) return false;
+
+    const refreshData = await refreshRes.json();
+    return storeAuthSession(refreshData);
+  } catch (error) {
+    logAuthDebug("session refresh failed", error.message);
+    return false;
   }
 }
 
@@ -58,26 +231,61 @@ function getWorkspaceIdFromObject(workspace = {}) {
   return isMongoObjectId(id) ? id : "";
 }
 
-function getWorkspaceSelectValue(id) {
-  const select = document.getElementById(id);
-  return select?.value || "";
-}
-
-function getCanonicalActiveWorkspaceId() {
+function readLegacyActiveWorkspaceId() {
   const storedWorkspace = getJsonStorage("tradeflowActiveWorkspaceObject", {});
   const candidates = [
-    getWorkspaceSelectValue("activeWorkspaceSelect"),
-    getWorkspaceSelectValue("workspaceAccessSelect"),
-    localStorage.getItem("tradeflowActiveWorkspaceId"),
-    localStorage.getItem("tradeflowActiveWorkspace"),
-    localStorage.getItem("tradeflowActiveWorkspaceV1"),
-    localStorage.getItem("activeWorkspaceId"),
-    localStorage.getItem("activeWorkspace"),
-    localStorage.getItem("workspaceId"),
+    ...WORKSPACE_ID_KEYS.map((key) => localStorage.getItem(key)),
     getWorkspaceIdFromObject(storedWorkspace)
   ];
 
   return candidates.find(isMongoObjectId) || "";
+}
+
+function getCanonicalActiveWorkspaceId() {
+  return isMongoObjectId(workspaceState.workspaceId)
+    ? workspaceState.workspaceId
+    : "";
+}
+
+function getWorkspaceStateSnapshot() {
+  return { ...workspaceState };
+}
+
+function subscribeWorkspace(callback) {
+  if (typeof callback !== "function") return () => {};
+
+  workspaceSubscribers.add(callback);
+  callback(getWorkspaceStateSnapshot());
+
+  return () => workspaceSubscribers.delete(callback);
+}
+
+function notifyWorkspaceSubscribers() {
+  const snapshot = getWorkspaceStateSnapshot();
+  workspaceSubscribers.forEach((callback) => {
+    try {
+      callback(snapshot);
+    } catch (error) {
+      debugLog("Workspace subscriber failed:", error.message);
+    }
+  });
+}
+
+function updateWorkspaceState(next = {}) {
+  workspaceState.workspaceId = isMongoObjectId(next.workspaceId)
+    ? next.workspaceId
+    : "";
+  workspaceState.workspaceName = next.workspaceName || "";
+  workspaceState.companyId = isMongoObjectId(next.companyId)
+    ? next.companyId
+    : "";
+  workspaceState.loaded = Boolean(next.loaded);
+
+  notifyWorkspaceSubscribers();
+
+  if (workspaceState.workspaceId) {
+    notifyWorkspaceReady(workspaceState.workspaceId);
+  }
 }
 
 function clearCanonicalActiveWorkspace() {
@@ -92,6 +300,13 @@ function clearCanonicalActiveWorkspace() {
     "activeWorkspaceName",
     "workspaceId"
   ].forEach((key) => localStorage.removeItem(key));
+
+  updateWorkspaceState({
+    workspaceId: "",
+    workspaceName: "",
+    companyId: "",
+    loaded: true
+  });
 }
 
 function updateWorkspaceSelectValue(id, workspaceId) {
@@ -116,6 +331,12 @@ function setCanonicalActiveWorkspace(workspace = {}) {
   }
 
   const workspaceName = workspaceDisplayName(workspace);
+  const companyId = String(
+    workspace.companyId ||
+    workspace.company?._id ||
+    workspace.company?.id ||
+    ""
+  ).trim();
   const canonicalWorkspace = {
     ...workspace,
     _id: workspaceId,
@@ -134,26 +355,120 @@ function setCanonicalActiveWorkspace(workspace = {}) {
   localStorage.setItem("activeWorkspaceName", workspaceName);
   localStorage.setItem("workspaceId", workspaceId);
 
-  updateWorkspaceSelectValue("activeWorkspaceSelect", workspaceId);
-  updateWorkspaceSelectValue("workspaceAccessSelect", workspaceId);
-
-  const currentWorkspaceName = document.getElementById("currentWorkspaceName");
-  if (currentWorkspaceName) currentWorkspaceName.innerText = workspaceName;
-
-  const adminActiveCompany = document.getElementById("adminActiveCompany");
-  if (adminActiveCompany) adminActiveCompany.innerText = workspaceName;
-
-  if (window.TradeFlowWorkspaceDataIsolationV2?.updateIsolationStatus) {
-    window.TradeFlowWorkspaceDataIsolationV2.updateIsolationStatus();
+  if (isMongoObjectId(companyId)) {
+    localStorage.setItem("tradeflowActiveCompany", companyId);
   }
+
+  updateWorkspaceState({
+    workspaceId,
+    workspaceName,
+    companyId,
+    loaded: true
+  });
 
   document.dispatchEvent(
     new CustomEvent("tradeflow:workspace-change", {
-      detail: { workspace: canonicalWorkspace }
+      detail: {
+        workspace: canonicalWorkspace,
+        state: getWorkspaceStateSnapshot()
+      }
     })
   );
 
   return workspaceId;
+}
+
+function getCanonicalActiveWorkspaceObject() {
+  const storedWorkspace = getJsonStorage("tradeflowActiveWorkspaceObject", {});
+  const workspaceId = getCanonicalActiveWorkspaceId();
+
+  if (workspaceId && getWorkspaceIdFromObject(storedWorkspace) === workspaceId) {
+    return storedWorkspace;
+  }
+
+  const cachedWorkspaces = getJsonStorage("tradeflowWorkspacesV1", []);
+  if (Array.isArray(cachedWorkspaces)) {
+    return cachedWorkspaces.find((workspace) =>
+      getWorkspaceIdFromObject(workspace) === workspaceId
+    ) || null;
+  }
+
+  return null;
+}
+
+function notifyWorkspaceReady(workspaceId) {
+  if (!isMongoObjectId(workspaceId)) return;
+
+  const waiters = workspaceWaiters.slice();
+  workspaceWaiters = [];
+  waiters.forEach((resolve) => resolve(workspaceId));
+}
+
+function normalizeWorkspaceForStorage(workspace = {}) {
+  const workspaceId = getWorkspaceIdFromObject(workspace);
+  if (!workspaceId) return null;
+
+  const name = workspaceDisplayName(workspace);
+
+  return {
+    ...workspace,
+    _id: workspaceId,
+    id: workspaceId,
+    name: workspace.name || workspace.workspaceName || name,
+    workspaceName: workspace.workspaceName || workspace.name || name,
+    backend: true
+  };
+}
+
+function restoreActiveWorkspace(workspaces = []) {
+  sanitizeWorkspaceHeaderState();
+
+  const normalized = (Array.isArray(workspaces) ? workspaces : [])
+    .map(normalizeWorkspaceForStorage)
+    .filter(Boolean);
+
+  if (normalized.length) {
+    localStorage.setItem("tradeflowWorkspacesV1", JSON.stringify(normalized));
+  }
+
+  const currentId = getCanonicalActiveWorkspaceId() || readLegacyActiveWorkspaceId();
+  const currentWorkspace =
+    normalized.find((workspace) => workspace._id === currentId) ||
+    normalized[0] ||
+    getCanonicalActiveWorkspaceObject();
+
+  return currentWorkspace ? setCanonicalActiveWorkspace(currentWorkspace) : "";
+}
+
+function waitForWorkspace(options = {}) {
+  const timeoutMs = Number(options.timeoutMs || 8000);
+  const existingId = getCanonicalActiveWorkspaceId();
+
+  if (existingId) return Promise.resolve(existingId);
+
+  return new Promise((resolve) => {
+    const timer = window.setTimeout(() => resolve(""), timeoutMs);
+
+    workspaceWaiters.push((workspaceId) => {
+      window.clearTimeout(timer);
+      resolve(workspaceId);
+    });
+  });
+}
+
+function getActiveCompanyId() {
+  const user = getUser() || {};
+  const candidates = [
+    localStorage.getItem("tradeflowActiveCompany"),
+    user.companyId,
+    user.company?._id,
+    user.company?.id,
+    getCanonicalActiveWorkspaceObject()?.companyId,
+    getCanonicalActiveWorkspaceObject()?.company?._id,
+    getCanonicalActiveWorkspaceObject()?.company?.id
+  ];
+
+  return candidates.find(isMongoObjectId) || "";
 }
 
 function getStoredActiveWorkspaceId() {
@@ -181,18 +496,21 @@ function workspaceDisplayName(workspace = {}) {
 function normalizeApiList(data, key) {
   if (Array.isArray(data)) return data;
   if (Array.isArray(data?.[key])) return data[key];
+  if (Array.isArray(data?.data?.[key])) return data.data[key];
+  if (Array.isArray(data?.items)) return data.items;
+  if (Array.isArray(data?.data?.items)) return data.data.items;
+  if (Array.isArray(data?.data)) return data.data;
+  if (key === "workspaces" && data?.workspace && typeof data.workspace === "object") {
+    return [data.workspace];
+  }
+  if (key === "workspaces" && data?.data?.workspace && typeof data.data.workspace === "object") {
+    return [data.data.workspace];
+  }
   return [];
 }
 
 function sanitizeWorkspaceHeaderState() {
-  [
-    "tradeflowActiveWorkspace",
-    "tradeflowActiveWorkspaceId",
-    "tradeflowActiveWorkspaceV1",
-    "activeWorkspace",
-    "activeWorkspaceId",
-    "workspaceId"
-  ].forEach((key) => {
+  WORKSPACE_ID_KEYS.forEach((key) => {
     const value = localStorage.getItem(key);
 
     if (value && !isMongoObjectId(value)) {
@@ -208,20 +526,64 @@ function sanitizeWorkspaceHeaderState() {
 
     localStorage.setItem("tradeflowWorkspacesV1", JSON.stringify(backendWorkspaces));
   }
+
+  const activeObject = getJsonStorage("tradeflowActiveWorkspaceObject", null);
+  if (activeObject && !getWorkspaceIdFromObject(activeObject)) {
+    localStorage.removeItem("tradeflowActiveWorkspaceObject");
+  }
 }
 
 sanitizeWorkspaceHeaderState();
 
+function syncWorkspaceChrome(state) {
+  const workspaceId = state.workspaceId || "";
+  const workspaceName = state.workspaceName || "None";
+
+  updateWorkspaceSelectValue("activeWorkspaceSelect", workspaceId);
+  updateWorkspaceSelectValue("workspaceAccessSelect", workspaceId);
+
+  const currentWorkspaceName = document.getElementById("currentWorkspaceName");
+  if (currentWorkspaceName) currentWorkspaceName.innerText = workspaceName;
+
+  const adminActiveCompany = document.getElementById("adminActiveCompany");
+  if (adminActiveCompany && workspaceName !== "None") {
+    adminActiveCompany.innerText = workspaceName;
+  }
+
+  const workspaceNameHeader = document.getElementById("workspaceName");
+  const user = getUser();
+  if (workspaceNameHeader && user && workspaceName !== "None") {
+    workspaceNameHeader.innerText =
+      `${workspaceName} â€¢ ${user.name || "User"} Workspace`;
+  }
+
+  if (window.TradeFlowWorkspaceDataIsolationV2?.updateIsolationStatus) {
+    window.TradeFlowWorkspaceDataIsolationV2.updateIsolationStatus();
+  }
+}
+
 window.getCanonicalActiveWorkspaceId = getCanonicalActiveWorkspaceId;
 window.setCanonicalActiveWorkspace = setCanonicalActiveWorkspace;
 window.clearCanonicalActiveWorkspace = clearCanonicalActiveWorkspace;
+window.TradeFlowWorkspace = {
+  state: workspaceState,
+  getState: getWorkspaceStateSnapshot,
+  subscribe: subscribeWorkspace,
+  isValidWorkspaceId: isMongoObjectId,
+  getActiveWorkspaceId: getCanonicalActiveWorkspaceId,
+  getActiveWorkspace: getCanonicalActiveWorkspaceObject,
+  setActiveWorkspace: setCanonicalActiveWorkspace,
+  clearActiveWorkspace: clearCanonicalActiveWorkspace,
+  restoreActiveWorkspace,
+  waitForWorkspace
+};
+window.TradeFlowWorkspace.subscribe(syncWorkspaceChrome);
 function protectDashboard() {
   const user = getUser();
+  const token = getStoredToken();
 
-  if (!user || !user.token) {
-    localStorage.removeItem("tradeflowUser");
-    window.location.replace("/login");
-    throw new Error("Not logged in");
+  if (!user || !token) {
+    return false;
   }
 
   document.getElementById("workspaceName").innerText =
@@ -235,7 +597,7 @@ function protectDashboard() {
 
   if (adminActiveCompany) {
     adminActiveCompany.innerText =
-      localStorage.getItem("tradeflowActiveWorkspaceName") || user.companyName || "TradeFlow Company";
+      workspaceState.workspaceName || user.companyName || "TradeFlow Company";
   }
 
   if (adminUserName) {
@@ -243,21 +605,20 @@ function protectDashboard() {
   }
 
   appReady = true;
+  return true;
 }
 
-protectDashboard();
 function getAuthHeaders() {
   const user = getUser();
+  const token = getStoredToken();
 
-  if (!user || !user.token) {
-    localStorage.removeItem("tradeflowUser");
-    window.location.replace("/login");
+  if (!user || !token) {
     throw new Error("Token missing");
   }
 
   const headers = {
     "Content-Type": "application/json",
-    "Authorization": `Bearer ${user.token}`
+    "Authorization": `Bearer ${token}`
   };
 
   const workspaceId = getStoredActiveWorkspaceId();
@@ -267,10 +628,114 @@ function getAuthHeaders() {
 
   return headers;
 }
-function logoutUser() {
+
+function isConfirmedAuthFailureStatus(status) {
+  return status === 401 || status === 403;
+}
+
+function logAuthDebug(message, value) {
+  console.log("[AUTH DEBUG] " + message, value);
+}
+
+function redirectToLogin(reason) {
+  logAuthDebug("redirect reason", reason);
+  window.location.replace("/login");
+}
+
+function handleModuleAuthFailure(reason) {
+  logAuthDebug("redirect reason", `module auth failure ignored: ${reason}`);
+}
+
+function logoutUser(options = {}) {
+  if (!options.explicit) {
+    handleModuleAuthFailure("logoutUser called without explicit user action");
+    return;
+  }
+
   localStorage.removeItem("tradeflowUser");
   window.location.href = "/login";
 }
+
+async function restoreTradeFlowAppSession() {
+  logAuthDebug("token on app boot", getStoredToken() ? "present" : "missing");
+
+  if (getUser() && getStoredToken()) {
+    const validated = await validateStoredSession();
+    if (validated === true || validated === "deferred") return true;
+    logAuthDebug("redirect reason", "stored token rejected by backend");
+    return false;
+  }
+
+  if (window.TradeFlowSessionManager?.restoreSession) {
+    return await window.TradeFlowSessionManager.restoreSession();
+  }
+
+  return false;
+}
+
+function getBootstrapStateSnapshot() {
+  return { ...bootstrapState };
+}
+
+function updateBootstrapState(patch = {}) {
+  Object.assign(bootstrapState, patch);
+
+  document.dispatchEvent(
+    new CustomEvent("tradeflow:bootstrap-state", {
+      detail: getBootstrapStateSnapshot()
+    })
+  );
+}
+
+function withTimeout(promise, timeoutMs, message) {
+  let timer;
+
+  const timeout = new Promise((_, reject) => {
+    timer = window.setTimeout(() => {
+      reject(new Error(message || "Operation timed out"));
+    }, timeoutMs);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => {
+    window.clearTimeout(timer);
+  });
+}
+
+async function waitForBootstrapForDataLoad(options = {}) {
+  if (options.duringBootstrap || bootstrapState.completed) return;
+  if (window.TradeFlowBootstrap?.whenReady) {
+    await window.TradeFlowBootstrap.whenReady();
+  }
+}
+
+function hasWorkspaceForDataLoad(options = {}) {
+  if (options.duringBootstrap || options.allowWithoutWorkspace) return true;
+  return Boolean(getCanonicalActiveWorkspaceId());
+}
+
+async function waitForBootstrap(timeoutMs = 15000) {
+  const pending = bootstrapPromise || bootstrap();
+
+  if (bootstrapState.completed) {
+    return getBootstrapStateSnapshot();
+  }
+
+  return withTimeout(pending, timeoutMs, "Timed out waiting for app bootstrap")
+    .catch((error) => {
+      updateBootstrapState({
+        status: "error",
+        error: error.message
+      });
+      return getBootstrapStateSnapshot();
+    });
+}
+
+window.TradeFlowBootstrap = {
+  state: bootstrapState,
+  bootstrap,
+  whenReady: waitForBootstrap,
+  getState: getBootstrapStateSnapshot
+};
 
 const pages = [
   "dashboard",
@@ -322,11 +787,7 @@ function showPage(page) {
 
   // Fast dashboard: only lightweight summary calls.
   if (page === "dashboard") {
-    safeRun(fetchSuppliers);
-    safeRun(fetchDeals);
-    safeRun(fetchAnalytics);
-    safeRun(fetchNotifications);
-    safeRun(fetchWorkspaces);
+    startDashboardPolling();
     return;
   }
 
@@ -345,7 +806,7 @@ function safeRun(fn) {
   try {
     if (typeof fn === "function") fn();
   } catch (error) {
-    console.log("Module skipped:", error.message);
+    debugLog("Module skipped:", error.message);
   }
 }
 
@@ -448,7 +909,7 @@ async function fetchEmployees() {
 
     renderEmployees(employees);
   } catch (error) {
-    console.log("Employee backend not connected:", error.message);
+    debugLog("Employee backend not connected:", error.message);
   }
 }
 
@@ -586,7 +1047,7 @@ function getActiveWorkspaceId() {
 }
 
 function getActiveWorkspaceName() {
-  return localStorage.getItem("tradeflowActiveWorkspaceName") || "None";
+  return workspaceState.workspaceName || "None";
 }
 
 function setActiveWorkspace() {
@@ -627,8 +1088,20 @@ function setActiveWorkspace() {
   fetchEmployees();
 }
 
-async function fetchWorkspaces() {
+async function fetchWorkspaces(options = {}) {
+  await waitForBootstrapForDataLoad(options);
+
+  if (requestLoading.workspaces) {
+    return getJsonStorage("tradeflowWorkspacesV1", []);
+  }
+
+  requestLoading.workspaces = true;
+
   try {
+    if (!options.duringBootstrap) {
+      bootstrapDebug("workspace load");
+    }
+
     const res = await fetch(WORKSPACE_URL, {
       headers: getAuthHeaders()
     });
@@ -638,12 +1111,41 @@ async function fetchWorkspaces() {
       return;
     }
 
-    const data = await res.json();
+    const contentType = res.headers.get("content-type") || "";
+    const rawBody = await res.text();
+
+    if (!contentType.includes("application/json")) {
+      console.error("[WORKSPACE API DEBUG] non-json response", {
+        status: res.status,
+        url: WORKSPACE_URL,
+        contentType,
+        bodyPreview: rawBody.slice(0, 300)
+      });
+      throw new Error(`Workspace API returned non-JSON response (${res.status})`);
+    }
+
+    const data = rawBody ? JSON.parse(rawBody) : {};
+    if (!res.ok) {
+      console.error("[WORKSPACE API DEBUG] failed response", {
+        status: res.status,
+        body: data
+      });
+    }
+
     const workspaces = normalizeApiList(data, "workspaces");
+    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+      console.log(
+        `[WORKSPACE API DEBUG] frontend workspace response status=${res.status} count=${workspaces.length} keys=${Object.keys(data || {}).join(",")}`
+      );
+    }
 
     renderWorkspaces(workspaces);
+    return workspaces;
   } catch (error) {
-    console.log("Workspace backend not connected:", error.message);
+    debugLog("Workspace backend not connected:", error.message);
+    return [];
+  } finally {
+    requestLoading.workspaces = false;
   }
 }
 
@@ -664,17 +1166,12 @@ function syncWorkspaceState(workspaces) {
     }))
     .filter((workspace) => isMongoObjectId(workspace.id));
 
-  localStorage.setItem("tradeflowWorkspacesV1", JSON.stringify(mapped));
-
   if (!mapped.length) {
     clearCanonicalActiveWorkspace();
     return;
   }
 
-  const currentId = getStoredActiveWorkspaceId();
-  const activeWorkspace = mapped.find((workspace) => workspace.id === currentId) || mapped[0];
-
-  setCanonicalActiveWorkspace(activeWorkspace);
+  restoreActiveWorkspace(mapped);
 }
 
 function renderWorkspaces(workspaces) {
@@ -980,7 +1477,13 @@ async function deleteWorkspace(id) {
   fetchWorkspaces();
 }
 
-async function fetchNotifications() {
+async function fetchNotifications(options = {}) {
+  await waitForBootstrapForDataLoad(options);
+  if (!hasWorkspaceForDataLoad(options)) return;
+  if (requestLoading.notifications) return;
+
+  requestLoading.notifications = true;
+
   try {
     const res = await fetch(NOTIFICATION_URL, {
       headers: getAuthHeaders()
@@ -995,7 +1498,9 @@ async function fetchNotifications() {
 
     renderNotifications(notifications);
   } catch (error) {
-    console.log("Notifications backend not connected:", error.message);
+    debugLog("Notifications backend not connected:", error.message);
+  } finally {
+    requestLoading.notifications = false;
   }
 }
 
@@ -1124,13 +1629,18 @@ async function createSystemNotification(title, message, type = "System", priorit
     });
 
     fetchNotifications();
-fetchWorkspaces();
   } catch (error) {
-    console.log("Auto notification skipped:", error.message);
+    debugLog("Auto notification skipped:", error.message);
   }
 }
 
-async function fetchSuppliers() {
+async function fetchSuppliers(options = {}) {
+  await waitForBootstrapForDataLoad(options);
+  if (!hasWorkspaceForDataLoad(options)) return;
+  if (requestLoading.suppliers) return;
+
+  requestLoading.suppliers = true;
+
   try {
     const res = await fetch(API_URL, {
       headers: getAuthHeaders()
@@ -1192,6 +1702,8 @@ async function fetchSuppliers() {
 
   } catch (error) {
     console.warn("API request failed but session preserved:", error.message);
+  } finally {
+    requestLoading.suppliers = false;
   }
 }
 
@@ -1255,7 +1767,13 @@ async function deleteSupplier(id) {
   fetchSuppliers();
 }
 
-async function fetchDeals() {
+async function fetchDeals(options = {}) {
+  await waitForBootstrapForDataLoad(options);
+  if (!hasWorkspaceForDataLoad(options)) return;
+  if (requestLoading.deals) return;
+
+  requestLoading.deals = true;
+
   try {
     const res = await fetch(DEAL_URL, {
       headers: getAuthHeaders()
@@ -1276,7 +1794,9 @@ async function fetchDeals() {
 
     renderDeals(deals);
   } catch (error) {
-    console.log("CRM backend not connected:", error.message);
+    debugLog("CRM backend not connected:", error.message);
+  } finally {
+    requestLoading.deals = false;
   }
 }
 
@@ -1723,8 +2243,16 @@ async function generateInvoicePDF() {
 }
 
 
-async function fetchAnalytics() {
+async function fetchAnalytics(options = {}) {
+  await waitForBootstrapForDataLoad(options);
+  if (!hasWorkspaceForDataLoad(options)) return;
+  if (requestLoading.analytics) return;
+
+  requestLoading.analytics = true;
+
   try {
+    bootstrapDebug("analytics load");
+
     const res = await fetch(ANALYTICS_URL, {
       headers: getAuthHeaders()
     });
@@ -1762,7 +2290,9 @@ async function fetchAnalytics() {
     setText("dashboardPipelineValue", data.pipelineValue || 0);
     setText("dashboardClosedDeals", data.closedDeals || 0);
   } catch (error) {
-    console.log("Analytics backend not connected:", error.message);
+    debugLog("Analytics backend not connected:", error.message);
+  } finally {
+    requestLoading.analytics = false;
   }
 }
 
@@ -1899,7 +2429,7 @@ async function fetchOutreachRecords() {
 
     renderOutreachRecords(records);
   } catch (error) {
-    console.log("Outreach backend not connected:", error.message);
+    debugLog("Outreach backend not connected:", error.message);
   }
 }
 
@@ -2105,7 +2635,7 @@ async function fetchTasks() {
 
     renderTasks(tasks);
   } catch (error) {
-    console.log("Task backend not connected:", error.message);
+    debugLog("Task backend not connected:", error.message);
   }
 }
 
@@ -2217,11 +2747,6 @@ async function deleteTask(id) {
   fetchTasks();
 }
 
-fetchEmployees();
-fetchTasks();
-
-
-
 function contactSupport() {
   const user = getUser();
   const subject = encodeURIComponent("TradeFlow Support Query");
@@ -2232,18 +2757,232 @@ function contactSupport() {
   window.location.href = `mailto:ks2353013@gmail.com?subject=${subject}&body=${body}`;
 }
 
+function startDashboardPolling() {
+  if (dashboardPollingStarted) return;
+
+  dashboardPollingStarted = true;
+  bootstrapDebug("dashboard polling started");
+
+  setTimeout(() => safeRun(fetchSuppliers), 150);
+  setTimeout(() => safeRun(fetchDeals), 300);
+  setTimeout(() => safeRun(fetchAnalytics), 450);
+  setTimeout(() => safeRun(fetchNotifications), 600);
+}
+
 function bootTradeFlow() {
   if (!appReady) return;
 
   // Smooth first load: dashboard first, then background summaries.
   showPage("dashboard");
-
-  setTimeout(() => safeRun(fetchAnalytics), 250);
-  setTimeout(() => safeRun(fetchNotifications), 450);
-  setTimeout(() => safeRun(fetchWorkspaces), 650);
 }
 
-bootTradeFlow();
+async function loadUser() {
+  if (!protectDashboard()) {
+    throw new Error("Authenticated user could not be loaded");
+  }
+
+  updateBootstrapState({
+    step: "loadUser",
+    userLoaded: true
+  });
+
+  return getUser();
+}
+
+async function loadCompany() {
+  updateBootstrapState({
+    step: "loadCompany",
+    companyLoaded: true
+  });
+
+  return getActiveCompanyId();
+}
+
+async function loadWorkspacesForBootstrap() {
+  updateBootstrapState({ step: "loadWorkspaces" });
+  bootstrapDebug("workspace load");
+  const workspaces = await withTimeout(
+    fetchWorkspaces({ duringBootstrap: true }),
+    12000,
+    "Timed out loading workspaces"
+  );
+
+  updateBootstrapState({
+    workspacesLoaded: true
+  });
+
+  return Array.isArray(workspaces) ? workspaces : [];
+}
+
+function restoreWorkspaceForBootstrap(workspaces) {
+  updateBootstrapState({ step: "restoreWorkspace" });
+  const workspaceId = restoreActiveWorkspace(workspaces);
+  bootstrapDebug(`workspace restored ${workspaceId || "none"}`);
+  return workspaceId;
+}
+
+function verifyWorkspaceForBootstrap() {
+  updateBootstrapState({ step: "verifyWorkspace" });
+  const workspaceId = window.TradeFlowWorkspace.getActiveWorkspaceId();
+  const workspaceVerified = Boolean(workspaceId);
+
+  if (!workspaceVerified) {
+    updateWorkspaceState({
+      workspaceId: "",
+      workspaceName: "",
+      companyId: getActiveCompanyId(),
+      loaded: true
+    });
+  }
+
+  updateBootstrapState({
+    workspaceVerified
+  });
+
+  return workspaceVerified;
+}
+
+function initializeModules() {
+  updateBootstrapState({ step: "initializeModules" });
+  bootTradeFlow();
+  updateBootstrapState({
+    modulesInitialized: true
+  });
+}
+
+async function bootstrap() {
+  if (bootstrapPromise) return bootstrapPromise;
+
+  bootstrapPromise = (async () => {
+    updateBootstrapState({
+      status: "running",
+      step: "restoreSession",
+      completed: false,
+      error: ""
+    });
+
+    const restored = await withTimeout(
+      restoreTradeFlowAppSession(),
+      12000,
+      "Timed out restoring session"
+    );
+
+    if (!restored) {
+      throw new Error("Session restore failed");
+    }
+
+    updateBootstrapState({
+      sessionRestored: true
+    });
+
+    await loadUser();
+    document.dispatchEvent(
+      new CustomEvent("tradeflow:session-ready", {
+        detail: { user: getUser() }
+      })
+    );
+
+    await loadCompany();
+    const workspaces = await loadWorkspacesForBootstrap();
+    restoreWorkspaceForBootstrap(workspaces);
+    verifyWorkspaceForBootstrap();
+    initializeModules();
+
+    updateBootstrapState({
+      status: "ready",
+      step: "complete",
+      completed: true
+    });
+
+    document.dispatchEvent(
+      new CustomEvent("tradeflow:bootstrap-complete", {
+        detail: getBootstrapStateSnapshot()
+      })
+    );
+
+    return getBootstrapStateSnapshot();
+  })().catch((error) => {
+    updateBootstrapState({
+      status: "error",
+      step: "error",
+      completed: true,
+      error: error.message
+    });
+
+    if (error.message === "Session restore failed") {
+      const lastAuthStatus =
+        window.TradeFlowSessionManager?.getLastAuthStatus?.() || 0;
+
+      if (!getStoredToken()) {
+        redirectToLogin("no token exists on app boot");
+      } else if (isConfirmedAuthFailureStatus(lastAuthStatus)) {
+        redirectToLogin(`confirmed auth ${lastAuthStatus}`);
+      } else {
+        logAuthDebug(
+          "redirect reason",
+          `not redirecting: ${error.message}; auth status ${lastAuthStatus || "pending/transient"}`
+        );
+      }
+    }
+
+    return getBootstrapStateSnapshot();
+  });
+
+  return bootstrapPromise;
+}
+
+function bootTradeFlowApp() {
+  return bootstrap();
+}
+
+function getInvalidWorkspaceKeysFound() {
+  const keys = [
+    "tradeflowActiveWorkspace",
+    "tradeflowActiveWorkspaceId",
+    "tradeflowActiveWorkspaceV1",
+    "activeWorkspace",
+    "activeWorkspaceId",
+    "workspaceId"
+  ];
+
+  return keys.filter((key) => {
+    const value = localStorage.getItem(key);
+    return value && !isMongoObjectId(value);
+  });
+}
+
+window.tradeflowSmokeStatus = function () {
+  const activeWorkspace = getCanonicalActiveWorkspaceObject();
+  const selector = document.getElementById("activeWorkspaceSelect");
+  const headerWorkspace = document.getElementById("workspaceName");
+
+  return {
+    tokenPresent: Boolean(getStoredToken()),
+    userPresent: Boolean(getUser()),
+    companyId: getActiveCompanyId(),
+    activeWorkspaceId: window.TradeFlowWorkspace.getActiveWorkspaceId(),
+    activeWorkspaceName:
+      workspaceState.workspaceName ||
+      activeWorkspace?.workspaceName ||
+      activeWorkspace?.name ||
+      "",
+    selectorValue: selector?.value || "",
+    headerWorkspaceName: headerWorkspace?.innerText || "",
+    missionCenterReady: Boolean(window.TradeFlowMissionCenterReady),
+    invalidWorkspaceKeysFound: getInvalidWorkspaceKeysFound(),
+    apiBaseUrl: BACKEND_URL,
+    bootstrap: getBootstrapStateSnapshot()
+  };
+};
+
+window.TradeFlowBootstrap = {
+  state: bootstrapState,
+  bootstrap,
+  whenReady: waitForBootstrap,
+  getState: getBootstrapStateSnapshot
+};
+
+bootTradeFlowApp();
 
 
 /* =========================================================

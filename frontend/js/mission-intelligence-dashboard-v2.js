@@ -3,14 +3,26 @@
 (function () {
   if (window.TradeFlowMissionIntelligenceDashboardV2) return;
 
+  function isLocalHost(hostname) {
+    return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+  }
+
   const API_BASE =
     window.TRADEFLOW_API_BASE ||
-    (window.location.hostname.includes("localhost")
-      ? "http://localhost:5000"
+    window.TRADEFLOW_API_BASE_URL ||
+    window.BACKEND_URL ||
+    (isLocalHost(window.location.hostname)
+      ? window.location.origin
       : "https://trade-flow-lc1k.onrender.com");
+  const LOADER_TIMEOUT_MS = 12000;
 
   function getToken() {
+    if (window.TradeFlowSessionManager?.getToken) {
+      return window.TradeFlowSessionManager.getToken();
+    }
+
     return (
+      localStorage.getItem("tradeflowAccessToken") ||
       localStorage.getItem("tradeflowToken") ||
       localStorage.getItem("token") ||
       localStorage.getItem("authToken") ||
@@ -20,10 +32,29 @@
   }
 
   function headers() {
-    return {
+    const requestHeaders = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${getToken()}`
     };
+
+    const workspaceId = window.TradeFlowWorkspace?.getActiveWorkspaceId?.() || "";
+    if (workspaceId) {
+      requestHeaders["x-workspace-id"] = workspaceId;
+    }
+
+    return requestHeaders;
+  }
+
+  function withLoaderTimeout(promise, message, timeoutMs = LOADER_TIMEOUT_MS) {
+    let timer;
+
+    const timeout = new Promise((_, reject) => {
+      timer = window.setTimeout(() => reject(new Error(message)), timeoutMs);
+    });
+
+    return Promise.race([promise, timeout]).finally(() => {
+      window.clearTimeout(timer);
+    });
   }
 
   function money(v) {
@@ -260,24 +291,64 @@
       dashboard.prepend(panel);
     }
 
+    const workspaceId = window.TradeFlowWorkspace?.getActiveWorkspaceId?.() || "";
+    if (!workspaceId) {
+      panel.innerHTML = `<div class="deal">Workspace not selected</div>`;
+      return;
+    }
+
     panel.innerHTML = `<div class="deal">Loading Mission Intelligence...</div>`;
 
     try {
-      const missions = await fetchMissions();
-      panel.innerHTML = renderMission(getLatestMission(missions));
+      const missions = await withLoaderTimeout(
+        fetchMissions(),
+        "Timed out loading Mission Intelligence"
+      );
+      panel.innerHTML = missions.length
+        ? renderMission(getLatestMission(missions))
+        : `<div class="deal">No missions found</div>`;
     } catch (error) {
-      panel.innerHTML = `<div class="deal">Mission Intelligence error: ${safe(error.message)}</div>`;
+      panel.innerHTML = `<div class="deal">Mission service unavailable: ${safe(error.message)}</div>`;
     }
   }
 
   function boot() {
-    setTimeout(render, 1400);
+    const scheduleRenderAfterBootstrap = () => {
+      if (
+        window.TradeFlowBootstrap?.getState &&
+        !window.TradeFlowBootstrap.getState().completed
+      ) {
+        return;
+      }
+
+      setTimeout(render, 300);
+    };
+
+    const start = async () => {
+      if (window.TradeFlowBootstrap?.whenReady) {
+        await window.TradeFlowBootstrap.whenReady();
+      }
+
+      setTimeout(render, 100);
+    };
+
+    start();
 
     document.addEventListener("tradeflow:page-change", function () {
-      setTimeout(render, 300);
+      scheduleRenderAfterBootstrap();
     });
 
-    console.log("✅ Mission Intelligence Dashboard V2 active");
+    if (window.TradeFlowWorkspace?.subscribe) {
+      window.TradeFlowWorkspace.subscribe(scheduleRenderAfterBootstrap);
+    }
+
+    document.addEventListener("tradeflow:bootstrap-complete", function () {
+      scheduleRenderAfterBootstrap();
+    });
+
+    if (window.TRADEFLOW_DEBUG === true || localStorage.getItem("tradeflowDebug") === "true") {
+      console.log("Mission Intelligence Dashboard V2 active");
+    }
   }
 
   window.TradeFlowMissionIntelligenceDashboardV2 = {

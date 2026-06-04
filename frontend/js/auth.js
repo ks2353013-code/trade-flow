@@ -25,23 +25,46 @@ function getTradeflowUser() {
   return (
     safeJsonParse(localStorage.getItem("tradeflowUser")) ||
     safeJsonParse(localStorage.getItem("user")) ||
-    safeJsonParse(localStorage.getItem("currentUser"))
+    safeJsonParse(localStorage.getItem("currentUser")) ||
+    safeJsonParse(sessionStorage.getItem("tradeflowUser")) ||
+    safeJsonParse(sessionStorage.getItem("user")) ||
+    safeJsonParse(sessionStorage.getItem("currentUser"))
   );
 }
 
 function getTradeflowToken() {
+  const storedUser = getTradeflowUser();
+
+  if (storedUser?.token) return storedUser.token;
+  if (storedUser?.accessToken) return storedUser.accessToken;
+
   return (
+    localStorage.getItem("tradeflowAccessToken") ||
     localStorage.getItem("tradeflowToken") ||
     localStorage.getItem("token") ||
     localStorage.getItem("authToken") ||
     localStorage.getItem("jwt") ||
+    sessionStorage.getItem("tradeflowAccessToken") ||
+    sessionStorage.getItem("tradeflowToken") ||
+    sessionStorage.getItem("token") ||
+    sessionStorage.getItem("authToken") ||
+    sessionStorage.getItem("jwt") ||
     ""
   );
 }
 
 function saveTradeflowUser(data = {}) {
-  const rawUser = data.user || data.data || data;
-  const token = data.token || data.accessToken || data.jwt || rawUser.token || rawUser.accessToken;
+  const rawData = data.data || {};
+  const rawUser = data.user || rawData.user || rawData || data;
+  const token =
+    data.token ||
+    data.accessToken ||
+    data.jwt ||
+    rawData.token ||
+    rawData.accessToken ||
+    rawData.jwt ||
+    rawUser.token ||
+    rawUser.accessToken;
 
   if (!token) {
     throw new Error("Authentication token missing");
@@ -64,6 +87,7 @@ function saveTradeflowUser(data = {}) {
   localStorage.setItem("user", JSON.stringify(finalUser));
   localStorage.setItem("currentUser", JSON.stringify(finalUser));
 
+  localStorage.setItem("tradeflowAccessToken", token);
   localStorage.setItem("tradeflowToken", token);
   localStorage.setItem("token", token);
   localStorage.setItem("authToken", token);
@@ -87,6 +111,10 @@ function requireAuthenticatedUser() {
   const token = getTradeflowToken();
 
   if (!user || !token) {
+    if (window.location.pathname === "/app") {
+      return false;
+    }
+
     clearTradeflowSession();
     window.location.href = "/login";
     return false;
@@ -142,6 +170,8 @@ function redirectAuthenticatedMaster() {
 
 window.saveTradeflowUser = saveTradeflowUser;
 window.getTradeflowUser = getTradeflowUser;
+window.getAuthToken = window.getAuthToken || getTradeflowToken;
+window.getTradeflowToken = getTradeflowToken;
 window.clearTradeflowSession = clearTradeflowSession;
 window.protectDashboard = protectDashboard;
 window.protectMasterAdmin = protectMasterAdmin;

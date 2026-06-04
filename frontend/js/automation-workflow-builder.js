@@ -28,7 +28,7 @@
       Authorization: user?.token ? `Bearer ${user.token}` : "",
       "x-user-email": user?.email || "unknown@tradeflow.local",
       "x-company-id": localStorage.getItem("tradeflowActiveCompany") || "",
-      "x-workspace-id": localStorage.getItem("tradeflowActiveWorkspace") || ""
+      "x-workspace-id": window.TradeFlowWorkspace?.getActiveWorkspaceId?.() || ""
     };
   }
 
@@ -233,7 +233,11 @@
     execute: executeWorkflow
   };
 
-  function boot() {
+  async function boot() {
+    if (window.TradeFlowBootstrap?.whenReady) {
+      await window.TradeFlowBootstrap.whenReady();
+    }
+
     buildPanel();
     setTimeout(fetchWorkflows, 1200);
   }

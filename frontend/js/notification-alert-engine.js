@@ -3,6 +3,7 @@
 (function () {
 
   const CACHE_KEY = "tradeflowNotifications";
+  let notificationsLoading = false;
 
   function $(id) {
     return document.getElementById(id);
@@ -57,22 +58,44 @@
     );
   }
 
+  function getActiveWorkspaceId() {
+    return window.TradeFlowWorkspace?.getActiveWorkspaceId?.() || "";
+  }
+
+  async function waitForBootstrap() {
+    if (window.TradeFlowBootstrap?.whenReady) {
+      await window.TradeFlowBootstrap.whenReady();
+    }
+  }
+
   function getHeaders() {
 
     const user = getUser();
+    const token =
+      window.getAuthToken?.() ||
+      window.TradeFlowSessionManager?.getToken?.() ||
+      user?.token ||
+      "";
+    const workspaceId = getActiveWorkspaceId();
 
-    return {
+    const headers = {
       "Content-Type": "application/json",
 
       Authorization:
-        user?.token
-          ? `Bearer ${user.token}`
+        token
+          ? `Bearer ${token}`
           : "",
 
       "x-user-email":
         user?.email ||
         "tradeflow@local.test"
     };
+
+    if (workspaceId) {
+      headers["x-workspace-id"] = workspaceId;
+    }
+
+    return headers;
   }
 
   async function createNotification(
@@ -126,6 +149,15 @@
   async function fetchNotifications(
     renderStatus = true
   ) {
+    await waitForBootstrap();
+    if (!getActiveWorkspaceId()) {
+      renderNotifications();
+      return;
+    }
+
+    if (notificationsLoading) return;
+
+    notificationsLoading = true;
 
     try {
 
@@ -162,6 +194,10 @@
       setStatus(
         "Local notification mode active."
       );
+
+    } finally {
+
+      notificationsLoading = false;
 
     }
 
@@ -383,7 +419,10 @@
 
     buildPanel();
 
-    fetchNotifications(false);
+    (async () => {
+      await waitForBootstrap();
+      fetchNotifications(false);
+    })();
 
     console.log(
       "✅ Notification Engine Active"

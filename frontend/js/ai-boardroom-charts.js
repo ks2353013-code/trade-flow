@@ -2,6 +2,26 @@
 
 (function () {
   if (window.TradeFlowAIBoardroomCharts) return;
+  let renderLoading = false;
+  let renderQueued = false;
+  let renderTimer = null;
+
+  async function waitForBootstrap() {
+    if (window.TradeFlowBootstrap?.whenReady) {
+      await window.TradeFlowBootstrap.whenReady();
+    }
+  }
+
+  function scheduleRender(delay = 250) {
+    if (renderTimer) {
+      clearTimeout(renderTimer);
+    }
+
+    renderTimer = setTimeout(() => {
+      renderTimer = null;
+      render();
+    }, delay);
+  }
 
   function getEmail() {
     return (
@@ -210,7 +230,15 @@
   }
 
   async function render() {
+    if (renderLoading) {
+      renderQueued = true;
+      return;
+    }
+
+    renderLoading = true;
+
     try {
+      await waitForBootstrap();
       await loadChartJS();
       createPanel();
 
@@ -268,6 +296,13 @@
       console.log("✅ AI Boardroom Charts rendered");
     } catch (error) {
       console.warn("AI Boardroom Charts failed:", error.message);
+    } finally {
+      renderLoading = false;
+
+      if (renderQueued) {
+        renderQueued = false;
+        scheduleRender(500);
+      }
     }
   }
 
@@ -280,11 +315,11 @@
         page === "master" ||
         page === "dashboard"
       ) {
-        setTimeout(render, 500);
+        scheduleRender(500);
       }
     });
 
-    setTimeout(render, 1800);
+    scheduleRender(1800);
 
     console.log("✅ AI Boardroom Charts active");
   }

@@ -89,11 +89,16 @@
 
 <script>
   const RENDER_BACKEND_URL = "https://trade-flow-lc1k.onrender.com";
+  function isLocalHost(hostname) {
+    return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+  }
+
   const API_BASE =
-    window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1"
+    window.TRADEFLOW_API_BASE ||
+    window.TRADEFLOW_API_BASE_URL ||
+    (isLocalHost(window.location.hostname)
       ? window.location.origin
-      : RENDER_BACKEND_URL;
+      : RENDER_BACKEND_URL);
 
   let selectedBusinessType = localStorage.getItem("tradeflowBusinessType") || "";
 

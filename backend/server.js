@@ -12,7 +12,7 @@ const { Server } = require("socket.io");
 const cookieParser = require("cookie-parser");
 
 const { initSocketServer } = require("./socket/socketServer");
-const connectDB = require("./config/db");
+const { connectDB, getMongoState, isMongoConnected } = require("./config/db");
 
 const authMiddleware = require("./middleware/authMiddleware");
 const tenantMiddleware = require("./middleware/tenantMiddleware");
@@ -63,6 +63,7 @@ const onboardingRoutes = require("./routes/onboardingRoutes");
 const realSupplierDiscoveryRoutes = require("./routes/realSupplierDiscoveryRoutes");
 const buyerDiscoveryRoutes = require("./routes/buyerDiscoveryRoutes");
 const tradeAgentRoutes = require("./routes/tradeAgentRoutes");
+const crmPushRoutes = require("./routes/crmPushRoutes");
 const outreachApprovalRoutes = require("./routes/outreachApprovalRoutes");
 
 const { startWorkflowScheduler } = require("./services/workflowScheduler");
@@ -77,11 +78,22 @@ app.set("trust proxy", 1);
 const allowedOrigins = [
   "http://localhost:5000",
   "http://localhost:3000",
+  "http://127.0.0.1:5000",
+  "http://127.0.0.1:3000",
   "https://trade-flow-lc1k.onrender.com",
   "https://tradeflowai.in",
   "https://www.tradeflowai.in"
 ];
 const allowVercelPreviews = process.env.ALLOW_VERCEL_PREVIEWS === "true";
+
+function isAllowedVercelPreview(origin) {
+  try {
+    const url = new URL(origin);
+    return url.protocol === "https:" && url.hostname.endsWith(".vercel.app");
+  } catch {
+    return false;
+  }
+}
 
 app.use(
   cors({
@@ -90,7 +102,7 @@ app.use(
 
       if (
         allowedOrigins.includes(origin) ||
-        (allowVercelPreviews && origin.endsWith(".vercel.app"))
+        (allowVercelPreviews && isAllowedVercelPreview(origin))
       ) {
         return callback(null, true);
       }
@@ -110,9 +122,36 @@ app.use(
 app.use(compression());
 app.use(morgan("combined"));
 
+const isProduction = process.env.NODE_ENV === "production";
+
+function isLocalSmokeRequest(req) {
+  if (isProduction) return false;
+
+  const host = String(req.hostname || "").toLowerCase();
+  const ip = String(req.ip || req.socket?.remoteAddress || "");
+
+  return (
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "::1" ||
+    ip === "127.0.0.1" ||
+    ip === "::1" ||
+    ip === "::ffff:127.0.0.1"
+  );
+}
+
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 500,
+  max: isProduction
+    ? 500
+    : Number(process.env.DEV_RATE_LIMIT_MAX || 5000),
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => (
+    req.path === "/health" ||
+    req.path === "/ready" ||
+    isLocalSmokeRequest(req)
+  ),
   message: {
     success: false,
     message: "Too many requests. Please try again later."
@@ -120,6 +159,24 @@ const apiLimiter = rateLimit({
 });
 
 app.use("/api", apiLimiter);
+
+function getMongoStatusLabel() {
+  const status = getMongoState().status;
+  if (status === "connected") return "connected";
+  if (status === "failed") return "failed";
+  return "connecting";
+}
+
+function requireDatabaseReady(req, res, next) {
+  if (isMongoConnected()) {
+    return next();
+  }
+
+  return res.status(503).json({
+    success: false,
+    message: "Database not ready. Please retry shortly."
+  });
+}
 
 /* Razorpay webhook must stay before JSON parser and auth */
 app.use("/api/razorpay-webhook", razorpayWebhookRoutes);
@@ -131,18 +188,35 @@ app.use(cookieParser());
 /* Health check */
 app.get("/api/health", (req, res) => {
   res.json({
-    success: true,
-    message: "TradeFlow backend working",
-    port: process.env.PORT || 5000,
-    mode: process.env.NODE_ENV || "local"
+    ok: true,
+    server: "running",
+    mongo: getMongoStatusLabel(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || "local"
   });
 });
 
+app.get("/api/ready", (req, res) => {
+  const payload = {
+    ok: isMongoConnected(),
+    server: "running",
+    mongo: getMongoStatusLabel(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || "local"
+  };
+
+  if (!payload.ok) {
+    return res.status(503).json(payload);
+  }
+
+  return res.json(payload);
+});
+
 /* Public Auth Routes */
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", requireDatabaseReady, authRoutes);
 
 /* Protected API Routes */
-const protectedStack = [authMiddleware, tenantMiddleware];
+const protectedStack = [requireDatabaseReady, authMiddleware, tenantMiddleware];
 
 app.use("/suppliers", protectedStack, supplierRoutes);
 app.use("/api/deals", protectedStack, dealRoutes);
@@ -187,8 +261,17 @@ app.use("/api/onboarding", protectedStack, onboardingRoutes);
 app.use("/api/org-workspaces", protectedStack, workspaceOrgRoutes);
 app.use("/api/ai-memory", protectedStack, aiMemoryRoutes);
 app.use("/api/trade-agent", protectedStack, tradeAgentRoutes);
+app.use("/api/crm", protectedStack, crmPushRoutes);
 app.use("/api/outreach-approvals", protectedStack, outreachApprovalRoutes);
 app.use("/api/email-deliveries", protectedStack, emailDeliveryRoutes);
+
+app.use("/api", (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "API route not found",
+    path: req.originalUrl
+  });
+});
 
 /* Frontend Pages */
 app.get("/", (req, res) => {
@@ -227,14 +310,6 @@ app.use(
 
 /* Fallback */
 app.use((req, res) => {
-  if (req.path.startsWith("/api")) {
-    return res.status(404).json({
-      success: false,
-      message: "API route not found",
-      path: req.path
-    });
-  }
-
   return res.redirect("/login");
 });
 
@@ -248,7 +323,7 @@ const io = new Server(server, {
 
       if (
         allowedOrigins.includes(origin) ||
-        (allowVercelPreviews && origin.endsWith(".vercel.app"))
+        (allowVercelPreviews && isAllowedVercelPreview(origin))
       ) {
         return callback(null, true);
       }
@@ -262,30 +337,37 @@ const io = new Server(server, {
 
 initSocketServer(io);
 
-async function startServer() {
-  try {
-    await connectDB();
-
-    server.listen(PORT, () => {
-      console.log(`✅ TradeFlow Server running on port ${PORT}`);
-      console.log("✅ MongoDB Connected");
-      console.log("✅ Real-time collaboration engine active");
-      console.log("✅ CORS enabled for localhost, Render, Vercel, and custom domain");
-      console.log("✅ JWT auth mounted on protected API routes");
-      console.log("✅ Tenant middleware uses verified JWT identity only");
-
-      if (process.env.ENABLE_SCHEDULERS === "true") {
-        console.log("✅ Workflow schedulers enabled");
-        startWorkflowScheduler();
-        startAIAutonomousScheduler();
-      } else {
-        console.log("ℹ️ Workflow schedulers disabled. Set ENABLE_SCHEDULERS=true to enable.");
-      }
-    });
-  } catch (error) {
-    console.error("❌ Server startup failed:", error);
-    process.exit(1);
+function startSchedulersIfEnabled() {
+  if (process.env.ENABLE_SCHEDULERS === "true") {
+    console.log("Workflow schedulers enabled");
+    startWorkflowScheduler();
+    startAIAutonomousScheduler();
+  } else {
+    console.log("Workflow schedulers disabled. Set ENABLE_SCHEDULERS=true to enable.");
   }
+}
+
+function startMongoConnection() {
+  connectDB()
+    .then((connected) => {
+      if (connected) {
+        startSchedulersIfEnabled();
+      }
+    })
+    .catch((error) => {
+      console.error("Mongo failed with reason:", error.message);
+    });
+}
+
+function startServer() {
+  server.listen(PORT, () => {
+    console.log(`Server listening on http://localhost:${PORT}`);
+    console.log("Real-time collaboration engine active");
+    console.log("CORS enabled for localhost, Render, Vercel, and custom domain");
+    console.log("JWT auth mounted on protected API routes");
+    console.log("Tenant middleware uses verified JWT identity only");
+    startMongoConnection();
+  });
 }
 
 startServer();

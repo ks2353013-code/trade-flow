@@ -36,29 +36,13 @@
     return "";
   }
 
-  function getSelectWorkspaceId(id) {
-    const select = document.getElementById(id);
-    return select?.value || "";
-  }
-
   function getWorkspaceId() {
-    if (typeof window.getCanonicalActiveWorkspaceId === "function") {
-      const canonicalId = window.getCanonicalActiveWorkspaceId();
-      if (isMongoObjectId(canonicalId)) return canonicalId;
+    if (window.TradeFlowWorkspace?.getActiveWorkspaceId) {
+      const workspaceId = window.TradeFlowWorkspace.getActiveWorkspaceId();
+      if (isMongoObjectId(workspaceId)) return workspaceId;
     }
 
-    const candidates = [
-      getSelectWorkspaceId("activeWorkspaceSelect"),
-      getSelectWorkspaceId("workspaceAccessSelect"),
-      localStorage.getItem("tradeflowActiveWorkspace"),
-      localStorage.getItem("tradeflowActiveWorkspaceId"),
-      localStorage.getItem("tradeflowActiveWorkspaceV1"),
-      localStorage.getItem("activeWorkspace"),
-      localStorage.getItem("activeWorkspaceId"),
-      localStorage.getItem("workspaceId")
-    ];
-
-    return candidates.find(isMongoObjectId) || "";
+    return "";
   }
 
   function getTenantHeaders() {
@@ -93,10 +77,22 @@
       url,
       options = {}
     ) {
+      const incomingHeaders = {
+        ...(options.headers || {})
+      };
+
+      Object.keys(incomingHeaders).forEach((key) => {
+        if (
+          key.toLowerCase() === "x-workspace-id" &&
+          !isMongoObjectId(incomingHeaders[key])
+        ) {
+          delete incomingHeaders[key];
+        }
+      });
 
       options.headers = {
-        ...getTenantHeaders(),
-        ...(options.headers || {})
+        ...incomingHeaders,
+        ...getTenantHeaders()
       };
 
       return originalFetch(url, options);

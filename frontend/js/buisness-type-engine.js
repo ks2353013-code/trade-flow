@@ -69,6 +69,8 @@
 
   function getToken() {
     return (
+      window.getAuthToken?.() ||
+      window.TradeFlowSessionManager?.getToken?.() ||
       localStorage.getItem("tradeflowToken") ||
       localStorage.getItem("token") ||
       localStorage.getItem("authToken") ||
@@ -78,9 +80,13 @@
   }
 
   function requireLogin() {
-    if (!getUser() || !getToken()) {
-      localStorage.clear();
-      window.location.href = "/login";
+    if (!getToken()) {
+      console.log("[AUTH DEBUG] redirect reason", "business type skipped: token missing");
+      return false;
+    }
+
+    if (!getUser()) {
+      console.log("[AUTH DEBUG] redirect reason", "business type waiting: user pending");
       return false;
     }
     return true;

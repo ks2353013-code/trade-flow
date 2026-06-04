@@ -6,17 +6,70 @@
 (function () {
   if (window.TradeFlowMissionCenterUIV1) return;
 
+  function isLocalHost(hostname) {
+    return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+  }
+
   const API_BASE =
     window.TRADEFLOW_API_BASE ||
-    (window.location.hostname.includes("localhost")
-      ? "http://localhost:5000"
+    window.TRADEFLOW_API_BASE_URL ||
+    window.BACKEND_URL ||
+    (isLocalHost(window.location.hostname)
+      ? window.location.origin
       : "https://trade-flow-lc1k.onrender.com");
   const leadPushCache = new Map();
   const outreachDraftCache = new Map();
   let leadPushCounter = 0;
   let outreachDraftCounter = 0;
+  let renderLoading = false;
+  let renderQueued = false;
   const WORKSPACE_REQUIRED_MESSAGE =
     "Select or create a workspace before using Outreach Approval Queue";
+  const LOADER_TIMEOUT_MS = 12000;
+
+  function showMissionNotice(message, type = "info") {
+    const panel = document.getElementById("missionCenterNotice");
+    if (!panel) return;
+
+    const colors = {
+      success: "rgba(34,197,94,.16)",
+      error: "rgba(239,68,68,.16)",
+      info: "rgba(14,165,233,.16)"
+    };
+
+    panel.innerHTML = `
+      <div class="deal" style="border-color:rgba(125,211,252,.22);background:${colors[type] || colors.info};">
+        ${safeText(message)}
+      </div>
+    `;
+  }
+
+  function clearMissionNotice() {
+    const panel = document.getElementById("missionCenterNotice");
+    if (panel) panel.innerHTML = "";
+  }
+
+  function withLoaderTimeout(promise, message, timeoutMs = LOADER_TIMEOUT_MS) {
+    let timer;
+
+    const timeout = new Promise((_, reject) => {
+      timer = window.setTimeout(() => {
+        reject(new Error(message));
+      }, timeoutMs);
+    });
+
+    return Promise.race([promise, timeout]).finally(() => {
+      window.clearTimeout(timer);
+    });
+  }
+
+  function getStoredUser() {
+    try {
+      return JSON.parse(localStorage.getItem("tradeflowUser") || "null");
+    } catch {
+      return null;
+    }
+  }
 
   function getToken() {
     try {
@@ -25,11 +78,16 @@
       if (storedUser?.token) {
         return storedUser.token;
       }
+
+      if (storedUser?.accessToken) {
+        return storedUser.accessToken;
+      }
     } catch {
       // Fall through to legacy token keys.
     }
 
     return (
+      localStorage.getItem("tradeflowAccessToken") ||
       localStorage.getItem("tradeflowToken") ||
       localStorage.getItem("token") ||
       localStorage.getItem("authToken") ||
@@ -59,29 +117,13 @@
     };
   }
 
-  function getSelectWorkspaceId(id) {
-    const select = document.getElementById(id);
-    return select?.value || "";
-  }
-
   function getActiveWorkspaceId() {
-    if (typeof window.getCanonicalActiveWorkspaceId === "function") {
-      const canonicalId = window.getCanonicalActiveWorkspaceId();
-      if (isMongoObjectId(canonicalId)) return canonicalId;
+    if (window.TradeFlowWorkspace?.getActiveWorkspaceId) {
+      const workspaceId = window.TradeFlowWorkspace.getActiveWorkspaceId();
+      if (isMongoObjectId(workspaceId)) return workspaceId;
     }
 
-    const candidates = [
-      getSelectWorkspaceId("activeWorkspaceSelect"),
-      getSelectWorkspaceId("workspaceAccessSelect"),
-      localStorage.getItem("tradeflowActiveWorkspaceId"),
-      localStorage.getItem("tradeflowActiveWorkspace"),
-      localStorage.getItem("tradeflowActiveWorkspaceV1"),
-      localStorage.getItem("activeWorkspaceId"),
-      localStorage.getItem("activeWorkspace"),
-      localStorage.getItem("workspaceId")
-    ];
-
-    return candidates.find(isMongoObjectId) || "";
+    return "";
   }
 
   function clearWorkspaceHeader(headers) {
@@ -130,8 +172,31 @@
   function requireActiveWorkspace() {
     if (hasActiveWorkspace()) return true;
 
-    alert(WORKSPACE_REQUIRED_MESSAGE);
+    showMissionNotice(WORKSPACE_REQUIRED_MESSAGE, "error");
     return false;
+  }
+
+  async function waitForMissionReadiness() {
+    if (window.TradeFlowWorkspace?.waitForWorkspace && !getActiveWorkspaceId()) {
+      await window.TradeFlowWorkspace.waitForWorkspace({ timeoutMs: 8000 });
+    }
+
+    const token = getToken();
+    const user = getStoredUser();
+    const workspaceId = getActiveWorkspaceId();
+    const companyId =
+      window.tradeflowSmokeStatus?.().companyId ||
+      user?.companyId ||
+      user?.company?._id ||
+      "";
+
+    return {
+      ready: Boolean(token && user && workspaceId),
+      tokenPresent: Boolean(token),
+      userPresent: Boolean(user),
+      companyId,
+      workspaceId
+    };
   }
 
   function formatCurrency(value) {
@@ -278,11 +343,19 @@
   }
 
   async function runMission() {
+    clearMissionNotice();
+
+    const readiness = await waitForMissionReadiness();
+    if (!readiness.ready) {
+      showMissionNotice(WORKSPACE_REQUIRED_MESSAGE, "error");
+      return;
+    }
+
     const input = document.getElementById("missionCenterInput");
     const missionText = input?.value?.trim();
 
     if (!missionText) {
-      alert("Enter a mission first. Example: Export Basmati Rice to UAE");
+      showMissionNotice("Enter a mission first. Example: Export Basmati Rice to UAE", "error");
       return;
     }
 
@@ -296,18 +369,17 @@
     const data = await res.json();
 
     if (!res.ok || !data.success) {
-      alert(data.message || "Mission failed");
+      showMissionNotice(data.message || "Mission failed", "error");
       return;
     }
 
     input.value = "";
     await render();
-    alert("Mission created successfully.");
+    showMissionNotice("Mission created successfully.", "success");
   }
 
   async function approveMission(id) {
-    const ok = confirm("Approve this mission to move it from approval stage to running?");
-    if (!ok) return;
+    clearMissionNotice();
 
     const res = await fetch(`${API_BASE}/api/trade-agent/missions/${id}/approve`, {
       method: "POST",
@@ -318,19 +390,20 @@
     const data = await res.json();
 
     if (!res.ok || !data.success) {
-      alert(data.message || "Mission approval failed");
+      showMissionNotice(data.message || "Mission approval failed", "error");
       return;
     }
 
     await render();
-    alert("Mission approved.");
+    showMissionNotice("Mission approved.", "success");
   }
 
   async function pushLeadToCRM(cacheId) {
+    clearMissionNotice();
     const cached = leadPushCache.get(cacheId);
 
     if (!cached) {
-      alert("Lead data is no longer available. Refresh Mission Center and try again.");
+      showMissionNotice("Lead data is no longer available. Refresh Mission Center and try again.", "error");
       return;
     }
 
@@ -346,18 +419,19 @@
     const data = await res.json();
 
     if (!res.ok || !data.success) {
-      alert(data.message || "CRM push failed");
+      showMissionNotice(data.message || "CRM push failed", "error");
       return;
     }
 
-    alert(data.duplicate ? "Lead already exists in CRM." : "Lead added to CRM");
+    showMissionNotice(data.duplicate ? "Lead already exists in CRM." : "Lead added to CRM", "success");
   }
 
   async function createOutreachDraft(cacheId) {
+    clearMissionNotice();
     const cached = outreachDraftCache.get(cacheId);
 
     if (!cached) {
-      alert("Lead data is no longer available. Refresh Mission Center and try again.");
+      showMissionNotice("Lead data is no longer available. Refresh Mission Center and try again.", "error");
       return;
     }
 
@@ -373,19 +447,17 @@
     const data = await res.json();
 
     if (!res.ok || !data.success) {
-      alert(data.message || "Outreach draft creation failed");
+      showMissionNotice(data.message || "Outreach draft creation failed", "error");
       return;
     }
 
     await render();
-    alert("Draft created. Human approval required before sending.");
+    showMissionNotice("Draft created. Human approval required before sending.", "success");
   }
 
   async function approveOutreachDraft(id) {
+    clearMissionNotice();
     if (!requireActiveWorkspace()) return;
-
-    const ok = confirm("Approve this stored draft? No message will be sent.");
-    if (!ok) return;
 
     const res = await fetch(`${API_BASE}/api/outreach-approvals/${id}/approve`, {
       method: "POST",
@@ -396,19 +468,17 @@
     const data = await res.json();
 
     if (!res.ok || !data.success) {
-      alert(data.message || "Draft approval failed");
+      showMissionNotice(data.message || "Draft approval failed", "error");
       return;
     }
 
     await render();
-    alert("Draft approved. No message was sent.");
+    showMissionNotice("Draft approved. No message was sent.", "success");
   }
 
   async function rejectOutreachDraft(id) {
+    clearMissionNotice();
     if (!requireActiveWorkspace()) return;
-
-    const ok = confirm("Reject this stored draft? No message will be sent.");
-    if (!ok) return;
 
     const res = await fetch(`${API_BASE}/api/outreach-approvals/${id}/reject`, {
       method: "POST",
@@ -419,15 +489,16 @@
     const data = await res.json();
 
     if (!res.ok || !data.success) {
-      alert(data.message || "Draft rejection failed");
+      showMissionNotice(data.message || "Draft rejection failed", "error");
       return;
     }
 
     await render();
-    alert("Draft rejected. No message was sent.");
+    showMissionNotice("Draft rejected. No message was sent.", "success");
   }
 
   async function viewOutreachAudit(id) {
+    clearMissionNotice();
     if (!requireActiveWorkspace()) return;
 
     const res = await fetch(`${API_BASE}/api/outreach-approvals/${id}/audit`, {
@@ -438,36 +509,25 @@
     const data = await res.json();
 
     if (!res.ok || !data.success) {
-      alert(data.message || "Failed to load audit trail");
+      showMissionNotice(data.message || "Failed to load audit trail", "error");
       return;
     }
 
     const auditRows = safeArray(data.audit);
 
     if (!auditRows.length) {
-      alert("No audit records found for this draft.");
+      renderOutreachAuditTrail([]);
+      showMissionNotice("No audit records found for this draft.", "info");
       return;
     }
 
-    const lines = auditRows.map((row) => {
-      const timestamp = row.timestamp
-        ? new Date(row.timestamp).toLocaleString()
-        : "Unknown time";
-      const actor = row.actorEmail || "Unknown actor";
-      const oldStatus = row.oldStatus || "None";
-      const newStatus = row.newStatus || "None";
-
-      return `${timestamp}\n${actor}\n${row.action || "Action"}: ${oldStatus} -> ${newStatus}`;
-    });
-
-    alert(`Approval Audit Trail\n\n${lines.join("\n\n")}`);
+    renderOutreachAuditTrail(auditRows);
+    showMissionNotice("Audit trail loaded.", "success");
   }
 
   async function sendApprovedEmail(id) {
+    clearMissionNotice();
     if (!requireActiveWorkspace()) return;
-
-    const ok = confirm("Send this approved email draft now?");
-    if (!ok) return;
 
     const res = await fetch(`${API_BASE}/api/email-deliveries/send-approved/${id}`, {
       method: "POST",
@@ -478,12 +538,12 @@
     const data = await res.json();
 
     if (!res.ok || !data.success) {
-      alert(data.message || "Email sending failed");
+      showMissionNotice(data.message || "Email sending failed", "error");
       return;
     }
 
     await render();
-    alert(data.message || "Approved email sent successfully.");
+    showMissionNotice(data.message || "Approved email sent successfully.", "success");
   }
 
   function renderAgentReports(mission) {
@@ -652,6 +712,42 @@
           ${renderApprovalDraftGroup("Pending Drafts", pending, true)}
           ${renderApprovalDraftGroup("Approved Drafts", approved, false)}
           ${renderApprovalDraftGroup("Rejected Drafts", rejected, false)}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderOutreachAuditTrail(rows = []) {
+    const auditPanel = document.getElementById("missionOutreachAuditTrail");
+    if (!auditPanel) return;
+
+    auditPanel.innerHTML = `
+      <div style="margin-top:18px;">
+        <h4 style="color:white;font-weight:900;margin-bottom:10px;">Approval Audit Trail</h4>
+        <div style="display:grid;grid-template-columns:1fr;gap:10px;">
+          ${
+            rows.length
+              ? rows.map((row) => {
+                  const timestamp = row.timestamp
+                    ? new Date(row.timestamp).toLocaleString()
+                    : "Unknown time";
+                  const oldStatus = row.oldStatus || "None";
+                  const newStatus = row.newStatus || "None";
+
+                  return `
+                    <div class="deal">
+                      <b style="color:white;">${safeText(row.action || "Action")}</b>
+                      <p class="muted" style="margin-top:4px;">
+                        ${safeText(timestamp)} &bull; ${safeText(row.actorEmail || "Unknown actor")}
+                      </p>
+                      <p class="muted" style="margin-top:4px;">
+                        ${safeText(oldStatus)} -> ${safeText(newStatus)}
+                      </p>
+                    </div>
+                  `;
+                }).join("")
+              : `<div class="deal">No audit records loaded.</div>`
+          }
         </div>
       </div>
     `;
@@ -890,8 +986,16 @@
   }
 
   async function render() {
-    const dashboard = document.getElementById("dashboardPage");
-    if (!dashboard) return;
+    if (renderLoading) {
+      renderQueued = true;
+      return;
+    }
+
+    renderLoading = true;
+
+    try {
+      const dashboard = document.getElementById("dashboardPage");
+      if (!dashboard) return;
 
     let panel = document.getElementById("missionCenterUIPanel");
 
@@ -934,6 +1038,8 @@
           Launch Mission
         </button>
 
+        <div id="missionCenterNotice" style="margin-top:14px;"></div>
+
         <div id="missionCenterList" style="margin-top:22px;">
           <div class="deal">Loading missions...</div>
         </div>
@@ -941,6 +1047,8 @@
         <div id="missionOutreachApprovalQueue" style="margin-top:22px;">
           <div class="deal">Loading outreach approval queue...</div>
         </div>
+
+        <div id="missionOutreachAuditTrail" style="margin-top:22px;"></div>
 
         <div id="missionEmailDeliveryCenter" style="margin-top:22px;">
           <div class="deal">Loading email delivery center...</div>
@@ -952,8 +1060,29 @@
     const queue = document.getElementById("missionOutreachApprovalQueue");
     const deliveryCenter = document.getElementById("missionEmailDeliveryCenter");
 
+    window.TradeFlowMissionCenterReady = false;
+
+    const readiness = await waitForMissionReadiness();
+
+    if (!readiness.ready) {
+      const message = !readiness.workspaceId
+        ? WORKSPACE_REQUIRED_MESSAGE
+        : "Mission Center is waiting for your authenticated session.";
+
+      list.innerHTML = `<div class="deal">${safeText(message)}</div>`;
+      queue.innerHTML = renderWorkspaceRequiredSection("Outreach Approval Queue");
+      deliveryCenter.innerHTML = renderWorkspaceRequiredSection("Email Delivery Center");
+      showMissionNotice(message, "info");
+      return;
+    }
+
+    window.TradeFlowMissionCenterReady = true;
+
     try {
-      const missions = await fetchMissions();
+      const missions = await withLoaderTimeout(
+        fetchMissions(),
+        "Timed out loading missions"
+      );
       leadPushCache.clear();
       outreachDraftCache.clear();
       leadPushCounter = 0;
@@ -973,7 +1102,10 @@
     }
 
     try {
-      const approvals = await fetchOutreachApprovals();
+      const approvals = await withLoaderTimeout(
+        fetchOutreachApprovals(),
+        "Timed out loading outreach approval queue"
+      );
       queue.innerHTML = renderOutreachApprovalQueue(approvals);
     } catch (error) {
       queue.innerHTML = `
@@ -985,7 +1117,10 @@
     }
 
     try {
-      const deliveries = await fetchEmailDeliveries();
+      const deliveries = await withLoaderTimeout(
+        fetchEmailDeliveries(),
+        "Timed out loading email deliveries"
+      );
       deliveryCenter.innerHTML = renderEmailDeliveryCenter(deliveries);
     } catch (error) {
       deliveryCenter.innerHTML = `
@@ -995,20 +1130,57 @@
         </div>
       `;
     }
+    } finally {
+      renderLoading = false;
+
+      if (renderQueued) {
+        renderQueued = false;
+        setTimeout(render, 100);
+      }
+    }
   }
 
   function boot() {
-    setTimeout(render, 1200);
+    const scheduleRenderAfterBootstrap = () => {
+      if (
+        window.TradeFlowBootstrap?.getState &&
+        !window.TradeFlowBootstrap.getState().completed
+      ) {
+        return;
+      }
+
+      setTimeout(render, 250);
+    };
+
+    const start = async () => {
+      if (window.TradeFlowBootstrap?.whenReady) {
+        await window.TradeFlowBootstrap.whenReady();
+      }
+
+      setTimeout(render, 100);
+    };
+
+    start();
 
     document.addEventListener("tradeflow:page-change", function () {
-      setTimeout(render, 250);
+      scheduleRenderAfterBootstrap();
     });
 
-    document.addEventListener("tradeflow:workspace-change", function () {
-      setTimeout(render, 250);
+    if (window.TradeFlowWorkspace?.subscribe) {
+      window.TradeFlowWorkspace.subscribe(scheduleRenderAfterBootstrap);
+    } else {
+      document.addEventListener("tradeflow:workspace-change", function () {
+        scheduleRenderAfterBootstrap();
+      });
+    }
+
+    document.addEventListener("tradeflow:bootstrap-complete", function () {
+      scheduleRenderAfterBootstrap();
     });
 
-    console.log("✅ Mission Center UI V1 active");
+    if (window.TRADEFLOW_DEBUG === true || localStorage.getItem("tradeflowDebug") === "true") {
+      console.log("Mission Center UI V1 active");
+    }
   }
 
   window.TradeFlowMissionCenterUIV1 = {

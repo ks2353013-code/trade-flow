@@ -7,8 +7,6 @@
   if (window.TradeFlowWorkspaceEngineV1) return;
 
   const STORAGE_KEY = "tradeflowWorkspacesV1";
-  const ACTIVE_KEY = "tradeflowActiveWorkspaceV1";
-
   const PLAN_LIMITS = {
     Starter: 1,
     Professional: 3,
@@ -36,7 +34,12 @@
       return user.token;
     }
 
+    if (user?.accessToken) {
+      return user.accessToken;
+    }
+
     return (
+      localStorage.getItem("tradeflowAccessToken") ||
       localStorage.getItem("tradeflowToken") ||
       localStorage.getItem("token") ||
       localStorage.getItem("authToken") ||
@@ -47,7 +50,10 @@
 
   function requireLogin() {
     if (!getUser() || !getToken()) {
-      localStorage.clear();
+      if (window.location.pathname === "/app") {
+        return false;
+      }
+
       window.location.href = "/login";
       return false;
     }
@@ -95,19 +101,11 @@
   }
 
   function getActiveWorkspaceId() {
-    if (typeof window.getCanonicalActiveWorkspaceId === "function") {
-      return window.getCanonicalActiveWorkspaceId();
+    if (window.TradeFlowWorkspace?.getActiveWorkspaceId) {
+      return window.TradeFlowWorkspace.getActiveWorkspaceId();
     }
 
-    const candidates = [
-      localStorage.getItem("tradeflowActiveWorkspace"),
-      localStorage.getItem("tradeflowActiveWorkspaceId"),
-      localStorage.getItem(ACTIVE_KEY),
-      localStorage.getItem("activeWorkspaceId"),
-      localStorage.getItem("workspaceId")
-    ];
-
-    return candidates.find(isMongoObjectId) || "";
+    return "";
   }
 
   function getActiveWorkspace() {
@@ -131,8 +129,8 @@
       return "";
     }
 
-    if (typeof window.setCanonicalActiveWorkspace === "function") {
-      return window.setCanonicalActiveWorkspace({
+    if (window.TradeFlowWorkspace?.setActiveWorkspace) {
+      return window.TradeFlowWorkspace.setActiveWorkspace({
         ...workspace,
         _id: workspaceId,
         id: workspaceId,
@@ -141,14 +139,7 @@
       });
     }
 
-    localStorage.setItem("tradeflowActiveWorkspace", workspaceId);
-    localStorage.setItem("tradeflowActiveWorkspaceId", workspaceId);
-    localStorage.setItem(ACTIVE_KEY, workspaceId);
-    localStorage.setItem("activeWorkspaceId", workspaceId);
-    localStorage.setItem("workspaceId", workspaceId);
-    localStorage.setItem("tradeflowActiveWorkspaceName", getWorkspaceName(workspace));
-
-    return workspaceId;
+    return "";
   }
 
   function seedDefaultWorkspace() {
@@ -409,8 +400,15 @@ Recommended actions:
     updateAIConsole();
   }
 
-  function boot() {
-    if (!requireLogin()) return;
+  async function boot() {
+    if (!requireLogin()) {
+      document.addEventListener("tradeflow:session-ready", boot, { once: true });
+      return;
+    }
+
+    if (window.TradeFlowBootstrap?.whenReady) {
+      await window.TradeFlowBootstrap.whenReady();
+    }
 
     setTimeout(render, 900);
 
@@ -418,7 +416,15 @@ Recommended actions:
       setTimeout(render, 150);
     });
 
-    console.log("✅ TradeFlow Workspace Engine V1 active");
+    if (window.TradeFlowWorkspace?.subscribe) {
+      window.TradeFlowWorkspace.subscribe(function () {
+        setTimeout(render, 150);
+      });
+    }
+
+    if (window.TRADEFLOW_DEBUG === true || localStorage.getItem("tradeflowDebug") === "true") {
+      console.log("TradeFlow Workspace Engine V1 active");
+    }
   }
 
   window.TradeFlowWorkspaceEngineV1 = {

@@ -16,7 +16,7 @@
 
   function getWorkspaceId() {
     return (
-      localStorage.getItem("workspaceId") ||
+      window.TradeFlowWorkspace?.getActiveWorkspaceId?.() ||
       "global"
     );
   }
@@ -32,10 +32,21 @@
       const script = document.createElement("script");
 
       script.src =
-        "https://cdn.socket.io/4.7.5/socket.io.min.js";
+        "/socket.io/socket.io.js";
 
       script.onload = resolve;
-      script.onerror = reject;
+      script.onerror = () => {
+        const fallback =
+          document.createElement("script");
+
+        fallback.src =
+          "https://cdn.socket.io/4.7.5/socket.io.min.js";
+
+        fallback.onload = resolve;
+        fallback.onerror = reject;
+
+        document.body.appendChild(fallback);
+      };
 
       document.body.appendChild(script);
 
@@ -224,6 +235,9 @@
   async function boot() {
 
     try {
+      if (window.TradeFlowBootstrap?.whenReady) {
+        await window.TradeFlowBootstrap.whenReady();
+      }
 
       await loadSocketScript();
 
@@ -235,9 +249,9 @@
 
     } catch (error) {
 
-      console.warn(
-        "Realtime client failed:",
-        error.message
+      console.info(
+        "Realtime client unavailable:",
+        error?.message || "Socket client failed to load"
       );
 
     }

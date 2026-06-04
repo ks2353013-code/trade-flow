@@ -12,10 +12,31 @@
     "authToken",
     "jwt"
   ];
+  let lastAuthStatus = 0;
+  let lastAuthFailure = "";
+
+  function isDebugMode() {
+    return (
+      window.TRADEFLOW_DEBUG === true ||
+      localStorage.getItem("tradeflowDebug") === "true"
+    );
+  }
+
+  function debugLog(...args) {
+    if (isDebugMode()) console.log(...args);
+  }
 
   function getToken() {
+    try {
+      const storedUser = JSON.parse(localStorage.getItem("tradeflowUser") || "null");
+      if (storedUser?.token) return storedUser.token;
+      if (storedUser?.accessToken) return storedUser.accessToken;
+    } catch {}
+
     for (const key of TOKEN_KEYS) {
-      const value = localStorage.getItem(key);
+      const value =
+        localStorage.getItem(key) ||
+        sessionStorage.getItem(key);
       if (value) return value;
     }
     return "";
@@ -48,14 +69,76 @@
 
   window.BACKEND_URL = getBackendUrl();
 
+  function isJsonContentType(contentType) {
+    return (
+      String(contentType || "").includes("application/json") ||
+      String(contentType || "").includes("+json")
+    );
+  }
+
+  function isApiUrl(finalUrl) {
+    if (typeof finalUrl !== "string") return false;
+    return (
+      finalUrl.includes("/api/") ||
+      finalUrl.endsWith("/api") ||
+      finalUrl.includes("/suppliers")
+    );
+  }
+
+  function wrapJsonResponse(response, finalUrl) {
+    if (!response || !isApiUrl(finalUrl)) return response;
+
+    const originalJson = response.json.bind(response);
+
+    response.json = async function () {
+      const contentType = response.headers.get("content-type") || "";
+
+      if (isJsonContentType(contentType)) {
+        return originalJson();
+      }
+
+      const text = await response.clone().text().catch(() => "");
+      console.error("[API JSON ERROR]", {
+        status: response.status,
+        url: finalUrl,
+        contentType,
+        bodyPreview: text.slice(0, 300)
+      });
+
+      throw new Error(`Backend returned non-JSON response from ${finalUrl}`);
+    };
+
+    return response;
+  }
+
   function saveToken(token) {
     if (!token) return;
     TOKEN_KEYS.forEach((key) => localStorage.setItem(key, token));
   }
 
+  function extractToken(data = {}) {
+    const rawData = data.data || {};
+    const rawUser = data.user || rawData.user || rawData || {};
+    return (
+      data.token ||
+      data.accessToken ||
+      data.jwt ||
+      rawData.token ||
+      rawData.accessToken ||
+      rawData.jwt ||
+      rawUser.token ||
+      rawUser.accessToken ||
+      ""
+    );
+  }
+
   function getUser() {
     try {
-      return JSON.parse(localStorage.getItem("tradeflowUser") || "null");
+      return (
+        JSON.parse(localStorage.getItem("tradeflowUser") || "null") ||
+        JSON.parse(localStorage.getItem("user") || "null") ||
+        JSON.parse(localStorage.getItem("currentUser") || "null")
+      );
     } catch {
       return null;
     }
@@ -70,7 +153,7 @@
 
   async function refreshSession() {
     try {
-      const res = await fetch("/api/auth/refresh", {
+      const res = await fetch(`${getBackendUrl()}/api/auth/refresh`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -78,24 +161,33 @@
       });
 
       const data = await res.json();
+      const token = extractToken(data);
+      lastAuthStatus = res.status;
+      lastAuthFailure = res.ok ? "" : data.message || "refresh failed";
 
-      if (!res.ok || !data.success || !data.accessToken) {
+      if (res.status === 401 || res.status === 403) {
         return false;
+      }
+
+      if (!res.ok || !data.success || !token) {
+        return Boolean(getToken() && getUser());
       }
 
       const user = {
         ...(data.user || {}),
-        token: data.accessToken,
-        accessToken: data.accessToken,
+        token,
+        accessToken: token,
         isLoggedIn: true
       };
 
-      saveToken(data.accessToken);
+      saveToken(token);
       saveUser(user);
 
       return true;
     } catch {
-      return false;
+      lastAuthStatus = 0;
+      lastAuthFailure = "refresh network error";
+      return Boolean(getToken() && getUser());
     }
   }
 
@@ -107,7 +199,7 @@
     }
 
     try {
-      const res = await fetch("/api/auth/session", {
+      const res = await fetch(`${getBackendUrl()}/api/auth/session`, {
         headers: {
           Authorization: `Bearer ${token}`
         },
@@ -115,9 +207,15 @@
       });
 
       const data = await res.json();
+      lastAuthStatus = res.status;
+      lastAuthFailure = res.ok ? "" : data.message || "session validation failed";
+
+      if (res.status === 401 || res.status === 403) {
+        return false;
+      }
 
       if (!res.ok || !data.valid) {
-        return false;
+        return Boolean(getToken() && getUser());
       }
 
       const user = {
@@ -130,13 +228,31 @@
       saveUser(user);
       return true;
     } catch {
-      return false;
+      lastAuthStatus = 0;
+      lastAuthFailure = "session validation network error";
+      return Boolean(getToken() && getUser());
     }
+  }
+
+  async function restoreSession() {
+    const token = getToken();
+
+    if (token && await validateSession()) {
+      debugLog("TradeFlow session restored from stored token");
+      return true;
+    }
+
+    if (await refreshSession()) {
+      debugLog("TradeFlow session restored from refresh cookie");
+      return true;
+    }
+
+    return false;
   }
 
   async function logout() {
     try {
-      await fetch("/api/auth/logout", {
+      await fetch(`${getBackendUrl()}/api/auth/logout`, {
         method: "POST",
         credentials: "include"
       });
@@ -151,8 +267,32 @@
     window.TradeFlowFetchPatched = true;
 
     const originalFetch = window.fetch;
+    const bootstrapGatedPaths = [
+      "/api/analytics",
+      "/api/deals",
+      "/api/notifications",
+      "/api/audit",
+      "/suppliers"
+    ];
 
-    window.fetch = function (url, options = {}) {
+    function shouldWaitForBootstrap(finalUrl) {
+      if (typeof finalUrl !== "string") return false;
+      return bootstrapGatedPaths.some((path) => finalUrl.includes(path));
+    }
+
+    async function waitForBootstrapIfNeeded(finalUrl) {
+      const bootstrap = window.TradeFlowBootstrap;
+
+      if (
+        shouldWaitForBootstrap(finalUrl) &&
+        bootstrap?.whenReady &&
+        !bootstrap.getState?.().completed
+      ) {
+        await bootstrap.whenReady();
+      }
+    }
+
+    window.fetch = async function (url, options = {}) {
       options.headers = options.headers || {};
 
       const token = getToken();
@@ -169,37 +309,39 @@
       if (
         token &&
         typeof finalUrl === "string" &&
-        (
-          finalUrl.includes("/api/") ||
-          finalUrl.endsWith("/api") ||
-          finalUrl.includes("/suppliers")
-        )
+        isApiUrl(finalUrl)
       ) {
         options.headers.Authorization =
           options.headers.Authorization || `Bearer ${token}`;
       }
 
       options.credentials = options.credentials || "include";
+      await waitForBootstrapIfNeeded(finalUrl);
 
-      return originalFetch(finalUrl, options);
+      const response = await originalFetch(finalUrl, options);
+      return wrapJsonResponse(response, finalUrl);
     };
 
-    console.log("✅ TradeFlow production fetch patched");
+    debugLog("TradeFlow production fetch patched");
   }
 
   function boot() {
     patchFetchWithToken();
-    console.log("✅ TradeFlow production session manager active");
+    debugLog("TradeFlow production session manager active");
   }
 
   window.TradeFlowSessionManager = {
     getToken,
+    getAuthToken: getToken,
     saveToken,
     getUser,
     saveUser,
     getBackendUrl,
+    restoreSession,
     refreshSession,
     validateSession,
+    getLastAuthStatus: () => lastAuthStatus,
+    getLastAuthFailure: () => lastAuthFailure,
     logout
   };
 

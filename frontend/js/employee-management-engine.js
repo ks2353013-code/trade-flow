@@ -2,6 +2,7 @@
 
 (function () {
   const EMPLOYEE_CACHE = "tradeflowEmployeeManagementCache";
+  let employeesLoading = false;
 
   const ROLE_PRESETS = {
     Owner: { dashboard:true, suppliers:true, crm:true, tasks:true, analytics:true, documents:true, outreach:true, ai:true, billing:true, admin:true },
@@ -51,17 +52,18 @@
 
   function getHeaders() {
     const user = getUser();
+    const token =
+      window.getAuthToken?.() ||
+      window.TradeFlowSessionManager?.getToken?.() ||
+      user?.token ||
+      "";
     const headers = {
       "Content-Type": "application/json",
-      Authorization: user?.token ? `Bearer ${user.token}` : "",
+      Authorization: token ? `Bearer ${token}` : "",
       "x-user-email": user?.email || "unknown@tradeflow.local"
     };
 
-    const workspaceId = getValidStoredId([
-      "tradeflowActiveWorkspace",
-      "tradeflowActiveWorkspaceId",
-      "tradeflowActiveWorkspaceV1"
-    ]);
+    const workspaceId = window.TradeFlowWorkspace?.getActiveWorkspaceId?.() || "";
 
     if (workspaceId) headers["x-workspace-id"] = workspaceId;
 
@@ -77,6 +79,10 @@
   }
 
   async function fetchEmployees() {
+    if (employeesLoading) return getJson(EMPLOYEE_CACHE, []);
+
+    employeesLoading = true;
+
     try {
       const res = await fetch(`${getBackendUrl()}/api/employees`, { headers: getHeaders() });
       const data = await res.json();
@@ -89,6 +95,8 @@
       console.error("Employee engine fetch error:", error.message);
       renderEmployees();
       return getJson(EMPLOYEE_CACHE, []);
+    } finally {
+      employeesLoading = false;
     }
   }
 
@@ -122,11 +130,7 @@
     }
 
     const activeCompany = getValidStoredId(["tradeflowActiveCompany"]);
-    const activeWorkspace = getValidStoredId([
-      "tradeflowActiveWorkspace",
-      "tradeflowActiveWorkspaceId",
-      "tradeflowActiveWorkspaceV1"
-    ]);
+    const activeWorkspace = window.TradeFlowWorkspace?.getActiveWorkspaceId?.() || "";
     const user = getUser();
 
     try {
@@ -347,10 +351,20 @@
     applyRolePreset
   };
 
-  function boot() {
+  async function boot() {
     injectStyles();
     buildPanel();
-    setTimeout(() => fetchEmployees(), 1200);
+    setTimeout(() => {
+      (async () => {
+        if (window.TradeFlowBootstrap?.whenReady) {
+          await window.TradeFlowBootstrap.whenReady();
+        }
+
+        if (window.getAuthToken?.() || window.TradeFlowSessionManager?.getToken?.()) {
+          fetchEmployees();
+        }
+      })();
+    }, 1200);
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);

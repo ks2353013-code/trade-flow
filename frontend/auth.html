@@ -41,6 +41,7 @@
         <input id="loginEmail" type="email" required placeholder="Email" class="input"/>
         <input id="loginPassword" type="password" required placeholder="Password" class="input"/>
         <button type="submit" class="btn btn-primary">Login to TradeFlow</button>
+        <button id="forgotPasswordLink" type="button" class="w-full text-sm font-bold text-blue-300 hover:text-blue-200">Forgot password?</button>
       </form>
 
       <form id="signupForm" class="space-y-5 hidden">
@@ -51,6 +52,20 @@
         <button type="submit" class="btn btn-primary">Create TradeFlow Account</button>
       </form>
 
+      <form id="forgotForm" class="space-y-5 hidden">
+        <input id="forgotEmail" type="email" required placeholder="Business email" class="input"/>
+        <button type="submit" class="btn btn-primary">Send Password Reset Link</button>
+        <button id="backToLoginFromForgot" type="button" class="w-full text-sm font-bold text-slate-300 hover:text-white">Back to login</button>
+      </form>
+
+      <form id="resetForm" class="space-y-5 hidden">
+        <input id="resetEmail" type="email" required placeholder="Email" class="input"/>
+        <input id="resetToken" type="hidden"/>
+        <input id="resetPassword" type="password" required minlength="8" placeholder="New password" class="input"/>
+        <button type="submit" class="btn btn-primary">Reset Password</button>
+        <button id="backToLoginFromReset" type="button" class="w-full text-sm font-bold text-slate-300 hover:text-white">Back to login</button>
+      </form>
+
       <div id="messageBox" class="hidden mt-6 p-4 rounded-2xl text-center font-bold"></div>
     </div>
   </div>
@@ -58,17 +73,61 @@
 <script>
 const RENDER_BACKEND_URL = "https://trade-flow-lc1k.onrender.com";
 
+function isLocalHost(hostname) {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+}
+
 const API_BASE =
-  window.location.hostname === "localhost" ||
-  window.location.hostname === "127.0.0.1"
+  window.TRADEFLOW_API_BASE ||
+  window.TRADEFLOW_API_BASE_URL ||
+  (isLocalHost(window.location.hostname)
     ? window.location.origin
-    : RENDER_BACKEND_URL;
+    : RENDER_BACKEND_URL);
 
 const loginTab = document.getElementById("loginTab");
 const signupTab = document.getElementById("signupTab");
 const loginForm = document.getElementById("loginForm");
 const signupForm = document.getElementById("signupForm");
+const forgotForm = document.getElementById("forgotForm");
+const resetForm = document.getElementById("resetForm");
+const forgotPasswordLink = document.getElementById("forgotPasswordLink");
+const backToLoginFromForgot = document.getElementById("backToLoginFromForgot");
+const backToLoginFromReset = document.getElementById("backToLoginFromReset");
 const messageBox = document.getElementById("messageBox");
+const blockedSignupDomains = new Set([
+  "gmail.com",
+  "googlemail.com",
+  "yahoo.com",
+  "ymail.com",
+  "hotmail.com",
+  "outlook.com",
+  "live.com",
+  "msn.com",
+  "icloud.com",
+  "me.com",
+  "mac.com",
+  "aol.com",
+  "proton.me",
+  "protonmail.com",
+  "pm.me",
+  "zoho.com",
+  "gmx.com",
+  "mail.com",
+  "yandex.com",
+  "hey.com",
+  "fastmail.com",
+  "tutanota.com",
+  "mailinator.com",
+  "tempmail.com",
+  "temp-mail.org",
+  "10minutemail.com",
+  "guerrillamail.com",
+  "throwawaymail.com",
+  "trashmail.com",
+  "example.com",
+  "test.com",
+  "localhost"
+]);
 
 function showMessage(message,type="error"){
   messageBox.classList.remove("hidden");
@@ -78,12 +137,68 @@ function showMessage(message,type="error"){
   messageBox.innerText = message;
 }
 
+function hideMessage() {
+  messageBox.classList.add("hidden");
+}
+
+function showAuthView(view) {
+  hideMessage();
+  loginForm.classList.toggle("hidden", view !== "login");
+  signupForm.classList.toggle("hidden", view !== "signup");
+  forgotForm.classList.toggle("hidden", view !== "forgot");
+  resetForm.classList.toggle("hidden", view !== "reset");
+  loginTab.classList.toggle("tab-active", view === "login");
+  signupTab.classList.toggle("tab-active", view === "signup");
+  signupTab.classList.toggle("text-white", view !== "signup");
+  loginTab.classList.toggle("text-white", view !== "login");
+}
+
+function validateCorporateEmail(email) {
+  const normalized = String(email || "").trim().toLowerCase();
+  const parts = normalized.split("@");
+  const domain = parts.length === 2 ? parts[1] : "";
+
+  if (
+    parts.length !== 2 ||
+    !parts[0] ||
+    !/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+$/.test(parts[0]) ||
+    !/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(domain) ||
+    domain.includes("..") ||
+    blockedSignupDomains.has(domain)
+  ) {
+    throw new Error("Use a valid company email address to create a TradeFlow account.");
+  }
+
+  return normalized;
+}
+
 function saveSession(data){
-  const rawUser = data.user || data.data || data;
-  const token = data.token || data.accessToken || data.jwt || "local-testing-token";
+  const rawData = data.data || {};
+  const rawUser = data.user || rawData.user || rawData || data;
+  const tokenCandidates = [
+    ["data.token", data.token],
+    ["data.accessToken", data.accessToken],
+    ["data.jwt", data.jwt],
+    ["data.data.token", rawData.token],
+    ["data.data.accessToken", rawData.accessToken],
+    ["data.data.jwt", rawData.jwt],
+    ["data.user.token", rawUser.token],
+    ["data.user.accessToken", rawUser.accessToken]
+  ];
+  const tokenMatch = tokenCandidates.find((candidate) => Boolean(candidate[1]));
+  const token = tokenMatch?.[1] || "";
+
+  console.log("[AUTH DEBUG] login response keys", Object.keys(data || {}).join(","));
+  console.log("[AUTH DEBUG] login response token source", tokenMatch?.[0] || "missing");
+
+  if (!token) {
+    throw new Error("Authentication token missing from login response");
+  }
+
   const subscriptionPlan =
     rawUser.subscriptionPlan ||
     rawUser.plan ||
+    rawData.subscriptionPlan ||
     data.subscriptionPlan ||
     "Starter";
 
@@ -104,6 +219,7 @@ function saveSession(data){
   localStorage.setItem("tradeflowUser", JSON.stringify(user));
   localStorage.setItem("user", JSON.stringify(user));
   localStorage.setItem("currentUser", JSON.stringify(user));
+  localStorage.setItem("tradeflowAccessToken", token);
   localStorage.setItem("tradeflowToken", token);
   localStorage.setItem("token", token);
   localStorage.setItem("authToken", token);
@@ -111,6 +227,8 @@ function saveSession(data){
   localStorage.setItem("isLoggedIn", "true");
   localStorage.setItem("tradeflowLoggedIn", "true");
   localStorage.setItem("tradeflowSubscriptionPlan", subscriptionPlan);
+
+  console.log("[AUTH DEBUG] token after login", token ? "present" : "missing");
 
   if (user.onboardingCompleted === true) {
     localStorage.setItem("tradeflowOnboardingDone", "true");
@@ -120,28 +238,38 @@ function saveSession(data){
 }
 
 async function safeJson(res) {
+  const contentType = res.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json") || contentType.includes("+json")) {
+    return await res.json();
+  }
+
   const text = await res.text();
   if (!text) return {};
-  try {
-    return JSON.parse(text);
-  } catch {
-    throw new Error("Backend returned non-JSON response. Check Render backend/CORS.");
-  }
+  console.error("[API JSON ERROR]", {
+    status: res.status,
+    url: res.url,
+    contentType,
+    bodyPreview: text.slice(0, 300)
+  });
+  throw new Error(`Backend returned non-JSON response from ${res.url}`);
 }
 
 loginTab.onclick = () => {
-  loginForm.classList.remove("hidden");
-  signupForm.classList.add("hidden");
-  loginTab.classList.add("tab-active");
-  signupTab.classList.remove("tab-active");
+  showAuthView("login");
 };
 
 signupTab.onclick = () => {
-  signupForm.classList.remove("hidden");
-  loginForm.classList.add("hidden");
-  signupTab.classList.add("tab-active");
-  loginTab.classList.remove("tab-active");
+  showAuthView("signup");
 };
+
+forgotPasswordLink.onclick = () => {
+  document.getElementById("forgotEmail").value = document.getElementById("loginEmail").value.trim();
+  showAuthView("forgot");
+};
+
+backToLoginFromForgot.onclick = () => showAuthView("login");
+backToLoginFromReset.onclick = () => showAuthView("login");
 
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -193,6 +321,8 @@ signupForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   try {
+    const signupEmail = validateCorporateEmail(document.getElementById("signupEmail").value);
+
     const res = await fetch(`${API_BASE}/api/auth/signup`, {
       method:"POST",
       headers:{ "Content-Type":"application/json" },
@@ -200,7 +330,7 @@ signupForm.addEventListener("submit", async (e) => {
       body:JSON.stringify({
         name:document.getElementById("signupName").value.trim(),
         companyName:document.getElementById("signupCompany").value.trim(),
-        email:document.getElementById("signupEmail").value.trim(),
+        email:signupEmail,
         password:document.getElementById("signupPassword").value,
         role:"master_admin"
       })
@@ -223,6 +353,66 @@ signupForm.addEventListener("submit", async (e) => {
     showMessage(err.message || "Server request failed");
   }
 });
+
+forgotForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      credentials:"include",
+      body:JSON.stringify({
+        email:document.getElementById("forgotEmail").value.trim()
+      })
+    });
+
+    const data = await safeJson(res);
+
+    if(!res.ok || data.success === false){
+      throw new Error(data.message || "Password reset request failed");
+    }
+
+    showMessage(data.resetUrl ? `Reset link generated: ${data.resetUrl}` : data.message, "success");
+  } catch(err) {
+    showMessage(err.message || "Server request failed");
+  }
+});
+
+resetForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      credentials:"include",
+      body:JSON.stringify({
+        email:document.getElementById("resetEmail").value.trim(),
+        resetToken:document.getElementById("resetToken").value,
+        password:document.getElementById("resetPassword").value
+      })
+    });
+
+    const data = await safeJson(res);
+
+    if(!res.ok || data.success === false){
+      throw new Error(data.message || "Password reset failed");
+    }
+
+    showAuthView("login");
+    showMessage(data.message || "Password reset successful. Please login.", "success");
+  } catch(err) {
+    showMessage(err.message || "Server request failed");
+  }
+});
+
+const resetParams = new URLSearchParams(window.location.search);
+if (resetParams.get("resetToken")) {
+  document.getElementById("resetEmail").value = resetParams.get("email") || "";
+  document.getElementById("resetToken").value = resetParams.get("resetToken") || "";
+  showAuthView("reset");
+}
 </script>
 
 </body>

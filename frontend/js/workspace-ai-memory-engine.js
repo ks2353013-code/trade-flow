@@ -45,7 +45,7 @@
   function getContextIds() {
     return {
       companyId: localStorage.getItem("tradeflowActiveCompany") || "",
-      workspaceId: localStorage.getItem("tradeflowActiveWorkspace") || ""
+      workspaceId: window.TradeFlowWorkspace?.getActiveWorkspaceId?.() || ""
     };
   }
 
@@ -280,7 +280,11 @@
     manualSave
   };
 
-  function boot() {
+  async function boot() {
+    if (window.TradeFlowBootstrap?.whenReady) {
+      await window.TradeFlowBootstrap.whenReady();
+    }
+
     injectStyles();
     buildPanel();
 

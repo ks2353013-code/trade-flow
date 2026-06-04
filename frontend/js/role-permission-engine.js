@@ -86,6 +86,8 @@
 
   function getToken() {
     return (
+      window.getAuthToken?.() ||
+      window.TradeFlowSessionManager?.getToken?.() ||
       localStorage.getItem("tradeflowToken") ||
       localStorage.getItem("token") ||
       localStorage.getItem("authToken") ||
@@ -98,9 +100,13 @@
     const user = getUser();
     const token = getToken();
 
-    if (!user.email || !token) {
-      localStorage.clear();
-      window.location.href = "/login";
+    if (!token) {
+      console.log("[AUTH DEBUG] redirect reason", "role permission skipped: token missing");
+      return false;
+    }
+
+    if (!user.email) {
+      console.log("[AUTH DEBUG] redirect reason", "role permission waiting: user pending");
       return false;
     }
 

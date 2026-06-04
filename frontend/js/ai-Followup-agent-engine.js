@@ -29,7 +29,7 @@
       "Content-Type": "application/json",
       Authorization: user?.token ? `Bearer ${user.token}` : "",
       "x-company-id": localStorage.getItem("tradeflowActiveCompany") || "",
-      "x-workspace-id": localStorage.getItem("tradeflowActiveWorkspace") || ""
+      "x-workspace-id": window.TradeFlowWorkspace?.getActiveWorkspaceId?.() || ""
     };
   }
 
@@ -168,7 +168,11 @@
     generate: generatePlan
   };
 
-  function boot() {
+  async function boot() {
+    if (window.TradeFlowBootstrap?.whenReady) {
+      await window.TradeFlowBootstrap.whenReady();
+    }
+
     buildPanel();
   }
 

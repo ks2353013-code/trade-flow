@@ -4,6 +4,7 @@
 
   const CACHE_KEY =
     "tradeflowAuditLogs";
+  let auditLogsLoading = false;
 
   function $(id) {
     return document.getElementById(id);
@@ -60,6 +61,16 @@
       : "";
   }
 
+  function getActiveWorkspaceId() {
+    return window.TradeFlowWorkspace?.getActiveWorkspaceId?.() || "";
+  }
+
+  async function waitForBootstrap() {
+    if (window.TradeFlowBootstrap?.whenReady) {
+      await window.TradeFlowBootstrap.whenReady();
+    }
+  }
+
   function auditDebugEnabled() {
     return localStorage.getItem(
       "tradeflowAuditDebug"
@@ -69,14 +80,20 @@
   function getHeaders() {
 
     const user = getUser();
+    const token =
+      window.getAuthToken?.() ||
+      window.TradeFlowSessionManager?.getToken?.() ||
+      user?.token ||
+      "";
+    const workspaceId = getActiveWorkspaceId();
 
-    return {
+    const headers = {
       "Content-Type":
         "application/json",
 
       Authorization:
-        user?.token
-          ? `Bearer ${user.token}`
+        token
+          ? `Bearer ${token}`
           : "",
 
       "x-user-email":
@@ -86,13 +103,14 @@
       "x-company-id":
         getStoredObjectId(
           "tradeflowActiveCompany"
-        ),
-
-      "x-workspace-id":
-        getStoredObjectId(
-          "tradeflowActiveWorkspace"
         )
     };
+
+    if (workspaceId) {
+      headers["x-workspace-id"] = workspaceId;
+    }
+
+    return headers;
   }
 
   async function logEvent(
@@ -104,6 +122,8 @@
   ) {
 
     try {
+      await waitForBootstrap();
+      if (!getActiveWorkspaceId()) return;
 
       const res = await fetch(
         `${getBackendUrl()}/api/audit`,
@@ -142,6 +162,15 @@
   async function fetchLogs(
     renderStatus = true
   ) {
+    await waitForBootstrap();
+    if (!getActiveWorkspaceId()) {
+      renderLogs();
+      return;
+    }
+
+    if (auditLogsLoading) return;
+
+    auditLogsLoading = true;
 
     try {
 
@@ -186,6 +215,10 @@
       );
 
       renderLogs();
+
+    } finally {
+
+      auditLogsLoading = false;
 
     }
 
@@ -574,7 +607,10 @@
 
     patchFetch();
 
-    fetchLogs(false);
+    (async () => {
+      await waitForBootstrap();
+      fetchLogs(false);
+    })();
 
   }
 
