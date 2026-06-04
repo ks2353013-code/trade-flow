@@ -8,6 +8,7 @@ const rateLimit = require("express-rate-limit");
 const morgan = require("morgan");
 const compression = require("compression");
 const http = require("http");
+const childProcess = require("child_process");
 const { Server } = require("socket.io");
 const cookieParser = require("cookie-parser");
 
@@ -16,6 +17,7 @@ const { connectDB, getMongoState, isMongoConnected } = require("./config/db");
 
 const authMiddleware = require("./middleware/authMiddleware");
 const tenantMiddleware = require("./middleware/tenantMiddleware");
+const optionalAuth = authMiddleware.optionalAuth;
 
 const supplierRoutes = require("./routes/supplierRoutes");
 const authRoutes = require("./routes/authRoutes");
@@ -65,11 +67,13 @@ const buyerDiscoveryRoutes = require("./routes/buyerDiscoveryRoutes");
 const tradeAgentRoutes = require("./routes/tradeAgentRoutes");
 const crmPushRoutes = require("./routes/crmPushRoutes");
 const outreachApprovalRoutes = require("./routes/outreachApprovalRoutes");
+const clientErrorRoutes = require("./routes/clientErrorRoutes");
 
 const { startWorkflowScheduler } = require("./services/workflowScheduler");
 const { startAIAutonomousScheduler } = require("./services/aiAutonomousScheduler");
 
 const emailDeliveryRoutes = require("./routes/emailDeliveryRoutes");
+const { isEmailConfigured } = require("./services/emailSender");
 
 const app = express();
 
@@ -120,9 +124,22 @@ app.use(
 );
 
 app.use(compression());
-app.use(morgan("combined"));
-
 const isProduction = process.env.NODE_ENV === "production";
+const debugTradeFlow = process.env.DEBUG_TRADEFLOW === "true";
+const schedulerState = {
+  enabled: process.env.ENABLE_SCHEDULERS === "true",
+  status: "disabled"
+};
+
+app.use(
+  morgan(isProduction ? "tiny" : "dev", {
+    skip: (req, res) => (
+      req.path === "/api/health" ||
+      req.path === "/api/ready" ||
+      (isProduction && !debugTradeFlow && res.statusCode < 500)
+    )
+  })
+);
 
 function isLocalSmokeRequest(req) {
   if (isProduction) return false;
@@ -178,6 +195,41 @@ function requireDatabaseReady(req, res, next) {
   });
 }
 
+function getCommitVersion() {
+  if (process.env.RENDER_GIT_COMMIT) return process.env.RENDER_GIT_COMMIT;
+  if (process.env.GIT_COMMIT) return process.env.GIT_COMMIT;
+  if (process.env.COMMIT_SHA) return process.env.COMMIT_SHA;
+
+  try {
+    return childProcess
+      .execSync("git rev-parse --short HEAD", {
+        cwd: path.join(__dirname, ".."),
+        stdio: ["ignore", "pipe", "ignore"]
+      })
+      .toString()
+      .trim();
+  } catch {
+    return "unknown";
+  }
+}
+
+function buildHealthPayload() {
+  return {
+    ok: isMongoConnected(),
+    server: "running",
+    mongo: getMongoStatusLabel(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || "local",
+    version: process.env.npm_package_version || "1.0.0",
+    commit: getCommitVersion(),
+    scheduler: {
+      enabled: schedulerState.enabled,
+      status: schedulerState.status
+    },
+    emailMode: isEmailConfigured() ? "smtp" : "dry-run"
+  };
+}
+
 /* Razorpay webhook must stay before JSON parser and auth */
 app.use("/api/razorpay-webhook", razorpayWebhookRoutes);
 
@@ -188,22 +240,13 @@ app.use(cookieParser());
 /* Health check */
 app.get("/api/health", (req, res) => {
   res.json({
-    ok: true,
-    server: "running",
-    mongo: getMongoStatusLabel(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV || "local"
+    ...buildHealthPayload(),
+    ok: true
   });
 });
 
 app.get("/api/ready", (req, res) => {
-  const payload = {
-    ok: isMongoConnected(),
-    server: "running",
-    mongo: getMongoStatusLabel(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV || "local"
-  };
+  const payload = buildHealthPayload();
 
   if (!payload.ok) {
     return res.status(503).json(payload);
@@ -214,6 +257,7 @@ app.get("/api/ready", (req, res) => {
 
 /* Public Auth Routes */
 app.use("/api/auth", requireDatabaseReady, authRoutes);
+app.use("/api/errors", requireDatabaseReady, optionalAuth, clientErrorRoutes);
 
 /* Protected API Routes */
 const protectedStack = [requireDatabaseReady, authMiddleware, tenantMiddleware];
@@ -340,10 +384,13 @@ initSocketServer(io);
 function startSchedulersIfEnabled() {
   if (process.env.ENABLE_SCHEDULERS === "true") {
     console.log("Workflow schedulers enabled");
+    schedulerState.status = "starting";
     startWorkflowScheduler();
     startAIAutonomousScheduler();
+    schedulerState.status = "running";
   } else {
     console.log("Workflow schedulers disabled. Set ENABLE_SCHEDULERS=true to enable.");
+    schedulerState.status = "disabled";
   }
 }
 

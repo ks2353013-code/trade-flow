@@ -12,13 +12,25 @@
     "authToken",
     "jwt"
   ];
+  const SESSION_KEYS = [
+    ...TOKEN_KEYS,
+    "tradeflowUser",
+    "user",
+    "currentUser",
+    "isLoggedIn",
+    "tradeflowLoggedIn",
+    "tradeflowIsOwner",
+    "tradeflowRole",
+    "role"
+  ];
   let lastAuthStatus = 0;
   let lastAuthFailure = "";
 
   function isDebugMode() {
     return (
       window.TRADEFLOW_DEBUG === true ||
-      localStorage.getItem("tradeflowDebug") === "true"
+      localStorage.getItem("tradeflowDebug") === "true" ||
+      ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)
     );
   }
 
@@ -151,6 +163,11 @@
     localStorage.setItem("currentUser", JSON.stringify(user));
   }
 
+  function clearAuthSession() {
+    SESSION_KEYS.forEach((key) => localStorage.removeItem(key));
+    SESSION_KEYS.forEach((key) => sessionStorage.removeItem(key));
+  }
+
   async function refreshSession() {
     try {
       const res = await fetch(`${getBackendUrl()}/api/auth/refresh`, {
@@ -258,7 +275,7 @@
       });
     } catch {}
 
-    localStorage.clear();
+    clearAuthSession();
     window.location.href = "/login";
   }
 
@@ -342,6 +359,7 @@
     validateSession,
     getLastAuthStatus: () => lastAuthStatus,
     getLastAuthFailure: () => lastAuthFailure,
+    clearAuthSession,
     logout
   };
 

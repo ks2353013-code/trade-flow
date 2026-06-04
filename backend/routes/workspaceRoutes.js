@@ -56,7 +56,12 @@ function workspaceAccessFilter(req) {
 }
 
 function logWorkspaceApiDebug(req, filter, count, source) {
-  if (process.env.NODE_ENV === "production") return;
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.DEBUG_TRADEFLOW !== "true"
+  ) {
+    return;
+  }
 
   console.log("[WORKSPACE API DEBUG] user id/email/companyId", {
     id: req.user?.id || null,

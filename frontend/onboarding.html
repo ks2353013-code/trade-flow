@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TradeFlow Onboarding</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./css/tailwind.css">
+  <script src="./js/client-error-tracker.js" defer></script>
 </head>
 
 <body class="min-h-screen bg-slate-950 text-white flex items-center justify-center p-6">
@@ -134,12 +135,30 @@
     localStorage.setItem("currentUser", JSON.stringify(user));
   }
 
+  function clearAuthSession() {
+    [
+      "tradeflowAccessToken",
+      "tradeflowToken",
+      "token",
+      "authToken",
+      "jwt",
+      "tradeflowUser",
+      "user",
+      "currentUser",
+      "isLoggedIn",
+      "tradeflowLoggedIn",
+      "tradeflowIsOwner",
+      "tradeflowRole",
+      "role"
+    ].forEach((key) => localStorage.removeItem(key));
+  }
+
   function requireLogin() {
     const user = getUser();
     const token = getToken();
 
     if (!user || !token) {
-      localStorage.clear();
+      clearAuthSession();
       window.location.href = "/login";
       return false;
     }
@@ -219,7 +238,7 @@
   }
 
   function logoutUser() {
-    localStorage.clear();
+    clearAuthSession();
     window.location.href = "/login";
   }
 

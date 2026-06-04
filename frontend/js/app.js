@@ -63,7 +63,8 @@ const workspaceState = {
 function isDebugMode() {
   return (
     window.TRADEFLOW_DEBUG === true ||
-    localStorage.getItem("tradeflowDebug") === "true"
+    localStorage.getItem("tradeflowDebug") === "true" ||
+    ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)
   );
 }
 
@@ -72,7 +73,7 @@ function debugLog(...args) {
 }
 
 function bootstrapDebug(message) {
-  console.log(`[BOOTSTRAP] ${message}`);
+  debugLog(`[BOOTSTRAP] ${message}`);
 }
 
 
@@ -634,7 +635,7 @@ function isConfirmedAuthFailureStatus(status) {
 }
 
 function logAuthDebug(message, value) {
-  console.log("[AUTH DEBUG] " + message, value);
+  debugLog("[AUTH DEBUG] " + message, value);
 }
 
 function redirectToLogin(reason) {
@@ -1134,7 +1135,7 @@ async function fetchWorkspaces(options = {}) {
 
     const workspaces = normalizeApiList(data, "workspaces");
     if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-      console.log(
+      debugLog(
         `[WORKSPACE API DEBUG] frontend workspace response status=${res.status} count=${workspaces.length} keys=${Object.keys(data || {}).join(",")}`
       );
     }

@@ -1,7 +1,39 @@
 /* TradeFlow Production Session Guard */
 
 (function () {
-  console.log("✅ TradeFlow production session guard active");
+  const AUTH_KEYS = [
+    "tradeflowAccessToken",
+    "tradeflowToken",
+    "token",
+    "authToken",
+    "jwt",
+    "tradeflowUser",
+    "user",
+    "currentUser",
+    "isLoggedIn",
+    "tradeflowLoggedIn",
+    "tradeflowIsOwner",
+    "tradeflowRole",
+    "role"
+  ];
+
+  function isDebugMode() {
+    return (
+      window.TRADEFLOW_DEBUG === true ||
+      ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)
+    );
+  }
+
+  function debugLog(...args) {
+    if (isDebugMode()) console.log(...args);
+  }
+
+  function clearAuthSession() {
+    AUTH_KEYS.forEach((key) => localStorage.removeItem(key));
+    AUTH_KEYS.forEach((key) => sessionStorage.removeItem(key));
+  }
+
+  debugLog("TradeFlow production session guard active");
 
   function getToken() {
     return (
@@ -51,17 +83,17 @@
     if (isAuthenticated()) return true;
 
     if (getToken()) {
-      console.log("[AUTH DEBUG] redirect reason", "not redirecting: token present but user pending");
+      debugLog("[AUTH DEBUG] redirect reason", "not redirecting: token present but user pending");
       return true;
     }
 
-    console.log("[AUTH DEBUG] redirect reason", "no token exists in session guard");
+    debugLog("[AUTH DEBUG] redirect reason", "no token exists in session guard");
     window.location.href = "/login";
     return false;
   }
 
   window.logoutUser = function () {
-    localStorage.clear();
+    clearAuthSession();
     window.location.href = "/login";
   };
 

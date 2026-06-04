@@ -103,7 +103,32 @@ function saveTradeflowUser(data = {}) {
 }
 
 function clearTradeflowSession() {
-  localStorage.clear();
+  [
+    "tradeflowAccessToken",
+    "tradeflowToken",
+    "token",
+    "authToken",
+    "jwt",
+    "tradeflowUser",
+    "user",
+    "currentUser",
+    "isLoggedIn",
+    "tradeflowLoggedIn",
+    "tradeflowIsOwner",
+    "tradeflowRole",
+    "role"
+  ].forEach((key) => localStorage.removeItem(key));
+
+  [
+    "tradeflowAccessToken",
+    "tradeflowToken",
+    "token",
+    "authToken",
+    "jwt",
+    "tradeflowUser",
+    "user",
+    "currentUser"
+  ].forEach((key) => sessionStorage.removeItem(key));
 }
 
 function requireAuthenticatedUser() {

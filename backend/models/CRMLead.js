@@ -88,6 +88,13 @@ const crmLeadSchema = new mongoose.Schema(
       trim: true
     },
 
+    assignedToEmail: {
+      type: String,
+      default: "",
+      lowercase: true,
+      trim: true
+    },
+
     ownerEmail: {
       type: String,
       required: true,
