@@ -7,6 +7,12 @@ const PLAN_LIMITS = {
     employee_create: 3,
     workspace_create: 1,
     verified_lead_create: 25,
+    mission_create: 20,
+    buyer_discovery: 20,
+    supplier_discovery: 20,
+    crm_lead_create: 25,
+    outreach_draft_create: 25,
+    email_send: 25,
     ai_workflow_create: 5,
     pdf_export: 5,
     analytics_access: false,
@@ -19,6 +25,12 @@ const PLAN_LIMITS = {
     employee_create: 25,
     workspace_create: 5,
     verified_lead_create: 500,
+    mission_create: 500,
+    buyer_discovery: 500,
+    supplier_discovery: 500,
+    crm_lead_create: 500,
+    outreach_draft_create: 500,
+    email_send: 500,
     ai_workflow_create: 100,
     pdf_export: 500,
     analytics_access: true,
@@ -31,6 +43,12 @@ const PLAN_LIMITS = {
     employee_create: 50,
     workspace_create: 15,
     verified_lead_create: 2000,
+    mission_create: 2000,
+    buyer_discovery: 2000,
+    supplier_discovery: 2000,
+    crm_lead_create: 2000,
+    outreach_draft_create: 2000,
+    email_send: 2000,
     ai_workflow_create: 500,
     pdf_export: 1500,
     analytics_access: true,
@@ -43,6 +61,12 @@ const PLAN_LIMITS = {
     employee_create: 200,
     workspace_create: 100,
     verified_lead_create: 10000,
+    mission_create: 10000,
+    buyer_discovery: 10000,
+    supplier_discovery: 10000,
+    crm_lead_create: 10000,
+    outreach_draft_create: 10000,
+    email_send: 10000,
     ai_workflow_create: 10000,
     pdf_export: 5000,
     analytics_access: true,
@@ -90,6 +114,19 @@ async function getPlan(email) {
   return subscription?.plan || "Starter";
 }
 
+function isSubscriptionActive(subscription) {
+  return subscription?.status === "Active" || subscription?.status === "Trial";
+}
+
+function sendInactiveSubscription(res, subscription) {
+  return res.status(403).json({
+    success: false,
+    message: "Subscription inactive. Please upgrade your plan.",
+    plan: subscription?.plan || "Starter",
+    status: subscription?.status || "Inactive"
+  });
+}
+
 function getLimit(plan, metricType) {
   return PLAN_LIMITS[plan]?.[metricType];
 }
@@ -98,7 +135,12 @@ function requireFeature(metricType) {
   return async function (req, res, next) {
     try {
       const email = getOwnerEmail(req);
-      const plan = await getPlan(email);
+      const subscription = await getSubscription(email);
+      if (!isSubscriptionActive(subscription)) {
+        return sendInactiveSubscription(res, subscription);
+      }
+
+      const plan = subscription?.plan || "Starter";
       const allowed = getLimit(plan, metricType);
 
       if (allowed === true || typeof allowed === "number") {
@@ -125,7 +167,12 @@ function enforceCountLimit(metricType, countFunction) {
   return async function (req, res, next) {
     try {
       const email = getOwnerEmail(req);
-      const plan = await getPlan(email);
+      const subscription = await getSubscription(email);
+      if (!isSubscriptionActive(subscription)) {
+        return sendInactiveSubscription(res, subscription);
+      }
+
+      const plan = subscription?.plan || "Starter";
       const limit = getLimit(plan, metricType);
 
       if (limit === undefined) {
@@ -172,7 +219,12 @@ function enforceLimit(metricType) {
   return async function (req, res, next) {
     try {
       const email = getOwnerEmail(req);
-      const plan = await getPlan(email);
+      const subscription = await getSubscription(email);
+      if (!isSubscriptionActive(subscription)) {
+        return sendInactiveSubscription(res, subscription);
+      }
+
+      const plan = subscription?.plan || "Starter";
       const limit = getLimit(plan, metricType);
 
       if (limit === undefined || limit === true) {

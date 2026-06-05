@@ -2,6 +2,8 @@ const express = require("express");
 const EmailDelivery = require("../models/EmailDelivery");
 const OutreachApproval = require("../models/OutreachApproval");
 const { sendApprovedEmail } = require("../services/emailSender");
+const { enforceLimit } = require("../middleware/planLimitMiddleware");
+const { usageTracker } = require("../middleware/usageMiddleware");
 
 const router = express.Router();
 
@@ -35,7 +37,11 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/send-approved/:approvalId", async (req, res) => {
+router.post(
+  "/send-approved/:approvalId",
+  enforceLimit("email_send"),
+  usageTracker("email_send"),
+  async (req, res) => {
   try {
     const ownerEmail = getOwnerEmail(req);
 
@@ -135,6 +141,7 @@ router.post("/send-approved/:approvalId", async (req, res) => {
       delivery
     });
   }
-});
+  }
+);
 
 module.exports = router;

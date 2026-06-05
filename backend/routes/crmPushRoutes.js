@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const CRMLead = require("../models/CRMLead");
 const TradeMission = require("../models/TradeMission");
 const { writeAuditLog } = require("../utils/auditLogger");
+const { enforceLimit } = require("../middleware/planLimitMiddleware");
+const { usageTracker } = require("../middleware/usageMiddleware");
 
 const router = express.Router();
 
@@ -194,7 +196,11 @@ async function writeCrmLeadAudit(req, action, lead, metadata = {}, severity = "L
   });
 }
 
-router.post("/push", async (req, res) => {
+router.post(
+  "/push",
+  enforceLimit("crm_lead_create"),
+  usageTracker("crm_push"),
+  async (req, res) => {
   try {
     const { missionId, lead } = req.body || {};
 
@@ -284,7 +290,8 @@ router.post("/push", async (req, res) => {
       error: error.message
     });
   }
-});
+  }
+);
 
 router.put("/:id", async (req, res) => {
   try {

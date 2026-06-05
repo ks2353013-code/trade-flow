@@ -101,6 +101,52 @@ function requirePlan(requiredPlan = "Pro Exporter") {
   };
 }
 
+function shouldSkipActiveSubscriptionGuard(req) {
+  const path = String(req.originalUrl || req.path || "").toLowerCase();
+
+  return (
+    path.startsWith("/api/subscription") ||
+    path.startsWith("/api/subscriptions") ||
+    path.startsWith("/api/billing") ||
+    path.startsWith("/api/payment") ||
+    path.startsWith("/api/razorpay-checkout")
+  );
+}
+
+function requireActiveSubscription() {
+  return async (req, res, next) => {
+    if (shouldSkipActiveSubscriptionGuard(req)) {
+      return next();
+    }
+
+    try {
+      const subscription = await getUserSubscription(req);
+
+      if (
+        subscription.status !== "Active" &&
+        subscription.status !== "Trial"
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: "Subscription inactive. Please upgrade your plan.",
+          currentPlan: subscription.plan || "Starter",
+          status: subscription.status || "Inactive"
+        });
+      }
+
+      req.subscription = subscription;
+      return next();
+    } catch (error) {
+      console.error("Active subscription check failed:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Subscription check failed"
+      });
+    }
+  };
+}
+
 function requireEnterprise() {
   return requirePlan("Enterprise AI OS");
 }
@@ -113,6 +159,7 @@ module.exports = {
   requirePlan,
   requirePro,
   requireEnterprise,
+  requireActiveSubscription,
   getUserSubscription,
   PLAN_ENTITLEMENTS
 };

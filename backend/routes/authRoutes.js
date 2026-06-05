@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 
 const User = require("../models/User");
+const Subscription = require("../models/Subscription");
 const { sendPasswordResetEmail } = require("../services/emailSender");
 const {
   normalizeEmail,
@@ -85,6 +86,9 @@ function sendAuthResponse(res, user, message = "Authentication successful") {
       name: user.name || "TradeFlow User",
       email: user.email,
       companyName: user.companyName || "TradeFlow Workspace",
+      businessType: user.businessType || "Trading Company",
+      businessTypeLocked: user.businessTypeLocked === true,
+      businessTypeLockedAt: user.businessTypeLockedAt || null,
       role: user.role || "Founder",
       subscriptionPlan: user.subscriptionPlan || "Starter",
       subscriptionStatus: user.subscriptionStatus || "Active",
@@ -140,6 +144,27 @@ async function handleSignup(req, res) {
           ? "Master Admin"
           : "Founder"
     });
+
+    await Subscription.findOneAndUpdate(
+      { email: cleanEmail },
+      {
+        $setOnInsert: {
+          email: cleanEmail,
+          plan: "Starter",
+          status: "Active",
+          price: 1999,
+          approvalStatus: "Not Required",
+          entitlements: {
+            aiLimit: 20,
+            supplierLimit: 200,
+            dealLimit: 50,
+            workspaceLimit: 1,
+            employeeLimit: 3
+          }
+        }
+      },
+      { upsert: true, new: true }
+    );
 
     sendAuthResponse(res, user, "Signup successful");
   } catch (error) {
@@ -381,6 +406,9 @@ router.get("/session", async (req, res) => {
         name: user.name,
         email: user.email,
         companyName: user.companyName,
+        businessType: user.businessType || "Trading Company",
+        businessTypeLocked: user.businessTypeLocked === true,
+        businessTypeLockedAt: user.businessTypeLockedAt || null,
         role: user.role || "Founder",
         permissions: buildPermissions(user.role || "Founder")
       }

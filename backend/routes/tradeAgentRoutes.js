@@ -1,6 +1,8 @@
 const express = require("express");
 const TradeMission = require("../models/TradeMission");
 const { runTradeMission } = require("../services/tradeflowAgentOrchestrator");
+const { enforceLimit } = require("../middleware/planLimitMiddleware");
+const { usageTracker } = require("../middleware/usageMiddleware");
 
 const router = express.Router();
 
@@ -149,7 +151,11 @@ router.get("/missions", async (req, res) => {
   }
 });
 
-router.post("/run", async (req, res) => {
+router.post(
+  "/run",
+  enforceLimit("mission_create"),
+  usageTracker("mission_create"),
+  async (req, res) => {
   try {
     const ownerEmail = getOwnerEmail(req);
     const { missionText } = req.body;
@@ -182,7 +188,8 @@ router.post("/run", async (req, res) => {
       error: error.message
     });
   }
-});
+  }
+);
 
 router.post("/missions/backfill-agent-reports", async (req, res) => {
   try {

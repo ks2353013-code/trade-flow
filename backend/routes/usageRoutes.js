@@ -1,5 +1,6 @@
 const express = require("express");
 const Usage = require("../models/Usage");
+const UsageMetric = require("../models/UsageMetric");
 
 const router = express.Router();
 
@@ -45,10 +46,14 @@ router.get("/", async (req, res) => {
     const usage = await Usage.find(tenantFilter(req)).sort({
       createdAt: -1
     });
+    const metrics = await UsageMetric.find(tenantFilter(req)).sort({
+      updatedAt: -1
+    });
 
     res.json({
       success: true,
-      usage
+      usage,
+      metrics
     });
   } catch (error) {
     res.status(500).json({
@@ -86,6 +91,7 @@ router.post("/", async (req, res) => {
 router.get("/summary", async (req, res) => {
   try {
     const usage = await Usage.find(tenantFilter(req));
+    const metrics = await UsageMetric.find(tenantFilter(req));
 
     const summary = usage.reduce(
       (acc, item) => {
@@ -102,9 +108,18 @@ router.get("/summary", async (req, res) => {
       }
     );
 
+    metrics.forEach((metric) => {
+      const type = metric.metricType || "unknown";
+      const count = Number(metric.count || 0);
+
+      summary.total += count;
+      summary.byType[type] = (summary.byType[type] || 0) + count;
+    });
+
     res.json({
       success: true,
-      summary
+      summary,
+      metrics
     });
   } catch (error) {
     res.status(500).json({

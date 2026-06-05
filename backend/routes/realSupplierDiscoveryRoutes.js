@@ -2,10 +2,16 @@ const express = require("express");
 const {
   searchSuppliers
 } = require("../services/supplierSearchService");
+const { enforceLimit } = require("../middleware/planLimitMiddleware");
+const { usageTracker } = require("../middleware/usageMiddleware");
 
 const router = express.Router();
 
-router.post("/search", async (req, res) => {
+router.post(
+  "/search",
+  enforceLimit("supplier_discovery"),
+  usageTracker("supplier_discovery"),
+  async (req, res) => {
   try {
     const { product, country } = req.body;
 
@@ -27,6 +33,7 @@ router.post("/search", async (req, res) => {
       message: "Supplier discovery failed"
     });
   }
-});
+  }
+);
 
 module.exports = router;

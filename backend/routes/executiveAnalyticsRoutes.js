@@ -1,10 +1,11 @@
 const express = require("express");
 
 const AutomationWorkflow = require("../models/AutomationWorkflow2");
+const { requireFeature } = require("../middleware/planLimitMiddleware");
 
 const router = express.Router();
 
-router.get("/overview", async (req, res) => {
+router.get("/overview", requireFeature("executive_access"), async (req, res) => {
   try {
 
     const totalWorkflows =

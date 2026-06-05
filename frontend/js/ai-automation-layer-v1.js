@@ -28,7 +28,15 @@
   }
 
   function getBusinessType() {
+    let user = null;
+    try {
+      user = JSON.parse(localStorage.getItem("tradeflowUser") || "null");
+    } catch {
+      user = null;
+    }
+
     return (
+      user?.businessType ||
       localStorage.getItem("tradeflowBusinessType") ||
       "Trading Company"
     );

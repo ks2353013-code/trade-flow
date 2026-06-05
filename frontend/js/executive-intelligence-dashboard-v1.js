@@ -38,7 +38,18 @@
   }
 
   function getBusinessType() {
-    return localStorage.getItem("tradeflowBusinessType") || "Trading Company";
+    return (
+      getUser()?.businessType ||
+      localStorage.getItem("tradeflowBusinessType") ||
+      "Trading Company"
+    );
+  }
+
+  function isBusinessTypeLocked() {
+    return (
+      getUser()?.businessTypeLocked === true ||
+      localStorage.getItem("tradeflowBusinessTypeLocked") === "true"
+    );
   }
 
   function currency(value) {
@@ -56,7 +67,7 @@
     if (leads.length >= 1) score += 15;
     if (workflows.length >= 1) score += 15;
     if (getBusinessType()) score += 10;
-    if (localStorage.getItem("tradeflowBusinessTypeLocked") === "true") score += 5;
+    if (isBusinessTypeLocked()) score += 5;
 
     return Math.min(score, 100);
   }
@@ -83,7 +94,7 @@
       alerts.push("AI automation workflows not started.");
     }
 
-    if (localStorage.getItem("tradeflowBusinessTypeLocked") !== "true") {
+    if (!isBusinessTypeLocked()) {
       alerts.push("Business Type is not locked.");
     }
 

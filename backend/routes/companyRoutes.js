@@ -66,23 +66,56 @@ router.post("/", async (req, res) => {
 
 router.put("/:id", requireAdminAccess, async (req, res) => {
   try {
-    const company = await Company.findOneAndUpdate(
-      { _id: req.params.id, ...tenantFilter(req) },
-      safeBody(req.body),
-      { new: true }
-    );
+    const existingCompany = await Company.findOne({
+      _id: req.params.id,
+      ...tenantFilter(req)
+    });
 
-    if (!company) {
+    if (!existingCompany) {
       return res.status(404).json({ success: false, message: "Company not found" });
     }
 
+    if (
+      req.body?.businessType &&
+      existingCompany.businessTypeLocked === true &&
+      existingCompany.businessType !== req.body.businessType &&
+      !isMasterAdmin(req)
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Business type is locked and cannot be changed after onboarding."
+      });
+    }
+
+    const update = safeBody(req.body);
+    const isBusinessTypeOverride =
+      req.body?.businessType &&
+      existingCompany.businessTypeLocked === true &&
+      existingCompany.businessType !== req.body.businessType &&
+      isMasterAdmin(req);
+
+    if (req.body?.businessType && !existingCompany.businessTypeLocked) {
+      update.businessTypeLocked = true;
+      update.businessTypeLockedAt = new Date();
+    }
+
+    const company = await Company.findOneAndUpdate(
+      { _id: req.params.id, ...tenantFilter(req) },
+      update,
+      { new: true }
+    );
+
     await writeAuditLog(req, {
       module: "Companies",
-      action: "Updated company",
+      action: isBusinessTypeOverride ? "BUSINESS_TYPE_OVERRIDE" : "Updated company",
       entityType: "Company",
       entityId: String(company._id),
-      severity: "Medium",
-      metadata: { updatedFields: Object.keys(req.body || {}) }
+      severity: isBusinessTypeOverride ? "High" : "Medium",
+      metadata: {
+        updatedFields: Object.keys(req.body || {}),
+        previousBusinessType: existingCompany.businessType || "",
+        businessType: company.businessType || ""
+      }
     });
 
     res.json(company);

@@ -61,9 +61,10 @@
   }
 
   function getBusinessType() {
+    const user = getUser();
     return (
+      user?.businessType ||
       localStorage.getItem("tradeflowBusinessType") ||
-      getUser()?.businessType ||
       "Trading Company"
     );
   }

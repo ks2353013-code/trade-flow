@@ -5,6 +5,7 @@ const Deal = require("../models/Deal");
 const Task = require("../models/Task");
 const Outreach = require("../models/Outreach");
 const Notification = require("../models/Notification");
+const { requireFeature } = require("../middleware/planLimitMiddleware");
 
 const router = express.Router();
 
@@ -32,7 +33,7 @@ function tenantFilter(req) {
   return filter;
 }
 
-router.get("/", async (req, res) => {
+router.get("/", requireFeature("analytics_access"), async (req, res) => {
   try {
     const filter = tenantFilter(req);
 

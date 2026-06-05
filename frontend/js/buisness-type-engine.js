@@ -98,15 +98,19 @@
   }
 
   function getBusinessType() {
+    const user = getUser();
     return (
+      user?.businessType ||
       localStorage.getItem("tradeflowBusinessType") ||
-      getUser()?.businessType ||
       "Trading Company"
     );
   }
 
   function isBusinessTypeLocked() {
-    return localStorage.getItem("tradeflowBusinessTypeLocked") === "true";
+    return (
+      getUser()?.businessTypeLocked === true ||
+      localStorage.getItem("tradeflowBusinessTypeLocked") === "true"
+    );
   }
 
   function getConfig() {
@@ -136,33 +140,13 @@
   }
 
   function ownerUnlockBusinessType() {
-    if (!isOwner()) {
-      requestBusinessTypeChange();
-      return;
-    }
-
-    const confirmUnlock = confirm(
-      "Master Admin only: unlock business type for this account?"
-    );
-
-    if (!confirmUnlock) return;
-
-    localStorage.removeItem("tradeflowBusinessTypeLocked");
-
-    const user = getUser();
-    if (user) {
-      user.businessTypeLocked = false;
-      saveUser(user);
-    }
-
-    alert("Business Type unlocked by Master Admin.");
-    render();
+    requestBusinessTypeChange();
   }
 
   function saveBusinessType(type) {
     if (!BUSINESS_TYPES[type]) return;
 
-    if (isBusinessTypeLocked() && !isOwner()) {
+    if (isBusinessTypeLocked()) {
       requestBusinessTypeChange();
       render();
       return;
@@ -217,11 +201,6 @@
             Request Change
           </button>
 
-          ${isOwner() ? `
-            <button class="btn" style="margin-top:10px;background:#7c3aed;" onclick="TradeFlowBusinessTypeEngineV2.ownerUnlock()">
-              Master Unlock
-            </button>
-          ` : ""}
         </div>
       </div>
 

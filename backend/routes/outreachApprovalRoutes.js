@@ -4,6 +4,8 @@ const OutreachApproval = require("../models/OutreachApproval");
 const ApprovalAuditLog = require("../models/ApprovalAuditLog");
 const CRMLead = require("../models/CRMLead");
 const TradeMission = require("../models/TradeMission");
+const { enforceLimit } = require("../middleware/planLimitMiddleware");
+const { usageTracker } = require("../middleware/usageMiddleware");
 
 const router = express.Router();
 
@@ -234,7 +236,11 @@ function ensureValidApprovalId(id) {
   return mongoose.isValidObjectId(id);
 }
 
-router.post("/create", async (req, res) => {
+router.post(
+  "/create",
+  enforceLimit("outreach_draft_create"),
+  usageTracker("outreach_draft_create"),
+  async (req, res) => {
   try {
     if (!requireActiveWorkspace(req, res)) return;
 
@@ -285,7 +291,8 @@ router.post("/create", async (req, res) => {
       error: error.message
     });
   }
-});
+  }
+);
 
 router.get("/", async (req, res) => {
   try {

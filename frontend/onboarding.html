@@ -101,7 +101,7 @@
       ? window.location.origin
       : RENDER_BACKEND_URL);
 
-  let selectedBusinessType = localStorage.getItem("tradeflowBusinessType") || "";
+  let selectedBusinessType = "";
 
   const descriptions = {
     "Supplier": "Your workspace will focus on product listings, buyer discovery, export documents, outreach and CRM follow-ups.",
@@ -133,6 +133,26 @@
     localStorage.setItem("tradeflowUser", JSON.stringify(user));
     localStorage.setItem("user", JSON.stringify(user));
     localStorage.setItem("currentUser", JSON.stringify(user));
+  }
+
+  function isBusinessTypeLocked() {
+    return getUser()?.businessTypeLocked === true;
+  }
+
+  function restoreBackendBusinessType() {
+    const user = getUser();
+
+    if (user?.businessTypeLocked && user.businessType) {
+      selectedBusinessType = user.businessType;
+      localStorage.setItem("tradeflowBusinessType", user.businessType);
+      localStorage.setItem("tradeflowBusinessTypeLocked", "true");
+      return;
+    }
+
+    selectedBusinessType =
+      user?.businessType ||
+      localStorage.getItem("tradeflowBusinessType") ||
+      "";
   }
 
   function clearAuthSession() {
@@ -167,11 +187,21 @@
   }
 
   function selectBusinessType(type) {
+    const user = getUser();
+
+    if (
+      isBusinessTypeLocked() &&
+      user?.businessType &&
+      user.businessType !== type
+    ) {
+      alert("Business type is locked and cannot be changed after onboarding.");
+      type = user.businessType;
+    }
+
     selectedBusinessType = type;
 
     localStorage.setItem("tradeflowBusinessType", type);
 
-    const user = getUser();
     if (user) {
       user.businessType = type;
       localStorage.setItem("tradeflowUser", JSON.stringify(user));
@@ -218,6 +248,10 @@
 
       if (data.onboardingCompleted === true) {
         user.onboardingCompleted = true;
+        user.businessType = data.businessType || selectedBusinessType;
+        user.businessTypeLocked = data.businessTypeLocked === true;
+        localStorage.setItem("tradeflowBusinessType", user.businessType);
+        localStorage.setItem("tradeflowBusinessTypeLocked", user.businessTypeLocked ? "true" : "false");
         saveUser(user);
       }
     } catch (error) {
@@ -227,6 +261,7 @@
 
   async function enterDashboard() {
     if (!requireLogin()) return;
+    restoreBackendBusinessType();
 
     if (!selectedBusinessType) {
       selectBusinessType("Trading Company");
@@ -240,6 +275,14 @@
   function logoutUser() {
     clearAuthSession();
     window.location.href = "/login";
+  }
+
+  if (requireLogin()) {
+    restoreBackendBusinessType();
+
+    if (getUser()?.onboardingCompleted === true && isBusinessTypeLocked()) {
+      window.location.href = "/app";
+    }
   }
 
   if (requireLogin() && selectedBusinessType) {

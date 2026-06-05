@@ -17,6 +17,7 @@ const { connectDB, getMongoState, isMongoConnected } = require("./config/db");
 
 const authMiddleware = require("./middleware/authMiddleware");
 const tenantMiddleware = require("./middleware/tenantMiddleware");
+const { requireActiveSubscription } = require("./middleware/subscriptionMiddleware");
 const optionalAuth = authMiddleware.optionalAuth;
 
 const supplierRoutes = require("./routes/supplierRoutes");
@@ -260,7 +261,12 @@ app.use("/api/auth", requireDatabaseReady, authRoutes);
 app.use("/api/errors", requireDatabaseReady, optionalAuth, clientErrorRoutes);
 
 /* Protected API Routes */
-const protectedStack = [requireDatabaseReady, authMiddleware, tenantMiddleware];
+const protectedStack = [
+  requireDatabaseReady,
+  authMiddleware,
+  tenantMiddleware,
+  requireActiveSubscription()
+];
 
 app.use("/suppliers", protectedStack, supplierRoutes);
 app.use("/api/deals", protectedStack, dealRoutes);

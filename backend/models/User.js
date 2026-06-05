@@ -43,6 +43,28 @@ const userSchema = new mongoose.Schema(
       default: "TradeFlow Company"
     },
 
+    businessType: {
+      type: String,
+      enum: [
+        "Supplier",
+        "Manufacturer",
+        "Buyer",
+        "Trading Company",
+        "Buying House"
+      ],
+      default: "Trading Company"
+    },
+
+    businessTypeLocked: {
+      type: Boolean,
+      default: false
+    },
+
+    businessTypeLockedAt: {
+      type: Date,
+      default: null
+    },
+
     role: {
       type: String,
       enum: [

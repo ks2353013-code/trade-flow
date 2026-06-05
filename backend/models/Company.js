@@ -23,8 +23,28 @@ const companySchema = new mongoose.Schema(
 
     businessType: {
       type: String,
-      enum: ["Exporter", "Importer", "Both", "Agency", "Manufacturer"],
-      default: "Both"
+      enum: [
+        "Supplier",
+        "Manufacturer",
+        "Buyer",
+        "Trading Company",
+        "Buying House",
+        "Exporter",
+        "Importer",
+        "Both",
+        "Agency"
+      ],
+      default: "Trading Company"
+    },
+
+    businessTypeLocked: {
+      type: Boolean,
+      default: false
+    },
+
+    businessTypeLockedAt: {
+      type: Date,
+      default: null
     },
 
     country: {

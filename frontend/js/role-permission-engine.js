@@ -114,9 +114,10 @@
   }
 
   function getBusinessType() {
+    const user = getUser();
     return (
+      user.businessType ||
       localStorage.getItem("tradeflowBusinessType") ||
-      getUser().businessType ||
       "Trading Company"
     );
   }
@@ -246,40 +247,14 @@
         <button class="btn" onclick="TradeFlowBusinessTypeEngine.openRecommended('suppliers')">Open Main Leads</button>
         <button class="btn" onclick="TradeFlowBusinessTypeEngine.openRecommended('crm')">Open CRM</button>
         <button class="btn" onclick="TradeFlowBusinessTypeEngine.openRecommended('outreach')">Open Outreach</button>
-        <button class="btn" onclick="TradeFlowBusinessTypeEngine.changeType()">Change Business Type</button>
+        <button class="btn" onclick="TradeFlowBusinessTypeEngine.changeType()">Request Business Type Change</button>
       </div>
     `;
   }
 
   function buildBusinessTypeSwitcher() {
-    const topbar = document.querySelector(".topbar > div:last-child");
-    if (!topbar || $("businessTypeSelect")) return;
-
-    const select = document.createElement("select");
-    select.id = "businessTypeSelect";
-    select.style.maxWidth = "240px";
-    select.style.marginTop = "0";
-
-    Object.keys(BUSINESS_CONFIG).forEach((type) => {
-      const option = document.createElement("option");
-      option.value = type;
-      option.textContent = type;
-      if (type === getBusinessType()) option.selected = true;
-      select.appendChild(option);
-    });
-
-    select.onchange = function() {
-      localStorage.setItem("tradeflowBusinessType", this.value);
-
-      const user = getUser();
-      user.businessType = this.value;
-      saveUser(user);
-
-      applyBusinessTypeUI();
-      alert(`Business type changed to ${this.value}`);
-    };
-
-    topbar.prepend(select);
+    const existing = $("businessTypeSelect");
+    if (existing) existing.remove();
   }
 
   function updateAIConsoleDefault() {
@@ -342,30 +317,9 @@ Recommended first steps:
   }
 
   function changeType() {
-    const current = getBusinessType();
-
-    const next = prompt(
-      "Enter business type:\nSupplier\nManufacturer\nBuyer\nTrading Company\nBuying House",
-      current
+    alert(
+      "Business type is locked and cannot be changed after onboarding. Contact support or Master Admin for an approved override."
     );
-
-    if (!next) return;
-
-    if (!BUSINESS_CONFIG[next]) {
-      alert("Invalid business type. Please use exact name from the list.");
-      return;
-    }
-
-    localStorage.setItem("tradeflowBusinessType", next);
-
-    const user = getUser();
-    user.businessType = next;
-    saveUser(user);
-
-    const selector = $("businessTypeSelect");
-    if (selector) selector.value = next;
-
-    applyBusinessTypeUI();
   }
 
   function boot() {
