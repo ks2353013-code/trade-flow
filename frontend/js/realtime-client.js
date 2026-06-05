@@ -4,6 +4,10 @@
   if (window.TradeFlowRealtimeClient) return;
 
   let socket = null;
+  let bootStarted = false;
+  let realtimeUnavailable = false;
+  let connectWarningShown = false;
+  const RENDER_SOCKET_ORIGIN = "https://trade-flow-lc1k.onrender.com";
 
   function getEmail() {
     return (
@@ -21,36 +25,96 @@
     );
   }
 
-  function loadSocketScript() {
-    return new Promise((resolve, reject) => {
+  function isLocalHost(hostname) {
+    return (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "::1"
+    );
+  }
 
+  function getSocketOrigin() {
+    const configured =
+      window.TRADEFLOW_SOCKET_URL ||
+      window.TRADEFLOW_REALTIME_URL ||
+      window.BACKEND_URL ||
+      window.TRADEFLOW_API_BASE ||
+      window.TRADEFLOW_API_BASE_URL;
+
+    if (configured) {
+      return String(configured).replace(/\/$/, "");
+    }
+
+    if (isLocalHost(window.location.hostname)) {
+      return window.location.origin;
+    }
+
+    return RENDER_SOCKET_ORIGIN;
+  }
+
+  async function isJavaScriptResponse(url) {
+    if (!window.fetch) return true;
+
+    const response = await fetch(url, {
+      method: "GET",
+      cache: "no-store"
+    });
+
+    const contentType =
+      response.headers.get("content-type") || "";
+
+    if (
+      !response.ok ||
+      !/javascript|ecmascript|text\/plain/i.test(contentType)
+    ) {
+      throw new Error(
+        `Socket.IO client unavailable at ${url} (${response.status}, ${contentType || "unknown content-type"})`
+      );
+    }
+
+    return true;
+  }
+
+  function injectScript(src) {
+    return new Promise((resolve, reject) => {
       if (window.io) {
         resolve();
         return;
       }
 
       const script = document.createElement("script");
-
-      script.src =
-        "/socket.io/socket.io.js";
+      script.src = src;
+      script.async = true;
 
       script.onload = resolve;
-      script.onerror = () => {
-        const fallback =
-          document.createElement("script");
-
-        fallback.src =
-          "https://cdn.socket.io/4.7.5/socket.io.min.js";
-
-        fallback.onload = resolve;
-        fallback.onerror = reject;
-
-        document.body.appendChild(fallback);
-      };
+      script.onerror = () => reject(
+        new Error(`Socket.IO client script failed to load from ${src}`)
+      );
 
       document.body.appendChild(script);
-
     });
+  }
+
+  async function loadSocketScript() {
+    if (window.io) return;
+
+    const socketOrigin = getSocketOrigin();
+    const backendScriptUrl = `${socketOrigin}/socket.io/socket.io.js`;
+    const fallbackScriptUrl =
+      "https://cdn.socket.io/4.7.5/socket.io.min.js";
+
+    try {
+      await isJavaScriptResponse(backendScriptUrl);
+      await injectScript(backendScriptUrl);
+      return;
+    } catch (error) {
+      console.warn(
+        "Realtime Socket.IO backend client unavailable; trying CDN fallback.",
+        error?.message || error
+      );
+    }
+
+    await injectScript(fallbackScriptUrl);
   }
 
   function ensureFeedContainer() {
@@ -134,9 +198,15 @@
 
   function connectSocket() {
 
-    if (!window.io) return;
+    if (!window.io || realtimeUnavailable) return;
 
-    socket = io();
+    socket = io(getSocketOrigin(), {
+      path: "/socket.io",
+      transports: ["websocket", "polling"],
+      withCredentials: true,
+      reconnectionAttempts: 3,
+      timeout: 8000
+    });
 
     socket.on("connect", () => {
 
@@ -204,6 +274,16 @@
 
     });
 
+    socket.on("connect_error", (error) => {
+      if (connectWarningShown) return;
+
+      connectWarningShown = true;
+      console.warn(
+        "Realtime connection unavailable; continuing without live updates.",
+        error?.message || "Socket connection failed"
+      );
+    });
+
   }
 
   function emitActivity(
@@ -233,6 +313,8 @@
   }
 
   async function boot() {
+    if (bootStarted || realtimeUnavailable) return;
+    bootStarted = true;
 
     try {
       if (window.TradeFlowBootstrap?.whenReady) {
@@ -248,9 +330,10 @@
       );
 
     } catch (error) {
+      realtimeUnavailable = true;
 
-      console.info(
-        "Realtime client unavailable:",
+      console.warn(
+        "Realtime client unavailable; continuing without live updates.",
         error?.message || "Socket client failed to load"
       );
 
