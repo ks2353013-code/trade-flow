@@ -120,6 +120,21 @@ const userSchema = new mongoose.Schema(
       default: false
     },
 
+    betaUser: {
+      type: Boolean,
+      default: false
+    },
+
+    betaAccessEnabled: {
+      type: Boolean,
+      default: false
+    },
+
+    betaNotes: {
+      type: String,
+      default: ""
+    },
+
     features: {
       aiTools: {
         type: Boolean,

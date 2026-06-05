@@ -47,6 +47,21 @@ const companySchema = new mongoose.Schema(
       default: null
     },
 
+    betaCompany: {
+      type: Boolean,
+      default: false
+    },
+
+    betaAccessEnabled: {
+      type: Boolean,
+      default: false
+    },
+
+    betaNotes: {
+      type: String,
+      default: ""
+    },
+
     country: {
       type: String,
       default: ""

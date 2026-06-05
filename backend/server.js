@@ -69,6 +69,10 @@ const tradeAgentRoutes = require("./routes/tradeAgentRoutes");
 const crmPushRoutes = require("./routes/crmPushRoutes");
 const outreachApprovalRoutes = require("./routes/outreachApprovalRoutes");
 const clientErrorRoutes = require("./routes/clientErrorRoutes");
+const aiCommandRoutes = require("./routes/aiCommandRoutes");
+const agentRegistryRoutes = require("./routes/agentRegistryRoutes");
+const agentMemoryRoutes = require("./routes/agentMemoryRoutes");
+const betaRoutes = require("./routes/betaRoutes");
 
 const { startWorkflowScheduler } = require("./services/workflowScheduler");
 const { startAIAutonomousScheduler } = require("./services/aiAutonomousScheduler");
@@ -205,7 +209,8 @@ function getCommitVersion() {
     return childProcess
       .execSync("git rev-parse --short HEAD", {
         cwd: path.join(__dirname, ".."),
-        stdio: ["ignore", "pipe", "ignore"]
+        stdio: ["ignore", "pipe", "ignore"],
+        timeout: 1000
       })
       .toString()
       .trim();
@@ -314,6 +319,10 @@ app.use("/api/trade-agent", protectedStack, tradeAgentRoutes);
 app.use("/api/crm", protectedStack, crmPushRoutes);
 app.use("/api/outreach-approvals", protectedStack, outreachApprovalRoutes);
 app.use("/api/email-deliveries", protectedStack, emailDeliveryRoutes);
+app.use("/api/ai-command", protectedStack, aiCommandRoutes);
+app.use("/api/agent-registry", protectedStack, agentRegistryRoutes);
+app.use("/api/agent-memory", protectedStack, agentMemoryRoutes);
+app.use("/api/beta", protectedStack, betaRoutes);
 
 app.use("/api", (req, res) => {
   res.status(404).json({
