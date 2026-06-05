@@ -351,6 +351,59 @@ button{
 
   </div>
 
+  <div class="card">
+
+    <h2
+      style="
+        color:white;
+        margin-top:0;
+      "
+    >
+      Controlled Beta
+    </h2>
+
+    <div class="grid grid4">
+      <div class="card metric">
+        <h3>Beta Companies</h3>
+        <p id="betaCompanyMetric">0</p>
+      </div>
+
+      <div class="card metric">
+        <h3>Beta Users</h3>
+        <p id="betaUserMetric">0</p>
+      </div>
+
+      <div class="card metric">
+        <h3>Open Support</h3>
+        <p id="betaSupportMetric">0</p>
+      </div>
+
+      <div class="card metric">
+        <h3>Avg Progress</h3>
+        <p id="betaProgressMetric">0%</p>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <h3 style="color:white;">Beta Companies</h3>
+        <div id="betaCompanyList"></div>
+      </div>
+
+      <div>
+        <h3 style="color:white;">Beta Users</h3>
+        <div id="betaUserList"></div>
+      </div>
+    </div>
+
+    <h3 style="color:white;">Support & Feedback</h3>
+    <div id="betaSupportList"></div>
+
+    <h3 style="color:white;">Usage Intelligence</h3>
+    <div id="betaUsageList"></div>
+
+  </div>
+
 </div>
 
 <script>
@@ -360,6 +413,9 @@ const BACKEND_URL =
 
 const WORKSPACE_URL =
   `${BACKEND_URL}/api/workspaces`;
+
+const BETA_URL =
+  `${BACKEND_URL}/api/beta`;
 
 const OWNER_EMAILS = [
   "contact@tradeflowai.in",
@@ -665,8 +721,247 @@ async function rejectCompany(id) {
 
 }
 
+async function fetchBetaControl() {
+
+  try {
+
+    const res =
+      await fetch(
+        `${BETA_URL}/overview`,
+        {
+          headers: headers()
+        }
+      );
+
+    const data =
+      await res.json();
+
+    renderBetaControl(
+      data.overview || {}
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Beta control load error:",
+      error
+    );
+
+  }
+
+}
+
+function renderBetaControl(overview) {
+
+  const betaCompanies =
+    overview.betaCompanies || [];
+
+  const betaUsers =
+    overview.betaUsers || [];
+
+  const support =
+    overview.support || {};
+
+  const usage =
+    overview.usage || {};
+
+  const customerSuccess =
+    overview.customerSuccess || {};
+
+  const supportItems = [
+    ...(support.openIssues || []),
+    ...(support.featureRequests || []),
+    ...(support.supportRequests || [])
+  ];
+
+  document.getElementById(
+    "betaCompanyMetric"
+  ).innerText =
+    betaCompanies.length;
+
+  document.getElementById(
+    "betaUserMetric"
+  ).innerText =
+    betaUsers.length;
+
+  document.getElementById(
+    "betaSupportMetric"
+  ).innerText =
+    supportItems.length;
+
+  document.getElementById(
+    "betaProgressMetric"
+  ).innerText =
+    `${customerSuccess.averageScore || 0}%`;
+
+  renderBetaCompanies(betaCompanies);
+  renderBetaUsers(betaUsers);
+  renderBetaSupport(supportItems);
+  renderBetaUsage(usage);
+
+}
+
+function betaStatusBadge(status) {
+
+  const clean =
+    status || "invited";
+
+  return `
+    <span class="status ${clean === "active" ? "ok" : "bad"}">
+      ${clean}
+    </span>
+  `;
+
+}
+
+function renderBetaCompanies(companies) {
+
+  const list =
+    document.getElementById(
+      "betaCompanyList"
+    );
+
+  if (!companies.length) {
+    list.innerHTML =
+      `<div class="muted">No beta companies yet.</div>`;
+    return;
+  }
+
+  list.innerHTML =
+    companies.map((company) => `
+      <div class="company">
+        <h3 style="color:white;margin:0 0 8px;">
+          ${company.companyName || "Unnamed Company"}
+        </h3>
+        <div class="muted">${company.ownerEmail || ""}</div>
+        ${betaStatusBadge(company.betaStatus)}
+        <div class="actions">
+          <button class="approve" onclick="setBetaCompanyStatus('${company._id}', 'active')">Activate</button>
+          <button class="reject" onclick="setBetaCompanyStatus('${company._id}', 'revoked')">Revoke</button>
+        </div>
+      </div>
+    `).join("");
+
+}
+
+function renderBetaUsers(users) {
+
+  const list =
+    document.getElementById(
+      "betaUserList"
+    );
+
+  if (!users.length) {
+    list.innerHTML =
+      `<div class="muted">No beta users yet.</div>`;
+    return;
+  }
+
+  list.innerHTML =
+    users.map((user) => `
+      <div class="company">
+        <h3 style="color:white;margin:0 0 8px;">
+          ${user.name || "TradeFlow User"}
+        </h3>
+        <div class="muted">${user.email || ""}</div>
+        ${betaStatusBadge(user.betaStatus)}
+        <div class="actions">
+          <button class="approve" onclick="setBetaUserStatus('${user._id}', 'active')">Activate</button>
+          <button class="reject" onclick="setBetaUserStatus('${user._id}', 'revoked')">Revoke</button>
+        </div>
+      </div>
+    `).join("");
+
+}
+
+function renderBetaSupport(items) {
+
+  const list =
+    document.getElementById(
+      "betaSupportList"
+    );
+
+  if (!items.length) {
+    list.innerHTML =
+      `<div class="muted">No open support items.</div>`;
+    return;
+  }
+
+  list.innerHTML =
+    items.map((item) => `
+      <div class="company">
+        <h3 style="color:white;margin:0 0 8px;">
+          ${item.category || item.type || "Feedback"}
+        </h3>
+        <div class="muted">${item.title || "Untitled"}</div>
+        <div class="muted">${item.message || ""}</div>
+        <span class="status ${item.priority === "High" ? "bad" : "ok"}">
+          ${item.priority || "Medium"}
+        </span>
+      </div>
+    `).join("");
+
+}
+
+function renderBetaUsage(usage) {
+
+  const list =
+    document.getElementById(
+      "betaUsageList"
+    );
+
+  list.innerHTML = `
+    <div class="muted">Active companies: ${usage.activeCompanies || 0}</div>
+    <div class="muted">Active workspaces: ${usage.activeWorkspaces || 0}</div>
+    <div class="muted">Active users: ${usage.activeUsers || 0}</div>
+    <div class="muted">Missions created: ${usage.missionsCreated || 0}</div>
+    <div class="muted">Discovery runs: ${usage.discoveryRuns || 0}</div>
+    <div class="muted">CRM pushes: ${usage.crmPushes || 0}</div>
+    <div class="muted">Outreach drafts: ${usage.outreachDrafts || 0}</div>
+    <div class="muted">Email sends: ${usage.emailSends || 0}</div>
+    <div class="muted">AI Command Center usage: ${usage.aiCommandCenterUsage || 0}</div>
+    <div class="muted">Agent memory records: ${usage.agentMemoryGrowth || 0}</div>
+  `;
+
+}
+
+async function setBetaUserStatus(id, status) {
+
+  await fetch(
+    `${BETA_URL}/users/${id}/beta-status`,
+    {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({
+        betaStatus: status
+      })
+    }
+  );
+
+  fetchBetaControl();
+
+}
+
+async function setBetaCompanyStatus(id, status) {
+
+  await fetch(
+    `${BETA_URL}/companies/${id}/beta-status`,
+    {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({
+        betaStatus: status
+      })
+    }
+  );
+
+  fetchBetaControl();
+
+}
+
 protectMaster();
 fetchWorkspaces();
+fetchBetaControl();
 
 </script>
 

@@ -17,6 +17,20 @@ function isMaster(req) {
   );
 }
 
+function hasActiveBetaRecord(record, userFlag, accessFlag) {
+  if (!record) return false;
+
+  if (record.betaStatus === "paused" || record.betaStatus === "revoked") {
+    return false;
+  }
+
+  return (
+    record[userFlag] === true ||
+    record[accessFlag] === true ||
+    record.betaStatus === "active"
+  );
+}
+
 async function hasBetaAccess(req) {
   if (isMaster(req)) return true;
 
@@ -24,10 +38,12 @@ async function hasBetaAccess(req) {
   const companyId = req.tenant?.companyId;
 
   const user = email
-    ? await User.findOne({ email }).select("betaUser betaAccessEnabled").lean()
+    ? await User.findOne({ email })
+        .select("betaUser betaAccessEnabled betaStatus")
+        .lean()
     : null;
 
-  if (user?.betaUser === true || user?.betaAccessEnabled === true) {
+  if (hasActiveBetaRecord(user, "betaUser", "betaAccessEnabled")) {
     return true;
   }
 
@@ -35,9 +51,9 @@ async function hasBetaAccess(req) {
     const company = await Company.findOne({
       _id: companyId,
       ownerEmail: req.tenant?.ownerEmail
-    }).select("betaCompany betaAccessEnabled").lean();
+    }).select("betaCompany betaAccessEnabled betaStatus").lean();
 
-    if (company?.betaCompany === true || company?.betaAccessEnabled === true) {
+    if (hasActiveBetaRecord(company, "betaCompany", "betaAccessEnabled")) {
       return true;
     }
   }

@@ -62,6 +62,12 @@ const companySchema = new mongoose.Schema(
       default: ""
     },
 
+    betaStatus: {
+      type: String,
+      enum: ["invited", "active", "paused", "revoked"],
+      default: "invited"
+    },
+
     country: {
       type: String,
       default: ""

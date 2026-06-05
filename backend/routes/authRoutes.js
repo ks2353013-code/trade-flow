@@ -214,6 +214,14 @@ router.post("/login", async (req, res) => {
       });
     }
 
+    if (!user.firstLoginAt) {
+      user.firstLoginAt = new Date();
+    }
+
+    user.lastLoginAt = new Date();
+    user.loginCount = Number(user.loginCount || 0) + 1;
+    await user.save();
+
     sendAuthResponse(res, user, "Login successful");
   } catch (error) {
     console.error("Login error:", error.message);

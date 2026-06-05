@@ -135,6 +135,27 @@ const userSchema = new mongoose.Schema(
       default: ""
     },
 
+    betaStatus: {
+      type: String,
+      enum: ["invited", "active", "paused", "revoked"],
+      default: "invited"
+    },
+
+    firstLoginAt: {
+      type: Date,
+      default: null
+    },
+
+    lastLoginAt: {
+      type: Date,
+      default: null
+    },
+
+    loginCount: {
+      type: Number,
+      default: 0
+    },
+
     features: {
       aiTools: {
         type: Boolean,

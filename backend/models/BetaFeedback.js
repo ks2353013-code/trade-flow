@@ -28,6 +28,16 @@ const betaFeedbackSchema = new mongoose.Schema(
       enum: ["feedback", "issue", "feature_request", "support"],
       default: "feedback"
     },
+    category: {
+      type: String,
+      enum: [
+        "Report Issue",
+        "Request Feature",
+        "Contact Support",
+        "General Feedback"
+      ],
+      default: "General Feedback"
+    },
     title: {
       type: String,
       default: ""
@@ -49,6 +59,10 @@ const betaFeedbackSchema = new mongoose.Schema(
       type: String,
       enum: ["Low", "Medium", "High"],
       default: "Medium"
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now
     }
   },
   { timestamps: true }
