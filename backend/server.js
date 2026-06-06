@@ -60,6 +60,7 @@ const emailAutomationRoutes = require("./routes/emailAutomationRoutes");
 const whatsappAutomationRoutes = require("./routes/whatsappAutomationRoutes");
 
 const executiveAnalyticsRoutes = require("./routes/executiveAnalyticsRoutes");
+const executiveControlTowerRoutes = require("./routes/executiveControlTowerRoutes");
 const whiteLabelRoutes = require("./routes/whiteLabelRoutes");
 const liveSupplierIntelligenceRoutes = require("./routes/liveSupplierIntelligenceRoutes");
 const onboardingRoutes = require("./routes/onboardingRoutes");
@@ -308,6 +309,7 @@ app.use("/api/razorpay-checkout", protectedStack, razorpayRoutes);
 app.use("/api/hunter", protectedStack, hunterRoutes);
 app.use("/api/ai-lead-enrichment", protectedStack, aiLeadEnrichmentRoutes);
 app.use("/api/executive-analytics", protectedStack, executiveAnalyticsRoutes);
+app.use("/api/executive-control-tower", protectedStack, executiveControlTowerRoutes);
 app.use("/api/white-label", protectedStack, whiteLabelRoutes);
 app.use("/api/buyer-discovery", protectedStack, buyerDiscoveryRoutes);
 app.use("/api/live-supplier-intelligence", protectedStack, liveSupplierIntelligenceRoutes);

@@ -751,6 +751,7 @@ const pages = [
   "documents",
   "outreach",
   "analytics",
+  "executiveTower",
   "ai",
   "notifications"
 ];
