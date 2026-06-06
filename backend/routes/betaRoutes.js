@@ -12,6 +12,7 @@ const AgentMissionPlan = require("../models/AgentMissionPlan");
 const AgentMemory = require("../models/AgentMemory");
 const BetaFeedback = require("../models/BetaFeedback");
 const ClientErrorLog = require("../models/ClientErrorLog");
+const AuditLog = require("../models/AuditLog");
 const UsageMetric = require("../models/UsageMetric");
 const { hasBetaAccess } = require("../middleware/betaAccessMiddleware");
 
@@ -145,6 +146,8 @@ async function supportDashboard() {
 }
 
 async function usageIntelligence() {
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const usageCounts = await sumUsageMetrics([
     "mission_create",
@@ -161,36 +164,55 @@ async function usageIntelligence() {
     activeCompanies,
     activeWorkspaces,
     activeUsers,
+    dailyActiveUsers,
+    weeklyActiveUsers,
     missionsCreated,
     crmPushes,
     outreachDrafts,
+    approvalsCompleted,
     emailSends,
+    emailsDelivered,
+    emailsDryRun,
     aiCommandCenterUsage,
-    agentMemoryGrowth
+    agentMemoryGrowth,
+    executiveTowerUsage
   ] = await Promise.all([
     Company.countDocuments({ status: "Active" }),
     Workspace.countDocuments({ status: "Active" }),
     User.countDocuments({ lastLoginAt: { $gte: thirtyDaysAgo } }),
+    User.countDocuments({ lastLoginAt: { $gte: oneDayAgo } }),
+    User.countDocuments({ lastLoginAt: { $gte: sevenDaysAgo } }),
     TradeMission.countDocuments(),
     CRMLead.countDocuments(),
     OutreachApproval.countDocuments(),
+    OutreachApproval.countDocuments({ status: "Approved" }),
     EmailDelivery.countDocuments({ status: { $in: ["Sent", "Dry Run"] } }),
+    EmailDelivery.countDocuments({ status: "Sent" }),
+    EmailDelivery.countDocuments({ status: "Dry Run" }),
     AgentMissionPlan.countDocuments(),
-    AgentMemory.countDocuments()
+    AgentMemory.countDocuments(),
+    AuditLog.countDocuments({ action: "EXECUTIVE_TOWER_VIEWED" })
   ]);
 
   return {
     activeCompanies,
     activeWorkspaces,
     activeUsers,
+    dailyActiveUsers,
+    weeklyActiveUsers,
     missionsCreated,
     discoveryRuns:
       Number(usageCounts.buyer_discovery || 0) +
       Number(usageCounts.supplier_discovery || 0),
     crmPushes,
     outreachDrafts,
+    draftsCreated: outreachDrafts,
+    approvalsCompleted,
     emailSends,
+    emailsDelivered,
+    emailsDryRun,
     aiCommandCenterUsage,
+    executiveTowerUsage,
     agentMemoryGrowth,
     usageMetrics: usageCounts
   };
@@ -221,24 +243,184 @@ function milestone(done, firstAt = null) {
   };
 }
 
+function scopedOwnerFilter(ownerEmail, workspaceId = "") {
+  const filter = {
+    ownerEmail: normalizeEmail(ownerEmail)
+  };
+
+  if (mongoose.isValidObjectId(workspaceId)) {
+    filter.workspaceId = String(workspaceId);
+  }
+
+  return filter;
+}
+
+async function onboardingProgressForOwner(ownerEmail, user = null, workspaceId = "") {
+  const email = normalizeEmail(ownerEmail);
+  const workspaceScopedFilter = scopedOwnerFilter(email, workspaceId);
+  const discoveryFilter = {
+    ...workspaceScopedFilter,
+    $or: [
+      { "agentReports.buyerDiscovery": { $ne: null } },
+      { "agentReports.supplierDiscovery": { $ne: null } }
+    ]
+  };
+
+  const [
+    loadedUser,
+    company,
+    workspace,
+    mission,
+    discovery,
+    crmLead,
+    outreachDraft,
+    approvedDraft,
+    emailDelivery
+  ] = await Promise.all([
+    user
+      ? Promise.resolve(user)
+      : User.findOne({ email })
+          .select("name email companyName businessType businessTypeLocked businessTypeLockedAt firstLoginAt lastLoginAt betaStatus createdAt")
+          .lean(),
+    Company.findOne({ ownerEmail: email }).sort({ createdAt: 1 }).lean(),
+    mongoose.isValidObjectId(workspaceId)
+      ? Workspace.findOne({
+          _id: workspaceId,
+          $or: [{ ownerEmail: email }, { "members.email": email }]
+        }).lean()
+      : Workspace.findOne({ ownerEmail: email }).sort({ createdAt: 1 }).lean(),
+    TradeMission.findOne(workspaceScopedFilter).sort({ createdAt: 1 }).lean(),
+    TradeMission.findOne(discoveryFilter).sort({ createdAt: 1 }).lean(),
+    CRMLead.findOne(workspaceScopedFilter).sort({ createdAt: 1 }).lean(),
+    OutreachApproval.findOne(workspaceScopedFilter).sort({ createdAt: 1 }).lean(),
+    OutreachApproval.findOne({
+      ...workspaceScopedFilter,
+      status: "Approved"
+    }).sort({ approvedAt: 1, updatedAt: 1, createdAt: 1 }).lean(),
+    EmailDelivery.findOne({
+      ...workspaceScopedFilter,
+      status: { $in: ["Sent", "Dry Run"] },
+      humanApproved: true
+    }).sort({ sentAt: 1, createdAt: 1 }).lean()
+  ]);
+
+  const businessTypeSelected = Boolean(
+    loadedUser?.businessTypeLocked ||
+    company?.businessTypeLocked
+  );
+
+  const checklist = [
+    {
+      key: "company",
+      label: "Create company",
+      done: Boolean(company || loadedUser?.companyName),
+      completedAt: company?.createdAt || loadedUser?.createdAt || null
+    },
+    {
+      key: "businessType",
+      label: "Select business type",
+      done: businessTypeSelected,
+      completedAt: company?.businessTypeLockedAt || loadedUser?.businessTypeLockedAt || null
+    },
+    {
+      key: "workspace",
+      label: "Create workspace",
+      done: Boolean(workspace),
+      completedAt: workspace?.createdAt || null
+    },
+    {
+      key: "mission",
+      label: "Create first mission",
+      done: Boolean(mission),
+      completedAt: mission?.createdAt || null
+    },
+    {
+      key: "discovery",
+      label: "Run discovery",
+      done: Boolean(discovery),
+      completedAt: discovery?.createdAt || null
+    },
+    {
+      key: "crm",
+      label: "Push lead to CRM",
+      done: Boolean(crmLead),
+      completedAt: crmLead?.createdAt || null
+    },
+    {
+      key: "outreach",
+      label: "Create outreach draft",
+      done: Boolean(outreachDraft),
+      completedAt: outreachDraft?.createdAt || null
+    },
+    {
+      key: "approval",
+      label: "Approve draft",
+      done: Boolean(approvedDraft),
+      completedAt: approvedDraft?.approvedAt || approvedDraft?.updatedAt || approvedDraft?.createdAt || null
+    }
+  ];
+
+  const completed = checklist.filter((item) => item.done).length;
+
+  return {
+    accountVerified: Boolean(loadedUser),
+    ownerEmail: email,
+    workspaceId: workspace?._id ? String(workspace._id) : "",
+    workspaceName: workspace?.workspaceName || workspace?.name || "",
+    companyId: company?._id ? String(company._id) : "",
+    companyName: company?.companyName || loadedUser?.companyName || "",
+    businessType: company?.businessType || loadedUser?.businessType || "",
+    checklist,
+    completed,
+    total: checklist.length,
+    onboardingProgressScore: checklist.length
+      ? Math.round((completed / checklist.length) * 100)
+      : 0,
+    signals: {
+      firstLogin: milestone(loadedUser?.firstLoginAt, loadedUser?.firstLoginAt),
+      firstWorkspace: milestone(workspace, workspace?.createdAt),
+      firstMission: milestone(mission, mission?.createdAt),
+      firstDiscovery: milestone(discovery, discovery?.createdAt),
+      firstCrmPush: milestone(crmLead, crmLead?.createdAt),
+      firstOutreachDraft: milestone(outreachDraft, outreachDraft?.createdAt),
+      firstApproval: milestone(
+        approvedDraft,
+        approvedDraft?.approvedAt || approvedDraft?.updatedAt || approvedDraft?.createdAt
+      ),
+      firstEmail: milestone(emailDelivery, emailDelivery?.sentAt || emailDelivery?.createdAt)
+    }
+  };
+}
+
 async function customerSuccessSignals() {
   const users = await User.find({})
-    .select("name email companyName firstLoginAt lastLoginAt loginCount betaStatus betaAccessEnabled betaUser createdAt")
+    .select("name email companyName businessType businessTypeLocked firstLoginAt lastLoginAt loginCount betaStatus betaAccessEnabled betaUser createdAt updatedAt")
     .sort({ lastLoginAt: -1, createdAt: -1 })
     .limit(200)
     .lean();
 
   const [
+    companyByOwner,
     workspaceByOwner,
     missionByOwner,
+    discoveryByOwner,
     crmByOwner,
     draftByOwner,
+    approvalByOwner,
     emailByOwner
   ] = await Promise.all([
+    countByOwner(Company),
     countByOwner(Workspace),
     countByOwner(TradeMission),
+    countByOwner(TradeMission, {
+      $or: [
+        { "agentReports.buyerDiscovery": { $ne: null } },
+        { "agentReports.supplierDiscovery": { $ne: null } }
+      ]
+    }),
     countByOwner(CRMLead),
     countByOwner(OutreachApproval),
+    countByOwner(OutreachApproval, { status: "Approved" }),
     countByOwner(EmailDelivery, { status: { $in: ["Sent", "Dry Run"] }, humanApproved: true })
   ]);
 
@@ -246,10 +428,14 @@ async function customerSuccessSignals() {
     const email = normalizeEmail(user.email);
     const milestones = {
       firstLogin: milestone(user.firstLoginAt, user.firstLoginAt),
+      firstCompany: milestone(companyByOwner[email]?.count, companyByOwner[email]?.firstAt),
+      businessTypeSelected: milestone(user.businessTypeLocked, user.updatedAt || user.createdAt),
       firstWorkspaceCreation: milestone(workspaceByOwner[email]?.count, workspaceByOwner[email]?.firstAt),
       firstMission: milestone(missionByOwner[email]?.count, missionByOwner[email]?.firstAt),
+      firstDiscovery: milestone(discoveryByOwner[email]?.count, discoveryByOwner[email]?.firstAt),
       firstCrmPush: milestone(crmByOwner[email]?.count, crmByOwner[email]?.firstAt),
       firstOutreachDraft: milestone(draftByOwner[email]?.count, draftByOwner[email]?.firstAt),
+      firstApproval: milestone(approvalByOwner[email]?.count, approvalByOwner[email]?.firstAt),
       firstApprovedEmail: milestone(emailByOwner[email]?.count, emailByOwner[email]?.firstAt)
     };
 
@@ -305,6 +491,34 @@ router.get("/status", async (req, res) => {
     betaStatus: user?.betaStatus || company?.betaStatus || "invited",
     isMasterAdmin: isMaster(req)
   });
+});
+
+router.get("/my-onboarding", async (req, res) => {
+  try {
+    const ownerEmail = normalizeEmail(req.tenant?.ownerEmail || req.user?.email);
+    const progress = await onboardingProgressForOwner(
+      ownerEmail,
+      null,
+      req.tenant?.workspaceId || ""
+    );
+
+    res.json({
+      success: true,
+      progress,
+      guidance: {
+        missionCenter: "Start by creating your first mission.",
+        aiCommandCenter: "Describe what you want TradeFlow AI to accomplish.",
+        executiveTower: "Review recommendations and growth opportunities.",
+        crm: "Push qualified leads from Discovery."
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch onboarding progress",
+      error: error.message
+    });
+  }
 });
 
 router.post("/feedback", async (req, res) => {

@@ -911,6 +911,8 @@ function renderBetaUsage(usage) {
     );
 
   list.innerHTML = `
+    <div class="muted">Daily active users: ${usage.dailyActiveUsers || 0}</div>
+    <div class="muted">Weekly active users: ${usage.weeklyActiveUsers || 0}</div>
     <div class="muted">Active companies: ${usage.activeCompanies || 0}</div>
     <div class="muted">Active workspaces: ${usage.activeWorkspaces || 0}</div>
     <div class="muted">Active users: ${usage.activeUsers || 0}</div>
@@ -918,8 +920,12 @@ function renderBetaUsage(usage) {
     <div class="muted">Discovery runs: ${usage.discoveryRuns || 0}</div>
     <div class="muted">CRM pushes: ${usage.crmPushes || 0}</div>
     <div class="muted">Outreach drafts: ${usage.outreachDrafts || 0}</div>
+    <div class="muted">Approvals completed: ${usage.approvalsCompleted || 0}</div>
     <div class="muted">Email sends: ${usage.emailSends || 0}</div>
+    <div class="muted">Emails delivered: ${usage.emailsDelivered || 0}</div>
+    <div class="muted">Email dry-runs: ${usage.emailsDryRun || 0}</div>
     <div class="muted">AI Command Center usage: ${usage.aiCommandCenterUsage || 0}</div>
+    <div class="muted">Executive Tower usage: ${usage.executiveTowerUsage || 0}</div>
     <div class="muted">Agent memory records: ${usage.agentMemoryGrowth || 0}</div>
   `;
 
