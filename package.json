@@ -1,0 +1,16 @@
+{
+  "name": "tradeflow-ai-mobile-wrapper",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Capacitor Android wrapper for TradeFlow AI web app.",
+  "scripts": {
+    "cap:sync": "cap sync android",
+    "cap:open": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/cli": "^8.4.0",
+    "@capacitor/core": "^8.4.0",
+    "@capacitor/ios": "^8.4.0"
+  }
+}

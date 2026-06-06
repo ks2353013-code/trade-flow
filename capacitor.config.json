@@ -1,0 +1,9 @@
+{
+  "appId": "com.tradeflow.ai",
+  "appName": "TradeFlowAI",
+  "webDir": "frontend",
+  "server": {
+    "url": "https://tradeflowai.in",
+    "cleartext": false
+  }
+}
