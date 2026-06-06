@@ -20,7 +20,7 @@
 
   const STARTER_PAGES = [
     "ai",
-    "executiveTower"
+    "executivetower"
   ];
 
   const PRO_PAGES = [
@@ -146,31 +146,34 @@
   }
 
   function pageRequiredPlan(page) {
+    const normalizedPage = String(page || "")
+      .trim()
+      .toLowerCase();
 
     if (isMasterAdmin()) {
       return "Free";
     }
 
     if (
-      FREE_ALLOWED_PAGES.includes(page)
+      FREE_ALLOWED_PAGES.includes(normalizedPage)
     ) {
       return "Free";
     }
 
     if (
-      STARTER_PAGES.includes(page)
+      STARTER_PAGES.includes(normalizedPage)
     ) {
       return "Starter";
     }
 
     if (
-      PRO_PAGES.includes(page)
+      PRO_PAGES.includes(normalizedPage)
     ) {
       return "Pro";
     }
 
     if (
-      ENTERPRISE_PAGES.includes(page)
+      ENTERPRISE_PAGES.includes(normalizedPage)
     ) {
       return "Enterprise";
     }
