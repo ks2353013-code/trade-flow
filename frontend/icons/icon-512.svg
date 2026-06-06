@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="TradeFlow app icon">
+  <rect width="512" height="512" rx="112" fill="#020617"/>
+  <circle cx="150" cy="138" r="90" fill="#0ea5e9" opacity="0.9"/>
+  <circle cx="362" cy="374" r="104" fill="#22c55e" opacity="0.82"/>
+  <path d="M118 277h276M256 141v244M174 195l82-74 82 74M174 337l82 74 82-74" fill="none" stroke="#ffffff" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="256" y="300" text-anchor="middle" font-family="Arial, sans-serif" font-size="112" font-weight="900" fill="#ffffff">TF</text>
+</svg>

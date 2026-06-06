@@ -26,6 +26,11 @@
         var(--bg);
       color: var(--text);
       overflow-x: hidden;
+      padding-top: env(safe-area-inset-top);
+      padding-right: env(safe-area-inset-right);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      -webkit-tap-highlight-color: transparent;
     }
 
     .app {
@@ -352,6 +357,7 @@
       color: white;
       outline: none;
       font-size: 14px;
+      max-width: 100%;
     }
 
     input:focus, textarea:focus, select:focus {
@@ -601,32 +607,184 @@
 
     @media (max-width: 900px) {
       .sidebar {
-        position: relative;
+        position: sticky;
+        top: 0;
         width: 100%;
         height: auto;
-        max-height: 60vh;
+        max-height: 34vh;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        padding: 12px;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
       }
 
       .app {
         display: block;
       }
 
+      .brand {
+        grid-column: 1 / -1;
+        margin-bottom: 4px;
+        padding: 14px;
+        border-radius: 20px;
+      }
+
+      .brand h1 {
+        font-size: 24px;
+      }
+
+      .nav-btn {
+        margin-bottom: 0;
+        min-height: 46px;
+        border-radius: 14px;
+        padding: 11px 10px;
+        font-size: 12.5px;
+      }
+
       .main {
         margin-left: 0;
         width: 100%;
-        padding: 18px;
+        padding: 16px;
       }
 
       .topbar {
         flex-direction: column;
         align-items: flex-start;
+        border-radius: 20px;
+        padding: 16px;
+      }
+
+      .topbar > div:last-child {
+        width: 100%;
+      }
+
+      #activeWorkspaceSelect {
+        width: 100%;
+        max-width: none !important;
+        min-height: 48px;
+        font-size: 16px;
+      }
+
+      .page-title {
+        font-size: 22px;
+        line-height: 1.15;
       }
 
       .dashboard-hero {
         padding: 22px;
+        border-radius: 24px;
       }
 
       .dashboard-hero::after {
-        font-size: 58px;
+        font-size: 54px;
+      }
+
+      .hero-title {
+        font-size: 34px;
+        letter-spacing: 0;
+      }
+
+      .hero-copy,
+      .muted,
+      .quick-card p {
+        font-size: 14px;
+        line-height: 1.55;
+      }
+
+      .grid-2,
+      .grid-3,
+      .grid-4,
+      .kanban {
+        grid-template-columns: 1fr;
+      }
+
+      .card,
+      .deal,
+      .supplier-card,
+      .column,
+      .admin-hero {
+        border-radius: 18px;
+      }
+
+      .card,
+      .admin-hero {
+        padding: 16px;
+      }
+
+      .approval-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .btn,
+      .mini-btn,
+      .approve-btn,
+      .reject-btn,
+      .danger-btn {
+        min-height: 46px;
+        font-size: 14px;
+      }
+
+      input,
+      textarea,
+      select {
+        min-height: 48px;
+        font-size: 16px;
+      }
+
+      textarea,
+      .ai-output,
+      #missionCenterInput,
+      #tradeflowAiConsole {
+        min-height: 130px !important;
+      }
+
+      #missionCenterUIPanel,
+      #aiCommandCenterV2Panel,
+      #executiveTowerPage,
+      #crmPage,
+      #outreachPage,
+      #missionOutreachApprovalQueue,
+      #missionEmailDeliveryCenter {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+
+      #missionCenterList,
+      #missionOutreachApprovalQueue,
+      #missionOutreachAuditTrail,
+      #missionEmailDeliveryCenter {
+        overflow-wrap: anywhere;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .sidebar {
+        grid-template-columns: 1fr;
+        max-height: 38vh;
+      }
+
+      .main {
+        padding: 12px;
+      }
+
+      .topbar,
+      .dashboard-hero,
+      .card,
+      .admin-hero {
+        border-radius: 16px;
+      }
+
+      .hero-chip,
+      .pill,
+      .status,
+      .plan-pill {
+        white-space: normal;
+      }
+
+      .metric p {
+        font-size: 28px;
       }
     }
