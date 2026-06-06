@@ -75,6 +75,11 @@
       if (!res.ok) throw new Error(data.message || "Failed");
 
       localStorage.setItem("tradeflowSubscriptionPlan", data.plan || "Free");
+      window.dispatchEvent(
+        new CustomEvent("tradeflow:subscription-updated", {
+          detail: { plan: data.plan || "Free" }
+        })
+      );
 
       if (window.TradeFlowSubscriptionEngine) {
         TradeFlowSubscriptionEngine.render();

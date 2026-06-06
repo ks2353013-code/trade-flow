@@ -1,12 +1,22 @@
 const Subscription = require("../models/Subscription");
 
 const PLAN_ORDER = {
+  Free: 0,
   Starter: 1,
   "Pro Exporter": 2,
   "Enterprise AI OS": 3
 };
 
 const PLAN_ENTITLEMENTS = {
+  Free: {
+    price: 0,
+    aiLimit: 0,
+    supplierLimit: 25,
+    dealLimit: 10,
+    workspaceLimit: 1,
+    employeeLimit: 1
+  },
+
   Starter: {
     price: 1999,
     aiLimit: 20,
@@ -34,6 +44,18 @@ const PLAN_ENTITLEMENTS = {
     employeeLimit: 200
   }
 };
+
+function normalizePlanName(plan) {
+  const value = String(plan || "").trim().toLowerCase();
+
+  if (value === "free") return "Free";
+  if (value === "starter") return "Starter";
+  if (value === "pro" || value === "pro exporter") return "Pro Exporter";
+  if (value === "enterprise" || value === "enterprise ai os") return "Enterprise AI OS";
+
+  // Unknown plan names must fail closed rather than inheriting Starter access.
+  return "Free";
+}
 
 async function getUserSubscription(req) {
   const email =
@@ -69,7 +91,8 @@ function requirePlan(requiredPlan = "Pro Exporter") {
     try {
       const subscription = await getUserSubscription(req);
 
-      const currentPlan = subscription.plan || "Starter";
+      const currentPlan = normalizePlanName(subscription.plan);
+      const normalizedRequiredPlan = normalizePlanName(requiredPlan);
 
       if (subscription.status !== "Active") {
         return res.status(403).json({
@@ -79,12 +102,15 @@ function requirePlan(requiredPlan = "Pro Exporter") {
         });
       }
 
-      if ((PLAN_ORDER[currentPlan] || 1) < (PLAN_ORDER[requiredPlan] || 2)) {
+      if (PLAN_ORDER[currentPlan] < PLAN_ORDER[normalizedRequiredPlan]) {
         return res.status(403).json({
           success: false,
-          message: `${requiredPlan} plan required`,
+          message:
+            normalizedRequiredPlan === "Starter"
+              ? "Upgrade to Starter to unlock TradeFlow AI"
+              : `${normalizedRequiredPlan} plan required`,
           currentPlan,
-          requiredPlan
+          requiredPlan: normalizedRequiredPlan
         });
       }
 
@@ -161,5 +187,6 @@ module.exports = {
   requireEnterprise,
   requireActiveSubscription,
   getUserSubscription,
-  PLAN_ENTITLEMENTS
+  PLAN_ENTITLEMENTS,
+  normalizePlanName
 };

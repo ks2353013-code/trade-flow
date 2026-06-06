@@ -6,6 +6,13 @@ const { requireMasterAdmin } = require("../middleware/permissionMiddleware");
 const router = express.Router();
 
 const PLAN_ENTITLEMENTS = {
+  Free: {
+    aiLimit: 0,
+    supplierLimit: 25,
+    dealLimit: 10,
+    workspaceLimit: 1,
+    employeeLimit: 1
+  },
   Starter: {
     aiLimit: 20,
     supplierLimit: 200,
@@ -91,11 +98,11 @@ router.post("/set-free", requireMasterAdmin, async (req, res) => {
       { email },
       {
         email,
-        plan: "Starter",
+        plan: "Free",
         status: "Active",
         startsAt: new Date(),
         expiresAt: null,
-        entitlements: PLAN_ENTITLEMENTS.Starter
+        entitlements: PLAN_ENTITLEMENTS.Free
       },
       { new: true, upsert: true }
     );

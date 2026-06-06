@@ -5,23 +5,63 @@
 
   const PLAN_KEY = "tradeflowSubscriptionPlan";
 
+  function apiBase() {
+    if (window.TRADEFLOW_API_BASE) return window.TRADEFLOW_API_BASE;
+    if (location.hostname === "localhost" || location.hostname === "127.0.0.1") return "";
+    return "https://trade-flow-lc1k.onrender.com";
+  }
+
   function getUserEmail() {
+    let user = null;
+
+    try {
+      user = JSON.parse(
+        localStorage.getItem("tradeflowUser") ||
+        localStorage.getItem("currentUser") ||
+        "null"
+      );
+    } catch {
+      user = null;
+    }
+
     return (
+      user?.email ||
       localStorage.getItem("userEmail") ||
       localStorage.getItem("tradeflowUserEmail") ||
       localStorage.getItem("email") ||
-      "ks2353013@gmail.com"
+      ""
     );
+  }
+
+  function getToken() {
+    return (
+      window.getAuthToken?.() ||
+      window.TradeFlowSessionManager?.getToken?.() ||
+      localStorage.getItem("tradeflowToken") ||
+      localStorage.getItem("token") ||
+      localStorage.getItem("authToken") ||
+      ""
+    );
+  }
+
+  function authHeaders(includeJson = false) {
+    const headers = {};
+    const token = getToken();
+    const email = getUserEmail();
+
+    if (includeJson) headers["Content-Type"] = "application/json";
+    if (token) headers.Authorization = `Bearer ${token}`;
+    if (email) headers["x-user-email"] = email;
+
+    return headers;
   }
 
   async function syncSubscriptionFromBackend() {
     try {
       const email = getUserEmail();
 
-      const res = await fetch("/api/subscription/me", {
-        headers: {
-          "x-user-email": email
-        }
+      const res = await fetch(`${apiBase()}/api/subscription/me`, {
+        headers: authHeaders()
       });
 
       const data = await res.json();
@@ -40,6 +80,11 @@
       }
 
       localStorage.setItem(PLAN_KEY, activePlan);
+      window.dispatchEvent(
+        new CustomEvent("tradeflow:subscription-updated", {
+          detail: { plan: activePlan }
+        })
+      );
 
       if (window.TradeFlowSubscriptionEngine?.render) {
         window.TradeFlowSubscriptionEngine.render();
@@ -59,12 +104,9 @@
     try {
       const email = getUserEmail();
 
-      const res = await fetch("/api/subscription/request-upgrade", {
+      const res = await fetch(`${apiBase()}/api/subscription/request-upgrade`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-email": email
-        },
+        headers: authHeaders(true),
         body: JSON.stringify({
           email,
           plan

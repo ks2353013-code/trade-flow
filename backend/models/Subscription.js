@@ -18,6 +18,7 @@ const subscriptionSchema = new mongoose.Schema(
     plan: {
       type: String,
       enum: [
+        "Free",
         "Starter",
         "Pro Exporter",
         "Enterprise AI OS"
@@ -107,6 +108,21 @@ const subscriptionSchema = new mongoose.Schema(
 );
 
 subscriptionSchema.pre("save", function (next) {
+
+  if (this.plan === "Free") {
+
+    this.price = 0;
+
+    this.approvalStatus = "Not Required";
+
+    this.entitlements = {
+      aiLimit: 0,
+      supplierLimit: 25,
+      dealLimit: 10,
+      workspaceLimit: 1,
+      employeeLimit: 1
+    };
+  }
 
   if (this.plan === "Starter") {
 

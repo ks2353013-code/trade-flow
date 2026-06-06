@@ -759,6 +759,14 @@ const pages = [
 function showPage(page) {
   if (!appReady) return;
 
+  if (
+    (page === "ai" || page === "executiveTower") &&
+    window.TradeFlowAISubscriptionGate?.isBlocked?.()
+  ) {
+    window.TradeFlowAISubscriptionGate.showUpgradePrompt();
+    page = "dashboard";
+  }
+
   pages.forEach((p) => {
     const el = document.getElementById(`${p}Page`);
     if (el) el.classList.add("hidden");

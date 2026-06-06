@@ -11,12 +11,16 @@
 
   const FREE_ALLOWED_PAGES = [
     "dashboard",
-    "ai",
     "suppliers",
     "crm",
     "notifications",
     "workspaces",
     "employees"
+  ];
+
+  const STARTER_PAGES = [
+    "ai",
+    "executiveTower"
   ];
 
   const PRO_PAGES = [
@@ -78,6 +82,7 @@
     if (value.includes("enterprise")) return "Enterprise";
     if (value.includes("growth")) return "Growth";
     if (value.includes("pro") || value.includes("professional")) return "Pro";
+    if (value.includes("free")) return "Free";
 
     return "Starter";
   }
@@ -153,6 +158,12 @@
     }
 
     if (
+      STARTER_PAGES.includes(page)
+    ) {
+      return "Starter";
+    }
+
+    if (
       PRO_PAGES.includes(page)
     ) {
       return "Pro";
@@ -178,6 +189,10 @@
 
     if (required === "Free") {
       return true;
+    }
+
+    if (required === "Starter") {
+      return getPlan() !== "Free";
     }
 
     if (required === "Pro") {

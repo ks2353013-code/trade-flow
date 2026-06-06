@@ -63,6 +63,11 @@
 
       if (subscription?.plan) {
         localStorage.setItem("tradeflowSubscriptionPlan", subscription.plan);
+        window.dispatchEvent(
+          new CustomEvent("tradeflow:subscription-updated", {
+            detail: { plan: subscription.plan }
+          })
+        );
       }
 
       if (window.TradeFlowSubscriptionEngine) {
@@ -127,6 +132,11 @@
 
       setJson(BILLING_CACHE_KEY, data.subscription);
       localStorage.setItem("tradeflowSubscriptionPlan", data.subscription.plan);
+      window.dispatchEvent(
+        new CustomEvent("tradeflow:subscription-updated", {
+          detail: { plan: data.subscription.plan }
+        })
+      );
 
       await fetchPayments();
 
@@ -165,6 +175,11 @@
 
       setJson(BILLING_CACHE_KEY, data.subscription);
       localStorage.setItem("tradeflowSubscriptionPlan", "Free");
+      window.dispatchEvent(
+        new CustomEvent("tradeflow:subscription-updated", {
+          detail: { plan: "Free" }
+        })
+      );
 
       if (window.TradeFlowSubscriptionEngine) {
         TradeFlowSubscriptionEngine.setPlan("Free");

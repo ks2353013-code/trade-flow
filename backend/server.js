@@ -17,7 +17,10 @@ const { connectDB, getMongoState, isMongoConnected } = require("./config/db");
 
 const authMiddleware = require("./middleware/authMiddleware");
 const tenantMiddleware = require("./middleware/tenantMiddleware");
-const { requireActiveSubscription } = require("./middleware/subscriptionMiddleware");
+const {
+  requireActiveSubscription,
+  requirePlan
+} = require("./middleware/subscriptionMiddleware");
 const optionalAuth = authMiddleware.optionalAuth;
 
 const supplierRoutes = require("./routes/supplierRoutes");
@@ -309,7 +312,12 @@ app.use("/api/razorpay-checkout", protectedStack, razorpayRoutes);
 app.use("/api/hunter", protectedStack, hunterRoutes);
 app.use("/api/ai-lead-enrichment", protectedStack, aiLeadEnrichmentRoutes);
 app.use("/api/executive-analytics", protectedStack, executiveAnalyticsRoutes);
-app.use("/api/executive-control-tower", protectedStack, executiveControlTowerRoutes);
+app.use(
+  "/api/executive-control-tower",
+  protectedStack,
+  requirePlan("Starter"),
+  executiveControlTowerRoutes
+);
 app.use("/api/white-label", protectedStack, whiteLabelRoutes);
 app.use("/api/buyer-discovery", protectedStack, buyerDiscoveryRoutes);
 app.use("/api/live-supplier-intelligence", protectedStack, liveSupplierIntelligenceRoutes);
@@ -321,9 +329,9 @@ app.use("/api/trade-agent", protectedStack, tradeAgentRoutes);
 app.use("/api/crm", protectedStack, crmPushRoutes);
 app.use("/api/outreach-approvals", protectedStack, outreachApprovalRoutes);
 app.use("/api/email-deliveries", protectedStack, emailDeliveryRoutes);
-app.use("/api/ai-command", protectedStack, aiCommandRoutes);
-app.use("/api/agent-registry", protectedStack, agentRegistryRoutes);
-app.use("/api/agent-memory", protectedStack, agentMemoryRoutes);
+app.use("/api/ai-command", protectedStack, requirePlan("Starter"), aiCommandRoutes);
+app.use("/api/agent-registry", protectedStack, requirePlan("Starter"), agentRegistryRoutes);
+app.use("/api/agent-memory", protectedStack, requirePlan("Starter"), agentMemoryRoutes);
 app.use("/api/beta", protectedStack, betaRoutes);
 
 app.use("/api", (req, res) => {
