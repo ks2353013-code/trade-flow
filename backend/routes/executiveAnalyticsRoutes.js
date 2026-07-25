@@ -1,23 +1,41 @@
 const express = require("express");
+const mongoose = require("mongoose");
 
 const AutomationWorkflow = require("../models/AutomationWorkflow2");
 const { requireFeature } = require("../middleware/planLimitMiddleware");
 
 const router = express.Router();
 
+function tenantFilter(req) {
+  return {
+    ownerEmail: req.tenant.ownerEmail,
+    ...(req.tenant.companyId && mongoose.isValidObjectId(req.tenant.companyId)
+      ? { companyId: new mongoose.Types.ObjectId(req.tenant.companyId) }
+      : {}),
+    ...(req.tenant.workspaceId && mongoose.isValidObjectId(req.tenant.workspaceId)
+      ? { workspaceId: new mongoose.Types.ObjectId(req.tenant.workspaceId) }
+      : {})
+  };
+}
+
 router.get("/overview", requireFeature("executive_access"), async (req, res) => {
   try {
+    const filter = tenantFilter(req);
 
     const totalWorkflows =
-      await AutomationWorkflow.countDocuments();
+      await AutomationWorkflow.countDocuments(filter);
 
     const activeWorkflows =
       await AutomationWorkflow.countDocuments({
+        ...filter,
         enabled: true
       });
 
     const workflowExecutions =
       await AutomationWorkflow.aggregate([
+        {
+          $match: filter
+        },
         {
           $group: {
             _id: null,
@@ -29,7 +47,7 @@ router.get("/overview", requireFeature("executive_access"), async (req, res) => 
       ]);
 
     const topWorkflows =
-      await AutomationWorkflow.find()
+      await AutomationWorkflow.find(filter)
         .sort({
           executionCount: -1
         })

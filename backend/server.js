@@ -279,7 +279,7 @@ const protectedStack = [
 
 app.use("/suppliers", protectedStack, supplierRoutes);
 app.use("/api/deals", protectedStack, dealRoutes);
-app.use("/api/ai", protectedStack, aiRoutes);
+app.use("/api/ai", protectedStack, requirePlan("Starter"), aiRoutes);
 app.use("/api/tasks", protectedStack, taskRoutes);
 app.use("/api/pdf", protectedStack, pdfRoutes);
 app.use("/api/analytics", protectedStack, analyticsRoutes);

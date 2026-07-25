@@ -1,4 +1,5 @@
 const Employee = require("../models/Employee");
+const User = require("../models/User");
 const { verifyAccessToken, accessSecret } = require("../utils/tokenService");
 
 function getJwtSecret() {
@@ -29,6 +30,19 @@ async function authMiddleware(req, res, next) {
 
     const email = decoded.email.toLowerCase().trim();
 
+    const user = await User.findById(decoded.id).select("email tokenVersion role");
+
+    if (
+      !user ||
+      user.email !== email ||
+      Number(decoded.tokenVersion || 0) !== Number(user.tokenVersion || 0)
+    ) {
+      return res.status(401).json({
+        success: false,
+        message: "Session has been revoked. Please login again."
+      });
+    }
+
     const employee = await Employee.findOne({
       email,
       status: { $ne: "Removed" }
@@ -40,7 +54,7 @@ async function authMiddleware(req, res, next) {
       ownerEmail: employee?.ownerEmail || email,
       companyId: employee?.companyId || null,
       workspaceId: employee?.workspaceId || null,
-      role: employee?.role || decoded.role || "Owner",
+      role: employee?.role || user.role || decoded.role || "Owner",
       permissions: employee?.permissions || decoded.permissions || {},
       employee: employee || null,
       authMode: "jwt"

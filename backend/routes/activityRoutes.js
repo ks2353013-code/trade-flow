@@ -1,11 +1,30 @@
 const express = require("express");
 const Activity = require("../models/Activity");
+const { requireMasterAdmin } = require("../middleware/permissionMiddleware");
 
 const router = express.Router();
 
+function getTenantFilter(req) {
+  const filter = {};
+
+  if (req.tenant?.ownerEmail) {
+    filter.ownerEmail = req.tenant.ownerEmail;
+  }
+
+  if (req.tenant?.companyId) {
+    filter.companyId = req.tenant.companyId;
+  }
+
+  if (req.tenant?.workspaceId) {
+    filter.workspaceId = req.tenant.workspaceId;
+  }
+
+  return filter;
+}
+
 router.get("/", async (req, res) => {
   try {
-    const activities = await Activity.find()
+    const activities = await Activity.find(getTenantFilter(req))
       .sort({ createdAt: -1 })
       .limit(100);
 
@@ -26,6 +45,9 @@ router.post("/", async (req, res) => {
     }
 
     const activity = await Activity.create({
+      ownerEmail: req.tenant?.ownerEmail || req.user?.email,
+      companyId: req.tenant?.companyId || null,
+      workspaceId: req.tenant?.workspaceId || null,
       type,
       title,
       message,
@@ -42,16 +64,24 @@ router.post("/", async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
   try {
-    await Activity.findByIdAndDelete(req.params.id);
+    const activity = await Activity.findOneAndDelete({
+      _id: req.params.id,
+      ...getTenantFilter(req)
+    });
+
+    if (!activity) {
+      return res.status(404).json({ message: "Activity not found" });
+    }
+
     res.json({ message: "Activity deleted" });
   } catch (error) {
     res.status(500).json({ message: "Failed to delete activity" });
   }
 });
 
-router.delete("/", async (req, res) => {
+router.delete("/", requireMasterAdmin, async (req, res) => {
   try {
-    await Activity.deleteMany({});
+    await Activity.deleteMany(getTenantFilter(req));
     res.json({ message: "All activities cleared" });
   } catch (error) {
     res.status(500).json({ message: "Failed to clear activities" });

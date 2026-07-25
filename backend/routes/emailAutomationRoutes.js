@@ -14,6 +14,10 @@ const {
 
 const router = express.Router();
 
+function directEmailEnabled() {
+  return process.env.ALLOW_UNAPPROVED_EMAIL_SEND === "true";
+}
+
 /* =========================
    SEND EMAIL
 ========================= */
@@ -28,6 +32,12 @@ router.post(
   async (req, res) => {
 
     try {
+      if (!directEmailEnabled()) {
+        return res.status(403).json({
+          success: false,
+          message: "AI email automation sending is disabled. Use approved email delivery."
+        });
+      }
 
       const {
         to,

@@ -2,6 +2,24 @@ const mongoose = require("mongoose");
 
 const activitySchema = new mongoose.Schema(
   {
+    ownerEmail: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      index: true
+    },
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      default: null,
+      index: true
+    },
+    workspaceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Workspace",
+      default: null,
+      index: true
+    },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

@@ -13,12 +13,23 @@ const {
 
 const router = express.Router();
 
+function whatsappAutomationEnabled() {
+  return process.env.ENABLE_WHATSAPP_AUTOMATION === "true";
+}
+
 router.post(
   "/send",
   enforceLimit("ai_request"),
   usageTracker("ai_request"),
   async (req, res) => {
     try {
+      if (!whatsappAutomationEnabled()) {
+        return res.status(403).json({
+          success: false,
+          message: "WhatsApp automation is disabled for beta. Human-approved email workflow remains available."
+        });
+      }
+
       const { to, message } = req.body;
 
       if (!to || !message) {

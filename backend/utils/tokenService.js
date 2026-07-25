@@ -28,7 +28,8 @@ function generateAccessToken(user) {
     {
       id: user._id,
       email: user.email,
-      role: user.role || "Owner"
+      role: user.role || "Owner",
+      tokenVersion: Number(user.tokenVersion || 0)
     },
     accessSecret(),
     {
@@ -43,7 +44,8 @@ function generateRefreshToken(user) {
   return jwt.sign(
     {
       id: user._id,
-      email: user.email
+      email: user.email,
+      tokenVersion: Number(user.tokenVersion || 0)
     },
     refreshSecret(),
     {

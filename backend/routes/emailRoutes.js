@@ -3,8 +3,19 @@ const nodemailer = require("nodemailer");
 
 const router = express.Router();
 
+function directEmailEnabled() {
+  return process.env.ALLOW_UNAPPROVED_EMAIL_SEND === "true";
+}
+
 router.post("/send", async (req, res) => {
   try {
+    if (!directEmailEnabled()) {
+      return res.status(403).json({
+        success: false,
+        message: "Direct email sending is disabled. Use the approved email delivery workflow."
+      });
+    }
+
     const { to, subject, message } = req.body;
 
     if (!to || !subject || !message) {

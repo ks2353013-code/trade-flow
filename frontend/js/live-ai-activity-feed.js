@@ -3,13 +3,14 @@
 (function () {
   if (window.TradeFlowLiveAIActivityFeed) return;
 
-  function getEmail() {
-    return (
-      localStorage.getItem("userEmail") ||
-      localStorage.getItem("tradeflowUserEmail") ||
-      localStorage.getItem("email") ||
-      "ks2353013@gmail.com"
-    );
+  function authHeaders() {
+    const token = window.getAuthToken?.() ||
+      localStorage.getItem("tradeflowToken") ||
+      localStorage.getItem("token") ||
+      localStorage.getItem("authToken") ||
+      "";
+
+    return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
   function createPanel() {
@@ -32,7 +33,7 @@
     panel.innerHTML = `
       <div class="section-title">🧠 Live AI Activity Feed</div>
       <p class="muted">
-        Real-time autonomous activity from TradeFlow AI across suppliers, CRM, outreach, tasks, and operations.
+        Real-time AI planning and approval activity across suppliers, CRM, outreach, tasks, and operations.
       </p>
 
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0;">
@@ -41,7 +42,7 @@
         </button>
 
         <button class="btn" onclick="TradeFlowLiveAIActivityFeed.runAIWorkflow()">
-          Run AI Workflow Now
+          Autonomous Execution Disabled
         </button>
       </div>
 
@@ -58,9 +59,7 @@
   async function fetchAuditLogs() {
     try {
       const res = await fetch("/api/audit?module=AI&limit=20", {
-        headers: {
-          "x-user-email": getEmail()
-        }
+        headers: authHeaders()
       });
 
       const data = await res.json();
@@ -140,33 +139,16 @@
   }
 
   async function runAIWorkflow() {
-    try {
-      const res = await fetch("/api/ai-autonomous-workflows/run", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-email": getEmail()
-        },
-        body: JSON.stringify({})
-      });
-
-      const data = await res.json();
-
-      alert(
-        data.success
-          ? `AI workflow completed.\nTasks: ${data.summary.tasksCreated}\nOutreach: ${data.summary.outreachCreated}\nDeals Scored: ${data.summary.dealsScored || 0}`
-          : data.message || "AI workflow failed."
-      );
-
-      await refresh();
-
-      if (window.fetchTasks) window.fetchTasks();
-      if (window.fetchOutreachRecords) window.fetchOutreachRecords();
-      if (window.fetchAnalytics) window.fetchAnalytics();
-
-    } catch {
-      alert("AI workflow failed. Please check backend.");
-    }
+    renderLogs([
+      {
+        action: "Autonomous execution blocked for beta",
+        severity: "High",
+        createdAt: new Date().toISOString(),
+        metadata: {
+          status: "Use AI Command Center planning and human approvals"
+        }
+      }
+    ]);
   }
 
   function boot() {

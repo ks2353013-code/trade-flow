@@ -15,8 +15,14 @@ const { requirePlan } = require("../middleware/subscriptionMiddleware");
 const router = express.Router();
 
 function tenantFilter(req) {
+  const ownerEmail = req.tenant?.ownerEmail;
+
+  if (!ownerEmail) {
+    throw new Error("Authenticated tenant owner email missing");
+  }
+
   const filter = {
-    ownerEmail: req.tenant?.ownerEmail || "unknown@tradeflow.local"
+    ownerEmail
   };
 
   if (req.tenant?.companyId) {
@@ -47,7 +53,7 @@ router.get("/export", requirePlan("Pro"), async (req, res) => {
       deals: await Deal.find(filter),
       tasks: await Task.find(filter),
       notifications: await Notification.find(filter),
-      activities: await Activity.find({}),
+      activities: await Activity.find(filter),
       aiMemory: await AIMemory.find(filter)
     };
 
@@ -76,10 +82,13 @@ router.post("/restore", requirePlan("Enterprise"), async (req, res) => {
       });
     }
 
-    const ownerEmail =
-      req.tenant?.ownerEmail ||
-      backup.ownerEmail ||
-      "unknown@tradeflow.local";
+    const ownerEmail = req.tenant?.ownerEmail;
+
+    if (!ownerEmail) {
+      return res.status(401).json({
+        message: "Authenticated tenant owner email required"
+      });
+    }
 
     const restored = {
       companies: 0,

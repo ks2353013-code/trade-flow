@@ -2,7 +2,6 @@ function requireRole(allowedRoles = []) {
   return (req, res, next) => {
     const userRole =
       req.user?.role ||
-      req.headers["x-user-role"] ||
       "Viewer";
 
     if (!allowedRoles.includes(userRole)) {

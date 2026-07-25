@@ -6,18 +6,18 @@ const { writeAuditLog } = require("../utils/auditLogger");
 
 const router = express.Router();
 
+function directEmailEnabled() {
+  return process.env.ALLOW_UNAPPROVED_EMAIL_SEND === "true";
+}
+
 function getOwnerEmail(req) {
-  return (
-    req.tenant?.ownerEmail ||
-    req.user?.email ||
-    req.headers["x-user-email"] ||
-    req.body?.ownerEmail ||
-    req.body?.email ||
-    req.query?.email ||
-    "unknown@tradeflow.local"
-  )
-    .toLowerCase()
-    .trim();
+  const email = req.tenant?.ownerEmail || req.user?.email;
+
+  if (!email) {
+    throw new Error("Authenticated user email missing");
+  }
+
+  return email.toLowerCase().trim();
 }
 
 function createTransporter() {
@@ -36,6 +36,13 @@ function createTransporter() {
 
 router.post("/send", async (req, res) => {
   try {
+    if (!directEmailEnabled()) {
+      return res.status(403).json({
+        success: false,
+        message: "Direct outreach email sending is disabled. Use the Outreach Approval Queue."
+      });
+    }
+
     const ownerEmail = getOwnerEmail(req);
 
     const {

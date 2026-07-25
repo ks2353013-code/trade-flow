@@ -1,11 +1,14 @@
 const UsageMetric = require("../models/UsageMetric");
 
 function getTenant(req) {
+  const ownerEmail = req.tenant?.ownerEmail || req.user?.email;
+
+  if (!ownerEmail) {
+    throw new Error("Authenticated user email missing for usage tracking");
+  }
+
   return {
-    ownerEmail:
-      req.tenant?.ownerEmail ||
-      req.user?.email ||
-      "unknown@tradeflow.local",
+    ownerEmail,
 
     companyId:
       req.tenant?.companyId ||

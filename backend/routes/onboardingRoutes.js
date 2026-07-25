@@ -9,16 +9,17 @@ const { writeAuditLog } = require("../utils/auditLogger");
 const router = express.Router();
 
 function getTenant(req) {
+  const ownerEmail = req.tenant?.ownerEmail || req.user?.email;
+
+  if (!ownerEmail) {
+    throw new Error("Authenticated user email missing");
+  }
+
   return {
-    ownerEmail:
-      req.tenant?.ownerEmail ||
-      req.user?.email ||
-      req.headers["x-user-email"] ||
-      "unknown@tradeflow.local",
+    ownerEmail,
 
     workspaceId:
       req.tenant?.workspaceId ||
-      req.headers["x-workspace-id"] ||
       undefined
   };
 }

@@ -1,6 +1,24 @@
 const Subscription = require("../models/Subscription");
 
 const PLAN_LIMITS = {
+  Free: {
+    ai_request: 0,
+    supplier_create: 25,
+    employee_create: 1,
+    workspace_create: 1,
+    verified_lead_create: 0,
+    mission_create: 0,
+    buyer_discovery: 0,
+    supplier_discovery: 0,
+    crm_lead_create: 0,
+    outreach_draft_create: 0,
+    email_send: 0,
+    ai_workflow_create: 0,
+    pdf_export: 0,
+    analytics_access: false,
+    executive_access: false
+  },
+
   Starter: {
     ai_request: 20,
     supplier_create: 200,

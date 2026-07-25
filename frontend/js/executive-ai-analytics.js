@@ -3,13 +3,14 @@
 (function () {
   if (window.TradeFlowExecutiveAIAnalytics) return;
 
-  function getEmail() {
-    return (
-      localStorage.getItem("userEmail") ||
-      localStorage.getItem("tradeflowUserEmail") ||
-      localStorage.getItem("email") ||
-      "ks2353013@gmail.com"
-    );
+  function authHeaders() {
+    const token = window.getAuthToken?.() ||
+      localStorage.getItem("tradeflowToken") ||
+      localStorage.getItem("token") ||
+      localStorage.getItem("authToken") ||
+      "";
+
+    return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
   function currency(value) {
@@ -70,9 +71,7 @@
   async function fetchAnalytics() {
     try {
       const res = await fetch("/api/analytics", {
-        headers: {
-          "x-user-email": getEmail()
-        }
+        headers: authHeaders()
       });
 
       return await res.json();
@@ -84,9 +83,7 @@
   async function fetchAuditSummary() {
     try {
       const res = await fetch("/api/audit/summary", {
-        headers: {
-          "x-user-email": getEmail()
-        }
+        headers: authHeaders()
       });
 
       return await res.json();
@@ -231,36 +228,20 @@
       activityBox.innerHTML = `
         <div class="deal">Autonomous AI Runs: ${aiActivity}</div>
         <div class="deal">AI Audit Logging: Active</div>
-        <div class="deal">Workflow Automation: Enabled</div>
+        <div class="deal">Workflow Automation: Approval required</div>
         <button class="btn" onclick="TradeFlowExecutiveAIAnalytics.runNow()">
-          Run AI Workflow Now
+          Autonomous Execution Disabled
         </button>
       `;
     }
   }
 
   async function runNow() {
-    try {
-      const res = await fetch("/api/ai-autonomous-workflows/run", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-email": getEmail()
-        },
-        body: JSON.stringify({})
-      });
-
-      const data = await res.json();
-
-      alert(
-        data.success
-          ? `AI workflow completed.\nTasks: ${data.summary.tasksCreated}\nOutreach: ${data.summary.outreachCreated}`
-          : data.message || "AI workflow failed."
-      );
-
-      render();
-    } catch {
-      alert("AI workflow failed.");
+    const activityBox = document.getElementById("aiAutonomousActivityBox");
+    if (activityBox) {
+      activityBox.innerHTML += `
+        <div class="deal">Autonomous execution is disabled for beta. Use AI Command Center planning and human approvals.</div>
+      `;
     }
   }
 

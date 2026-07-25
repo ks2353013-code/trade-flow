@@ -22,6 +22,12 @@ const userSchema = new mongoose.Schema(
       required: true
     },
 
+    tokenVersion: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+
     passwordResetTokenHash: {
       type: String,
       default: null,

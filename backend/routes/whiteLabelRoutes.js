@@ -5,17 +5,21 @@ const WhiteLabelSettings = require("../models/WhiteLabelSettings");
 const router = express.Router();
 
 function tenant(req) {
+  const ownerEmail = req.tenant?.ownerEmail || req.user?.email;
+
+  if (!ownerEmail) {
+    throw new Error("Authenticated user email missing");
+  }
+
   return {
-    ownerEmail:
-      req.headers["x-user-email"] ||
-      "unknown@tradeflow.local",
+    ownerEmail,
 
     companyId:
-      req.headers["x-company-id"] ||
+      req.tenant?.companyId ||
       undefined,
 
     workspaceId:
-      req.headers["x-workspace-id"] ||
+      req.tenant?.workspaceId ||
       undefined
   };
 }

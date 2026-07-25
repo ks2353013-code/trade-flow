@@ -5,12 +5,16 @@
   "description": "Capacitor Android wrapper for TradeFlow AI web app.",
   "scripts": {
     "cap:sync": "cap sync android",
-    "cap:open": "cap open android"
+    "cap:open": "cap open android",
+    "test:e2e:iteration2": "playwright test"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",
     "@capacitor/cli": "^8.4.0",
     "@capacitor/core": "^8.4.0",
     "@capacitor/ios": "^8.4.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.0"
   }
 }

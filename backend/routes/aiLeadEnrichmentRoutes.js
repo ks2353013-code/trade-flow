@@ -10,16 +10,13 @@ const { writeAuditLog } = require("../utils/auditLogger");
 const router = express.Router();
 
 function getOwnerEmail(req) {
-  return (
-    req.tenant?.ownerEmail ||
-    req.user?.email ||
-    req.headers["x-user-email"] ||
-    req.body?.email ||
-    req.query?.email ||
-    "unknown@tradeflow.local"
-  )
-    .toLowerCase()
-    .trim();
+  const email = req.tenant?.ownerEmail || req.user?.email;
+
+  if (!email) {
+    throw new Error("Authenticated user email missing");
+  }
+
+  return email.toLowerCase().trim();
 }
 
 function getHunterKey() {

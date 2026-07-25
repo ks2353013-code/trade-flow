@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 
 const User = require("../models/User");
+const authMiddleware = require("../middleware/authMiddleware");
 const Subscription = require("../models/Subscription");
 const { sendPasswordResetEmail } = require("../services/emailSender");
 const {
@@ -352,10 +353,13 @@ router.post("/refresh", async (req, res) => {
 
     const user = await User.findById(decoded.id);
 
-    if (!user) {
+    if (
+      !user ||
+      Number(decoded.tokenVersion || 0) !== Number(user.tokenVersion || 0)
+    ) {
       return res.status(401).json({
         success: false,
-        message: "User not found"
+        message: "Refresh session has been revoked"
       });
     }
 
@@ -369,19 +373,34 @@ router.post("/refresh", async (req, res) => {
   }
 });
 
-router.post("/logout", (req, res) => {
+router.post("/logout", authMiddleware, async (req, res) => {
   const production = process.env.NODE_ENV === "production";
 
-  res.clearCookie("tradeflow_refresh_token", {
-    httpOnly: true,
-    secure: production,
-    sameSite: production ? "none" : "lax"
-  });
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { $inc: { tokenVersion: 1 } },
+      { new: true }
+    );
 
-  res.json({
-    success: true,
-    message: "Logged out successfully"
-  });
+    if (!user) {
+      return res.status(401).json({ success: false, message: "User not found" });
+    }
+
+    res.clearCookie("tradeflow_refresh_token", {
+      httpOnly: true,
+      secure: production,
+      sameSite: production ? "none" : "lax"
+    });
+
+    return res.json({ success: true, message: "Logged out successfully" });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Logout failed",
+      error: error.message
+    });
+  }
 });
 
 router.get("/session", async (req, res) => {
@@ -400,7 +419,10 @@ router.get("/session", async (req, res) => {
 
     const user = await User.findById(decoded.id).select("-password");
 
-    if (!user) {
+    if (
+      !user ||
+      Number(decoded.tokenVersion || 0) !== Number(user.tokenVersion || 0)
+    ) {
       return res.status(401).json({
         valid: false,
         message: "User not found"

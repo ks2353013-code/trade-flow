@@ -21,6 +21,7 @@ const subscriptionSchema = new mongoose.Schema(
         "Free",
         "Starter",
         "Pro Exporter",
+        "Growth",
         "Enterprise AI OS"
       ],
       default: "Starter"
@@ -151,6 +152,21 @@ subscriptionSchema.pre("save", function (next) {
       dealLimit: 1000,
       workspaceLimit: 5,
       employeeLimit: 25
+    };
+  }
+
+  if (this.plan === "Growth") {
+
+    this.price = 19999;
+
+    this.approvalStatus = "Not Required";
+
+    this.entitlements = {
+      aiLimit: 5000,
+      supplierLimit: 5000,
+      dealLimit: 2500,
+      workspaceLimit: 15,
+      employeeLimit: 50
     };
   }
 

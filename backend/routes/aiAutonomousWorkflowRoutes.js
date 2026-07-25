@@ -9,6 +9,10 @@ const { writeAuditLog } = require("../utils/auditLogger");
 
 const router = express.Router();
 
+function autonomousExecutionEnabled() {
+  return process.env.ENABLE_AUTONOMOUS_EXECUTION === "true";
+}
+
 function getOwnerEmail(req) {
   if (!req.tenant?.ownerEmail) {
     throw new Error("Tenant owner email missing");
@@ -38,6 +42,13 @@ async function getTaskUserId(ownerEmail) {
 
 router.post("/run", async (req, res) => {
   try {
+    if (!autonomousExecutionEnabled()) {
+      return res.status(403).json({
+        success: false,
+        message: "Autonomous execution is disabled. Use human-approved mission, CRM, and outreach workflows."
+      });
+    }
+
     const ownerEmail = getOwnerEmail(req);
     const taskUserId = await getTaskUserId(ownerEmail);
     const filter = tenantFilter(req);

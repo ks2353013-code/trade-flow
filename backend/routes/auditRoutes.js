@@ -7,17 +7,13 @@ const router = express.Router();
 const MASTER_ADMIN_EMAIL = "ks2353013@gmail.com";
 
 function getOwnerEmail(req) {
-  return (
-    req.tenant?.ownerEmail ||
-    req.user?.email ||
-    req.headers["x-user-email"] ||
-    req.body?.ownerEmail ||
-    req.body?.email ||
-    req.query?.email ||
-    "unknown@tradeflow.local"
-  )
-    .toLowerCase()
-    .trim();
+  const email = req.tenant?.ownerEmail || req.user?.email;
+
+  if (!email) {
+    throw new Error("Authenticated user email missing");
+  }
+
+  return email.toLowerCase().trim();
 }
 
 function isMasterAdmin(req) {
@@ -193,34 +189,10 @@ router.get("/summary", async (req, res) => {
 });
 
 router.delete("/:id", async (req, res) => {
-  try {
-    if (!isMasterAdmin(req)) {
-      return res.status(403).json({
-        success: false,
-        message: "Master Admin access required"
-      });
-    }
-
-    const log = await AuditLog.findByIdAndDelete(req.params.id);
-
-    if (!log) {
-      return res.status(404).json({
-        success: false,
-        message: "Audit log not found"
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "Audit log deleted"
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to delete audit log",
-      error: error.message
-    });
-  }
+  return res.status(405).json({
+    success: false,
+    message: "Audit logs are append-only and cannot be deleted"
+  });
 });
 
 module.exports = router;

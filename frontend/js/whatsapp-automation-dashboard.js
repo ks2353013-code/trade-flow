@@ -24,8 +24,6 @@
     return {
       "Content-Type": "application/json",
       Authorization: user?.token ? `Bearer ${user.token}` : "",
-      "x-user-email": user?.email || "unknown@tradeflow.local",
-      "x-company-id": localStorage.getItem("tradeflowActiveCompany") || "",
       "x-workspace-id": window.TradeFlowWorkspace?.getActiveWorkspaceId?.() || ""
     };
   }
@@ -36,35 +34,7 @@
   }
 
   async function sendWhatsApp() {
-    try {
-      const to = $("waTo")?.value?.trim();
-      const message = $("waMessage")?.value?.trim();
-
-      if (!to || !message) {
-        alert("WhatsApp number and message are required.");
-        return;
-      }
-
-      setStatus("Sending WhatsApp message...");
-
-      const res = await fetch(`${getBackendUrl()}/api/whatsapp-automation/send`, {
-        method: "POST",
-        headers: getHeaders(),
-        body: JSON.stringify({ to, message })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "WhatsApp sending failed");
-      }
-
-      setStatus("WhatsApp message sent successfully.");
-      alert("WhatsApp sent successfully.");
-    } catch (error) {
-      setStatus(error.message || "WhatsApp failed.");
-      alert(error.message || "WhatsApp failed.");
-    }
+    setStatus("WhatsApp sending is disabled for beta. Use this panel only to prepare draft text.");
   }
 
   function loadAIOutreach() {
@@ -90,7 +60,7 @@
     panel.innerHTML = `
       <div class="section-title">💬 WhatsApp Automation Dashboard</div>
       <p class="muted">
-        Send AI-generated outreach, reminders, supplier follow-ups, and workflow alerts through WhatsApp.
+        Prepare WhatsApp draft text for review. Sending is disabled during controlled beta.
       </p>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:18px;">
@@ -106,7 +76,7 @@
 
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;">
         <button class="btn" onclick="TradeFlowWhatsAppAutomation.send()">
-          Send WhatsApp
+          Sending Disabled
         </button>
 
         <button class="mini-btn" onclick="TradeFlowWhatsAppAutomation.loadOutreach()">
@@ -115,7 +85,7 @@
       </div>
 
       <div id="whatsappAutomationStatus" style="margin-top:14px;color:#7dd3fc;font-weight:900;">
-        WhatsApp automation ready.
+        WhatsApp draft mode ready. Human approval required before any external outreach.
       </div>
     `;
 

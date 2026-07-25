@@ -6,13 +6,14 @@
   let drawerOpen = false;
   let notifications = [];
 
-  function getEmail() {
-    return (
-      localStorage.getItem("userEmail") ||
-      localStorage.getItem("tradeflowUserEmail") ||
-      localStorage.getItem("email") ||
-      "ks2353013@gmail.com"
-    );
+  function authHeaders() {
+    const token = window.getAuthToken?.() ||
+      localStorage.getItem("tradeflowToken") ||
+      localStorage.getItem("token") ||
+      localStorage.getItem("authToken") ||
+      "";
+
+    return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
   function createBell() {
@@ -199,9 +200,7 @@
   async function fetchAIAlerts() {
     try {
       const res = await fetch("/api/audit?module=AI&limit=20", {
-        headers: {
-          "x-user-email": getEmail()
-        }
+        headers: authHeaders()
       });
 
       const data = await res.json();
@@ -251,52 +250,12 @@
   }
 
   async function runAI() {
-    try {
-      const res = await fetch("/api/ai-autonomous-workflows/run", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-email": getEmail()
-        },
-        body: JSON.stringify({})
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        addNotification({
-          title: "Autonomous AI Workflow Completed",
-          message: `Tasks: ${data.summary.tasksCreated}, Outreach: ${data.summary.outreachCreated}, Deals Scored: ${data.summary.dealsScored || 0}`,
-          severity: "Medium",
-          type: "AI"
-        });
-
-        if (window.fetchTasks) window.fetchTasks();
-        if (window.fetchOutreachRecords) window.fetchOutreachRecords();
-        if (window.fetchAnalytics) window.fetchAnalytics();
-
-        if (window.TradeFlowRealtimeClient?.emitActivity) {
-          window.TradeFlowRealtimeClient.emitActivity(
-            "ai",
-            "Autonomous AI workflow completed"
-          );
-        }
-      } else {
-        addNotification({
-          title: "AI Workflow Blocked",
-          message: data.message || "AI workflow could not run.",
-          severity: "High",
-          type: "AI"
-        });
-      }
-    } catch {
-      addNotification({
-        title: "AI Workflow Failed",
-        message: "Backend connection failed during AI workflow.",
-        severity: "High",
-        type: "System"
-      });
-    }
+    addNotification({
+      title: "Autonomous AI Workflow Blocked",
+      message: "Autonomous execution is disabled for beta. Use AI Command Center planning and human approvals.",
+      severity: "High",
+      type: "AI"
+    });
   }
 
   function clearAll() {

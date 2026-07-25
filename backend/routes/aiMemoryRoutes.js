@@ -8,26 +8,26 @@ const {
 const router = express.Router();
 
 function getOwnerEmail(req) {
-  return (
-    req.user?.email ||
-    req.headers["x-user-email"] ||
-    req.body?.ownerEmail ||
-    req.query?.ownerEmail ||
-    "unknown@tradeflow.local"
-  )
-    .toString()
-    .toLowerCase()
-    .trim();
+  const email = req.tenant?.ownerEmail || req.user?.email;
+
+  if (!email) {
+    throw new Error("Authenticated user email missing");
+  }
+
+  return email.toString().toLowerCase().trim();
+}
+
+function tenantFilter(req) {
+  return {
+    ownerEmail: getOwnerEmail(req),
+    ...(req.tenant?.companyId ? { companyId: req.tenant.companyId } : {}),
+    ...(req.tenant?.workspaceId ? { workspaceId: req.tenant.workspaceId } : {})
+  };
 }
 
 router.get("/", requirePlan("Pro"), async (req, res) => {
   try {
-    const ownerEmail = getOwnerEmail(req);
-
-    const filter = { ownerEmail };
-
-    if (req.query.companyId) filter.companyId = req.query.companyId;
-    if (req.query.workspaceId) filter.workspaceId = req.query.workspaceId;
+    const filter = tenantFilter(req);
 
     const memories = await AIMemory.find(filter)
       .sort({ createdAt: -1 })
@@ -43,12 +43,10 @@ router.get("/", requirePlan("Pro"), async (req, res) => {
 
 router.post("/", requirePlan("Pro"), async (req, res) => {
   try {
-    const ownerEmail = getOwnerEmail(req);
-
     const memory = await AIMemory.create({
-      ownerEmail,
-      companyId: req.body.companyId || undefined,
-      workspaceId: req.body.workspaceId || undefined,
+      ownerEmail: getOwnerEmail(req),
+      companyId: req.tenant?.companyId || undefined,
+      workspaceId: req.tenant?.workspaceId || undefined,
       type: req.body.type || "General",
       prompt: req.body.prompt || "",
       response: req.body.response || "",
@@ -66,11 +64,9 @@ router.post("/", requirePlan("Pro"), async (req, res) => {
 
 router.delete("/:id", requirePlan("Pro"), async (req, res) => {
   try {
-    const ownerEmail = getOwnerEmail(req);
-
     const memory = await AIMemory.findOneAndDelete({
       _id: req.params.id,
-      ownerEmail
+      ...tenantFilter(req)
     });
 
     if (!memory) {
@@ -91,14 +87,7 @@ router.delete("/:id", requirePlan("Pro"), async (req, res) => {
 
 router.delete("/", requirePlan("Pro"), async (req, res) => {
   try {
-    const ownerEmail = getOwnerEmail(req);
-
-    const filter = { ownerEmail };
-
-    if (req.query.companyId) filter.companyId = req.query.companyId;
-    if (req.query.workspaceId) filter.workspaceId = req.query.workspaceId;
-
-    await AIMemory.deleteMany(filter);
+    await AIMemory.deleteMany(tenantFilter(req));
 
     res.json({
       message: "AI memory cleared"

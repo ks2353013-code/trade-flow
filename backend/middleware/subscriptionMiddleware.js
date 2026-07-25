@@ -4,7 +4,8 @@ const PLAN_ORDER = {
   Free: 0,
   Starter: 1,
   "Pro Exporter": 2,
-  "Enterprise AI OS": 3
+  Growth: 3,
+  "Enterprise AI OS": 4
 };
 
 const PLAN_ENTITLEMENTS = {
@@ -35,6 +36,15 @@ const PLAN_ENTITLEMENTS = {
     employeeLimit: 25
   },
 
+  Growth: {
+    price: 19999,
+    aiLimit: 5000,
+    supplierLimit: 5000,
+    dealLimit: 2500,
+    workspaceLimit: 15,
+    employeeLimit: 50
+  },
+
   "Enterprise AI OS": {
     price: 49999,
     aiLimit: 10000,
@@ -51,6 +61,7 @@ function normalizePlanName(plan) {
   if (value === "free") return "Free";
   if (value === "starter") return "Starter";
   if (value === "pro" || value === "pro exporter") return "Pro Exporter";
+  if (value === "growth") return "Growth";
   if (value === "enterprise" || value === "enterprise ai os") return "Enterprise AI OS";
 
   // Unknown plan names must fail closed rather than inheriting Starter access.

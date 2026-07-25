@@ -24,8 +24,6 @@
     return {
       "Content-Type": "application/json",
       Authorization: user?.token ? `Bearer ${user.token}` : "",
-      "x-user-email": user?.email || "unknown@tradeflow.local",
-      "x-company-id": localStorage.getItem("tradeflowActiveCompany") || "",
       "x-workspace-id": window.TradeFlowWorkspace?.getActiveWorkspaceId?.() || ""
     };
   }
@@ -36,41 +34,7 @@
   }
 
   async function sendEmail() {
-    try {
-      const to = $("autoEmailTo")?.value?.trim();
-      const subject = $("autoEmailSubject")?.value?.trim();
-      const message = $("autoEmailMessage")?.value?.trim();
-
-      if (!to || !subject || !message) {
-        alert("To, subject, and message are required.");
-        return;
-      }
-
-      setStatus("Sending email through TradeFlow automation...");
-
-      const res = await fetch(`${getBackendUrl()}/api/email-automation/send`, {
-        method: "POST",
-        headers: getHeaders(),
-        body: JSON.stringify({
-          to,
-          subject,
-          message
-        })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Email sending failed");
-      }
-
-      setStatus("Email sent successfully.");
-      alert("Email sent successfully.");
-    } catch (error) {
-      console.error(error);
-      setStatus(error.message || "Email failed.");
-      alert(error.message || "Email failed.");
-    }
+    setStatus("Direct AI email sending is disabled. Create an Outreach Approval draft and send only after approval.");
   }
 
   function useOutreachEmail() {
@@ -100,7 +64,7 @@
     panel.innerHTML = `
       <div class="section-title">📨 AI Email Automation Dashboard</div>
       <p class="muted">
-        Send AI-generated outreach, follow-ups, supplier messages, and workflow emails directly from TradeFlow.
+        Prepare AI email draft text. Sending is available only through approved Email Delivery.
       </p>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:18px;">
@@ -117,7 +81,7 @@
 
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;">
         <button class="btn" onclick="TradeFlowAIEmailAutomation.send()">
-          Send Email
+          Sending Disabled
         </button>
 
         <button class="mini-btn" onclick="TradeFlowAIEmailAutomation.loadOutreach()">
@@ -126,7 +90,7 @@
       </div>
 
       <div id="aiEmailAutomationStatus" style="margin-top:14px;color:#7dd3fc;font-weight:900;">
-        Email automation ready.
+        Email draft mode ready. Use Outreach Approval Queue before sending.
       </div>
     `;
 
