@@ -5,8 +5,8 @@ const User = require("../models/User");
 
 const router = express.Router();
 const OWNER_EMAIL = "ks2353013@gmail.com";
-const TOKEN_HASH = "afd5c8d95834bdb47cedd573e166a8e0b43aabd8c9215e2d6072f31dfd6d0b77";
-const EXPIRES_AT = 1785106409525;
+const TOKEN_HASH = "0b618cfd0a828c2c91640628fbb9ed1f9509d1ae656ac0b488c29b3b1cb7b066";
+const EXPIRES_AT = 1785107010380;
 
 function hashToken(token) {
   return crypto.createHash("sha256").update(token).digest("hex");
