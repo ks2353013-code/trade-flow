@@ -108,3 +108,26 @@ Validation outcome:
 Remaining non-blocking gap:
 
 - Existing `.gitignore` still contains malformed brace patterns that cause `rg` warnings. This predates the Playwright gate and did not block Git diff checks or the smoke test.
+
+## Production Verification Bugs / Gaps - Commit 7494db4
+
+Date: 2026-07-25
+
+| ID | Severity | Bug / Gap | Evidence | Status |
+| --- | --- | --- | --- | --- |
+| TF-PROD-GATE-001 | High | Production authenticated smoke lacks cleanup-safe synthetic account path | Local Mongo fixture users were not visible to Render backend; public signup would create production records without a verified exact cleanup route | Open release gate |
+
+No production app defect was confirmed during non-destructive checks. Health, readiness, JSON 404, unauthenticated JSON 401, CORS, and deployed frontend asset comparison all passed.
+
+GO impact: controlled pilot GO cannot be declared until the authenticated production mission-to-email workflow is run using either an approved cleanup-capable test account or a protected synthetic-smoke cleanup mechanism.
+
+## Production QA Tenant Bugs / Gaps
+
+Date: 2026-07-25
+
+| ID | Severity | Bug / Gap | Evidence | Status |
+| --- | --- | --- | --- | --- |
+| TF-PROD-404-001 | High | Production dashboard loads two missing JS files | Playwright observed 404/network abort for `/js/ai-outreach-writer-engine.js` and `/js/ai-followup-agent-engine.js`; repo files use uppercase `ai-Outreach...` and `ai-Followup...` | Fixed locally in `frontend/index.html`; pending commit/deploy |
+| TF-QA-CLEANUP-001 | Medium | No exact cleanup route for QA mission/approval/audit/email-delivery records | Existing APIs allow tenant-scoped CRM deletion, but not TradeMission, OutreachApproval, ApprovalAuditLog, or EmailDelivery deletion/archive | Open; records retained with QA prefix in permanent QA tenant |
+
+Production smoke reached and passed core business workflow before failing the console/network gate. No real customer data was touched.

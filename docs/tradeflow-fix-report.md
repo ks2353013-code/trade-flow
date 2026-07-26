@@ -199,3 +199,63 @@ Validation passed:
 - Synthetic tenant cleanup PASS with zero remaining `iteration2.e2e.*` records.
 
 Commit readiness: SAFE after staging the new Playwright gate and updated audit documents. Do not stage generated Playwright report, trace, screenshot, or browser-cache artifacts.
+
+## Production Release Verification Notes - Commit 7494db4
+
+Date: 2026-07-25
+
+No production code fix was made.
+
+Verified:
+
+- GitHub main points to `7494db476b201b3af2946b1d458f0ff92a039102`.
+- Render health and ready endpoints returned JSON 200 with Mongo connected, production environment, schedulers disabled, and email dry-run.
+- Unknown API path returned JSON 404.
+- Protected unauthenticated API returned JSON 401.
+- Backend CORS accepted `https://tradeflowai.in`.
+- Vercel-served frontend assets matched local release commit files.
+
+Blocked:
+
+- Authenticated production mission-to-email smoke was not completed because local fixture records are not available to the Render backend and no exact cleanup-safe production signup/user deletion path was verified.
+
+Required next fix/process before pilot GO:
+
+- Add or authorize a protected production-smoke cleanup tool/endpoint for synthetic records, or provide an approved production test account with cleanup permissions.
+- Then rerun the full production workflow: login, session/workspace restore, mission, CRM push, outreach draft, approval audit, dry-run email delivery, bypass denials, logout invalidation, and zero-record cleanup confirmation.
+
+## Production QA Tenant Fix Notes
+
+Date: 2026-07-25
+
+Changes made:
+
+- Added `.tradeflow-production-qa.local` to `.gitignore` for local-only QA credentials.
+- Fixed `frontend/index.html` script casing:
+  - `ai-outreach-writer-engine.js` -> `ai-Outreach-writer-engine.js`
+  - `ai-followup-agent-engine.js` -> `ai-Followup-agent-engine.js`
+
+Production QA smoke result before deploy:
+
+- Login/session/workspace: PASS.
+- Mission/agent reports: PASS.
+- CRM push and duplicate protection: PASS.
+- Outreach draft, approval, audit: PASS.
+- Email delivery: PASS as `Dry Run`.
+- Bypass protections: PASS.
+- Console/network: FAIL due script 404s fixed locally.
+
+Validation after fix:
+
+- Local Playwright release smoke PASS.
+- Iteration 2 regression suite PASS.
+- Production health/ready PASS on currently deployed `7494db4`.
+- Diff checks PASS.
+- Changed JavaScript syntax checks PASS.
+- Live-secret scan PASS.
+
+Still needed:
+
+- Review, commit, and deploy the local casing fix with explicit approval.
+- Rerun production QA smoke after deployment.
+- Decide whether tagged QA smoke records can remain in the permanent QA tenant or add a narrow protected cleanup mechanism in a future release.

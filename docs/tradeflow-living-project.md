@@ -177,3 +177,71 @@ Validation performed:
 - Live-secret scan: PASS.
 
 Commit readiness: SAFE after staging the new Playwright gate files, package updates, `.gitignore`, and these audit-document updates. Do not stage generated Playwright artifacts.
+
+## Production Release Verification - Commit 7494db4
+
+Date: 2026-07-25
+
+Scope: production verification for commit `7494db476b201b3af2946b1d458f0ff92a039102` without enabling schedulers, live email, WhatsApp, or autonomous execution.
+
+Evidence:
+
+- GitHub `main`: PASS. GitHub API returned `7494db476b201b3af2946b1d458f0ff92a039102` with message `Complete Iterations 1-2 security hardening and release validation`.
+- Render backend: PASS. `GET https://trade-flow-lc1k.onrender.com/api/health` returned JSON 200 with `mongo: connected`, `environment: production`, `commit: 7494db476b201b3af2946b1d458f0ff92a039102`, `scheduler.status: disabled`, and `emailMode: dry-run`.
+- Render readiness: PASS. `GET /api/ready` returned JSON 200 with Mongo connected.
+- API JSON fallback: PASS. Unknown `/api/non-existing-production-smoke` returned JSON 404, not HTML.
+- Protected unauthenticated route: PASS. `/api/workspaces` returned JSON 401.
+- CORS: PASS. Health request with `Origin: https://tradeflowai.in` returned `access-control-allow-origin: https://tradeflowai.in`.
+- Vercel frontend: PASS by asset comparison. Deployed `/login`, `/app`, `/js/app.js`, `/js/mission-center-ui-v1.js`, and `/js/session-manager.js` matched local commit `7494db4` file hashes.
+- HTTPS frontend load: PASS. `https://tradeflowai.in` and `/login` returned HTTPS 200 HTML.
+
+Production workflow result:
+
+- BLOCKED, not failed. Local Mongo fixture records are not visible to the Render backend, so local direct fixture creation cannot authenticate against production.
+- Public signup was not used because this verification requires guaranteed cleanup of synthetic users, companies, workspaces, subscriptions, and related records, and no safe production cleanup route for exact synthetic user/company cleanup was verified.
+- Three synthetic fixture attempts were fully cleaned from the local/non-production database used by this workspace; final cleanup counts were zero for users, companies, workspaces, subscriptions, activities, suppliers, missions, CRM leads, approvals, and deliveries.
+
+GO/NO-GO:
+
+- NO-GO for controlled pilot declaration from this run because the authenticated production mission-to-email workflow was not completed with a cleanup-safe synthetic or approved test account.
+- Production deployment/health readiness is PASS.
+- Remaining gate: provide an approved production test account with cleanup permissions, or add an explicitly protected synthetic-smoke cleanup endpoint/tool before running production workflow validation.
+
+## Production QA Tenant Verification
+
+Date: 2026-07-25
+
+Permanent QA tenant:
+
+- Created via supported production signup/API behavior using a controlled `qa-smoke-...@tradeflowai.in` address.
+- Company: `TradeFlow Production QA`.
+- Workspace: `Production Smoke Workspace`.
+- Credentials stored only in ignored local file `.tradeflow-production-qa.local`; no password, token, cookie, or secret was printed or committed.
+- Permanent QA user/company/workspace/subscription are intentionally retained for future release tests.
+
+Authenticated production smoke:
+
+- PASS through login, `/app` redirect, refresh/session persistence, canonical workspace restore, mission execution, agent reports, CRM push, duplicate CRM protection, outreach draft creation, pre-approval send denial, approval, audit, dry-run delivery, and direct email/WhatsApp/autonomous bypass denials.
+- FAIL on browser console/network gate due production 404s for `/js/ai-outreach-writer-engine.js` and `/js/ai-followup-agent-engine.js`.
+- Root cause: Vercel/Linux is case-sensitive; repository files are `ai-Outreach-writer-engine.js` and `ai-Followup-agent-engine.js`, while `frontend/index.html` referenced lowercase filenames.
+- Fix made locally: updated `frontend/index.html` script references to match file casing.
+
+Cleanup:
+
+- CRM lead created during the failed production run was deleted through the existing tenant-scoped CRM delete API by exact ID.
+- Mission, outreach approval, approval audit, and email delivery records remain clearly tagged with prefix `production.qa.smoke.1785025759380` inside the isolated permanent QA tenant because no delete/archive routes exist for those resources.
+- No real customer records were modified.
+
+Validation after local fix:
+
+- Production health/ready still PASS on deployed `7494db4`.
+- Local Playwright release smoke PASS.
+- `node backend/scripts/iteration2-regression-tests.js` PASS.
+- `git diff --check` PASS.
+- `git diff --cached --check` PASS.
+- `node --check` on changed JavaScript set PASS.
+- Live-secret scan PASS.
+
+Release state:
+
+- NO-GO until the casing fix is reviewed, committed, deployed with explicit approval, and the production QA smoke is rerun against the deployed fix.

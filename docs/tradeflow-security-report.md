@@ -328,3 +328,46 @@ Security validation result:
 - Synthetic test data cleanup completed with zero remaining `iteration2.e2e.*` tenant records.
 
 Security release status: PASS for automated regression gates and the terminal-driven rendered-browser release gate. Generated Playwright artifacts are ignored and must not be staged.
+
+## Production Security Verification - Commit 7494db4
+
+Date: 2026-07-25
+
+Verified production security controls without modifying real customer data:
+
+- Backend health and readiness returned JSON 200 with Mongo connected.
+- Backend reported production environment, commit `7494db476b201b3af2946b1d458f0ff92a039102`, schedulers disabled, and email dry-run.
+- Unknown API path returned JSON 404.
+- Protected unauthenticated workspace API returned JSON 401.
+- CORS allowed `https://tradeflowai.in` for backend health.
+- Deployed frontend assets matched local release commit files.
+
+Authenticated production isolation/security workflow was not executed because a safe cleanup path for production synthetic signup data was not verified. Local fixture insertion was intentionally rejected as a production-smoke method after the Render backend returned 401 for locally inserted synthetic users, proving the local Mongo connection was not the production backend's active database.
+
+Security decision: NO-GO for controlled pilot based on this production run alone. The deployment is healthy, but production authenticated tenant-isolation and mission-to-email validation still requires either an approved test account with cleanup ability or a protected production-smoke cleanup mechanism.
+
+## Production QA Tenant Security Verification
+
+Date: 2026-07-25
+
+Security posture:
+
+- Permanent QA tenant was created intentionally through normal production authentication/API behavior.
+- QA credentials are stored only in ignored local file `.tradeflow-production-qa.local` and were not printed.
+- Email mode remained `dry-run`; schedulers remained disabled.
+- Reserved/non-deliverable recipient data was used.
+- Direct email, WhatsApp, and autonomous execution bypass attempts returned 403.
+- Pre-approval email delivery returned 403.
+- Approved delivery returned `Dry Run`.
+
+Failure:
+
+- Production smoke failed the console/network gate because two dashboard scripts returned 404 due filename casing mismatch. This is a frontend deployment defect, not an auth/tenant/security bypass.
+
+Cleanup/security impact:
+
+- The CRM lead from the failed run was deleted by exact tenant-scoped API ID.
+- Other smoke records remain tagged in the isolated QA tenant because no tenant-scoped delete/archive APIs exist for missions, approvals, approval audit logs, or email deliveries.
+- No real customer data was modified.
+
+Decision: NO-GO until the script-casing fix is deployed and the authenticated production QA smoke passes with no serious console/network errors.
