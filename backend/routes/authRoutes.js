@@ -331,6 +331,7 @@ router.post("/reset-password", async (req, res) => {
     user.passwordResetTokenHash = null;
     user.passwordResetExpiresAt = null;
     user.passwordResetRequestedAt = null;
+    user.tokenVersion = Number(user.tokenVersion || 0) + 1;
     await user.save();
 
     res.json({

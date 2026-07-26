@@ -340,3 +340,8 @@ Pre-deployment validation passed:
 - Iteration 2 regression suite, including stale-token rejection.
 - Health/readiness with Mongo connected, schedulers disabled, and email
   `dry-run`.
+
+Password reset hardening now increments the user's token version after a
+successful one-time reset. This revokes every previously issued access and
+refresh session without changing outreach email, scheduler, WhatsApp, or
+autonomous-execution controls.
