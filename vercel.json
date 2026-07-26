@@ -60,6 +60,11 @@
     },
 
     {
+      "src": "/master-admin.html",
+      "dest": "/frontend/master-admin.html"
+    },
+
+    {
       "src": "/(.*)",
       "dest": "/frontend/landing.html"
     }
