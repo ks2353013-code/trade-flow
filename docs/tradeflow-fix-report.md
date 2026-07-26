@@ -289,3 +289,30 @@ Cleanup:
 - Tagged mission/approval/audit/delivery records retained as isolated QA evidence with prefix `production.qa.smoke.1785028214109`.
 
 Final release decision: GO FOR CONTROLLED PILOT under dry-run email and disabled scheduler constraints.
+
+## Controlled Pilot Phase 3 Fix Notes
+
+Date: 2026-07-25
+
+Changes made:
+
+- Removed malformed `.gitignore` lines and zero-byte accidental files named `30)`, `{`, and `backend/{`.
+- Updated `BetaFeedback` support statuses to `Open`, `In Review`, `Resolved`, and `Closed`.
+- Added `PUT /api/beta/feedback/:id/status` for Master Admin-only support status changes.
+- Added Master Admin support queue buttons for In Review, Resolved, and Closed.
+- Added `docs/tradeflow-controlled-pilot-guide.md` covering onboarding, employee roles, mission-to-CRM, outreach approval, support escalation, monitoring, and known limitations.
+- Increased Playwright timeout to 240s so the full rendered release smoke can complete final logout and stale-session assertions.
+
+Validation:
+
+- Health/ready PASS.
+- Pilot onboarding browser smoke PASS.
+- Focused beta API validation PASS.
+- Iteration 2 regression suite PASS.
+- Playwright rendered release smoke PASS.
+
+Remaining constraints:
+
+- Email must remain Dry Run.
+- Schedulers must remain disabled.
+- WhatsApp, call automation, and autonomous execution must remain blocked until separately approved.

@@ -276,3 +276,32 @@ Transactional cleanup:
 - No real customer data was modified.
 
 Decision: GO FOR CONTROLLED PILOT with email dry-run and schedulers disabled. Live email, WhatsApp, scheduler activation, and autonomous execution still require a separate explicit activation phase.
+
+## Controlled Pilot Readiness - Phase 3
+
+Date: 2026-07-25
+
+Objective:
+
+- Prepare TradeFlow for onboarding the first 3-5 controlled pilot companies without enabling live email, WhatsApp, schedulers, or autonomous execution.
+
+Pilot readiness updates:
+
+- Verified existing beta onboarding checklist, support feedback capture, Master Admin beta overview, beta user/company activation controls, usage intelligence, and customer-success signals.
+- Added a controlled pilot guide at `docs/tradeflow-controlled-pilot-guide.md`.
+- Fixed malformed `.gitignore` lines that caused repository search tooling warnings.
+- Aligned beta support statuses to the pilot operating states: `Open`, `In Review`, `Resolved`, and `Closed`.
+- Added a Master Admin-only beta feedback status update endpoint and corresponding Master Admin support queue controls.
+- Increased the local Playwright release-smoke timeout from 120s to 240s after the workflow reached final logout/stale-session assertions but exceeded the harness limit.
+
+Validation:
+
+- Local health/ready PASS with Mongo connected, schedulers disabled, and email dry-run.
+- Pilot onboarding browser smoke PASS: synthetic corporate-domain signup, onboarding business-type selection, `/app` redirect, token persistence, and Mongo workspace restoration.
+- Focused beta API validation PASS: feedback create, Master Admin overview, support status transitions, and non-master denial.
+- Iteration 2 regression suite PASS.
+- Local Playwright rendered release smoke PASS.
+
+Pilot decision:
+
+- READY for controlled onboarding of 3-5 companies, provided email remains dry-run, schedulers remain disabled, WhatsApp/call/autonomous execution remain blocked, and support requests are reviewed by Master Admin during the pilot.

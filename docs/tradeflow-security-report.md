@@ -394,3 +394,25 @@ Expected plan gates:
 - The QA tenant generated expected background 403 responses for analytics and AI memory access. These were subscription gates and did not bypass or break the approved workflow.
 
 Security decision: GO FOR CONTROLLED PILOT while keeping email dry-run, schedulers disabled, WhatsApp disabled, and autonomous execution blocked.
+
+## Controlled Pilot Phase 3 Security Validation
+
+Date: 2026-07-25
+
+Security scope:
+
+- Validate pilot support and onboarding readiness without weakening tenant, workspace, subscription, approval, or outbound-action controls.
+
+Results:
+
+- Beta feedback creation remained authenticated and tenant-scoped.
+- Pilot onboarding browser smoke used a generated corporate-domain identity and cleaned up exact tenant records after validation.
+- Master Admin beta overview and support status mutation remained restricted to verified Master Admin identity.
+- Non-master access to beta overview returned JSON 403.
+- Support request payloads continue to avoid passwords, tokens, cookies, Mongo URIs, and secrets.
+- Health/ready returned JSON with Mongo connected, schedulers disabled, and email dry-run.
+- Local Playwright release smoke passed mission-to-approved-email Dry Run with direct email, WhatsApp, and autonomous bypass attempts blocked.
+
+Security decision:
+
+- PASS for controlled pilot readiness. Live email, WhatsApp, schedulers, and autonomous execution remain outside the approved pilot scope.

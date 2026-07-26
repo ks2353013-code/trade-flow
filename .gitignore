@@ -10,6 +10,3 @@ test-results/
 playwright-report/
 .playwright-browsers/
 .tradeflow-production-qa.local
-30)
-{
-backend/{

@@ -26,6 +26,7 @@ const MASTER_ADMIN_EMAILS = new Set([
 const BETA_STATUSES = new Set(["invited", "active", "paused", "revoked"]);
 const FEEDBACK_TYPES = new Set(["feedback", "issue", "feature_request", "support"]);
 const PRIORITIES = new Set(["Low", "Medium", "High"]);
+const FEEDBACK_STATUSES = new Set(["Open", "In Review", "Resolved", "Closed"]);
 
 function normalizeEmail(email) {
   return String(email || "").toLowerCase().trim();
@@ -116,6 +117,12 @@ function normalizeCategory(category, type) {
 function normalizePriority(priority) {
   const clean = String(priority || "").trim();
   return PRIORITIES.has(clean) ? clean : "Medium";
+}
+
+function normalizeFeedbackStatus(status) {
+  const clean = String(status || "").trim();
+  if (clean === "Reviewed") return "In Review";
+  return FEEDBACK_STATUSES.has(clean) ? clean : "Open";
 }
 
 async function sumUsageMetrics(metricTypes = []) {
@@ -685,6 +692,43 @@ router.get("/feedback", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to fetch beta feedback",
+      error: error.message
+    });
+  }
+});
+
+router.put("/feedback/:id/status", async (req, res) => {
+  try {
+    if (!requireMaster(req, res)) return;
+
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid feedback id"
+      });
+    }
+
+    const feedback = await BetaFeedback.findByIdAndUpdate(
+      req.params.id,
+      { status: normalizeFeedbackStatus(req.body?.status) },
+      { new: true }
+    );
+
+    if (!feedback) {
+      return res.status(404).json({
+        success: false,
+        message: "Feedback item not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      feedback
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to update beta feedback status",
       error: error.message
     });
   }

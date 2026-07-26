@@ -52,7 +52,7 @@ const betaFeedbackSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Open", "Reviewed", "Closed"],
+      enum: ["Open", "In Review", "Resolved", "Closed"],
       default: "Open"
     },
     priority: {

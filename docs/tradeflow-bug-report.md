@@ -142,3 +142,15 @@ Date: 2026-07-25
 | TF-QA-CLEANUP-001 | Medium | No exact cleanup route for QA mission/approval/audit/email-delivery records | Accepted for pilot as isolated QA evidence retention; CRM transactional record cleanup passed by exact tenant-scoped API ID |
 
 Final production QA smoke passed. No serious browser console/network errors remain after the casing deployment. Expected subscription-gated background 403s for analytics/AI memory were observed and classified as non-blocking.
+
+## Controlled Pilot Phase 3 Bugs / Gaps
+
+Date: 2026-07-25
+
+| ID | Severity | Bug / Gap | Final Status |
+| --- | --- | --- | --- |
+| TF-OPS-001 | Medium | `.gitignore` contained malformed brace-pattern leftovers that made `rg` emit ignore parsing warnings | Fixed by removing stray malformed lines and deleting matching zero-byte accidental files |
+| TF-PILOT-SUPPORT-001 | Medium | Beta support status model did not match pilot support states | Fixed by supporting `Open`, `In Review`, `Resolved`, and `Closed` |
+| TF-TEST-HARNESS-001 | Low | Local rendered release smoke reached final assertions but exceeded the 120s Playwright harness timeout | Fixed by increasing Playwright timeout to 240s |
+
+No new product blocker was found in Phase 3 validation.

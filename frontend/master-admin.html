@@ -905,6 +905,12 @@ function renderBetaSupport(items) {
         <span class="status ${item.priority === "High" ? "bad" : "ok"}">
           ${item.priority || "Medium"}
         </span>
+        <div class="muted">Status: ${item.status || "Open"}</div>
+        <div class="actions">
+          <button class="navbtn" onclick="setBetaFeedbackStatus('${item._id}', 'In Review')">In Review</button>
+          <button class="approve" onclick="setBetaFeedbackStatus('${item._id}', 'Resolved')">Resolved</button>
+        </div>
+        <button class="reject" style="width:100%;margin-top:10px;" onclick="setBetaFeedbackStatus('${item._id}', 'Closed')">Close</button>
       </div>
     `).join("");
 
@@ -964,6 +970,23 @@ async function setBetaCompanyStatus(id, status) {
       headers: headers(),
       body: JSON.stringify({
         betaStatus: status
+      })
+    }
+  );
+
+  fetchBetaControl();
+
+}
+
+async function setBetaFeedbackStatus(id, status) {
+
+  await fetch(
+    `${BETA_URL}/feedback/${id}/status`,
+    {
+      method: "PUT",
+      headers: headers(),
+      body: JSON.stringify({
+        status
       })
     }
   );
