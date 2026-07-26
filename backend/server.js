@@ -25,6 +25,7 @@ const optionalAuth = authMiddleware.optionalAuth;
 
 const supplierRoutes = require("./routes/supplierRoutes");
 const authRoutes = require("./routes/authRoutes");
+const ownerRecoveryRoutes = require("./routes/ownerRecoveryRoutes");
 const dealRoutes = require("./routes/dealRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const taskRoutes = require("./routes/taskRoutes");
@@ -267,6 +268,7 @@ app.get("/api/ready", (req, res) => {
 
 /* Public Auth Routes */
 app.use("/api/auth", requireDatabaseReady, authRoutes);
+app.use("/api/auth/owner-recovery", requireDatabaseReady, ownerRecoveryRoutes);
 app.use("/api/errors", requireDatabaseReady, optionalAuth, clientErrorRoutes);
 
 /* Protected API Routes */
