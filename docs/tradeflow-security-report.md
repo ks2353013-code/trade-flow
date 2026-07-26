@@ -371,3 +371,26 @@ Cleanup/security impact:
 - No real customer data was modified.
 
 Decision: NO-GO until the script-casing fix is deployed and the authenticated production QA smoke passes with no serious console/network errors.
+
+## Final Production QA Security Revalidation
+
+Date: 2026-07-25
+
+Commit `92b0c5b5be3c7bb79c824fa39fab10a6098e6ca5` was pushed and Vercel served the corrected frontend.
+
+Security validation:
+
+- Corrected script assets returned HTTP 200.
+- Lowercase broken script paths were no longer requested by the deployed frontend.
+- QA login, session persistence, and canonical workspace restoration passed.
+- Mission-to-CRM-to-outreach-to-approved-email flow passed with email status `Dry Run`.
+- Pre-approval send was blocked.
+- Direct email, WhatsApp, and autonomous execution bypass attempts returned 403.
+- Logout invalidated old access and refresh sessions with JSON 401.
+- No real customer data was modified and no external message was transmitted.
+
+Expected plan gates:
+
+- The QA tenant generated expected background 403 responses for analytics and AI memory access. These were subscription gates and did not bypass or break the approved workflow.
+
+Security decision: GO FOR CONTROLLED PILOT while keeping email dry-run, schedulers disabled, WhatsApp disabled, and autonomous execution blocked.

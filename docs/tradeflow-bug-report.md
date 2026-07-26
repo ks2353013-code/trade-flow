@@ -131,3 +131,14 @@ Date: 2026-07-25
 | TF-QA-CLEANUP-001 | Medium | No exact cleanup route for QA mission/approval/audit/email-delivery records | Existing APIs allow tenant-scoped CRM deletion, but not TradeMission, OutreachApproval, ApprovalAuditLog, or EmailDelivery deletion/archive | Open; records retained with QA prefix in permanent QA tenant |
 
 Production smoke reached and passed core business workflow before failing the console/network gate. No real customer data was touched.
+
+## Production QA Final Bug Status
+
+Date: 2026-07-25
+
+| ID | Severity | Bug / Gap | Final Status |
+| --- | --- | --- | --- |
+| TF-PROD-404-001 | High | Production dashboard loaded lowercase script filenames that 404 on Vercel | Fixed in commit `92b0c5b5be3c7bb79c824fa39fab10a6098e6ca5`; deployed frontend now requests corrected casing and both scripts return HTTP 200 |
+| TF-QA-CLEANUP-001 | Medium | No exact cleanup route for QA mission/approval/audit/email-delivery records | Accepted for pilot as isolated QA evidence retention; CRM transactional record cleanup passed by exact tenant-scoped API ID |
+
+Final production QA smoke passed. No serious browser console/network errors remain after the casing deployment. Expected subscription-gated background 403s for analytics/AI memory were observed and classified as non-blocking.

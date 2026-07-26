@@ -245,3 +245,34 @@ Validation after local fix:
 Release state:
 
 - NO-GO until the casing fix is reviewed, committed, deployed with explicit approval, and the production QA smoke is rerun against the deployed fix.
+
+## Final Production QA Revalidation - Commit 92b0c5b
+
+Date: 2026-07-25
+
+The script-casing fix was committed as `92b0c5b5be3c7bb79c824fa39fab10a6098e6ca5` and pushed to `origin/main`.
+
+Deployment evidence:
+
+- GitHub push: PASS.
+- Vercel frontend deployment: PASS by deployed `/app` hash matching local `frontend/index.html`.
+- Deployed `/app` no longer references lowercase `ai-outreach-writer-engine.js` or `ai-followup-agent-engine.js`.
+- Corrected scripts returned HTTP 200 JavaScript:
+  - `/js/ai-Outreach-writer-engine.js`
+  - `/js/ai-Followup-agent-engine.js`
+- Render backend health/ready remained JSON 200 with Mongo connected, schedulers disabled, and email dry-run.
+
+Production QA smoke:
+
+- PASS for login, `/app` redirect, refresh/session persistence, QA workspace restore, mission execution, agent reports, CRM push, duplicate CRM protection, outreach draft creation, pre-approval send denial, approval, audit, approved email `Dry Run`, direct email/WhatsApp/autonomous bypass denials, CRM cleanup, logout, stale access-token JSON 401, stale refresh-token JSON 401, and `/app` login enforcement after logout.
+- No missing-script 404 remained.
+- No uncaught browser console errors remained.
+- Background 403 responses for analytics and AI memory were observed as expected plan-gate responses for the QA tenant and did not affect the mission-to-email workflow.
+
+Transactional cleanup:
+
+- CRM lead from the final run was deleted through tenant-scoped API by exact ID.
+- Tagged QA evidence retained in the permanent QA tenant: mission, outreach approval, approval audit rows, and email delivery with prefix `production.qa.smoke.1785028214109`.
+- No real customer data was modified.
+
+Decision: GO FOR CONTROLLED PILOT with email dry-run and schedulers disabled. Live email, WhatsApp, scheduler activation, and autonomous execution still require a separate explicit activation phase.

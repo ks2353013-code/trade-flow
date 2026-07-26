@@ -259,3 +259,33 @@ Still needed:
 - Review, commit, and deploy the local casing fix with explicit approval.
 - Rerun production QA smoke after deployment.
 - Decide whether tagged QA smoke records can remain in the permanent QA tenant or add a narrow protected cleanup mechanism in a future release.
+
+## Final Production Casing Fix Deployment
+
+Date: 2026-07-25
+
+Fix commit:
+
+- `92b0c5b5be3c7bb79c824fa39fab10a6098e6ca5`
+- Message: `Fix production frontend script filename casing`
+
+Deployment validation:
+
+- Pushed to `origin/main`.
+- Vercel served deployed `/app` matching local `frontend/index.html`.
+- `/js/ai-Outreach-writer-engine.js`: HTTP 200 JavaScript.
+- `/js/ai-Followup-agent-engine.js`: HTTP 200 JavaScript.
+- Deployed `/app` no longer requested lowercase broken paths.
+- Render health/ready stayed JSON 200 with Mongo connected, schedulers disabled, and email dry-run.
+
+Production QA smoke:
+
+- PASS for login, session/workspace restore, mission, agent reports, CRM push, duplicate protection, outreach draft, approval, audit, approved email `Dry Run`, bypass protections, CRM cleanup, logout, and stale-token rejection.
+
+Cleanup:
+
+- CRM record from the final run deleted by exact tenant-scoped ID.
+- Permanent QA tenant retained.
+- Tagged mission/approval/audit/delivery records retained as isolated QA evidence with prefix `production.qa.smoke.1785028214109`.
+
+Final release decision: GO FOR CONTROLLED PILOT under dry-run email and disabled scheduler constraints.
