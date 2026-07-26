@@ -5,6 +5,7 @@ require("../models/OnboardingProgress");
 const User = require("../models/User");
 const Company = require("../models/Company");
 const { writeAuditLog } = require("../utils/auditLogger");
+const { hasMasterAdminRole } = require("../utils/masterAdminIdentity");
 
 const router = express.Router();
 
@@ -39,15 +40,7 @@ function normalizeBusinessType(value) {
 }
 
 function isMasterAdmin(req) {
-  const email = String(req.user?.email || "").toLowerCase().trim();
-  const role = String(req.user?.role || "").toLowerCase();
-
-  return (
-    req.tenant?.isMasterAdmin === true ||
-    role.includes("master") ||
-    email === "ks2353013@gmail.com" ||
-    email === "contact@tradeflowai.in"
-  );
+  return hasMasterAdminRole(req.user);
 }
 
 async function markUserOnboardingComplete(req) {

@@ -257,6 +257,33 @@ function saveSession(data){
   return user;
 }
 
+function getSafeNextPath() {
+  const candidate = new URLSearchParams(window.location.search).get("next");
+  if (!candidate) return "";
+
+  const approvedPaths = new Set([
+    "/app",
+    "/master-admin.html",
+    "/onboarding"
+  ]);
+
+  try {
+    const parsed = new URL(candidate, window.location.origin);
+    if (
+      parsed.origin !== window.location.origin ||
+      !approvedPaths.has(parsed.pathname) ||
+      parsed.search ||
+      parsed.hash ||
+      parsed.pathname === "/login"
+    ) {
+      return "";
+    }
+    return parsed.pathname;
+  } catch {
+    return "";
+  }
+}
+
 async function safeJson(res) {
   const contentType = res.headers.get("content-type") || "";
 
@@ -317,9 +344,8 @@ loginForm.addEventListener("submit", async (e) => {
       localStorage.getItem("tradeflowOnboardingDone") === "true";
 
     const destination =
-      onboardingDone
-        ? "/app"
-        : "/onboarding";
+      getSafeNextPath() ||
+      (onboardingDone ? "/app" : "/onboarding");
 
     showMessage(
       destination === "/app"

@@ -1,6 +1,11 @@
 const Employee = require("../models/Employee");
 const User = require("../models/User");
 const { verifyAccessToken, accessSecret } = require("../utils/tokenService");
+const {
+  MASTER_ADMIN_ROLE,
+  applyMasterAdminIdentity,
+  hasMasterAdminRole
+} = require("../utils/masterAdminIdentity");
 
 function getJwtSecret() {
   return accessSecret();
@@ -43,6 +48,10 @@ async function authMiddleware(req, res, next) {
       });
     }
 
+    if (applyMasterAdminIdentity(user)) {
+      await user.save();
+    }
+
     const employee = await Employee.findOne({
       email,
       status: { $ne: "Removed" }
@@ -54,7 +63,10 @@ async function authMiddleware(req, res, next) {
       ownerEmail: employee?.ownerEmail || email,
       companyId: employee?.companyId || null,
       workspaceId: employee?.workspaceId || null,
-      role: employee?.role || user.role || decoded.role || "Owner",
+      role:
+        user.role === MASTER_ADMIN_ROLE
+          ? MASTER_ADMIN_ROLE
+          : employee?.role || user.role || "Owner",
       permissions: employee?.permissions || decoded.permissions || {},
       employee: employee || null,
       authMode: "jwt"
@@ -99,12 +111,7 @@ function optionalAuth(req, res, next) {
 }
 
 function masterOnly(req, res, next) {
-  const email = String(req.user?.email || "").toLowerCase().trim();
-
-  if (
-    email !== "ks2353013@gmail.com" &&
-    email !== "contact@tradeflowai.in"
-  ) {
+  if (!hasMasterAdminRole(req.user)) {
     return res.status(403).json({
       success: false,
       message: "Master Admin access required"

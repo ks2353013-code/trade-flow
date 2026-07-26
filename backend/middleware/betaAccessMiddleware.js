@@ -1,20 +1,13 @@
 const User = require("../models/User");
 const Company = require("../models/Company");
-
-const MASTER_ADMIN_EMAILS = new Set([
-  "ks2353013@gmail.com",
-  "contact@tradeflowai.in"
-]);
+const { hasMasterAdminRole } = require("../utils/masterAdminIdentity");
 
 function normalizeEmail(email) {
   return String(email || "").toLowerCase().trim();
 }
 
 function isMaster(req) {
-  return (
-    req.tenant?.isMasterAdmin === true ||
-    MASTER_ADMIN_EMAILS.has(normalizeEmail(req.user?.email))
-  );
+  return hasMasterAdminRole(req.user);
 }
 
 function hasActiveBetaRecord(record, userFlag, accessFlag) {

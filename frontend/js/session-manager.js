@@ -187,7 +187,7 @@
       }
 
       if (!res.ok || !data.success || !token) {
-        return Boolean(getToken() && getUser());
+        return false;
       }
 
       const user = {
@@ -204,7 +204,7 @@
     } catch {
       lastAuthStatus = 0;
       lastAuthFailure = "refresh network error";
-      return Boolean(getToken() && getUser());
+      return false;
     }
   }
 
@@ -232,7 +232,7 @@
       }
 
       if (!res.ok || !data.valid) {
-        return Boolean(getToken() && getUser());
+        return false;
       }
 
       const user = {
@@ -247,7 +247,7 @@
     } catch {
       lastAuthStatus = 0;
       lastAuthFailure = "session validation network error";
-      return Boolean(getToken() && getUser());
+      return false;
     }
   }
 
@@ -269,8 +269,10 @@
 
   async function logout() {
     try {
+      const token = getToken();
       await fetch(`${getBackendUrl()}/api/auth/logout`, {
         method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         credentials: "include"
       });
     } catch {}

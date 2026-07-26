@@ -316,3 +316,27 @@ Remaining constraints:
 - Email must remain Dry Run.
 - Schedulers must remain disabled.
 - WhatsApp, call automation, and autonomous execution must remain blocked until separately approved.
+## Canonical Master Admin Authentication
+
+The Master Admin dashboard now restores the normal TradeFlow session through
+the verified auth session endpoint and requires the canonical `Master Admin`
+database role before loading privileged data. Both approved owner identities
+are normalized by one server-side identity helper during signup, login,
+refresh, and session restoration. Client-provided email headers, request
+fields, URL parameters, and the retired `tradeflowMasterAdmin` local-storage
+record are not authorization sources.
+
+Missing or expired authentication redirects to
+`/login?next=/master-admin.html`; authenticated non-master users receive an
+Access Denied view. The login page accepts only an explicit allowlist of
+same-origin internal next paths.
+
+Pre-deployment validation passed:
+
+- Changed JavaScript syntax checks.
+- Focused Master Admin server regression tests.
+- Six-case local Master Admin Playwright coverage.
+- Complete serial local Playwright release smoke.
+- Iteration 2 regression suite, including stale-token rejection.
+- Health/readiness with Mongo connected, schedulers disabled, and email
+  `dry-run`.

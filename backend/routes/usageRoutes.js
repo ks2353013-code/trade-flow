@@ -1,13 +1,9 @@
 const express = require("express");
 const Usage = require("../models/Usage");
 const UsageMetric = require("../models/UsageMetric");
+const { hasMasterAdminRole } = require("../utils/masterAdminIdentity");
 
 const router = express.Router();
-
-const MASTER_ADMIN_EMAILS = [
-  "ks2353013@gmail.com",
-  "contact@tradeflowai.in"
-];
 
 function getOwnerEmail(req) {
   if (!req.user?.email) {
@@ -18,7 +14,7 @@ function getOwnerEmail(req) {
 }
 
 function isMasterAdmin(req) {
-  return MASTER_ADMIN_EMAILS.includes(getOwnerEmail(req));
+  return hasMasterAdminRole(req.user);
 }
 
 function tenantFilter(req) {

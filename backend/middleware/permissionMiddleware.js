@@ -1,14 +1,7 @@
-const MASTER_ADMIN_EMAILS = new Set([
-  "ks2353013@gmail.com",
-  "contact@tradeflowai.in"
-]);
-
-function normalizeEmail(email) {
-  return String(email || "").toLowerCase().trim();
-}
+const { hasMasterAdminRole } = require("../utils/masterAdminIdentity");
 
 function isMasterAdmin(req) {
-  return MASTER_ADMIN_EMAILS.has(normalizeEmail(req.user?.email));
+  return hasMasterAdminRole(req.user);
 }
 
 function hasAdminAccess(req) {

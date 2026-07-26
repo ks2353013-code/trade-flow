@@ -18,6 +18,11 @@ const {
   verifyAccessToken,
   verifyRefreshToken
 } = require("../utils/tokenService");
+const {
+  MASTER_ADMIN_ROLE,
+  applyMasterAdminIdentity,
+  isMasterAdminEmail
+} = require("../utils/masterAdminIdentity");
 
 const router = express.Router();
 
@@ -102,6 +107,13 @@ function sendAuthResponse(res, user, message = "Authentication successful") {
   });
 }
 
+async function synchronizeVerifiedIdentity(user) {
+  if (applyMasterAdminIdentity(user)) {
+    await user.save();
+  }
+  return user;
+}
+
 async function handleSignup(req, res) {
   try {
     const { name, email, password, companyName } = req.body;
@@ -140,10 +152,7 @@ async function handleSignup(req, res) {
       email: cleanEmail,
       password,
       companyName: companyName || "TradeFlow Workspace",
-      role:
-        cleanEmail === "ks2353013@gmail.com"
-          ? "Master Admin"
-          : "Founder"
+      role: isMasterAdminEmail(cleanEmail) ? MASTER_ADMIN_ROLE : "Founder"
     });
 
     await Subscription.findOneAndUpdate(
@@ -214,6 +223,8 @@ router.post("/login", async (req, res) => {
         message: "Invalid email or password"
       });
     }
+
+    await synchronizeVerifiedIdentity(user);
 
     if (!user.firstLoginAt) {
       user.firstLoginAt = new Date();
@@ -355,6 +366,7 @@ router.post("/refresh", async (req, res) => {
 
     if (
       !user ||
+      String(decoded.email || "").trim().toLowerCase() !== user.email ||
       Number(decoded.tokenVersion || 0) !== Number(user.tokenVersion || 0)
     ) {
       return res.status(401).json({
@@ -363,6 +375,7 @@ router.post("/refresh", async (req, res) => {
       });
     }
 
+    await synchronizeVerifiedIdentity(user);
     sendAuthResponse(res, user, "Session refreshed");
   } catch (error) {
     res.status(401).json({
@@ -421,6 +434,7 @@ router.get("/session", async (req, res) => {
 
     if (
       !user ||
+      String(decoded.email || "").trim().toLowerCase() !== user.email ||
       Number(decoded.tokenVersion || 0) !== Number(user.tokenVersion || 0)
     ) {
       return res.status(401).json({
@@ -428,6 +442,8 @@ router.get("/session", async (req, res) => {
         message: "User not found"
       });
     }
+
+    await synchronizeVerifiedIdentity(user);
 
     res.json({
       valid: true,

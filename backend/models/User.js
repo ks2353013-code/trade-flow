@@ -1,5 +1,8 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const {
+  applyMasterAdminIdentity
+} = require("../utils/masterAdminIdentity");
 
 const userSchema = new mongoose.Schema(
   {
@@ -253,13 +256,11 @@ const legacyRoleMap = {
 };
 
 userSchema.pre("validate", function (next) {
-  if (this.email === "ks2353013@gmail.com") {
-    this.isMasterAdmin = true;
-    this.role = "Master Admin";
-  } else if (this.role && legacyRoleMap[this.role]) {
+  if (this.role && legacyRoleMap[this.role]) {
     this.role = legacyRoleMap[this.role];
   }
 
+  applyMasterAdminIdentity(this);
   next();
 });
 
@@ -277,11 +278,7 @@ userSchema.pre("save", async function (next) {
 });
 
 userSchema.pre("save", function (next) {
-
-  if (this.email === "ks2353013@gmail.com") {
-    this.isMasterAdmin = true;
-    this.role = "Master Admin";
-  }
+  applyMasterAdminIdentity(this);
 
   if (this.subscriptionPlan === "Starter") {
 

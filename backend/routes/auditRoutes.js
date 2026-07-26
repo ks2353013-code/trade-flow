@@ -1,10 +1,9 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const AuditLog = require("../models/AuditLog");
+const { hasMasterAdminRole } = require("../utils/masterAdminIdentity");
 
 const router = express.Router();
-
-const MASTER_ADMIN_EMAIL = "ks2353013@gmail.com";
 
 function getOwnerEmail(req) {
   const email = req.tenant?.ownerEmail || req.user?.email;
@@ -17,7 +16,7 @@ function getOwnerEmail(req) {
 }
 
 function isMasterAdmin(req) {
-  return getOwnerEmail(req) === MASTER_ADMIN_EMAIL;
+  return hasMasterAdminRole(req.user);
 }
 
 function tenantFilter(req) {

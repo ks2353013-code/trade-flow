@@ -14,6 +14,7 @@
 <title>TradeFlow Master Admin</title>
 
 <link rel="stylesheet" href="./css/tailwind.css">
+<script src="./js/session-manager.js"></script>
 <script src="./js/client-error-tracker.js" defer></script>
 
 <style>
@@ -415,8 +416,11 @@ button{
 
 <script>
 
+const sessionManager =
+  window.TradeFlowSessionManager;
+
 const BACKEND_URL =
-  "https://trade-flow-lc1k.onrender.com";
+  sessionManager.getBackendUrl();
 
 const WORKSPACE_URL =
   `${BACKEND_URL}/api/workspaces`;
@@ -424,79 +428,36 @@ const WORKSPACE_URL =
 const BETA_URL =
   `${BACKEND_URL}/api/beta`;
 
-const OWNER_EMAILS = [
-  "contact@tradeflowai.in",
-  "ks2353013@gmail.com"
-];
-
-function normalizeEmail(email) {
-
-  return String(email || "")
-    .trim()
-    .toLowerCase();
+function getMaster() {
+  return sessionManager.getUser();
 
 }
 
-function getMaster() {
+async function protectMaster() {
 
-  try {
+  if (!await sessionManager.restoreSession()) {
 
-    return JSON.parse(
-      localStorage.getItem(
-        "tradeflowMasterAdmin"
-      ) || "null"
+    sessionManager.clearAuthSession();
+    window.location.replace(
+      "/login?next=/master-admin.html"
     );
 
-  } catch {
-
-    return null;
-
+    return false;
   }
-
-}
-
-function protectMaster() {
 
   const admin = getMaster();
 
-  const email =
-    normalizeEmail(admin?.email);
+  if (admin?.role !== "Master Admin") {
+    document.body.innerHTML = `
+      <main style="min-height:100vh;display:grid;place-items:center;background:#020617;color:white;padding:24px">
+        <section style="max-width:560px;text-align:center">
+          <h1 style="font-size:2rem;margin-bottom:12px">Access Denied</h1>
+          <p>Your authenticated account does not have Master Admin access.</p>
+          <p><a href="/app" style="color:#60a5fa">Return to TradeFlow</a></p>
+        </section>
+      </main>`;
 
-  if (
-    !admin ||
-    !admin.token
-  ) {
-
-    window.location.replace(
-      "master-login.html"
-    );
-
-    throw new Error(
-      "No admin token"
-    );
-
-  }
-
-  if (
-    !OWNER_EMAILS.includes(email)
-  ) {
-
-    localStorage.removeItem(
-      "tradeflowMasterAdmin"
-    );
-
-    alert(
-      "Master Admin is restricted to owner email only."
-    );
-
-    window.location.replace(
-      "master-login.html"
-    );
-
-    throw new Error(
-      "Unauthorized master admin"
-    );
-
+    return false;
   }
 
   document.getElementById(
@@ -505,36 +466,25 @@ function protectMaster() {
     (admin.companyName ||
     "TradeFlow") +
     " • " +
-    email;
+    admin.email;
 
+  return true;
 }
 
 function headers() {
-
-  const admin = getMaster();
 
   return {
     "Content-Type":
       "application/json",
 
     Authorization:
-      `Bearer ${admin.token}`,
-
-    "x-user-email":
-      normalizeEmail(admin.email)
+      `Bearer ${sessionManager.getToken()}`
   };
 
 }
 
-function logoutMaster() {
-
-  localStorage.removeItem(
-    "tradeflowMasterAdmin"
-  );
-
-  window.location.href =
-    "master-login.html";
-
+async function logoutMaster() {
+  await sessionManager.logout();
 }
 
 function openUserDashboardFromMaster() {
@@ -543,11 +493,11 @@ function openUserDashboardFromMaster() {
 
   if (
     !admin ||
-    !admin.token
+    !sessionManager.getToken()
   ) {
 
     window.location.href =
-      "master-login.html";
+      "/login?next=/master-admin.html";
 
     return;
 
@@ -567,7 +517,7 @@ function openUserDashboardFromMaster() {
   );
 
   window.location.href =
-    "index.html";
+    "/app";
 }
 
 async function fetchWorkspaces() {
@@ -995,9 +945,16 @@ async function setBetaFeedbackStatus(id, status) {
 
 }
 
-protectMaster();
-fetchWorkspaces();
-fetchBetaControl();
+async function bootMasterAdmin() {
+  if (!await protectMaster()) return;
+
+  await Promise.all([
+    fetchWorkspaces(),
+    fetchBetaControl()
+  ]);
+}
+
+bootMasterAdmin();
 
 </script>
 

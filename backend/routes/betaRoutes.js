@@ -15,13 +15,9 @@ const ClientErrorLog = require("../models/ClientErrorLog");
 const AuditLog = require("../models/AuditLog");
 const UsageMetric = require("../models/UsageMetric");
 const { hasBetaAccess } = require("../middleware/betaAccessMiddleware");
+const { hasMasterAdminRole } = require("../utils/masterAdminIdentity");
 
 const router = express.Router();
-
-const MASTER_ADMIN_EMAILS = new Set([
-  "ks2353013@gmail.com",
-  "contact@tradeflowai.in"
-]);
 
 const BETA_STATUSES = new Set(["invited", "active", "paused", "revoked"]);
 const FEEDBACK_TYPES = new Set(["feedback", "issue", "feature_request", "support"]);
@@ -33,7 +29,7 @@ function normalizeEmail(email) {
 }
 
 function isMaster(req) {
-  return req.tenant?.isMasterAdmin === true || MASTER_ADMIN_EMAILS.has(normalizeEmail(req.user?.email));
+  return hasMasterAdminRole(req.user);
 }
 
 function requireMaster(req, res) {

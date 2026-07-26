@@ -4,13 +4,9 @@ const Razorpay = require("razorpay");
 
 const Subscription = require("../models/Subscription");
 const User = require("../models/User");
+const { hasMasterAdminRole } = require("../utils/masterAdminIdentity");
 
 const router = express.Router();
-
-const MASTER_ADMIN_EMAILS = [
-  "ks2353013@gmail.com",
-  "contact@tradeflowai.in"
-];
 
 const PLAN_CONFIG = {
   Starter: {
@@ -58,7 +54,7 @@ function getEmail(req) {
 }
 
 function isMaster(req) {
-  return MASTER_ADMIN_EMAILS.includes(getEmail(req));
+  return hasMasterAdminRole(req.user);
 }
 
 function getRazorpay() {

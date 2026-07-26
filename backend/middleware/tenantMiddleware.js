@@ -6,11 +6,7 @@
 const mongoose = require("mongoose");
 const Company = require("../models/Company");
 const Workspace = require("../models/Workspace");
-
-const MASTER_ADMIN_EMAILS = new Set([
-  "ks2353013@gmail.com",
-  "contact@tradeflowai.in"
-]);
+const { hasMasterAdminRole } = require("../utils/masterAdminIdentity");
 
 function normalizeEmail(email) {
   return String(email || "").toLowerCase().trim();
@@ -22,10 +18,6 @@ function normalizeObjectId(value) {
 
   const id = String(raw).trim();
   return mongoose.isValidObjectId(id) ? id : false;
-}
-
-function isMasterAdmin(email) {
-  return MASTER_ADMIN_EMAILS.has(normalizeEmail(email));
 }
 
 async function resolveCompany(companyId, ownerEmail, masterAdmin) {
@@ -65,7 +57,7 @@ async function tenantMiddleware(req, res, next) {
 
     const userEmail = normalizeEmail(req.user.email);
     const ownerEmail = normalizeEmail(req.user.ownerEmail || userEmail);
-    const masterAdmin = isMasterAdmin(userEmail);
+    const masterAdmin = hasMasterAdminRole(req.user);
 
     const requestedCompanyId = normalizeObjectId(
       req.headers["x-company-id"] || req.body?.companyId || req.query?.companyId
