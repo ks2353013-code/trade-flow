@@ -171,7 +171,12 @@ function protectMasterAdmin() {
   return true;
 }
 
-function logoutUser() {
+async function logoutUser() {
+  if (window.TradeFlowSessionManager?.logout) {
+    await window.TradeFlowSessionManager.logout();
+    return;
+  }
+
   clearTradeflowSession();
   window.location.href = "/login";
 }

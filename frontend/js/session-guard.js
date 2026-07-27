@@ -92,7 +92,12 @@
     return false;
   }
 
-  window.logoutUser = function () {
+  window.logoutUser = async function () {
+    if (window.TradeFlowSessionManager?.logout) {
+      await window.TradeFlowSessionManager.logout();
+      return;
+    }
+
     clearAuthSession();
     window.location.href = "/login";
   };
