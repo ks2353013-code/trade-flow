@@ -719,17 +719,23 @@ function renderBetaControl(overview) {
   const support =
     overview.support || {};
 
+  const feedback =
+    overview.feedback || [];
+
   const usage =
     overview.usage || {};
 
   const customerSuccess =
     overview.customerSuccess || {};
 
-  const supportItems = [
-    ...(support.openIssues || []),
-    ...(support.featureRequests || []),
-    ...(support.supportRequests || [])
-  ];
+  const supportItems =
+    feedback.length
+      ? feedback
+      : [
+          ...(support.openIssues || []),
+          ...(support.featureRequests || []),
+          ...(support.supportRequests || [])
+        ];
 
   document.getElementById(
     "betaCompanyMetric"
