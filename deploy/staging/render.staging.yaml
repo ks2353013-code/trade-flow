@@ -1,0 +1,93 @@
+# Review-only staging blueprint. Creating these services may incur cost.
+# Do not apply without explicit owner approval.
+services:
+  - type: web
+    name: tradeflow-verification-backend-staging
+    env: node
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    autoDeploy: false
+    healthCheckPath: /api/ready
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRADEFLOW_ENVIRONMENT
+        value: staging
+      - key: BUSINESS_VERIFICATION_ENABLED
+        value: true
+      - key: BUSINESS_VERIFICATION_STAGING_MONGO_CONFIRMED
+        value: true
+      - key: BUSINESS_VERIFICATION_STORAGE_DRIVER
+        value: s3
+      - key: BUSINESS_VERIFICATION_S3_BUCKET
+        value: tradeflow-verification-staging
+      - key: BUSINESS_VERIFICATION_S3_PUBLIC_ACCESS_BLOCKED
+        value: true
+      - key: BUSINESS_VERIFICATION_SCANNER_DRIVER
+        value: clamav
+      - key: BUSINESS_VERIFICATION_CLAMAV_HOST
+        value: tradeflow-verification-clamav-staging
+      - key: BUSINESS_VERIFICATION_CLAMAV_PORT
+        value: 3310
+      - key: BUSINESS_VERIFICATION_SCANNER_TIMEOUT_MS
+        value: 10000
+      - key: ENABLE_SCHEDULERS
+        value: false
+      - key: ENABLE_WHATSAPP_AUTOMATION
+        value: false
+      - key: ENABLE_AUTONOMOUS_EXECUTION
+        value: false
+      - key: ENABLE_AI_AUTONOMOUS_HTTP_SCHEDULER
+        value: false
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: BUSINESS_VERIFICATION_ENCRYPTION_KEY
+        sync: false
+      - key: BUSINESS_VERIFICATION_HASH_KEY
+        sync: false
+      - key: BUSINESS_VERIFICATION_KEY_VERSION
+        sync: false
+      - key: BUSINESS_VERIFICATION_S3_ENDPOINT
+        sync: false
+      - key: BUSINESS_VERIFICATION_S3_REGION
+        sync: false
+      - key: BUSINESS_VERIFICATION_S3_ACCESS_KEY_ID
+        sync: false
+      - key: BUSINESS_VERIFICATION_S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+
+  - type: pserv
+    name: tradeflow-verification-clamav-staging
+    env: docker
+    dockerfilePath: ./deploy/staging/clamav/Dockerfile
+    autoDeploy: false
+
+  - type: web
+    name: tradeflow-verification-frontend-staging
+    env: static
+    buildCommand: node deploy/staging/generate-runtime-config.js
+    staticPublishPath: ./frontend
+    autoDeploy: false
+    envVars:
+      - key: TRADEFLOW_STAGING_API_BASE_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /login
+        destination: /auth.html
+      - type: rewrite
+        source: /app
+        destination: /index.html
+      - type: rewrite
+        source: /master-admin.html
+        destination: /master-admin.html
+      - type: rewrite
+        source: /*
+        destination: /landing.html

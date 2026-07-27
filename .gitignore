@@ -12,3 +12,4 @@ playwright-report/
 .tradeflow-production-qa.local
 .private/
 .cache/
+.staging-acceptance/

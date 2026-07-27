@@ -8,9 +8,11 @@ const { getBusinessVerificationReadiness } = require("../services/businessVerifi
 
 function isDryRunEmail() {
   return !(
-    process.env.EMAIL_USER &&
-    process.env.EMAIL_PASS &&
-    (process.env.EMAIL_HOST || process.env.SMTP_HOST)
+    process.env.SMTP_HOST &&
+    process.env.SMTP_PORT &&
+    process.env.SMTP_USER &&
+    process.env.SMTP_PASS &&
+    process.env.SMTP_FROM
   );
 }
 
@@ -21,7 +23,12 @@ function stagingDatabaseAcknowledged() {
     process.env.PRODUCTION_MONGO_URI &&
     process.env.PRODUCTION_MONGO_URI === process.env.MONGO_URI
   ) return false;
-  return true;
+  try {
+    const databaseName = new URL(process.env.MONGO_URI).pathname.replace(/^\/|\/$/g, "");
+    return databaseName === "tradeflow_verification_staging";
+  } catch {
+    return false;
+  }
 }
 
 async function main() {
@@ -29,6 +36,10 @@ async function main() {
   const mongoIsolation = stagingDatabaseAcknowledged();
   const emailDryRun = isDryRunEmail();
   const schedulersDisabled = process.env.ENABLE_SCHEDULERS !== "true";
+  const externalAutomationDisabled =
+    process.env.ENABLE_WHATSAPP_AUTOMATION !== "true" &&
+    process.env.ENABLE_AUTONOMOUS_EXECUTION !== "true" &&
+    process.env.ENABLE_AI_AUTONOMOUS_HTTP_SCHEDULER !== "true";
   let mongoConnected = false;
 
   if (environmentOk && mongoIsolation) {
@@ -43,6 +54,7 @@ async function main() {
       mongoConnected &&
       emailDryRun &&
       schedulersDisabled &&
+      externalAutomationDisabled &&
       verification.ready,
     environment: environmentOk ? "staging" : "invalid",
     mongo: {
@@ -51,7 +63,8 @@ async function main() {
     },
     businessVerification: verification,
     emailMode: emailDryRun ? "dry-run" : "external-enabled",
-    schedulers: schedulersDisabled ? "disabled" : "enabled"
+    schedulers: schedulersDisabled ? "disabled" : "enabled",
+    externalAutomation: externalAutomationDisabled ? "disabled" : "enabled"
   };
 
   console.log(JSON.stringify(result, null, 2));
