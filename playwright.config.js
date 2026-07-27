@@ -10,6 +10,12 @@ module.exports = defineConfig({
   workers: 1,
   retries: 0,
   reporter: [["list"], ["html", { open: "never" }]],
+  webServer: {
+    command: "node backend/server.js",
+    url: `${process.env.TRADEFLOW_E2E_BASE_URL || "http://127.0.0.1:5000"}/api/health`,
+    reuseExistingServer: true,
+    timeout: 120000
+  },
   use: {
     baseURL: process.env.TRADEFLOW_E2E_BASE_URL || "http://localhost:5000",
     browserName: "chromium",

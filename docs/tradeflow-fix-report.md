@@ -345,3 +345,8 @@ Password reset hardening now increments the user's token version after a
 successful one-time reset. This revokes every previously issued access and
 refresh session without changing outreach email, scheduler, WhatsApp, or
 autonomous-execution controls.
+# Business Verification implementation note (2026-07-27)
+
+Added a company-level verification model and indexes, protected application/review APIs, private upload adapter, verification gate middleware, public active-badge API, company UI, Master Admin queue, focused tests, and seven operating/privacy guides. Existing authentication, subscriptions, tenant middleware, and lead verification remain separate. No production records were modified.
+
+The hardening pass added provider-neutral local/S3 storage, deterministic test and private ClamAV scanner adapters, quarantine promotion, cleanup states, separate versioned cryptographic keys, startup/readiness gates, retention/deletion hooks, isolated test runners, staging readiness tooling, and dependency remediation. No staging or production configuration was created.

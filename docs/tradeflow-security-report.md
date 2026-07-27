@@ -416,3 +416,8 @@ Results:
 Security decision:
 
 - PASS for controlled pilot readiness. Live email, WhatsApp, schedulers, and autonomous execution remain outside the approved pilot scope.
+# Business Verification security addendum (2026-07-27)
+
+Verification ownership is derived from the verified JWT and tenant middleware. Client company IDs and owner emails are not trusted. Sensitive identifiers use AES-256-GCM ciphertext plus keyed hashes and masked response values. Production fails closed without a dedicated encryption key and private storage configuration. Uploads are private, bounded, MIME/signature checked, non-guessable, path-contained, and audited; malware scanning remains an explicit deployment integration. Approval and every destructive review transition require backend-confirmed Master Admin authorization. Audit identity fallback was tightened to exclude headers and request bodies.
+
+Production hardening now separates versioned encryption and duplicate-hash keys, authenticates ciphertext metadata, uses random 128-bit badge references, hides duplicate flags from tenants, and prevents all non-clean quarantine access. The S3-compatible adapter requires TLS, private-access attestation, server-side encryption, opaque prefixes, and clean-state promotion. The module remains disabled and production readiness remains fail-closed until staging infrastructure validates storage and private scanning.

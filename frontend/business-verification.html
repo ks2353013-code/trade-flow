@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Business Verification | TradeFlow</title>
+  <style>
+    :root{color-scheme:dark;--bg:#07111f;--card:#101d30;--line:#263a55;--text:#edf6ff;--muted:#9fb0c5;--accent:#43d6a5;--warn:#ffbf69}
+    *{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#07111f,#0c1930);color:var(--text);font:15px/1.5 system-ui,sans-serif}
+    main{max-width:1120px;margin:auto;padding:32px 20px 80px}.top{display:flex;justify-content:space-between;gap:20px;align-items:center}.card{background:rgba(16,29,48,.96);border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:20px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.wide{grid-column:1/-1}
+    label{display:grid;gap:6px;color:var(--muted)}input,select,textarea{width:100%;border:1px solid var(--line);border-radius:9px;background:#091526;color:var(--text);padding:11px}textarea{min-height:86px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}button,.button{border:0;border-radius:9px;padding:11px 16px;background:var(--accent);color:#03130e;font-weight:700;cursor:pointer;text-decoration:none}.secondary{background:#263a55;color:var(--text)}.danger{background:#ff7c77}.pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:5px 10px;color:var(--accent)}.muted{color:var(--muted)}.notice{border-left:3px solid var(--warn);padding-left:12px}.doc{display:flex;justify-content:space-between;gap:15px;border-top:1px solid var(--line);padding:12px 0}.hidden{display:none!important}progress{width:100%;height:12px}@media(max-width:700px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
+  </style>
+</head>
+<body>
+<main id="app" class="hidden">
+  <div class="top"><div><div class="pill" id="status">Not Started</div><h1>Business Verification</h1><p class="muted">Company verification for the controlled TradeFlow pilot.</p></div><a class="button secondary" href="/app">Back to dashboard</a></div>
+  <section class="card">
+    <h2>Application progress</h2><progress id="progress" value="0" max="100"></progress>
+    <p id="missing" class="muted">Start your application to see the evidence checklist.</p>
+    <p class="notice">TradeFlow reviews submitted business information and supporting documents. Review timing varies and no approval deadline is guaranteed.</p>
+  </section>
+  <form id="verificationForm" class="card">
+    <h2>Business details</h2>
+    <div class="grid">
+      <label>Legal business name<input name="legalBusinessName" required maxlength="180"></label>
+      <label>Trade name<input name="tradeName" maxlength="180"></label>
+      <label>Business type<input name="businessType" required maxlength="80"></label>
+      <label>Verification category<select name="verificationCategory" required><option>Exporter</option><option>Importer</option><option>Exporter &amp; Importer</option><option>Trading Company</option><option>Manufacturer</option><option>Supplier</option></select></label>
+      <label>Country<input name="country" required maxlength="80"></label>
+      <label>Incorporation type<input name="incorporationType" required maxlength="80"></label>
+      <label>Incorporation / CIN / LLPIN<input name="incorporationNumber" required maxlength="80" autocomplete="off"></label>
+      <label>PAN (where applicable)<input name="pan" maxlength="20" autocomplete="off"></label>
+      <label>GSTIN (where applicable)<input name="gstin" maxlength="30" autocomplete="off"></label>
+      <label>IEC (required for importer/exporter)<input name="iec" maxlength="20" autocomplete="off"></label>
+      <label>Udyam / MSME (optional)<input name="udyam" maxlength="40" autocomplete="off"></label>
+      <label>Business email<input name="businessEmail" type="email" required maxlength="254"></label>
+      <label>Business phone<input name="businessPhone" required maxlength="40"></label>
+      <label>Website<input name="website" type="url" maxlength="300"></label>
+      <label class="wide">Registered address<textarea name="registeredAddress" required maxlength="500"></textarea></label>
+      <label>Authorized representative<input name="authorizedRepresentativeName" required maxlength="150"></label>
+      <label>Representative designation<input name="authorizedRepresentativeDesignation" required maxlength="120"></label>
+      <label class="wide"><span><input name="representativeAuthorityDeclaration" type="checkbox" required style="width:auto"> I declare that I am authorized to submit this application for the company.</span></label>
+      <label>Operating markets (comma separated)<textarea name="operatingMarkets"></textarea></label>
+      <label>Export products (comma separated)<textarea name="exportProducts"></textarea></label>
+      <label>Import products (comma separated)<textarea name="importProducts"></textarea></label>
+      <label>Resubmission notes<textarea name="resubmissionNotes"></textarea></label>
+    </div>
+    <div class="actions"><button type="submit">Save draft</button><button id="resubmit" type="button" class="secondary hidden">Start resubmission</button><button id="submitReview" type="button" class="secondary">Submit for review</button></div>
+    <p id="message" role="status"></p>
+  </form>
+  <section class="card">
+    <h2>Private supporting documents</h2>
+    <p class="muted">PDF, PNG or JPEG only; maximum 8 MB. Never upload passwords, OTPs, bank credentials, card details or unnecessary personal identity documents.</p>
+    <form id="documentForm" class="grid">
+      <label>Document type<select name="type" id="documentType"></select></label>
+      <label>File<input name="document" type="file" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" required></label>
+      <div><button type="submit">Upload or replace</button></div>
+    </form>
+    <div id="documents"></div>
+  </section>
+  <section class="card"><h2>Verification history</h2><div id="history" class="muted">No review events yet.</div></section>
+  <section class="card"><h2>Privacy and badge meaning</h2><p class="muted">Identifiers are masked in application responses and are never included in public badge data. Documents remain private and are available only to authorized company administrators and verified TradeFlow Master Admin reviewers.</p><p>TradeFlow verification confirms that specified business information and supporting documents were reviewed at the stated date. It is not a guarantee of product quality, payment, delivery, legal compliance, or future performance.</p></section>
+</main>
+<script src="./js/session-manager.js"></script>
+<script src="./js/business-verification.js"></script>
+</body>
+</html>

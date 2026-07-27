@@ -234,6 +234,16 @@ test.describe("Iteration 2 rendered release smoke", () => {
       deliveryIds: []
     };
 
+    // Keep the release smoke deterministic and fully local. Charts are not
+    // under test here, and the browser sandbox may intentionally block CDNs.
+    await page.route("https://cdn.jsdelivr.net/npm/chart.js", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/javascript",
+        body: "window.Chart=class Chart{constructor(){this.data={};}update(){}destroy(){}};"
+      })
+    );
+
     page.on("console", (message) => {
       if (message.type() === "error") {
         const text = message.text();

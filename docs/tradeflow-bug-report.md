@@ -154,3 +154,8 @@ Date: 2026-07-25
 | TF-TEST-HARNESS-001 | Low | Local rendered release smoke reached final assertions but exceeded the 120s Playwright harness timeout | Fixed by increasing Playwright timeout to 240s |
 
 No new product blocker was found in Phase 3 validation.
+# Business Verification audit findings (2026-07-27)
+
+The pre-existing generic document route is an in-memory CRUD placeholder and was not suitable for verification evidence; the new engine does not reuse it. Production deployment requires `BUSINESS_VERIFICATION_ENCRYPTION_KEY`, private durable storage through `BUSINESS_VERIFICATION_STORAGE_DIR`, and a malware-scanning integration before accepting real documents. Package audit currently reports pre-existing dependency findings that must be reviewed independently; no blanket dependency upgrade was applied.
+
+Hardening supersedes the earlier local-storage recommendation: production must use `BUSINESS_VERIFICATION_STORAGE_DRIVER=s3`; the local adapter now refuses production use. The official audit was reduced from 33 findings, including one critical, to one unresolved high Nodemailer advisory. Its fix requires a breaking major upgrade and remains blocked behind a dedicated email regression; email stays Dry Run.

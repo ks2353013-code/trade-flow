@@ -4,10 +4,6 @@ function getOwnerEmail(req) {
   return (
     req.tenant?.ownerEmail ||
     req.user?.email ||
-    req.headers["x-user-email"] ||
-    req.body?.ownerEmail ||
-    req.body?.email ||
-    req.query?.email ||
     "unknown@tradeflow.local"
   )
     .toLowerCase()
@@ -21,12 +17,10 @@ async function writeAuditLog(req, data = {}) {
 
       companyId:
         req.tenant?.companyId ||
-        req.body?.companyId ||
         null,
 
       workspaceId:
         req.tenant?.workspaceId ||
-        req.body?.workspaceId ||
         null,
 
       userId:

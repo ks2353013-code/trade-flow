@@ -77,12 +77,18 @@ const aiCommandRoutes = require("./routes/aiCommandRoutes");
 const agentRegistryRoutes = require("./routes/agentRegistryRoutes");
 const agentMemoryRoutes = require("./routes/agentMemoryRoutes");
 const betaRoutes = require("./routes/betaRoutes");
+const businessVerificationRoutes = require("./routes/businessVerificationRoutes");
+const businessVerificationPublicRoutes = require("./routes/businessVerificationPublicRoutes");
 
 const { startWorkflowScheduler } = require("./services/workflowScheduler");
 const { startAIAutonomousScheduler } = require("./services/aiAutonomousScheduler");
 
 const emailDeliveryRoutes = require("./routes/emailDeliveryRoutes");
 const { isEmailConfigured } = require("./services/emailSender");
+const {
+  getBusinessVerificationReadiness,
+  isBusinessVerificationEnabled
+} = require("./services/businessVerificationReadiness");
 
 const app = express();
 
@@ -248,17 +254,20 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 /* Health check */
-app.get("/api/health", (req, res) => {
+app.get("/api/health", async (req, res) => {
+  const verification = await getBusinessVerificationReadiness();
   res.json({
     ...buildHealthPayload(),
-    ok: true
+    ok: true,
+    businessVerification: verification
   });
 });
 
-app.get("/api/ready", (req, res) => {
-  const payload = buildHealthPayload();
+app.get("/api/ready", async (req, res) => {
+  const verification = await getBusinessVerificationReadiness({ live: isBusinessVerificationEnabled() });
+  const payload = { ...buildHealthPayload(), businessVerification: verification };
 
-  if (!payload.ok) {
+  if (!payload.ok || (verification.enabled && !verification.ready)) {
     return res.status(503).json(payload);
   }
 
@@ -268,6 +277,7 @@ app.get("/api/ready", (req, res) => {
 /* Public Auth Routes */
 app.use("/api/auth", requireDatabaseReady, authRoutes);
 app.use("/api/errors", requireDatabaseReady, optionalAuth, clientErrorRoutes);
+app.use("/api/business-verification/badges", requireDatabaseReady, businessVerificationPublicRoutes);
 
 /* Protected API Routes */
 const protectedStack = [
@@ -333,6 +343,21 @@ app.use("/api/ai-command", protectedStack, requirePlan("Starter"), aiCommandRout
 app.use("/api/agent-registry", protectedStack, requirePlan("Starter"), agentRegistryRoutes);
 app.use("/api/agent-memory", protectedStack, requirePlan("Starter"), agentMemoryRoutes);
 app.use("/api/beta", protectedStack, betaRoutes);
+app.use(
+  "/api/business-verification",
+  protectedStack,
+  async (_req, res, next) => {
+    if (!isBusinessVerificationEnabled()) {
+      return res.status(503).json({ success: false, message: "Business verification is not enabled" });
+    }
+    const readiness = await getBusinessVerificationReadiness();
+    if (!readiness.ready) {
+      return res.status(503).json({ success: false, message: "Business verification security services are not ready" });
+    }
+    return next();
+  },
+  businessVerificationRoutes
+);
 
 app.use("/api", (req, res) => {
   res.status(404).json({
@@ -431,7 +456,13 @@ function startMongoConnection() {
     });
 }
 
-function startServer() {
+async function startServer() {
+  if (isBusinessVerificationEnabled()) {
+    const verification = await getBusinessVerificationReadiness({ live: true });
+    if (!verification.ready) {
+      throw new Error("Business verification is enabled but its security services are not ready");
+    }
+  }
   server.listen(PORT, () => {
     console.log(`Server listening on http://localhost:${PORT}`);
     console.log("Real-time collaboration engine active");
@@ -442,4 +473,7 @@ function startServer() {
   });
 }
 
-startServer();
+startServer().catch((error) => {
+  console.error(error.message);
+  process.exitCode = 1;
+});

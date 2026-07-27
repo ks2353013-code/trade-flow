@@ -305,3 +305,8 @@ Validation:
 Pilot decision:
 
 - READY for controlled onboarding of 3-5 companies, provided email remains dry-run, schedulers remain disabled, WhatsApp/call/autonomous execution remain blocked, and support requests are reviewed by Master Admin during the pilot.
+# Business Verification Engine (working tree, 2026-07-27)
+
+A tenant-scoped manual Business Verification Engine has been implemented for controlled-pilot review. It is separate from lead verification and supports exporter, importer, combined exporter/importer, trading company, manufacturer, and supplier categories. The working tree includes private document storage, encrypted/masked identifiers, Master Admin review, status-controlled public badges, internal notifications, UI, tests, and operator documentation. It is not committed or deployed pending the complete validation gate.
+
+Production hardening is complete in code and validated locally. The feature remains production-disabled. Separate staging Mongo, private S3-compatible storage, versioned encryption/hash keys, and a private ClamAV service have not been provisioned, so staging acceptance and real-document onboarding remain blocked.
