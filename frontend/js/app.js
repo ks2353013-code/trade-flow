@@ -647,9 +647,14 @@ function handleModuleAuthFailure(reason) {
   logAuthDebug("redirect reason", `module auth failure ignored: ${reason}`);
 }
 
-function logoutUser(options = {}) {
+async function logoutUser(options = {}) {
   if (!options.explicit) {
     handleModuleAuthFailure("logoutUser called without explicit user action");
+    return;
+  }
+
+  if (window.TradeFlowSessionManager?.logout) {
+    await window.TradeFlowSessionManager.logout();
     return;
   }
 
