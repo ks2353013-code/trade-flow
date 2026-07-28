@@ -48,7 +48,8 @@ test("runner writes redacted evidence and proves exact database and R2 cleanup",
   assert.match(runner, /writeFileSync/);
   assert.match(runner, /createdIds/);
   assert.match(runner, /HeadObjectCommand/);
-  assert.match(runner, /ListObjectsV2Command/);
+  assert.doesNotMatch(runner, /ListObjectsV2Command/);
+  assert.match(runner, /httpStatusCode/);
   assert.match(runner, /cleanup\.zero-run-records/);
   assert.match(runner, /cleanup\.zero-run-objects/);
   assert.match(runner, /finally/);
