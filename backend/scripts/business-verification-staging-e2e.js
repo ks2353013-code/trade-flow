@@ -20,17 +20,19 @@ const DATABASE = "tradeflow_verification_staging";
 const DISCLAIMER = "TradeFlow verification confirms that specified business information and supporting documents were reviewed at the stated date. It is not a guarantee of product quality, payment, delivery, legal compliance, or future performance.";
 const CATEGORIES = ["Exporter", "Importer", "Trading Company"];
 const resultPath = path.resolve(process.env.BUSINESS_VERIFICATION_STAGING_E2E_RESULT || path.join(os.tmpdir(), "tradeflow-business-verification-staging-e2e.json"));
-const runId = `bv-staging-${new Date().toISOString().replace(/[-:.TZ]/g, "")}-${crypto.randomUUID()}`;
+const suppliedRunId = String(process.env.BUSINESS_VERIFICATION_STAGING_RUN_ID || "");
+if (suppliedRunId && !/^bvsa_[A-Za-z0-9_-]{32}$/.test(suppliedRunId)) {
+  throw new Error("invalid acceptance run identifier");
+}
+const runId = suppliedRunId || `bvsa_${crypto.randomBytes(24).toString("base64url")}`;
 const result = {
   runId,
   startedAt: new Date().toISOString(),
   finishedAt: null,
   status: "FAIL",
   commit: String(process.env.RENDER_GIT_COMMIT || process.env.GIT_COMMIT || "").slice(0, 40),
-  database: DATABASE,
   companyTypes: {},
   steps: [],
-  createdIds: { users: [], companies: [], workspaces: [], verifications: [], notifications: [], audits: [], reviewer: null },
   objectCount: 0,
   cleanup: { recordsBefore: {}, recordsAfter: {}, objectsTracked: 0, objectsRemaining: null, runScopedObjectsRemaining: null },
   failure: ""
@@ -46,12 +48,11 @@ function step(name, pass, detail = "") {
 }
 
 function safeError(error) {
-  return String(error?.message || error || "unknown")
-    .replace(/mongodb(?:\+srv)?:\/\/\S+/gi, "[redacted-uri]")
-    .replace(/Bearer\s+\S+/gi, "Bearer [redacted]")
-    .replace(/eyJ[A-Za-z0-9._-]+/g, "[redacted-token]")
-    .replace(/[A-Za-z0-9+/]{43}=/g, "[redacted-key]")
-    .slice(0, 260);
+  const message = String(error?.message || error || "");
+  if (/^[A-Za-z0-9 .:_/-]{1,120}$/.test(message) && !/@|https?:|mongodb|s3|bucket|token|secret|key/i.test(message)) {
+    return message;
+  }
+  return "Acceptance execution failed";
 }
 
 function saveResult() {
@@ -120,11 +121,10 @@ async function createTenant(category, purpose) {
   const user = await User.create({ name: `Synthetic ${category} ${purpose}`, email, password: crypto.randomBytes(32).toString("base64url"), role: "Founder" });
   const company = await Company.create({ ownerId: user._id, ownerEmail: email, companyName: `Synthetic ${category} ${purpose} ${runId}`, businessType: category });
   const workspace = await Workspace.create({
-    companyId: company._id, ownerEmail: email, workspaceName: `Synthetic ${category} ${purpose}`,
+    companyId: company._id, ownerEmail: email, workspaceName: `Synthetic ${category} ${purpose} ${runId}`,
     type: category === "Exporter" ? "Export" : category === "Importer" ? "Import" : "Operations"
   });
   state.users.push(user._id); state.companies.push(company._id); state.workspaces.push(workspace._id); state.emails.push(email);
-  result.createdIds.users.push(String(user._id)); result.createdIds.companies.push(String(company._id)); result.createdIds.workspaces.push(String(workspace._id));
   return { category, purpose, email, user, company, workspace, token: generateAccessToken(user) };
 }
 
@@ -150,10 +150,46 @@ async function draft(tenant, incorporationNumber) {
   tenant.reference = saved.payload.verification.verificationReferenceId;
   if (!state.verifications.map(String).includes(tenant.verificationId)) {
     state.verifications.push(new mongoose.Types.ObjectId(tenant.verificationId));
-    result.createdIds.verifications.push(tenant.verificationId);
   }
   const text = JSON.stringify(saved.payload);
   step(`${tenant.category}.${tenant.purpose}.masked-response`, !text.includes(identifier) && !text.includes(incorporationNumber) && !/Encrypted|Hash|storageKey|sha256/.test(text));
+}
+
+async function rejectMalware(tenant) {
+  const form = new FormData();
+  form.set("type", "Company Registration");
+  form.set(
+    "document",
+    new Blob([
+      Buffer.from("%PDF-1.7\n"),
+      Buffer.from([
+        "X5O!P%@AP[4\\PZX54(P^)7CC)7}$",
+        "EICAR-STANDARD-ANTIVIRUS-TEST-FILE!",
+        "$H+H*"
+      ].join(""))
+    ], { type: "application/pdf" }),
+    `synthetic-antivirus-test-${runId}.pdf`
+  );
+  const rejected = await api("/api/business-verification/me/documents", {
+    token: tenant.token,
+    companyId: tenant.company._id,
+    method: "POST",
+    form,
+    expected: 422
+  });
+  const stored = await BusinessVerification.findById(tenant.verificationId).select("+documents.storageKey");
+  const infected = stored.documents.filter((document) => document.scanStatus === "Infected");
+  const audits = await AuditLog.find({
+    entityId: tenant.verificationId,
+    action: "VERIFICATION_DOCUMENT_INFECTED"
+  }).select("_id").lean();
+  step(
+    `${tenant.category}.${tenant.purpose}.malware-rejected`,
+    rejected.payload.message === "Document failed security scanning" &&
+      infected.length === 1 &&
+      infected[0].storageState === "Deleted" &&
+      audits.length === 1
+  );
 }
 
 async function upload(tenant) {
@@ -195,6 +231,7 @@ async function exercise(category) {
   const rejected = await createTenant(category, "rejected");
   const duplicate = `DUP${digest(`${category}:duplicate`).slice(0, 18)}`;
   await draft(primary, duplicate); await draft(rejected, duplicate);
+  await rejectMalware(primary);
   await upload(primary); await upload(rejected);
   await submit(primary); await submit(rejected);
   step(`${category}.tenant-scoped-creation-submission`, true);
@@ -254,8 +291,9 @@ async function exercise(category) {
   const audits = await AuditLog.find({ entityId: primary.verificationId, module: "Business Verification" }).select("_id").lean();
   step(`${category}.immutable-review-audit-history`, final.reviewHistory.length > historyBefore.reviewHistory.length && JSON.stringify(final.reviewHistory.slice(0, historyBefore.reviewHistory.length)) === frozenHistory && audits.length >= final.reviewHistory.length);
   result.companyTypes[category] = {
-    status: "PASS", primaryVerificationId: primary.verificationId, rejectedVerificationId: rejected.verificationId,
-    finalPrimaryStatus: "Expired", rejectedStatus: "Rejected"
+    status: "PASS",
+    finalPrimaryStatus: "Expired",
+    rejectedStatus: "Rejected"
   };
 }
 
@@ -264,8 +302,6 @@ async function collectSideEffects() {
   const audits = await AuditLog.find({ module: "Business Verification", entityId: { $in: state.verifications.map(String) } }).select("_id").lean();
   state.notifications = [...new Set(notifications.map((item) => String(item._id)))];
   state.audits = [...new Set(audits.map((item) => String(item._id)))];
-  result.createdIds.notifications = state.notifications;
-  result.createdIds.audits = state.audits;
 }
 
 async function counts() {
@@ -344,7 +380,6 @@ async function main() {
   if (!state.reviewer) {
     state.reviewer = await User.create({ name: "Synthetic Staging Master Reviewer", email: "contact@tradeflowai.in", password: crypto.randomBytes(32).toString("base64url"), role: "Founder" });
     state.reviewerCreated = true;
-    result.createdIds.reviewer = String(state.reviewer._id);
   }
   await state.reviewer.save();
   step("authorization.backend-master-admin", state.reviewer.role === "Master Admin" && state.reviewer.isMasterAdmin === true);
@@ -374,6 +409,26 @@ async function main() {
   result.status = !failure && result.steps.length && result.steps.every((item) => item.status === "PASS") ? "PASS" : "FAIL";
   result.failure = failure ? safeError(failure) : "";
   saveResult();
-  process.stdout.write(`${JSON.stringify({ runId, status: result.status, resultArtifact: resultPath, stepCount: result.steps.length, cleanup: result.cleanup })}\n`);
+  if (typeof process.send === "function") {
+    process.send({
+      type: "business-verification-acceptance-ledger",
+      runId,
+      ledger: {
+        ids: {
+          users: [
+            ...state.users.map(String),
+            ...(state.reviewerCreated && state.reviewer ? [String(state.reviewer._id)] : [])
+          ],
+          companies: state.companies.map(String),
+          workspaces: state.workspaces.map(String),
+          verifications: state.verifications.map(String),
+          notifications: state.notifications,
+          audits: state.audits
+        },
+        objectKeys: [...new Set(state.keys)]
+      }
+    });
+  }
+  process.stdout.write(`${JSON.stringify({ runId, status: result.status, stepCount: result.steps.length, cleanup: result.cleanup })}\n`);
   if (result.status !== "PASS") process.exitCode = 1;
 })();
