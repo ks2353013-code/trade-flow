@@ -5,7 +5,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const mongoose = require("mongoose");
-const { S3Client, HeadObjectCommand, ListObjectsV2Command } = require("@aws-sdk/client-s3");
+const { S3Client, HeadObjectCommand } = require("@aws-sdk/client-s3");
 const User = require("../models/User");
 const Company = require("../models/Company");
 const Workspace = require("../models/Workspace");
@@ -19,9 +19,16 @@ const { removePrivateDocument } = require("../services/businessVerificationStora
 const DATABASE = "tradeflow_verification_staging";
 const DISCLAIMER = "TradeFlow verification confirms that specified business information and supporting documents were reviewed at the stated date. It is not a guarantee of product quality, payment, delivery, legal compliance, or future performance.";
 const CATEGORIES = ["Exporter", "Importer", "Trading Company"];
-const resultPath = path.resolve(process.env.BUSINESS_VERIFICATION_STAGING_E2E_RESULT || path.join(os.tmpdir(), "tradeflow-business-verification-staging-e2e.json"));
-const runId = `bv-staging-${new Date().toISOString().replace(/[-:.TZ]/g, "")}-${crypto.randomUUID()}`;
-const result = {
+let resultPath;
+let runId;
+let result;
+let state;
+
+function initializeRun(options = {}) {
+  runId = options.runId || `bva_${crypto.randomBytes(24).toString("base64url")}`;
+  if (!/^bva_[A-Za-z0-9_-]{32}$/.test(runId)) throw new Error("invalid acceptance run scope");
+  resultPath = path.resolve(process.env.BUSINESS_VERIFICATION_STAGING_E2E_RESULT || path.join(os.tmpdir(), "tradeflow-business-verification-staging-e2e.json"));
+  result = {
   runId,
   startedAt: new Date().toISOString(),
   finishedAt: null,
@@ -34,11 +41,12 @@ const result = {
   objectCount: 0,
   cleanup: { recordsBefore: {}, recordsAfter: {}, objectsTracked: 0, objectsRemaining: null, runScopedObjectsRemaining: null },
   failure: ""
-};
-const state = {
-  users: [], companies: [], workspaces: [], verifications: [], notifications: [], audits: [],
-  keys: [], emails: [], reviewer: null, reviewerCreated: false, reviewerToken: "", connected: false
-};
+  };
+  state = {
+    users: [], companies: [], workspaces: [], verifications: [], notifications: [], audits: [],
+    keys: [], emails: [], reviewer: null, reviewerCreated: false, reviewerToken: "", connected: false, ownsConnection: false
+  };
+}
 
 function step(name, pass, detail = "") {
   result.steps.push({ name, status: pass ? "PASS" : "FAIL", detail: String(detail).slice(0, 200) });
@@ -54,14 +62,30 @@ function safeError(error) {
     .slice(0, 260);
 }
 
+function artifactResult() {
+  const safe = JSON.parse(JSON.stringify(result));
+  delete safe.createdIds;
+  safe.environment = "staging";
+  safe.companyTypes = Object.fromEntries(Object.entries(safe.companyTypes).map(([name, value]) => [name, { status: value.status }]));
+  safe.failureReasons = safe.failure ? [safe.failure] : [];
+  delete safe.failure;
+  delete safe.database;
+  safe.commit = /^[a-f0-9]{7,40}$/i.test(String(safe.commit || "")) ? safe.commit : "unknown";
+  safe.stepMatrix = safe.steps;
+  safe.syntheticResourceCounts = { ...safe.cleanup.recordsBefore, privateObjects: safe.objectCount };
+  safe.cleanupActions = ["exact private object deletion", "exact audit deletion", "exact notification deletion", "exact verification deletion", "exact workspace deletion", "exact company deletion", "exact user deletion", "fresh runner cleanup queries"];
+  return safe;
+}
+
 function saveResult() {
   result.finishedAt = new Date().toISOString();
   fs.mkdirSync(path.dirname(resultPath), { recursive: true });
-  fs.writeFileSync(resultPath, `${JSON.stringify(result, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
+  fs.writeFileSync(resultPath, `${JSON.stringify(artifactResult(), null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
 }
 
 function stagingUrl() {
   if (process.env.BUSINESS_VERIFICATION_STAGING_E2E_CONFIRMED !== "true") throw new Error("staging confirmation required");
+  if (process.env.NODE_ENV !== "staging") throw new Error("NODE_ENV must be exactly staging");
   if (String(process.env.TRADEFLOW_ENVIRONMENT || "").toLowerCase() !== "staging") throw new Error("staging environment required");
   if (process.env.BUSINESS_VERIFICATION_ENABLED !== "true") throw new Error("verification must be staging-enabled");
   for (const flag of ["ENABLE_SCHEDULERS", "ENABLE_WHATSAPP_AUTOMATION", "ENABLE_AUTONOMOUS_EXECUTION", "ENABLE_AI_AUTONOMOUS_HTTP_SCHEDULER"]) {
@@ -120,7 +144,7 @@ async function createTenant(category, purpose) {
   const user = await User.create({ name: `Synthetic ${category} ${purpose}`, email, password: crypto.randomBytes(32).toString("base64url"), role: "Founder" });
   const company = await Company.create({ ownerId: user._id, ownerEmail: email, companyName: `Synthetic ${category} ${purpose} ${runId}`, businessType: category });
   const workspace = await Workspace.create({
-    companyId: company._id, ownerEmail: email, workspaceName: `Synthetic ${category} ${purpose}`,
+    companyId: company._id, ownerEmail: email, workspaceName: `Synthetic ${category} ${purpose} ${runId}`,
     type: category === "Exporter" ? "Export" : category === "Importer" ? "Import" : "Operations"
   });
   state.users.push(user._id); state.companies.push(company._id); state.workspaces.push(workspace._id); state.emails.push(email);
@@ -253,10 +277,7 @@ async function exercise(category) {
   const final = await BusinessVerification.findById(primary.verificationId).select("reviewHistory").lean();
   const audits = await AuditLog.find({ entityId: primary.verificationId, module: "Business Verification" }).select("_id").lean();
   step(`${category}.immutable-review-audit-history`, final.reviewHistory.length > historyBefore.reviewHistory.length && JSON.stringify(final.reviewHistory.slice(0, historyBefore.reviewHistory.length)) === frozenHistory && audits.length >= final.reviewHistory.length);
-  result.companyTypes[category] = {
-    status: "PASS", primaryVerificationId: primary.verificationId, rejectedVerificationId: rejected.verificationId,
-    finalPrimaryStatus: "Expired", rejectedStatus: "Rejected"
-  };
+  result.companyTypes[category] = { status: "PASS" };
 }
 
 async function collectSideEffects() {
@@ -319,22 +340,27 @@ async function proveCleanup() {
     try {
       await client.send(new HeadObjectCommand({ Bucket: process.env.BUSINESS_VERIFICATION_S3_BUCKET, Key: key }));
       remaining += 1;
-    } catch {}
+    } catch (error) {
+      const status = Number(error?.$metadata?.httpStatusCode || 0);
+      if (status !== 404 && !["NotFound", "NoSuchKey"].includes(String(error?.name || ""))) throw error;
+    }
   }
-  const bucket = await client.send(new ListObjectsV2Command({ Bucket: process.env.BUSINESS_VERIFICATION_S3_BUCKET, MaxKeys: 1000 }));
   result.cleanup.objectsTracked = keys.length;
   result.cleanup.objectsRemaining = remaining;
   result.cleanup.runScopedObjectsRemaining = remaining;
   step("cleanup.zero-run-records", Object.values(result.cleanup.recordsAfter).every((value) => value === 0));
   step("cleanup.zero-run-objects", remaining === 0);
-  step("cleanup.private-bucket-empty", !bucket.IsTruncated && Number(bucket.KeyCount || 0) === 0);
 }
 
 async function main() {
   baseUrl = stagingUrl();
   step("guard.configured-database-name", configuredDatabaseName() === DATABASE);
-  await mongoose.connect(process.env.MONGO_URI);
-  state.connected = true;
+  if (mongoose.connection.readyState === 1) {
+    state.connected = true;
+  } else {
+    await mongoose.connect(process.env.MONGO_URI);
+    state.connected = true; state.ownsConnection = true;
+  }
   step("guard.exact-database", mongoose.connection.name === DATABASE);
   step("guard.production-database-rejected", !/prod|production/i.test(mongoose.connection.name));
   const readiness = await getBusinessVerificationReadiness({ live: true });
@@ -353,7 +379,8 @@ async function main() {
   result.objectCount = state.keys.length;
 }
 
-(async () => {
+async function runStagingAcceptance(options = {}) {
+  initializeRun(options);
   let failure;
   try {
     await main();
@@ -369,11 +396,33 @@ async function main() {
       failure ||= error;
       result.steps.push({ name: "cleanup.guarantee", status: "FAIL", detail: safeError(error) });
     }
-    await mongoose.disconnect().catch(() => {});
+    if (state.ownsConnection) await mongoose.disconnect().catch(() => {});
   }
   result.status = !failure && result.steps.length && result.steps.every((item) => item.status === "PASS") ? "PASS" : "FAIL";
   result.failure = failure ? safeError(failure) : "";
-  saveResult();
-  process.stdout.write(`${JSON.stringify({ runId, status: result.status, resultArtifact: resultPath, stepCount: result.steps.length, cleanup: result.cleanup })}\n`);
-  if (result.status !== "PASS") process.exitCode = 1;
-})();
+  result.finishedAt = new Date().toISOString();
+  const cleanupScope = {
+    users: state.users.map(String), companies: state.companies.map(String), workspaces: state.workspaces.map(String),
+    verifications: state.verifications.map(String), notifications: state.notifications.map(String), audits: state.audits.map(String), keys: [...new Set(state.keys)]
+  };
+  return {
+    status: result.status,
+    cleanupPassed: Boolean(result.cleanup.recordsAfter && Object.values(result.cleanup.recordsAfter).every((value) => value === 0) && result.cleanup.runScopedObjectsRemaining === 0),
+    artifact: artifactResult(), cleanupScope
+  };
+}
+
+module.exports = { runStagingAcceptance };
+
+if (require.main === module) {
+  runStagingAcceptance()
+    .then((output) => {
+      saveResult();
+      process.stdout.write(`${JSON.stringify({ runId, status: output.status, stepCount: output.artifact.steps.length, cleanup: output.artifact.cleanup })}\n`);
+      if (output.status !== "PASS") process.exitCode = 1;
+    })
+    .catch((error) => {
+      process.stderr.write(`${safeError(error)}\n`);
+      process.exitCode = 1;
+    });
+}

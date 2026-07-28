@@ -79,6 +79,13 @@ const agentMemoryRoutes = require("./routes/agentMemoryRoutes");
 const betaRoutes = require("./routes/betaRoutes");
 const businessVerificationRoutes = require("./routes/businessVerificationRoutes");
 const businessVerificationPublicRoutes = require("./routes/businessVerificationPublicRoutes");
+const { createRouter: createStagingAcceptanceRouter } = require("./routes/stagingAcceptanceRoutes");
+const {
+  assertSafeStartup,
+  configuredToken,
+  createControl: createStagingAcceptanceControl,
+  enabledByEnvironment
+} = require("./services/stagingAcceptanceControl");
 
 const { startWorkflowScheduler } = require("./services/workflowScheduler");
 const { startAIAutonomousScheduler } = require("./services/aiAutonomousScheduler");
@@ -91,8 +98,30 @@ const {
 } = require("./services/businessVerificationReadiness");
 
 const app = express();
+assertSafeStartup();
 
 app.set("trust proxy", 1);
+
+const stagingAcceptanceControl = enabledByEnvironment() && configuredToken()
+  ? createStagingAcceptanceControl()
+  : null;
+
+if (stagingAcceptanceControl) {
+  app.use(
+    "/api/internal/staging-acceptance",
+    async (_req, res, next) => {
+      try {
+        if (await stagingAcceptanceControl.activation()) return next();
+      } catch {}
+      return res.status(404).json({ success: false, message: "API route not found" });
+    },
+    createStagingAcceptanceRouter(stagingAcceptanceControl)
+  );
+}
+
+app.use("/api/internal/staging-acceptance", (_req, res) => {
+  res.status(404).json({ success: false, message: "API route not found" });
+});
 
 const allowedOrigins = [
   "http://localhost:5000",
@@ -256,18 +285,25 @@ app.use(cookieParser());
 /* Health check */
 app.get("/api/health", async (req, res) => {
   const verification = await getBusinessVerificationReadiness();
+  const acceptance = stagingAcceptanceControl
+    ? { enabled: true, ready: await stagingAcceptanceControl.activation().catch(() => false) }
+    : { enabled: false, ready: false };
   res.json({
     ...buildHealthPayload(),
     ok: true,
-    businessVerification: verification
+    businessVerification: verification,
+    stagingAcceptance: acceptance
   });
 });
 
 app.get("/api/ready", async (req, res) => {
   const verification = await getBusinessVerificationReadiness({ live: isBusinessVerificationEnabled() });
-  const payload = { ...buildHealthPayload(), businessVerification: verification };
+  const acceptance = stagingAcceptanceControl
+    ? { enabled: true, ready: await stagingAcceptanceControl.activation().catch(() => false) }
+    : { enabled: false, ready: false };
+  const payload = { ...buildHealthPayload(), businessVerification: verification, stagingAcceptance: acceptance };
 
-  if (!payload.ok || (verification.enabled && !verification.ready)) {
+  if (!payload.ok || (verification.enabled && !verification.ready) || (acceptance.enabled && !acceptance.ready)) {
     return res.status(503).json(payload);
   }
 
@@ -463,13 +499,22 @@ async function startServer() {
       throw new Error("Business verification is enabled but its security services are not ready");
     }
   }
+  let acceptanceConnected = false;
+  if (process.env.BUSINESS_VERIFICATION_STAGING_ACCEPTANCE_ENABLED === "true") {
+    if (!stagingAcceptanceControl) throw new Error("Staging acceptance configuration is invalid");
+    acceptanceConnected = Boolean(await connectDB());
+    if (!acceptanceConnected || !(await stagingAcceptanceControl.activation())) {
+      throw new Error("Staging acceptance security services are not ready");
+    }
+  }
   server.listen(PORT, () => {
     console.log(`Server listening on http://localhost:${PORT}`);
     console.log("Real-time collaboration engine active");
     console.log("CORS enabled for localhost, Render, Vercel, and custom domain");
     console.log("JWT auth mounted on protected API routes");
     console.log("Tenant middleware uses verified JWT identity only");
-    startMongoConnection();
+    if (acceptanceConnected) startSchedulersIfEnabled();
+    else startMongoConnection();
   });
 }
 

@@ -12,11 +12,15 @@ services:
     healthCheckPath: /api/ready
     envVars:
       - key: NODE_ENV
-        value: production
+        value: staging
       - key: TRADEFLOW_ENVIRONMENT
         value: staging
       - key: BUSINESS_VERIFICATION_ENABLED
         value: true
+      - key: BUSINESS_VERIFICATION_STAGING_ACCEPTANCE_ENABLED
+        value: false
+      - key: STAGING_ACCEPTANCE_CONTROL_TOKEN
+        sync: false
       - key: BUSINESS_VERIFICATION_STAGING_MONGO_CONFIRMED
         value: true
       - key: BUSINESS_VERIFICATION_STORAGE_DRIVER
