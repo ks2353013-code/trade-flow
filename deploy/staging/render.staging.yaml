@@ -4,6 +4,7 @@ services:
   - type: web
     name: tradeflow-verification-backend-staging
     env: node
+    plan: starter
     rootDir: backend
     buildCommand: npm ci
     startCommand: npm start
@@ -66,6 +67,7 @@ services:
   - type: pserv
     name: tradeflow-verification-clamav-staging
     env: docker
+    plan: standard
     dockerfilePath: ./deploy/staging/clamav/Dockerfile
     autoDeploy: false
 
@@ -85,9 +87,6 @@ services:
       - type: rewrite
         source: /app
         destination: /index.html
-      - type: rewrite
-        source: /master-admin.html
-        destination: /master-admin.html
       - type: rewrite
         source: /*
         destination: /landing.html
