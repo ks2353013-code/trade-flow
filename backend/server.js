@@ -79,6 +79,10 @@ const agentMemoryRoutes = require("./routes/agentMemoryRoutes");
 const betaRoutes = require("./routes/betaRoutes");
 const businessVerificationRoutes = require("./routes/businessVerificationRoutes");
 const businessVerificationPublicRoutes = require("./routes/businessVerificationPublicRoutes");
+const {
+  CONTROL_PREFIX: businessVerificationAcceptancePrefix,
+  createBusinessVerificationStagingAcceptanceRoutes
+} = require("./routes/businessVerificationStagingAcceptanceRoutes");
 
 const { startWorkflowScheduler } = require("./services/workflowScheduler");
 const { startAIAutonomousScheduler } = require("./services/aiAutonomousScheduler");
@@ -93,6 +97,16 @@ const {
 const app = express();
 
 app.set("trust proxy", 1);
+
+/*
+ * The staging acceptance control plane is intentionally mounted before CORS,
+ * cookie parsing, and request-body parsing. It is server-to-server only and
+ * authenticates exclusively with its dedicated Authorization bearer token.
+ */
+app.use(
+  businessVerificationAcceptancePrefix,
+  createBusinessVerificationStagingAcceptanceRoutes()
+);
 
 const allowedOrigins = [
   "http://localhost:5000",

@@ -19,6 +19,12 @@ services:
         value: true
       - key: BUSINESS_VERIFICATION_STAGING_MONGO_CONFIRMED
         value: true
+      - key: BUSINESS_VERIFICATION_STAGING_ACCEPTANCE_ENABLED
+        value: false
+      - key: BUSINESS_VERIFICATION_STAGING_E2E_CONFIRMED
+        value: false
+      - key: BUSINESS_VERIFICATION_ACCEPTANCE_EVIDENCE_TTL_SECONDS
+        value: 900
       - key: BUSINESS_VERIFICATION_STORAGE_DRIVER
         value: s3
       - key: BUSINESS_VERIFICATION_S3_BUCKET
@@ -41,7 +47,13 @@ services:
         value: false
       - key: ENABLE_AI_AUTONOMOUS_HTTP_SCHEDULER
         value: false
+      - key: EMAIL_MODE
+        value: dry-run
       - key: MONGO_URI
+        sync: false
+      - key: BUSINESS_VERIFICATION_STAGING_BASE_URL
+        sync: false
+      - key: BUSINESS_VERIFICATION_ACCEPTANCE_CONTROL_TOKEN
         sync: false
       - key: JWT_SECRET
         sync: false

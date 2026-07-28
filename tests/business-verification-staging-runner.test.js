@@ -46,11 +46,13 @@ test("runner covers every approved synthetic category and review state", () => {
 test("runner writes redacted evidence and proves exact database and R2 cleanup", () => {
   assert.match(runner, /safeError/);
   assert.match(runner, /writeFileSync/);
-  assert.match(runner, /createdIds/);
+  assert.doesNotMatch(runner, /result\.createdIds/);
+  assert.doesNotMatch(runner, /primaryVerificationId|rejectedVerificationId/);
   assert.match(runner, /HeadObjectCommand/);
   assert.match(runner, /ListObjectsV2Command/);
   assert.match(runner, /cleanup\.zero-run-records/);
   assert.match(runner, /cleanup\.zero-run-objects/);
+  assert.match(runner, /malware-rejected/);
   assert.match(runner, /finally/);
   assert.match(runner, /process\.exitCode = 1/);
 });
