@@ -23,7 +23,8 @@ const {
 } = require("../backend/services/businessVerificationStorage");
 const { getScannerReadiness, scanDocument } = require("../backend/services/businessVerificationScanner");
 const {
-  requiredDocumentTypes
+  requiredDocumentTypes,
+  safeVerification
 } = require("../backend/routes/businessVerificationRoutes");
 const { requireVerifiedBusiness } = require("../backend/middleware/businessVerificationMiddleware");
 const BusinessVerification = require("../backend/models/BusinessVerification");
@@ -48,6 +49,29 @@ test("identifier normalization, masking, encryption and duplicate hashes are saf
   assert.notEqual(encryptedA, encryptedB);
   assert.equal(encryptedA.includes("ABCDE1234F"), false);
   assert.equal(decryptIdentifier(encryptedA), "ABCDE1234F");
+});
+
+test("verification responses mask incorporation identifiers and remove plaintext and ciphertext", () => {
+  const raw = "U12345DL2020PTC123456";
+  const response = safeVerification({
+    _id: "507f1f77bcf86cd799439011",
+    incorporationNumber: raw,
+    incorporationNumberEncrypted: encryptIdentifier(raw),
+    incorporationNumberMasked: maskIdentifier(raw),
+    incorporationNumberHash: keyedHash(raw),
+    panEncrypted: encryptIdentifier("ABCDE1234F"),
+    panMasked: maskIdentifier("ABCDE1234F"),
+    panHash: keyedHash("ABCDE1234F"),
+    publicReference: "synthetic-reference"
+  });
+  const json = JSON.stringify(response);
+  assert.equal(json.includes(raw), false);
+  assert.equal(json.includes("bv1."), false);
+  assert.equal(Object.hasOwn(response, "incorporationNumber"), false);
+  assert.equal(Object.hasOwn(response, "incorporationNumberEncrypted"), false);
+  assert.equal(Object.hasOwn(response, "incorporationNumberHash"), false);
+  assert.equal(response.incorporationNumberMasked, maskIdentifier(raw));
+  assert.equal(response.panMasked, maskIdentifier("ABCDE1234F"));
 });
 
 test("production key readiness fails closed for missing and malformed separate keys", () => {
