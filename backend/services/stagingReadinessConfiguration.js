@@ -21,6 +21,7 @@ function validateStagingRuntimeConfiguration({ env = process.env, activeDatabase
     configuredName === EXPECTED_STAGING_DATABASE &&
     activeDatabaseName === EXPECTED_STAGING_DATABASE &&
     !(hasValue(env.PRODUCTION_MONGO_URI) && env.PRODUCTION_MONGO_URI === env.MONGO_URI);
+  const databaseConnected = activeDatabaseName === EXPECTED_STAGING_DATABASE;
 
   const twilioCredentialsConfigured = [
     "TWILIO_ACCOUNT_SID",
@@ -43,26 +44,37 @@ function validateStagingRuntimeConfiguration({ env = process.env, activeDatabase
   const calls = isEnabled(env.ENABLE_CALL_AUTOMATION) ||
     isEnabled(env.ENABLE_CALLS) || callConfigured || twilioCredentialsConfigured;
   const autonomousExecution = isEnabled(env.ENABLE_AUTONOMOUS_EXECUTION);
-  const otherExternalAutomation =
-    isEnabled(env.ENABLE_SCHEDULERS) ||
-    isEnabled(env.ENABLE_AI_AUTONOMOUS_HTTP_SCHEDULER) ||
-    isEnabled(env.ENABLE_EMAIL_AUTOMATION) ||
+  const schedulers = isEnabled(env.ENABLE_SCHEDULERS) ||
+    isEnabled(env.ENABLE_AI_AUTONOMOUS_HTTP_SCHEDULER);
+  const liveEmail = isEnabled(env.ENABLE_EMAIL_AUTOMATION) ||
     ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "SMTP_FROM"].some(
       (name) => hasValue(env[name])
     );
+  const otherExternalAutomation =
+    schedulers ||
+    liveEmail;
   const externalAutomationEnabled =
     whatsapp || calls || autonomousExecution || otherExternalAutomation;
 
   return {
     database: {
       name: databaseName,
-      isolated: databaseIsolated
+      isolated: databaseIsolated,
+      connected: databaseConnected
     },
     externalAutomation: {
       enabled: externalAutomationEnabled,
       whatsapp,
       calls,
-      autonomousExecution
+      autonomousExecution,
+      schedulers
+    },
+    emailMode: liveEmail ? "live" : "dry-run",
+    acceptance: {
+      enabled: env.BUSINESS_VERIFICATION_STAGING_ACCEPTANCE_ENABLED === "true",
+      ready: false,
+      // Presence is checked without reading or transforming the credential.
+      controlTokenConfigured: Object.prototype.hasOwnProperty.call(env, "STAGING_ACCEPTANCE_CONTROL_TOKEN")
     }
   };
 }

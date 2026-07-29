@@ -96,6 +96,7 @@ const {
   getBusinessVerificationReadiness,
   isBusinessVerificationEnabled
 } = require("./services/businessVerificationReadiness");
+const { addStagingVerification } = require("./services/stagingReadyResponse");
 
 const app = express();
 assertSafeStartup();
@@ -302,6 +303,12 @@ app.get("/api/ready", async (req, res) => {
     ? { enabled: true, ready: await stagingAcceptanceControl.activation().catch(() => false) }
     : { enabled: false, ready: false };
   const payload = { ...buildHealthPayload(), businessVerification: verification, stagingAcceptance: acceptance };
+
+  const staging = await addStagingVerification(payload, {
+    activeDatabaseName: isMongoConnected() ? require("mongoose").connection.name : "",
+    acceptanceReady: acceptance.ready
+  });
+  if (!staging.ready) return res.status(503).json(payload);
 
   if (!payload.ok || (verification.enabled && !verification.ready) || (acceptance.enabled && !acceptance.ready)) {
     return res.status(503).json(payload);
