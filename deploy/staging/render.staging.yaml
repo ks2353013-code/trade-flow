@@ -24,6 +24,8 @@ services:
         sync: false
       - key: BUSINESS_VERIFICATION_STAGING_MONGO_CONFIRMED
         value: true
+      - key: BUSINESS_VERIFICATION_STAGING_E2E_CONFIRMED
+        value: true
       - key: BUSINESS_VERIFICATION_STORAGE_DRIVER
         value: s3
       - key: BUSINESS_VERIFICATION_S3_BUCKET
