@@ -287,7 +287,7 @@ app.use(cookieParser());
 app.get("/api/health", async (req, res) => {
   const verification = await getBusinessVerificationReadiness();
   const acceptance = stagingAcceptanceControl
-    ? { enabled: true, ready: await stagingAcceptanceControl.activation().catch(() => false) }
+    ? { enabled: true, ready: false }
     : { enabled: false, ready: false };
   res.json({
     ...buildHealthPayload(),
@@ -298,9 +298,14 @@ app.get("/api/health", async (req, res) => {
 });
 
 app.get("/api/ready", async (req, res) => {
-  const verification = await getBusinessVerificationReadiness({ live: isBusinessVerificationEnabled() });
+  const [verification, acceptanceReady] = await Promise.all([
+    getBusinessVerificationReadiness({ live: isBusinessVerificationEnabled() }),
+    stagingAcceptanceControl
+      ? stagingAcceptanceControl.activation().catch(() => false)
+      : Promise.resolve(false)
+  ]);
   const acceptance = stagingAcceptanceControl
-    ? { enabled: true, ready: await stagingAcceptanceControl.activation().catch(() => false) }
+    ? { enabled: true, ready: acceptanceReady }
     : { enabled: false, ready: false };
   const payload = { ...buildHealthPayload(), businessVerification: verification, stagingAcceptance: acceptance };
 

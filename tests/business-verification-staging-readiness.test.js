@@ -176,6 +176,61 @@ test("residue is unverifiable rather than inferred zero when either resource can
   assert.deepEqual(failedListing, { clean: false, verifiable: false });
 });
 
+test("hanging Mongo residue lookup completes within its explicit bound", async () => {
+  const started = Date.now();
+  const result = await calculateStagingAcceptanceResidue({
+    env: residueEnvironment(),
+    EvidenceModel: {
+      countDocuments() {
+        return { maxTimeMS: () => new Promise(() => {}) };
+      }
+    },
+    s3Client: { send: async () => ({ KeyCount: 0, IsTruncated: false }) },
+    mongoTimeoutMs: 25,
+    r2TimeoutMs: 25,
+    totalTimeoutMs: 75
+  });
+  assert.deepEqual(result, { clean: false, verifiable: false });
+  assert.ok(Date.now() - started < 250);
+});
+
+test("hanging R2 residue lookup is aborted and completes within its explicit bound", async () => {
+  let observedSignal;
+  const started = Date.now();
+  const result = await calculateStagingAcceptanceResidue({
+    env: residueEnvironment(),
+    EvidenceModel: evidenceCount(0, {}),
+    s3Client: {
+      send(_command, options) {
+        observedSignal = options.abortSignal;
+        return new Promise(() => {});
+      }
+    },
+    mongoTimeoutMs: 25,
+    r2TimeoutMs: 25,
+    totalTimeoutMs: 75
+  });
+  assert.deepEqual(result, { clean: false, verifiable: false });
+  assert.equal(observedSignal.aborted, true);
+  assert.ok(Date.now() - started < 250);
+});
+
+test("the staging response bounds an injected unresolved residue calculation", async () => {
+  const started = Date.now();
+  const response = await addStagingVerification({}, {
+    env: safeEnvironment({ NODE_ENV: "staging" }),
+    activeDatabaseName: "tradeflow_verification_staging",
+    calculateResidue: () => new Promise(() => {}),
+    residueTimeoutMs: 25
+  });
+  assert.equal(response.ready, false);
+  assert.deepEqual(response.payload.stagingVerification.acceptanceResidue, {
+    clean: false,
+    verifiable: false
+  });
+  assert.ok(Date.now() - started < 250);
+});
+
 test("the ready response exposes sanitized evidence only in exact staging mode", async () => {
   const env = safeEnvironment({ NODE_ENV: "staging" });
   const staging = await addStagingVerification({ ok: true }, {

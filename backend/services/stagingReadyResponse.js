@@ -1,19 +1,31 @@
 "use strict";
 
 const { validateStagingRuntimeConfiguration } = require("./stagingReadinessConfiguration");
-const { calculateStagingAcceptanceResidue } = require("./stagingAcceptanceResidue");
+const {
+  TOTAL_RESIDUE_TIMEOUT_MS,
+  calculateStagingAcceptanceResidue,
+  unverifiableResidue,
+  withTimeout
+} = require("./stagingAcceptanceResidue");
+
+const READY_RESIDUE_TIMEOUT_MS = TOTAL_RESIDUE_TIMEOUT_MS + 100;
 
 async function addStagingVerification(payload, {
   env = process.env,
   activeDatabaseName = "",
   acceptanceReady = false,
-  calculateResidue = calculateStagingAcceptanceResidue
+  calculateResidue = calculateStagingAcceptanceResidue,
+  residueTimeoutMs = READY_RESIDUE_TIMEOUT_MS
 } = {}) {
   if (env.NODE_ENV !== "staging") return { payload, ready: true };
 
   const stagingVerification = validateStagingRuntimeConfiguration({ env, activeDatabaseName });
   stagingVerification.acceptance.ready = Boolean(acceptanceReady);
-  stagingVerification.acceptanceResidue = await calculateResidue();
+  try {
+    stagingVerification.acceptanceResidue = await withTimeout(calculateResidue(), residueTimeoutMs);
+  } catch {
+    stagingVerification.acceptanceResidue = unverifiableResidue();
+  }
   payload.stagingVerification = stagingVerification;
 
   return {
@@ -26,4 +38,4 @@ async function addStagingVerification(payload, {
   };
 }
 
-module.exports = { addStagingVerification };
+module.exports = { READY_RESIDUE_TIMEOUT_MS, addStagingVerification };
