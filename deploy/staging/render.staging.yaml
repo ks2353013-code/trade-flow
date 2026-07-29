@@ -3,6 +3,7 @@
 services:
   - type: web
     name: tradeflow-verification-backend-staging
+    branch: business-verification-staging-acceptance
     env: node
     plan: starter
     rootDir: backend
@@ -70,6 +71,7 @@ services:
 
   - type: pserv
     name: tradeflow-verification-clamav-staging
+    branch: business-verification-staging-acceptance
     env: docker
     plan: standard
     dockerfilePath: ./deploy/staging/clamav/Dockerfile
@@ -78,6 +80,7 @@ services:
 
   - type: web
     name: tradeflow-verification-frontend-staging
+    branch: business-verification-staging-acceptance
     env: static
     buildCommand: node deploy/staging/generate-runtime-config.js
     staticPublishPath: ./frontend

@@ -27,6 +27,34 @@ const backendService = blueprint.match(
 );
 if (!backendService || !/^    healthCheckPath: \/api\/health\s*$/m.test(backendService[0])) {
   failures.push("backend-health-check-must-use-api-health");
+}const expectedServices = [
+  ["web", "tradeflow-verification-backend-staging"],
+  ["pserv", "tradeflow-verification-clamav-staging"],
+  ["web", "tradeflow-verification-frontend-staging"]
+];
+for (const [type, name] of expectedServices) {
+  const service = blueprint.match(
+    new RegExp(`  - type: ${type}\\r?\\n    name: ${name}[\\s\\S]*?(?=\\r?\\n  - type:|$)`)
+  );
+  if (!service || !/^    branch: business-verification-staging-acceptance\s*$/m.test(service[0])) {
+    failures.push(`service-branch-mismatch:${name}`);
+  }
+}
+if (
+  !backendService ||
+  !/      - key: BUSINESS_VERIFICATION_STAGING_ACCEPTANCE_ENABLED\r?\n        value: false/.test(backendService[0])
+) {
+  failures.push("staging-acceptance-must-default-disabled");
+}
+if (
+  !backendService ||
+  !/      - key: STAGING_ACCEPTANCE_CONTROL_TOKEN\r?\n        sync: false/.test(backendService[0]) ||
+  /      - key: STAGING_ACCEPTANCE_CONTROL_TOKEN\r?\n        value:/.test(backendService[0])
+) {
+  failures.push("staging-control-token-must-remain-uncommitted");
+}
+if (/name:\s*\S*production\S*/i.test(blueprint) || /^\s*branch:\s*main\s*$/m.test(blueprint)) {
+  failures.push("production-reference-forbidden");
 }
 
 const envTemplate = fs.readFileSync(path.join(root, required[0]), "utf8");
