@@ -127,7 +127,12 @@ async function api(pathname, { token = "", companyId = "", method = "GET", json,
   });
   const contentType = String(response.headers.get("content-type") || "");
   const payload = contentType.includes("application/json") ? await response.json() : Buffer.from(await response.arrayBuffer());
-  if (response.status !== expected) throw new Error(`HTTP ${response.status} for ${pathname}`);
+  if (response.status !== expected) {
+    const detail = payload && !Buffer.isBuffer(payload)
+      ? String(payload.message || payload.code || "").replace(/[^a-zA-Z0-9 ._-]/g, "").slice(0, 120)
+      : "";
+    throw new Error(`HTTP ${response.status} for ${pathname}${detail ? ` (${detail})` : ""}`);
+  }
   return { contentType, payload };
 }
 
@@ -187,7 +192,7 @@ async function upload(tenant) {
     const fixture = fixtures[index % 3](`${tenant.category}-${tenant.purpose}-${type}`);
     const form = new FormData();
     form.set("type", type);
-    form.set("document", new Blob([fixture.bytes], { type: fixture.mime }), `../synthetic-${runId}-${index}.${fixture.ext}`);
+    form.set("document", new Blob([fixture.bytes], { type: fixture.mime }), `synthetic-${runId}-${index}.${fixture.ext}`);
     const uploaded = await api("/api/business-verification/me/documents", {
       token: tenant.token, companyId: tenant.company._id, method: "POST", form, expected: 201
     });
