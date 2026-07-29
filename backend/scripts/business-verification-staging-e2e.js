@@ -62,6 +62,20 @@ function safeError(error) {
     .slice(0, 260);
 }
 
+function responseFieldNames(value, names = new Set(), depth = 0) {
+  if (depth > 8 || value === null || value === undefined) return names;
+  if (Array.isArray(value)) {
+    for (const item of value) responseFieldNames(item, names, depth + 1);
+    return names;
+  }
+  if (typeof value !== "object") return names;
+  for (const [key, item] of Object.entries(value)) {
+    names.add(String(key));
+    responseFieldNames(item, names, depth + 1);
+  }
+  return names;
+}
+
 function artifactResult() {
   const safe = JSON.parse(JSON.stringify(result));
   delete safe.createdIds;
@@ -265,8 +279,9 @@ async function exercise(category) {
   await review(primary.verificationId, "verify", { confirm: true, validityDays: 30, checklist: ["Synthetic evidence clean", "Synthetic duplicate resolved"] });
 
   const badge = await api(`/api/business-verification/badges/${encodeURIComponent(primary.reference)}`);
-  const publicText = JSON.stringify(badge.payload);
-  step(`${category}.approved-badge-disclaimer`, badge.payload.badge === `TradeFlow Verified ${category}` && badge.payload.disclaimer === DISCLAIMER && !/documents|storageKey|sha256|pan|gstin|iec|ownerEmail/i.test(publicText));
+  const publicFields = [...responseFieldNames(badge.payload)];
+  const sensitivePublicField = /^(?:documents|storageKey|sha256|pan|gstin|iec|ownerEmail)/i;
+  step(`${category}.approved-badge-disclaimer`, badge.payload.badge === `TradeFlow Verified ${category}` && badge.payload.disclaimer === DISCLAIMER && !publicFields.some((field) => sensitivePublicField.test(field)));
 
   const historyBefore = await BusinessVerification.findById(primary.verificationId).select("reviewHistory").lean();
   const frozenHistory = JSON.stringify(historyBefore.reviewHistory);
