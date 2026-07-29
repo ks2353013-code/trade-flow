@@ -421,3 +421,18 @@ Security decision:
 Verification ownership is derived from the verified JWT and tenant middleware. Client company IDs and owner emails are not trusted. Sensitive identifiers use AES-256-GCM ciphertext plus keyed hashes and masked response values. Production fails closed without a dedicated encryption key and private storage configuration. Uploads are private, bounded, MIME/signature checked, non-guessable, path-contained, and audited; malware scanning remains an explicit deployment integration. Approval and every destructive review transition require backend-confirmed Master Admin authorization. Audit identity fallback was tightened to exclude headers and request bodies.
 
 Production hardening now separates versioned encryption and duplicate-hash keys, authenticates ciphertext metadata, uses random 128-bit badge references, hides duplicate flags from tenants, and prevents all non-clean quarantine access. The S3-compatible adapter requires TLS, private-access attestation, server-side encryption, opaque prefixes, and clean-state promotion. The module remains disabled and production readiness remains fail-closed until staging infrastructure validates storage and private scanning.
+
+## Business Verification synthetic staging cycle (2026-07-28)
+
+Approved scope was synthetic exporter, importer, and trading-company verification only. The isolated staging backend remained healthy with Mongo connected, private R2 storage ready, private fail-closed ClamAV ready, email in Dry Run, and schedulers and external automation disabled.
+
+Evidence:
+
+- Focused Business Verification backend regression: PASS, 14/14.
+- Focused Business Verification Playwright coverage: PASS, 2/2.
+- Exact post-attempt database query for run-scoped `synthetic-bv-` users, companies, workspaces, verifications, and notifications: zero.
+- The Render web shell accepted small readiness and cleanup commands, but the complete synthetic cycle payload did not reliably submit and no compact result artifact was produced.
+- Exporter/importer/trading-company submission, duplicate resolution, Master Admin transitions, badge expiry, and public disclaimer therefore do not have complete live staging evidence from this attempt.
+- No production deployment or production database access occurred. No real documents or customer records were used.
+
+Security decision: **FAIL / NOT ACCEPTED** for the complete synthetic end-to-end cycle. Existing staging readiness remains valid, but the cycle must be rerun through a reliable execution surface before it can receive PASS.

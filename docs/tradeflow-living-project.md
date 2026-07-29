@@ -310,3 +310,9 @@ Pilot decision:
 A tenant-scoped manual Business Verification Engine has been implemented for controlled-pilot review. It is separate from lead verification and supports exporter, importer, combined exporter/importer, trading company, manufacturer, and supplier categories. The working tree includes private document storage, encrypted/masked identifiers, Master Admin review, status-controlled public badges, internal notifications, UI, tests, and operator documentation. It is not committed or deployed pending the complete validation gate.
 
 Production hardening is complete in code and validated locally. The feature remains production-disabled. Separate staging Mongo, private S3-compatible storage, versioned encryption/hash keys, and a private ClamAV service have not been provisioned, so staging acceptance and real-document onboarding remain blocked.
+
+## Synthetic Business Verification staging cycle attempt (2026-07-28)
+
+The approved isolated staging infrastructure was available and healthy. Focused regression coverage passed (14 backend checks and 2 Playwright checks), and an exact read-only cleanup query found zero run-scoped `synthetic-bv-` records after the attempt.
+
+The complete live exporter/importer/trading-company cycle was not accepted because the Render web-shell test payload did not reliably submit and no explicit result artifact was created. No result was inferred from the clean database. The strict decision is FAIL pending a rerun through a reliable staging execution mechanism. Production verification remains disabled, and no production data, real documents, live email, schedulers, WhatsApp, calls, or autonomous execution were used.

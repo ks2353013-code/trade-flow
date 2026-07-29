@@ -10,7 +10,8 @@
     "build:css": "tailwindcss -c tailwind.config.js -i ../frontend/css/tailwind-input.css -o ../frontend/css/tailwind.css --minify",
     "test:iteration2:isolated": "node scripts/run-iteration2-isolated.js",
     "verification:staging-readiness": "node scripts/business-verification-staging-readiness.js",
-    "verification:staging-package": "node scripts/validate-business-verification-staging-package.js"
+    "verification:staging-package": "node scripts/validate-business-verification-staging-package.js",
+    "test:verification:staging-e2e": "node scripts/business-verification-staging-e2e.js"
   },
   "author": "Krishna Singh",
   "license": "ISC",
