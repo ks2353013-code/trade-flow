@@ -52,6 +52,10 @@ test("staging Blueprint keeps acceptance disabled and never commits its token", 
     backendService[0],
     /      - key: STAGING_ACCEPTANCE_CONTROL_TOKEN\r?\n        sync: false/
   );
+  assert.match(
+    backendService[0],
+    /      - key: BUSINESS_VERIFICATION_STAGING_E2E_CONFIRMED\r?\n        value: true/
+  );
   assert.doesNotMatch(
     backendService[0],
     /      - key: STAGING_ACCEPTANCE_CONTROL_TOKEN\r?\n        value:/
