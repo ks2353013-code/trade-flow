@@ -7,6 +7,7 @@ const express = require("../backend/node_modules/express");
 const { createRouter } = require("../backend/routes/stagingAcceptanceRoutes");
 const {
   assertSafeStartup,
+  cleanupDisabledEvidence,
   constantTimeTokenEqual,
   enabledByEnvironment,
   redact
@@ -34,6 +35,30 @@ test("activation is exact and production enablement fails closed", () => {
   assert.throws(() => assertSafeStartup({ NODE_ENV: "production", BUSINESS_VERIFICATION_STAGING_ACCEPTANCE_ENABLED: "true" }), /forbidden/);
 });
 
+
+test("disabled staging startup deletes only synthetic acceptance evidence in the exact isolated database", async () => {
+  let query;
+  const EvidenceModel = {
+    deleteMany: async (value) => {
+      query = value;
+      return { deletedCount: 1 };
+    }
+  };
+  const result = await cleanupDisabledEvidence({
+    env: { NODE_ENV: "staging", BUSINESS_VERIFICATION_STAGING_ACCEPTANCE_ENABLED: "false" },
+    EvidenceModel,
+    connection: { readyState: 1, name: "tradeflow_verification_staging" }
+  });
+  assert.deepEqual(result, { attempted: true, deletedCount: 1 });
+  assert.equal(String(query.runId.$regex), String(/^bva_[A-Za-z0-9_-]{32}$/));
+
+  const refused = await cleanupDisabledEvidence({
+    env: { NODE_ENV: "production", BUSINESS_VERIFICATION_STAGING_ACCEPTANCE_ENABLED: "false" },
+    EvidenceModel,
+    connection: { readyState: 1, name: "tradeflow_verification_staging" }
+  });
+  assert.deepEqual(refused, { attempted: false, deletedCount: 0 });
+});
 test("control token comparison uses fixed-width timing safe equality", () => {
   assert.equal(constantTimeTokenEqual(TOKEN, TOKEN), true);
   assert.equal(constantTimeTokenEqual("wrong", TOKEN), false);

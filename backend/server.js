@@ -82,6 +82,7 @@ const businessVerificationPublicRoutes = require("./routes/businessVerificationP
 const { createRouter: createStagingAcceptanceRouter } = require("./routes/stagingAcceptanceRoutes");
 const {
   assertSafeStartup,
+  cleanupDisabledEvidence,
   configuredToken,
   createControl: createStagingAcceptanceControl,
   enabledByEnvironment
@@ -494,8 +495,13 @@ function startSchedulersIfEnabled() {
 
 function startMongoConnection() {
   connectDB()
-    .then((connected) => {
+    .then(async (connected) => {
       if (connected) {
+        try {
+          await cleanupDisabledEvidence();
+        } catch {
+          console.error("Staging acceptance residue cleanup did not complete");
+        }
         startSchedulersIfEnabled();
       }
     })

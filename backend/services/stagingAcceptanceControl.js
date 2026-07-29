@@ -33,6 +33,12 @@ function configuredToken(env = process.env) {
   const token = String(env.STAGING_ACCEPTANCE_CONTROL_TOKEN || "");
   return Buffer.byteLength(token, "utf8") >= TOKEN_MIN_BYTES ? token : "";
 }
+async function cleanupDisabledEvidence({ env = process.env, EvidenceModel = Evidence, connection = mongoose.connection } = {}) {
+  if (env.NODE_ENV !== "staging" || enabledByEnvironment(env)) return { attempted: false, deletedCount: 0 };
+  if (connection.readyState !== 1 || connection.name !== DATABASE) return { attempted: false, deletedCount: 0 };
+  const result = await EvidenceModel.deleteMany({ runId: { $regex: /^bva_[A-Za-z0-9_-]{32}$/ } });
+  return { attempted: true, deletedCount: Number(result.deletedCount || 0) };
+}
 
 function constantTimeTokenEqual(candidate, expected) {
   const supplied = Buffer.from(String(candidate || ""));
@@ -163,4 +169,4 @@ function createControl(dependencies = {}) {
   return { activation, start, find, verifyCleanup, remove, isActive: () => Boolean(activeRunId) };
 }
 
-module.exports = { DATABASE, TOKEN_MIN_BYTES, TERMINAL, assertSafeStartup, configuredToken, constantTimeTokenEqual, createControl, enabledByEnvironment, redact };
+module.exports = { DATABASE, TOKEN_MIN_BYTES, TERMINAL, assertSafeStartup, cleanupDisabledEvidence, configuredToken, constantTimeTokenEqual, createControl, enabledByEnvironment, redact };
