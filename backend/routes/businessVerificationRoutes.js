@@ -102,7 +102,7 @@ function safeVerification(doc, {
   delete value.internalNotes;
   delete value.__v;
   for (const field of [
-    "incorporationNumberHash", "panEncrypted", "panHash", "gstinEncrypted",
+    "incorporationNumber", "incorporationNumberEncrypted", "incorporationNumberHash", "panEncrypted", "panHash", "gstinEncrypted",
     "gstinHash", "iecEncrypted", "iecHash", "udyamEncrypted"
   ]) {
     delete value[field];
@@ -158,12 +158,14 @@ function missingRequirements(verification) {
     ["businessEmail", "Business email"],
     ["businessPhone", "Business phone"],
     ["incorporationType", "Incorporation type"],
-    ["incorporationNumber", "Incorporation number"],
+    ["incorporationNumberEncrypted", "Incorporation number"],
     ["authorizedRepresentativeName", "Authorized representative"],
     ["authorizedRepresentativeDesignation", "Representative designation"]
   ];
   for (const [field, label] of requiredFields) {
-    if (!verification[field]) missing.push(label);
+    if (field === "incorporationNumberEncrypted") {
+      if (!verification.incorporationNumberEncrypted && !verification.incorporationNumber) missing.push(label);
+    } else if (!verification[field]) missing.push(label);
   }
   if (verification.representativeAuthorityDeclaration !== true) missing.push("Representative authority declaration");
   if (["Exporter", "Importer", "Exporter & Importer"].includes(verification.verificationCategory) && !verification.iecHash) {
@@ -228,7 +230,7 @@ router.get("/me", async (req, res) => {
     const verification = await BusinessVerification.findOne({
       companyId: company._id,
       ...tenantVerificationFilter(req)
-    });
+    }).select("+incorporationNumber +incorporationNumberEncrypted");
     if (!verification) {
       return res.json({ verification: null, status: "Not Started", requiredDocuments: [] });
     }
@@ -250,7 +252,7 @@ router.put("/me", async (req, res) => {
     if (!canManage(req)) return res.status(403).json({ success: false, message: "Company Owner or Admin permission required" });
     const company = await resolveTenantCompany(req);
     let verification = await BusinessVerification.findOne({ companyId: company._id })
-      .select("+incorporationNumberHash +panHash +gstinHash +iecHash");
+      .select("+incorporationNumber +incorporationNumberEncrypted +incorporationNumberHash +panHash +gstinHash +iecHash");
     ensureVerificationActive(verification);
     const locked = verification && verification.verificationStatus !== "Draft";
     if (locked) {
@@ -274,7 +276,7 @@ router.put("/me", async (req, res) => {
     const validation = validateIdentifiers({
       country: data.country || verification?.country,
       ...identifiers,
-      incorporationNumber: identifiers.incorporationNumber || verification?.incorporationNumber
+      incorporationNumber: identifiers.incorporationNumber
     }, { allowMissing: true });
     if (validation.errors.length) {
       return res.status(422).json({ success: false, message: "Identifier validation failed", errors: validation.errors });
@@ -282,7 +284,9 @@ router.put("/me", async (req, res) => {
 
     if (identifiers.incorporationNumber || !verification) {
       Object.assign(data, {
-        incorporationNumber: validation.values.incorporationNumber,
+        incorporationNumber: "",
+        incorporationNumberEncrypted: encryptIdentifier(validation.values.incorporationNumber),
+        incorporationNumberMasked: maskIdentifier(validation.values.incorporationNumber),
         incorporationNumberHash: keyedHash(validation.values.incorporationNumber)
       });
     }
@@ -470,7 +474,7 @@ router.post("/me/submit", async (req, res) => {
     const verification = await BusinessVerification.findOne({
       companyId: company._id,
       ownerEmail: req.tenant.ownerEmail
-    }).select("+incorporationNumberHash +panHash +gstinHash +iecHash");
+    }).select("+incorporationNumber +incorporationNumberEncrypted +incorporationNumberHash +panHash +gstinHash +iecHash");
     ensureVerificationActive(verification);
     if (!verification) return res.status(409).json({ success: false, message: "Complete a verification draft first" });
     if (verification.verificationStatus !== "Draft") {
@@ -534,7 +538,7 @@ router.post("/me/request-deletion", async (req, res) => {
 
 router.get("/admin/:id", requireMasterAdmin, async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid verification id" });
-  const verification = await BusinessVerification.findById(req.params.id).select("+internalNotes");
+  const verification = await BusinessVerification.findById(req.params.id).select("+internalNotes +incorporationNumber +incorporationNumberEncrypted");
   if (!verification) return res.status(404).json({ success: false, message: "Verification not found" });
   const value = safeVerification(verification, { includeRiskFlags: true });
   value.internalNotes = verification.internalNotes;
@@ -611,7 +615,7 @@ router.post("/admin/:id/review", requireMasterAdmin, async (req, res) => {
       return res.status(422).json({ success: false, message: "Explicit confirmation is required" });
     }
     const verification = await BusinessVerification.findById(req.params.id)
-      .select("+internalNotes +incorporationNumberHash +panHash +gstinHash +iecHash");
+      .select("+internalNotes +incorporationNumber +incorporationNumberEncrypted +incorporationNumberHash +panHash +gstinHash +iecHash");
     if (!verification) return res.status(404).json({ success: false, message: "Verification not found" });
     const allowedPreviousStatuses = {
       start: ["Submitted"],
@@ -720,3 +724,4 @@ router.use((error, _req, res, _next) => {
 module.exports = router;
 module.exports.requiredDocumentTypes = requiredDocumentTypes;
 module.exports.missingRequirements = missingRequirements;
+module.exports.safeVerification = safeVerification;
