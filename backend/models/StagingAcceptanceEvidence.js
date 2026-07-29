@@ -9,7 +9,12 @@ const schema = new mongoose.Schema({
   finishedAt: { type: Date, default: null },
   expiresAt: { type: Date, required: true },
   summary: { type: mongoose.Schema.Types.Mixed, default: {} },
-  artifact: { type: mongoose.Schema.Types.Mixed, default: null }
+  artifact: { type: mongoose.Schema.Types.Mixed, default: null },
+  privateCleanupScope: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null,
+    select: false
+  }
 }, { timestamps: true, strict: true, collection: "staging_acceptance_evidence" });
 
 schema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
