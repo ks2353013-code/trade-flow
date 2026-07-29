@@ -54,4 +54,6 @@ test("runner writes redacted evidence and proves exact database and R2 cleanup",
   assert.match(runner, /cleanup\.zero-run-objects/);
   assert.match(runner, /finally/);
   assert.match(runner, /process\.exitCode = 1/);
+  assert.doesNotMatch(runner, /\.\.\/synthetic-/);
+  assert.match(runner, /payload\.message \|\| payload\.code/);
 });
