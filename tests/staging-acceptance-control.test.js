@@ -9,6 +9,7 @@ const {
   assertSafeStartup,
   cleanupDisabledEvidence,
   constantTimeTokenEqual,
+  createControl,
   enabledByEnvironment,
   normalizeCleanupScope,
   redact

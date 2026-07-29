@@ -160,3 +160,53 @@ Until then:
 **SAFE TO PREPARE: YES**  
 **SAFE TO DEPLOY/ENABLE: NO**  
 **SAFE TO ACCEPT REAL DOCUMENTS: NO**
+
+## Read-only infrastructure audit — 2026-07-30
+
+This audit inspected only visible configuration and sanitized health/readiness evidence. No deployment,
+environment change, secret reveal, customer record, object, or document was accessed.
+
+### Existing evidence
+
+- Render has one existing production web service, `trade-flow`, on the Free plan and linked to `main`.
+- The existing production service returns JSON HTTP 200 from `/api/health` and `/api/ready`.
+- Its sanitized responses report `environment=production`, schedulers disabled, and email dry-run.
+- The existing production service has no configured Render health-check path.
+- Its Render auto-deploy setting is On Commit; it was not changed during this audit.
+- Cloudflare R2 is authenticated and currently lists only `tradeflow-verification-staging`.
+- R2 account usage shown during the audit was $0.00 for the current billing period.
+- MongoDB Atlas was signed out, so database names, users, network policy, backup policy, and isolation
+  could not be independently verified.
+
+### Missing production-isolated resources
+
+- dedicated `tradeflow-verification-backend-production` service
+- private `tradeflow-verification-clamav-production` service
+- private `tradeflow-verification-production` R2 bucket and production-only credentials
+- independently verified `tradeflow_verification_production` Mongo database
+- independently verified least-privilege production-only Mongo application user
+- verified Atlas backup, point-in-time recovery, restore procedure, and network restrictions
+- production-only encryption and duplicate-hash keys
+- disabled-first production readiness evidence from the reviewed production branch
+
+### Prepared deployment package
+
+`deploy/production/render.production.yaml` is review-only and defines exactly two new services:
+
+- Starter backend: $7/month
+- Standard private ClamAV: $25/month
+
+Expected fixed Render increase: **$32/month**. R2 and Atlas charges, if any, remain usage/account-plan
+dependent and require owner review before provisioning. The Blueprint keeps auto-deploy off, uses
+`/api/health`, keeps Business Verification disabled, keeps email dry-run, disables every external
+automation category, excludes the staging acceptance token, and rejects staging database, bucket,
+scanner, and Mongo-principal reuse.
+
+### Owner-only gates
+
+1. Approve the exact $32/month fixed Render increase before any Blueprint synchronization.
+2. Sign in to Atlas and privately create or verify the dedicated database and least-privilege user.
+3. Create the production R2 bucket and scoped credentials privately; never reuse staging credentials.
+4. Enter production-only secrets directly in provider UIs.
+5. Run the static production package validation and review the proposed Blueprint diff.
+6. Stop before the external deployment confirmation for a separate disabled-first deployment decision.
