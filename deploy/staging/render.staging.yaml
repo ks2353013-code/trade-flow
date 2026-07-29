@@ -9,7 +9,7 @@ services:
     buildCommand: npm ci
     startCommand: npm start
     autoDeploy: false
-    healthCheckPath: /api/ready
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: staging

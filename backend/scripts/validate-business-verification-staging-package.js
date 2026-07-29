@@ -18,6 +18,17 @@ for (const relative of required) {
   if (!fs.existsSync(path.join(root, relative))) failures.push(`missing:${relative}`);
 }
 
+const blueprint = fs.readFileSync(
+  path.join(root, "deploy/staging/render.staging.yaml"),
+  "utf8"
+);
+const backendService = blueprint.match(
+  /  - type: web\r?\n    name: tradeflow-verification-backend-staging[\s\S]*?(?=\r?\n  - type:|$)/
+);
+if (!backendService || !/^    healthCheckPath: \/api\/health\s*$/m.test(backendService[0])) {
+  failures.push("backend-health-check-must-use-api-health");
+}
+
 const envTemplate = fs.readFileSync(path.join(root, required[0]), "utf8");
 for (const line of envTemplate.split(/\r?\n/).filter(Boolean)) {
   if (!/^[A-Z0-9_]+=$/.test(line)) failures.push("environment-template-contains-value");
