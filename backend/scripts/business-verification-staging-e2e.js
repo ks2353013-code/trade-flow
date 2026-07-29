@@ -402,7 +402,7 @@ async function runStagingAcceptance(options = {}) {
   result.failure = failure ? safeError(failure) : "";
   result.finishedAt = new Date().toISOString();
   const cleanupScope = {
-    users: state.users.map(String), companies: state.companies.map(String), workspaces: state.workspaces.map(String),
+    users: [...state.users.map(String), ...(state.reviewerCreated && state.reviewer?._id ? [String(state.reviewer._id)] : [])], companies: state.companies.map(String), workspaces: state.workspaces.map(String),
     verifications: state.verifications.map(String), notifications: state.notifications.map(String), audits: state.audits.map(String), keys: [...new Set(state.keys)]
   };
   return {
