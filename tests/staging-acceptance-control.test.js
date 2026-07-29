@@ -10,6 +10,7 @@ const {
   cleanupDisabledEvidence,
   constantTimeTokenEqual,
   enabledByEnvironment,
+  normalizeCleanupScope,
   redact
 } = require("../backend/services/stagingAcceptanceControl");
 
@@ -125,4 +126,51 @@ test("concurrent trigger receives conflict", async (t) => {
   const options = { method: "POST", headers: { authorization: `Bearer ${TOKEN}` } };
   assert.equal((await request(url, "/api/internal/staging-acceptance/runs", options)).status, 202);
   assert.equal((await request(url, "/api/internal/staging-acceptance/runs", options)).status, 409);
+});
+
+
+test("cleanup scopes are validated, bounded, and never public", () => {
+  const scope = normalizeCleanupScope({
+    users: ["64b64c0f0f0f0f0f0f0f0f0f", "not-an-id", "64b64c0f0f0f0f0f0f0f0f0f"],
+    companies: [],
+    keys: [
+      "clean/tenant/synthetic/11111111-1111-4111-8111-111111111111.pdf",
+      "../../secret",
+      "https://objects.invalid/private"
+    ],
+    token: "must-not-survive"
+  });
+  assert.deepEqual(scope.users, ["64b64c0f0f0f0f0f0f0f0f0f"]);
+  assert.deepEqual(scope.keys, ["clean/tenant/synthetic/11111111-1111-4111-8111-111111111111.pdf"]);
+  assert.equal(Object.hasOwn(scope, "token"), false);
+  assert.equal(JSON.stringify(redact({ privateCleanupScope: scope, safe: "PASS" })).includes("64b64c0f"), false);
+});
+
+test("completed runs persist a private cleanup scope instead of process memory", async () => {
+  const updates = [];
+  const EvidenceModel = {
+    create: async () => {},
+    updateOne: async (_query, update) => { updates.push(update); }
+  };
+  const control = createControl({
+    Evidence: EvidenceModel,
+    runner: async () => ({
+      status: "FAIL",
+      cleanupPassed: true,
+      artifact: { steps: [{ name: "synthetic-step", status: "FAIL" }] },
+      cleanupScope: {
+        users: ["64b64c0f0f0f0f0f0f0f0f0f"],
+        companies: [], workspaces: [], verifications: [], notifications: [], audits: [],
+        keys: ["quarantine/tenant/synthetic/11111111-1111-4111-8111-111111111111.pdf"]
+      }
+    })
+  });
+  const started = await control.start();
+  assert.match(started.runId, /^bva_[A-Za-z0-9_-]{32}$/);
+  await new Promise((resolve) => setTimeout(resolve, 25));
+  const terminal = updates.find((update) => update.$set?.privateCleanupScope);
+  assert.ok(terminal);
+  assert.equal(terminal.$set.status, "Failed");
+  assert.deepEqual(terminal.$set.privateCleanupScope.users, ["64b64c0f0f0f0f0f0f0f0f0f"]);
+  assert.equal(JSON.stringify(started).includes("privateCleanupScope"), false);
 });
