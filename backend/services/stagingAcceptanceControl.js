@@ -17,7 +17,23 @@ const TOKEN_MIN_BYTES = 32;
 const RETENTION_MS = 24 * 60 * 60 * 1000;
 const TERMINAL = new Set(["Passed", "Failed", "CleanupFailed"]);
 const SAFE_STATUSES = new Set(["Pending", "Running", ...TERMINAL]);
-const FORBIDDEN_KEYS = /(?:token|secret|password|credential|uri|url|key|hash|document|content|path|command|stack|email|companyId|verificationId|createdIds)/i;
+const FORBIDDEN_KEYS = /(?:token|secret|password|credential|uri|url|key|hash|document|content|path|command|stack|email|companyId|verificationId|createdIds|privateCleanupScope)/i;
+const CLEANUP_ID_FIELDS = ["users", "companies", "workspaces", "verifications", "notifications", "audits"];
+
+function normalizeCleanupScope(scope = {}) {
+  const clean = {};
+  for (const field of CLEANUP_ID_FIELDS) {
+    clean[field] = [...new Set((Array.isArray(scope[field]) ? scope[field] : [])
+      .map(String)
+      .filter((value) => /^[a-f0-9]{24}$/i.test(value)))]
+      .slice(0, 500);
+  }
+  clean.keys = [...new Set((Array.isArray(scope.keys) ? scope.keys : [])
+    .map(String)
+    .filter((value) => /^(?:quarantine|clean)\/tenant\/[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/.test(value)))]
+    .slice(0, 500);
+  return clean;
+}
 
 function enabledByEnvironment(env = process.env) {
   return env.NODE_ENV === "staging" && env.BUSINESS_VERIFICATION_STAGING_ACCEPTANCE_ENABLED === "true";
@@ -91,7 +107,6 @@ function createControl(dependencies = {}) {
   const readiness = dependencies.readiness || getBusinessVerificationReadiness;
   const runner = dependencies.runner || (async (options) => require("../scripts/business-verification-staging-e2e").runStagingAcceptance(options));
   let activeRunId = null;
-  const privateScopes = new Map();
 
   async function activation() {
     if (!enabledByEnvironment() || !configuredToken()) return false;
@@ -121,12 +136,14 @@ function createControl(dependencies = {}) {
         artifact.environment = "staging";
         artifact.startedAt = now.toISOString(); artifact.finishedAt = finishedAt.toISOString();
         artifact.finalDecision = status === "Passed" ? "PASS" : "FAIL";
-        if (output.cleanupScope) {
-          privateScopes.set(runId, output.cleanupScope);
-          const timer = setTimeout(() => privateScopes.delete(runId), RETENTION_MS);
-          timer.unref?.();
-        }
-        await EvidenceModel.updateOne({ runId }, { $set: { status, finishedAt, artifact, summary: { decision: artifact.finalDecision, stepCount: artifact.steps?.length || 0 } } });
+        const privateCleanupScope = normalizeCleanupScope(output.cleanupScope);
+        await EvidenceModel.updateOne({ runId }, { $set: {
+          status,
+          finishedAt,
+          artifact,
+          privateCleanupScope,
+          summary: { decision: artifact.finalDecision, stepCount: artifact.steps?.length || 0 }
+        } });
       } catch {
         const finishedAt = new Date();
         await EvidenceModel.updateOne({ runId }, { $set: { status: "Failed", finishedAt, artifact: { runId, environment: "staging", startedAt: now.toISOString(), finishedAt: finishedAt.toISOString(), steps: [], failureReasons: ["Acceptance execution failed"], finalDecision: "FAIL" }, summary: { decision: "FAIL", stepCount: 0 } } }).catch(() => {});
@@ -143,10 +160,10 @@ function createControl(dependencies = {}) {
   }
 
   async function verifyCleanup(runId) {
-    const record = await EvidenceModel.findOne({ runId, expiresAt: { $gt: new Date() } });
+    const record = await EvidenceModel.findOne({ runId, expiresAt: { $gt: new Date() } }).select("+privateCleanupScope");
     if (!record) return { missing: true };
     if (!TERMINAL.has(record.status)) return { incomplete: true };
-    const scope = privateScopes.get(runId);
+    const scope = normalizeCleanupScope(record.privateCleanupScope || {});
     const counts = {};
     let failure = "";
     try {
@@ -165,8 +182,8 @@ function createControl(dependencies = {}) {
     return evidence;
   }
 
-  async function remove(runId) { privateScopes.delete(runId); return (await EvidenceModel.deleteOne({ runId })).deletedCount === 1; }
+  async function remove(runId) { return (await EvidenceModel.deleteOne({ runId })).deletedCount === 1; }
   return { activation, start, find, verifyCleanup, remove, isActive: () => Boolean(activeRunId) };
 }
 
-module.exports = { DATABASE, TOKEN_MIN_BYTES, TERMINAL, assertSafeStartup, cleanupDisabledEvidence, configuredToken, constantTimeTokenEqual, createControl, enabledByEnvironment, redact };
+module.exports = { DATABASE, TOKEN_MIN_BYTES, TERMINAL, assertSafeStartup, cleanupDisabledEvidence, configuredToken, constantTimeTokenEqual, createControl, enabledByEnvironment, normalizeCleanupScope, redact };
