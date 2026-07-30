@@ -12,7 +12,8 @@
     "verification:staging-readiness": "node scripts/business-verification-staging-readiness.js",
     "verification:staging-package": "node scripts/validate-business-verification-staging-package.js",
     "test:verification:staging-e2e": "node scripts/business-verification-staging-e2e.js",
-    "verification:production-readiness": "node scripts/business-verification-production-readiness.js"
+    "verification:production-readiness": "node scripts/business-verification-production-readiness.js",
+    "verification:production-package": "node scripts/validate-business-verification-production-package.js"
   },
   "author": "Krishna Singh",
   "license": "ISC",

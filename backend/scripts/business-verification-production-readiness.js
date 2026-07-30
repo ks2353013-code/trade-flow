@@ -5,13 +5,40 @@ const path = require("node:path");
 require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 
 const mongoose = require("mongoose");
-const { connectDB, isMongoConnected } = require("../config/db");
 const { getBusinessVerificationReadiness } = require("../services/businessVerificationReadiness");
 const {
   EXPECTED_PRODUCTION_DATABASE,
   configuredDatabaseName,
   validateProductionRuntimeConfiguration
 } = require("../services/productionReadinessConfiguration");
+
+const MONGO_TIMEOUT_MS = 4000;
+const DISCONNECT_TIMEOUT_MS = 500;
+
+async function connectProductionMongo() {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      connectTimeoutMS: MONGO_TIMEOUT_MS,
+      serverSelectionTimeoutMS: MONGO_TIMEOUT_MS,
+      socketTimeoutMS: MONGO_TIMEOUT_MS
+    });
+    return mongoose.connection.readyState === 1;
+  } catch {
+    return false;
+  }
+}
+
+async function disconnectProductionMongo() {
+  if (!mongoose.connection.readyState) return;
+  let timer;
+  await Promise.race([
+    mongoose.disconnect().catch(() => {}),
+    new Promise((resolve) => {
+      timer = setTimeout(resolve, DISCONNECT_TIMEOUT_MS);
+      timer.unref?.();
+    })
+  ]).finally(() => clearTimeout(timer));
+}
 
 async function main() {
   const configuredDatabase = configuredDatabaseName();
@@ -21,7 +48,7 @@ async function main() {
   let mongoConnected = false;
 
   if (environmentOk && configuredDatabase === EXPECTED_PRODUCTION_DATABASE) {
-    mongoConnected = Boolean(await connectDB()) && isMongoConnected();
+    mongoConnected = await connectProductionMongo();
   }
 
   const runtime = validateProductionRuntimeConfiguration({
@@ -48,11 +75,13 @@ async function main() {
       runtime.environment === "production" &&
       runtime.database.isolated &&
       mongoConnected &&
+      runtime.resources.isolated &&
       securityServicesReady &&
       safeDisabledState,
     environment: runtime.environment,
     database: runtime.database,
     mongo: { connected: mongoConnected },
+    resources: runtime.resources,
     businessVerification: {
       enabled: runtime.feature.enabled,
       securityServicesReady,
@@ -67,13 +96,27 @@ async function main() {
 
   console.log(JSON.stringify(result, null, 2));
   if (!result.readyForControlledActivation) process.exitCode = 1;
+  return result;
 }
 
-main()
-  .catch(() => {
+async function runCli() {
+  try {
+    await main();
+  } catch {
     console.error("Production readiness check failed without exposing configuration details");
     process.exitCode = 1;
-  })
-  .finally(async () => {
-    if (mongoose.connection.readyState) await mongoose.disconnect().catch(() => {});
-  });
+  } finally {
+    await disconnectProductionMongo();
+  }
+  process.exit(process.exitCode || 0);
+}
+
+if (require.main === module) runCli();
+
+module.exports = {
+  DISCONNECT_TIMEOUT_MS,
+  MONGO_TIMEOUT_MS,
+  connectProductionMongo,
+  disconnectProductionMongo,
+  main
+};
