@@ -89,9 +89,18 @@ async function runTradeMission(missionText = "", context = {}) {
     Number(revenue.revenueScenarioBase || revenue.estimatedDealValue || 0);
 
   const discoveryReport = detected.direction === "Export" ? buyerDiscovery : supplierDiscovery;
+  const discoveryCount = detected.direction === "Export"
+    ? Number(buyerDiscovery?.discoveredBuyers?.length || 0)
+    : Number(supplierDiscovery?.discoveredSuppliers?.length || 0);
+  const researchCount = Number(research?.liveResearchResults?.length || 0);
+  const userResponse = researchCount || discoveryCount
+    ? `I explored live sources for ${detected.direction.toLowerCase()}ing ${detected.product} in ${detected.market}. I found ${researchCount} relevant market results and ${discoveryCount} candidate ${detected.direction === "Export" ? "buyers" : "suppliers"}. I have organized the findings into your mission and kept external communication behind human approval.`
+    : `I could not retrieve live external results for ${detected.direction.toLowerCase()}ing ${detected.product} in ${detected.market}. TradeFlow has not invented results. Connect the configured live search/discovery provider and I will explore the market and return applicable findings.`;
+
 
   return {
     ...detected,
+    userResponse,
     status: "Needs Approval",
     agentReports: {
       research,
