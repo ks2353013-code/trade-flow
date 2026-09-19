@@ -1,5 +1,5 @@
 const express = require("express");
-const { createMission, listMissions, getMission } = require("../services/tradeMissionOrchestrator");
+const { createMission, listMissions, getMission, advanceMission, completeMissionAction } = require("../services/tradeMissionOrchestrator");
 
 const router = express.Router();
 
@@ -18,6 +18,16 @@ router.post("/", async (req, res) => {
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
+});
+
+router.post("/:missionId/actions/:actionKey/start", async (req, res) => {
+  try { res.json({ success: true, mission: await advanceMission(req, req.params.missionId, req.params.actionKey) }); }
+  catch (error) { res.status(400).json({ success: false, message: error.message }); }
+});
+
+router.post("/:missionId/actions/:actionKey/complete", async (req, res) => {
+  try { res.json({ success: true, mission: await completeMissionAction(req, req.params.missionId, req.params.actionKey) }); }
+  catch (error) { res.status(400).json({ success: false, message: error.message }); }
 });
 
 router.get("/:missionId", async (req, res) => {
