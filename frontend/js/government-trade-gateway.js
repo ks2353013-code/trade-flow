@@ -341,6 +341,9 @@
       .tf-quick-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0 22px}
       .tf-quick-card{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);border-radius:16px;padding:17px;text-align:left;cursor:pointer;color:inherit}
       .tf-quick-card:hover{background:rgba(255,255,255,.065);transform:translateY(-1px)}
+      .tf-mission-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0 24px}.tf-mission-card{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);border-radius:16px;padding:16px}.tf-mission-card h3{margin:0 0 6px;font-size:16px}.tf-mission-meta{font-size:12px;opacity:.55}.tf-mission-bar{height:6px;background:rgba(255,255,255,.08);border-radius:9px;overflow:hidden;margin:12px 0}.tf-mission-bar i{display:block;height:100%;background:#fff;border-radius:9px}.tf-mission-actions{font-size:12px;line-height:1.6;color:rgba(255,255,255,.68)}
+      .tf-mission-modal{position:fixed;inset:0;z-index:2100;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.62);padding:20px}.tf-mission-modal.open{display:flex}.tf-mission-box{width:min(680px,100%);background:#07101f;color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:26px;box-shadow:0 30px 100px rgba(0,0,0,.45)}.tf-mission-box h2{margin:0 0 8px;font-size:28px}.tf-mission-box p{margin:0 0 18px;color:rgba(255,255,255,.58)}.tf-mission-box textarea{width:100%;min-height:110px;resize:vertical;box-sizing:border-box;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;border-radius:14px;padding:14px;font:inherit}.tf-mission-box .row{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}.tf-mission-box button{border:0;border-radius:12px;padding:11px 16px;cursor:pointer;font-weight:800}.tf-mission-cancel{background:rgba(255,255,255,.08);color:#fff}.tf-mission-run{background:#fff;color:#111827}
+      @media(max-width:900px){.tf-mission-list{grid-template-columns:1fr}}
       .tf-quick-card strong{display:block;margin-top:8px}
       .tf-quick-card span{display:block;font-size:12px;opacity:.55;margin-top:4px}
       .tf-simple-hint{font-size:12px;color:rgba(255,255,255,.48);margin-top:6px}
@@ -408,6 +411,72 @@
     });
 
     simplifyDashboard();
+    injectMissionComposer();
+    refreshMissionCards();
+  }
+
+  function injectMissionComposer() {
+    if (document.getElementById("tfMissionComposer")) return;
+    const modal = document.createElement("div");
+    modal.id = "tfMissionComposer";
+    modal.className = "tf-mission-modal";
+    modal.innerHTML = '<div class="tf-mission-box"><h2>What are you trying to accomplish?</h2><p>Tell TradeFlow the outcome you want. We will build the workflow behind the scenes.</p><textarea id="tfMissionGoal" placeholder="Example: I want to export Basmati Rice from India to UAE"></textarea><div class="row"><button class="tf-mission-cancel">Cancel</button><button class="tf-mission-run">Start Mission →</button></div></div>';
+    document.body.appendChild(modal);
+    modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("open"); });
+    modal.querySelector(".tf-mission-cancel").onclick = () => modal.classList.remove("open");
+    modal.querySelector(".tf-mission-run").onclick = async () => {
+      const goal = modal.querySelector("#tfMissionGoal").value.trim();
+      if (!goal) return;
+      modal.classList.remove("open");
+      await createUserMission(goal);
+    };
+  }
+
+  function openMissionComposer(prefill = "") {
+    const modal = document.getElementById("tfMissionComposer");
+    if (!modal) return;
+    const input = modal.querySelector("#tfMissionGoal");
+    input.value = prefill;
+    modal.classList.add("open");
+    setTimeout(() => input.focus(), 50);
+  }
+
+  async function createUserMission(goal) {
+    const tokenValue = window.getAuthToken?.() || "";
+    const workspace = window.TradeFlowWorkspace?.getActiveWorkspaceId?.() || "";
+    if (!tokenValue || !workspace) {
+      go("governmentGatewayPage");
+      return;
+    }
+    try {
+      const data = await fetch(`${window.BACKEND_URL || ""}/api/missions`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type":"application/json", Authorization:`Bearer ${tokenValue}`, "x-workspace-id":workspace },
+        body: JSON.stringify({ goal })
+      }).then(async r => { const d=await r.json(); if(!r.ok||!d.success) throw new Error(d.message||"Could not start mission."); return d; });
+      go("dashboardPage");
+      setTimeout(() => { refreshMissionCards(); notify?.("TradeFlow has started your mission."); }, 150);
+      return data;
+    } catch (e) {
+      notify?.(e.message);
+    }
+  }
+
+  async function refreshMissionCards() {
+    const host = document.getElementById("tfActiveMissions");
+    if (!host) return;
+    const tokenValue = window.getAuthToken?.() || "";
+    const workspace = window.TradeFlowWorkspace?.getActiveWorkspaceId?.() || "";
+    if (!tokenValue || !workspace) return;
+    try {
+      const data = await fetch(`${window.BACKEND_URL || ""}/api/missions`, { credentials:"include", headers:{Authorization:`Bearer ${tokenValue}`,"x-workspace-id":workspace} }).then(r=>r.json());
+      const missions = data.missions || [];
+      host.innerHTML = missions.length ? missions.slice(0,6).map(m => {
+        const readiness = Math.max(0, Math.min(100, Number(m.readiness?.score || 0)));
+        const next = m.actions?.find(a => a.status === "ready")?.title || "Continue mission";
+        return `<article class="tf-mission-card"><h3>${esc(m.product)} → ${esc(m.market)}</h3><div class="tf-mission-meta">${esc(m.direction)} · ${esc(m.status)}</div><div class="tf-mission-bar"><i style="width:${readiness}%"></i></div><div class="tf-mission-actions"><strong>Next:</strong> ${esc(next)}</div></article>`;
+      }).join("") : '<div class="muted">No active missions yet. Start with one goal and TradeFlow will build the workflow.</div>';
+    } catch {}
   }
 
   function simplifyDashboard() {
@@ -435,6 +504,7 @@
       <button class="tf-quick-card" data-tf-start="research"><span>🧠</span><strong>Research a Market</strong><span>Understand a product or country</span></button>
     `;
     hero?.after(grid);
+    const missionHost = document.createElement("section"); missionHost.id="tfActiveMissions"; missionHost.className="tf-mission-list"; missionHost.innerHTML="<div class=\"muted\">Loading your work…</div>"; grid.after(missionHost);
 
     grid.querySelectorAll("[data-tf-start]").forEach(button => {
       button.addEventListener("click", () => startMission(button.dataset.tfStart));
@@ -445,62 +515,15 @@
   }
 
   async function startMission(type = "export") {
-    const promptText = type === "research"
-      ? "What product or market do you want to research?"
-      : "Describe your goal. Example: Export Basmati Rice to UAE";
-    const goal = window.prompt(promptText, "");
-    if (!goal) return;
-
     if (type === "buyers") {
-      go("buyerDiscoveryPage");
-      setTimeout(() => {
-        const input = document.querySelector("#buyerDiscoveryProduct,#aiProduct");
-        if (input) input.value = goal;
-      }, 250);
+      openMissionComposer("I want to find qualified buyers for ");
       return;
     }
-
     if (type === "research") {
-      go("aiPage");
-      setTimeout(() => {
-        const input = document.querySelector("#aiProduct");
-        if (input) input.value = goal;
-      }, 250);
+      openMissionComposer("Research the market opportunity for ");
       return;
     }
-
-    const tokenValue = window.getAuthToken?.() || "";
-    const workspace = window.TradeFlowWorkspace?.getActiveWorkspaceId?.() || "";
-    if (!tokenValue || !workspace) {
-      go("governmentGatewayPage");
-      setTimeout(() => {
-        const input = document.getElementById("governmentGatewayProduct");
-        if (input) input.value = goal;
-      }, 200);
-      return;
-    }
-
-    try {
-      const response = await fetch(`${window.BACKEND_URL || ""}/api/missions`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenValue}`, "x-workspace-id": workspace },
-        body: JSON.stringify({ goal, direction: type === "import" ? "Import" : "Export" })
-      }).then(async res => { const data = await res.json(); if (!res.ok || !data.success) throw new Error(data.message || "Could not create mission."); return data; });
-
-      const mission = response.mission || {};
-      go("dashboardPage");
-      setTimeout(() => {
-        const notice = document.getElementById("governmentGatewayNotice");
-        if (notice) notice.innerHTML = `<div class="deal"><strong>Mission created.</strong> ${esc(mission.product || "Your trade goal")} → ${esc(mission.market || "")}<br><span class="muted">${esc(response.plan?.nextAction || "TradeFlow is preparing the next steps.")}</span></div>`;
-      }, 250);
-    } catch (error) {
-      go("governmentGatewayPage");
-      setTimeout(() => {
-        const notice = document.getElementById("governmentGatewayNotice");
-        if (notice) notice.innerHTML = `<div class="deal"><strong>TradeFlow needs one more setup step.</strong><br><span class="muted">${esc(error.message)}</span></div>`;
-      }, 200);
-    }
+    openMissionComposer(type === "import" ? "I want to import " : "I want to export ");
   }
 
   document.addEventListener("DOMContentLoaded", buildShell);
