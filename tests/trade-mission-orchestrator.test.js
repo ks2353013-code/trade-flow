@@ -50,3 +50,32 @@ test("research agent supports live exploration without fabricating results", asy
     assert.equal(result.opportunityScore, null);
   }
 });
+
+
+test("supplier discovery does not reference results before initialization", async () => {
+  const supplier = require("../backend/services/agents/supplierDiscoveryAgent");
+  const result = await supplier.run({ product: "Basmati Rice", market: "UAE", direction: "Import" });
+  assert.ok(["Completed", "Source Unavailable"].includes(result.status));
+  assert.ok(Array.isArray(result.discoveredSuppliers));
+});
+
+test("revenue agent does not invent a deal value without commercial inputs", () => {
+  const revenue = require("../backend/services/agents/revenueAgent");
+  const result = revenue.run({ product: "Basmati Rice", market: "UAE", direction: "Export" });
+  assert.equal(result.estimatedDealValue, null);
+  assert.equal(result.riskAdjustedScore, null);
+});
+
+test("revenue agent calculates only from supplied commercial inputs", () => {
+  const revenue = require("../backend/services/agents/revenueAgent");
+  const result = revenue.run({ product: "Rice", market: "UAE", quantity: 1000, unitPrice: 120, currency: "USD", expectedMargin: 10 });
+  assert.equal(result.estimatedDealValue, 120000);
+  assert.equal(result.estimatedGrossMargin, 12000);
+});
+
+test("compliance agent remains preliminary without live official-source evidence", async () => {
+  const compliance = require("../backend/services/agents/complianceAgent");
+  const result = await compliance.run({ product: "Basmati Rice", market: "UAE", direction: "Export" });
+  assert.ok(["Completed", "Preliminary"].includes(result.status));
+  assert.ok(Array.isArray(result.requiredDocuments));
+});

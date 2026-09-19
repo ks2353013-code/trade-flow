@@ -16,19 +16,13 @@ function normalizeInput(input = {}) {
   };
 }
 
-function scoreOpportunity({ product, market }) {
-  let score = 55;
-
-  if (product && product !== "General Product") score += 15;
-  if (market && market !== "Global Market") score += 15;
-
-  const premiumProducts = ["Basmati Rice", "Medicine", "Textile"];
-  const premiumMarkets = ["UAE", "Europe", "USA"];
-
-  if (premiumProducts.includes(product)) score += 8;
-  if (premiumMarkets.includes(market)) score += 7;
-
-  return Math.min(score, 95);
+function scoreOpportunity(results = []) {
+  if (!Array.isArray(results) || !results.length) return null;
+  const uniqueHosts = new Set();
+  results.forEach((item) => {
+    try { uniqueHosts.add(new URL(item.url).hostname); } catch {}
+  });
+  return Math.min(95, 40 + Math.min(30, results.length * 3) + Math.min(25, uniqueHosts.size * 5));
 }
 
 async function exploreLiveMarket(ctx) {
@@ -60,9 +54,7 @@ async function run(input = {}) {
     console.warn("Live market research failed:", error.message);
   }
 
-  const opportunityScore = liveResearch.results.length
-    ? scoreOpportunity(ctx)
-    : null;
+  const opportunityScore = scoreOpportunity(liveResearch.results);
 
   return {
     agent: "Research Agent",
@@ -82,6 +74,7 @@ async function run(input = {}) {
     ],
     pricingAnalysis: `Pricing should compare landed cost, export price, logistics cost, margin expectation, buyer MOQ, and competitor pricing for ${ctx.product} in ${ctx.market}.`,
     opportunityScore,
+    opportunityScoreMethod: "Evidence-count heuristic based on live search results and unique source domains; not a market forecast.",
     executiveSummary:
       liveResearch.results.length
         ? `Live market research returned ${liveResearch.results.length} relevant public results for ${ctx.product} in ${ctx.market}. TradeFlow will use these results to guide verified lead discovery and next-step preparation.`

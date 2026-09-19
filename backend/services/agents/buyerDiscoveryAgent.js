@@ -142,8 +142,9 @@ async function run(input = {}) {
 
   return {
     agent: "Buyer Discovery Agent",
-    version: "V2",
-    status: "Completed",
+    version: "V3",
+    status: discoveredBuyers.length ? "Completed" : "Source Unavailable",
+    sourceMode: discoveredBuyers.length ? "provider" : "unavailable",
 
     buyerProfile: `Ideal buyers for ${ctx.product} in ${ctx.market} are companies already importing, distributing, wholesaling, or sourcing similar products.`,
 
@@ -175,6 +176,7 @@ async function run(input = {}) {
     estimatedBuyerFitScore,
 
     discoveredBuyers,
+    sourceEvidence: verifiedBuyerLeads.map((buyer) => ({ companyName: buyer.companyName, website: buyer.website, sourceUrl: buyer.sourceUrl || buyer.website })).filter((item) => item.sourceUrl),
     buyerLeaderboard,
     crmReadyBuyers,
     verifiedBuyerLeads,
@@ -185,12 +187,16 @@ async function run(input = {}) {
     humanApprovalRequired: true,
     outreachAllowed: false,
 
-    recommendedNextActions: [
-      "Review discovered buyer candidates",
+    recommendedNextActions: discoveredBuyers.length ? [
+      "Review discovered buyer candidates and source evidence",
       "Verify buyer contact details",
       "Approve buyer shortlist",
       "Prepare outreach message",
       "Push CRM-ready buyers into CRM after approval"
+    ] : [
+      "Connect a live buyer/search provider",
+      "Re-run buyer discovery",
+      "Do not treat unavailable results as real buyers"
     ]
   };
 }
