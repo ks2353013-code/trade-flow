@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const TradeMission = require("../models/TradeMission");
 const { createMissionGatewayPlan } = require("./governmentTradeGateway");
-const { saveProfile, buildOperatingPlan } = require("./exporterOperatingProfile");
+const { saveProfile } = require("./exporterOperatingProfile");
 
 function context(req) {
   const user = req.user || {};
@@ -92,6 +92,12 @@ async function createMission(req, input = {}) {
     status: "Running",
     agents: ["research", "buyerDiscovery", "compliance", "crm", "outreach", "revenue"],
     actions: plan.actions,
+    readiness: {
+      score: Number(profile?.readiness?.score || 0),
+      status: profile?.readiness?.status || "setup_required",
+      blockers: profile?.readiness?.blockers || [],
+      nextActions: profile?.readiness?.nextActions || []
+    },
     approvalsRequired: (gateway?.systems || [])
       .flatMap(system => (system.actions || []).filter(action => action.status === "manual_required").map(action => ({
         systemKey: system.systemKey,
@@ -109,6 +115,34 @@ async function listMissions(req, limit = 20) {
   return TradeMission.find(c).sort({ updatedAt: -1 }).limit(Math.min(Number(limit) || 20, 50)).lean();
 }
 
+async function advanceMission(req, missionId, actionKey) {
+  const c = context(req);
+  if (!mongoose.isValidObjectId(missionId)) throw new Error("Invalid mission id.");
+  const mission = await TradeMission.findOne({ ...c, _id: missionId });
+  if (!mission) throw new Error("Mission not found.");
+  const action = mission.actions.find(item => item.key === actionKey);
+  if (!action) throw new Error("Mission action not found.");
+  action.status = action.status === "completed" ? "completed" : "in_progress";
+  mission.timeline.push({ at: new Date(), event: "Action started", detail: action.title });
+  await mission.save();
+  return mission.toObject();
+}
+
+async function completeMissionAction(req, missionId, actionKey) {
+  const c = context(req);
+  if (!mongoose.isValidObjectId(missionId)) throw new Error("Invalid mission id.");
+  const mission = await TradeMission.findOne({ ...c, _id: missionId });
+  if (!mission) throw new Error("Mission not found.");
+  const action = mission.actions.find(item => item.key === actionKey);
+  if (!action) throw new Error("Mission action not found.");
+  action.status = "completed";
+  const remaining = mission.actions.some(item => item.status !== "completed");
+  mission.status = remaining ? "Running" : "Completed";
+  mission.timeline.push({ at: new Date(), event: "Action completed", detail: action.title });
+  await mission.save();
+  return mission.toObject();
+}
+
 async function getMission(req, missionId) {
   const c = context(req);
   if (!mongoose.isValidObjectId(missionId)) throw new Error("Invalid mission id.");
@@ -117,4 +151,4 @@ async function getMission(req, missionId) {
   return mission;
 }
 
-module.exports = { createMission, listMissions, getMission };
+module.exports = { createMission, listMissions, getMission, advanceMission, completeMissionAction };
