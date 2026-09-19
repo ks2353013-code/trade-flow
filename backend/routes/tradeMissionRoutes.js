@@ -1,5 +1,7 @@
 const express = require("express");
 const { createMission, listMissions, getMission, advanceMission, completeMissionAction } = require("../services/tradeMissionOrchestrator");
+const { enforceLimit } = require("../middleware/planLimitMiddleware");
+const { usageTracker } = require("../middleware/usageMiddleware");
 
 const router = express.Router();
 
@@ -11,7 +13,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", enforceLimit("mission_create"), usageTracker("mission_create"), async (req, res) => {
   try {
     const result = await createMission(req, req.body || {});
     res.status(201).json({ success: true, ...result });
