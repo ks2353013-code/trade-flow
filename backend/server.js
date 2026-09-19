@@ -245,6 +245,22 @@ function buildHealthPayload() {
   };
 }
 
+/* Webhooks that require raw-body signature verification must stay before JSON parsing. */
+app.post("/api/trade-integrations/webhooks/:providerKey", express.raw({ type: "*/*", limit: "2mb" }), async (req, res) => {
+  try {
+    const service = require("./services/tradeIntegrationService");
+    const workspaceId = req.headers["x-workspace-id"] || req.query.workspaceId;
+    const signature = req.headers["x-tradeflow-signature"] || req.headers["x-signature"];
+    const rawBody = Buffer.isBuffer(req.body) ? req.body : Buffer.from(req.body || "");
+    let payload = {};
+    try { payload = JSON.parse(rawBody.toString("utf8") || "{}"); } catch { payload = { raw: rawBody.toString("utf8") }; }
+    const result = await service.recordWebhookPublic(req.params.providerKey, workspaceId, rawBody, signature, payload);
+    return res.json({ success: true, ...result });
+  } catch (error) {
+    return res.status(401).json({ success: false, message: error.message });
+  }
+});
+
 /* Razorpay webhook must stay before JSON parser and auth */
 app.use("/api/razorpay-webhook", razorpayWebhookRoutes);
 

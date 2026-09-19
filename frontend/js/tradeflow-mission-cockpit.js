@@ -18,7 +18,7 @@
       ".tf-cockpit-card{background:rgba(255,255,255,.96);border:1px solid rgba(20,30,50,.09);border-radius:18px;padding:18px;box-shadow:0 10px 30px rgba(20,30,50,.05)}" +
       ".tf-cockpit-title{font-size:20px;font-weight:750;margin:0 0 4px}.tf-cockpit-muted{color:#667085;font-size:13px}" +
       ".tf-cockpit-flow{display:flex;gap:6px;overflow:auto;padding:12px 0 4px}.tf-stage{min-width:72px;text-align:center;font-size:11px;color:#667085}.tf-dot{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;margin:auto auto 5px;background:#eef1f5}.tf-stage.active .tf-dot{background:#111827;color:#fff}.tf-stage.done .tf-dot{background:#dfeee5;color:#185c37}" +
-      ".tf-next{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 14px;border-radius:12px;background:#f7f8fa;margin-top:10px}.tf-badge{font-size:11px;font-weight:700;padding:5px 8px;border-radius:999px;background:#eef1f5}.tf-list{display:grid;gap:8px;margin-top:12px}.tf-row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #edf0f3}.tf-row:last-child{border-bottom:0}@media(max-width:900px){.tf-cockpit{grid-template-columns:1fr}.tf-stage{min-width:60px}}";
+      ".tf-next{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 14px;border-radius:12px;background:#f7f8fa;margin-top:10px}.tf-badge{font-size:11px;font-weight:700;padding:5px 8px;border-radius:999px;background:#eef1f5}.tf-list{display:grid;gap:8px;margin-top:12px}.tf-integration{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #edf0f3}.tf-integration:last-child{border-bottom:0}.tf-dot-status{width:8px;height:8px;border-radius:50%;display:inline-block;background:#98a2b3;margin-right:6px}.tf-dot-status.active{background:#18794e}.tf-dot-status.error{background:#b42318}.tf-action-btn{border:0;background:#111827;color:#fff;border-radius:8px;padding:6px 9px;font-size:11px;cursor:pointer}.tf-row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #edf0f3}.tf-row:last-child{border-bottom:0}@media(max-width:900px){.tf-cockpit{grid-template-columns:1fr}.tf-stage{min-width:60px}}";
     document.head.appendChild(style);
   }
 
@@ -63,10 +63,36 @@
       '</div>';
   }
 
-  async function refresh() {
+  async function loadIntegrations() {
+    try { const data = await request("/api/trade-integrations/"); return data.integrations || []; }
+    catch { return []; }
+  }
+
+  function renderIntegrations(items) {
+    const box = document.getElementById("tradeflowMissionIntegrations");
+    if (!box) return;
+    box.innerHTML = items.map(function (x) {
+      const s = x.connection?.status || "not configured";
+      const cls = s === "active" ? "active" : s === "error" ? "error" : "";
+      return '<div class="tf-integration"><div><span class="tf-dot-status ' + cls + '"></span><strong>' +
+        esc(x.providerKey.replaceAll("_", " ")) + '</strong><div class="tf-cockpit-muted">' +
+        esc(x.mode) + '</div></div><span class="tf-badge">' + esc(s) + '</span></div>';
+    }).join("") || '<div class="tf-cockpit-muted">Integration control becomes available when a workspace is selected.</div>';
+  }\n\n  async function refresh() {
     try {
       const data = await request("/api/trade-executions");
-      if (data.executions && data.executions[0]) render(data.executions[0]);
+      if (data.executions && data.executions[0]) {
+        render(data.executions[0]);
+        const integrations = await loadIntegrations();
+        const cockpit = document.getElementById("tradeflowMissionCockpit");
+        if (cockpit && !document.getElementById("tradeflowMissionIntegrations")) {
+          const card = document.createElement("div");
+          card.className = "tf-cockpit-card";
+          card.innerHTML = '<strong>Connected operating layer</strong><div id="tradeflowMissionIntegrations" class="tf-list"></div>';
+          cockpit.querySelector(".tf-cockpit")?.appendChild(card);
+        }
+        renderIntegrations(integrations);
+      }
     } catch (error) {
       window.TradeFlowMissionCockpit.lastError = error.message;
     }
