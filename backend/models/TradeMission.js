@@ -25,6 +25,12 @@ const tradeMissionSchema = new mongoose.Schema(
       outreach: { type: mongoose.Schema.Types.Mixed, default: null }
     },
     opportunities: { type: Array, default: [] },
+    readiness: {
+      score: { type: Number, default: 0 },
+      status: { type: String, default: "setup_required" },
+      blockers: { type: Array, default: [] },
+      nextActions: { type: Array, default: [] }
+    },
     risks: { type: Array, default: [] },
     actions: { type: Array, default: [] },
     documents: { type: Array, default: [] },
