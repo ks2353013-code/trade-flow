@@ -29,6 +29,7 @@
     <button class="nav-btn" onclick="showPage('master')">🏢 Master Company</button>
     <button class="nav-btn" onclick="showPage('workspaces')">🏬 Multi-company Workspace</button>
     <button class="nav-btn" onclick="showPage('employees')">👥 Employees & Roles</button>
+    <button class="nav-btn" onclick="showPage('governmentGatewayPage'); TradeFlowGovernmentGateway?.refresh?.()">🏛️ Government Trade Gateway</button>
     <button class="nav-btn" onclick="showPage('suppliers')">🌍 Supplier Intelligence</button>
     <button class="nav-btn" onclick="showPage('crm')">📈 CRM Pipeline</button>
     <button class="nav-btn" onclick="showPage('negotiation')">💰 Negotiation Desk</button>
@@ -344,7 +345,39 @@
     </section>
 
 
-    <section id="employeesPage" class="hidden">
+    <section id="governmentGatewayPage" class="page">
+  <div class="page-header">
+    <div>
+      <h2>Government Trade Gateway</h2>
+      <p class="muted">TradeFlow prepares and tracks business-side work across official trade systems; official portals remain the authority for submissions and approvals.</p>
+    </div>
+  </div>
+  <div id="governmentGatewayNotice" class="notice" style="margin:12px 0;"></div>
+  <div id="governmentGatewayStatus" style="margin-bottom:18px;"></div>
+  <div class="grid-2">
+    <div class="panel">
+      <h3>Build a trade mission checklist</h3>
+      <p class="muted">Enter the product, country and direction to map relevant official systems.</p>
+      <div class="form-grid">
+        <label>Product<input id="governmentGatewayProduct" placeholder="e.g. Basmati rice"></label>
+        <label>Target country<input id="governmentGatewayCountry" placeholder="e.g. UAE"></label>
+        <label>Direction<select id="governmentGatewayDirection"><option value="Export">Export</option><option value="Import">Import</option></select></label>
+      </div>
+      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn" onclick="TradeFlowGovernmentGateway.createMissionPlan()">Create Government Checklist</button>
+        <button class="mini-btn" onclick="TradeFlowGovernmentGateway.refresh()">Refresh Gateway</button>
+      </div>
+      <div id="governmentGatewayPlan"></div>
+    </div>
+    <div class="panel">
+      <h3>Official system layer</h3>
+      <p class="muted">Use TradeFlow to organize the work and open the relevant official system for the authoritative step.</p>
+      <div id="governmentGatewayConnections"></div>
+    </div>
+  </div>
+</section>
+
+<section id="employeesPage" class="hidden">
 
       <div class="grid grid-3">
 
