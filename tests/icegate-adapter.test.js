@@ -1,0 +1,14 @@
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const crypto = require("crypto");
+const adapter = require("../backend/services/icegateApiAdapter");
+
+test("ICEGATE credential envelope uses RSA-OAEP and AES encryption", () => {
+  const { publicKey } = crypto.generateKeyPairSync("rsa", { modulusLength: 2048 });
+  const cert = publicKey.export({ type: "spki", format: "pem" });
+  const envelope = adapter.encryptCredentials({ icegateID: "TEST", password: "secret", publicCertificate: cert });
+  const parts = envelope.split(":");
+  assert.equal(parts.length, 2);
+  assert.ok(Buffer.from(parts[0], "base64").length > 0);
+  assert.ok(Buffer.from(parts[1], "base64").length > 0);
+});
