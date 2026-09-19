@@ -27,6 +27,7 @@ const tradeMissionSchema = new mongoose.Schema(
     },
     opportunities: { type: Array, default: [] },
     sourceEvidence: { type: mongoose.Schema.Types.Mixed, default: { market: [], counterparties: [], compliance: [] } },
+    compliancePlan: { type: mongoose.Schema.Types.Mixed, default: null },
     readiness: {
       score: { type: Number, default: 0 },
       status: { type: String, default: "setup_required" },

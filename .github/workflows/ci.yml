@@ -2,7 +2,7 @@ name: TradeFlow CI
 
 on:
   push:
-    branches: ["main", "feature/**"]
+    branches: ["main", "feature/**", "production/**", "production-*"]
   pull_request:
     branches: ["main"]
 
