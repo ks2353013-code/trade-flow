@@ -6,7 +6,8 @@
   "scripts": {
     "cap:sync": "cap sync android",
     "cap:open": "cap open android",
-    "test:e2e:iteration2": "playwright test"
+    "test:e2e:iteration2": "playwright test",
+    "test:backend": "npm --prefix backend test"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",
