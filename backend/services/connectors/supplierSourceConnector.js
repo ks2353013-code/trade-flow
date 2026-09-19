@@ -413,43 +413,6 @@ function deduplicateSuppliers(suppliers = []) {
   return Array.from(byKey.values());
 }
 
-function mockSupplierSource(ctx) {
-  const productSlug = ctx.product.toLowerCase().replace(/\s+/g, "-");
-
-  return [
-    {
-      companyName: `India ${ctx.product} Exporters Collective`,
-      country: "India",
-      product: ctx.product,
-      website: `https://india-${productSlug}-exporters.example`,
-      email: `sales@india-${productSlug}-exporters.example`,
-      phone: "+91-80-000-2001",
-      supplierType: "Exporter",
-      source: "Mock Supplier Source"
-    },
-    {
-      companyName: `India Premium ${ctx.product} Mills`,
-      country: "India",
-      product: ctx.product,
-      website: `https://premium-${productSlug}-mills.example`,
-      email: `exports@premium-${productSlug}-mills.example`,
-      phone: "+91-80-000-2002",
-      supplierType: "Manufacturer",
-      source: "Mock Supplier Source"
-    },
-    {
-      companyName: `${ctx.product} Wholesale Supply Desk`,
-      country: "India",
-      product: ctx.product,
-      website: `https://${productSlug}-wholesale-supply.example`,
-      email: "",
-      phone: "+91-80-000-2003",
-      supplierType: "Wholesaler",
-      source: "Mock Supplier Source"
-    }
-  ];
-}
-
 async function serpApiSupplierSource(ctx) {
   if (!process.env.SERP_API_KEY) return [];
 
@@ -495,7 +458,17 @@ async function discoverSuppliers(input = {}) {
   }
 
   if (!rawSuppliers.length) {
-    rawSuppliers = mockSupplierSource(ctx);
+    return {
+      connectorVersion: CONNECTOR_VERSION,
+      sourceMode: "unavailable",
+      product: ctx.product,
+      market: ctx.market,
+      total: 0,
+      suppliers: [],
+      networkReadySuppliers: [],
+      humanApprovalRequired: true,
+      note: "No live supplier source is configured. Configure SERP_API_KEY or connect a supported provider before treating discovery as live."
+    };
   }
 
   const suppliers = rawSuppliers
@@ -524,9 +497,7 @@ async function discoverSuppliers(input = {}) {
     });
 
   const dedupedSuppliers = deduplicateSuppliers(suppliers);
-  const finalSuppliers = dedupedSuppliers.length
-    ? dedupedSuppliers
-    : mockSupplierSource(ctx).map((supplier) => normalizeSupplier(supplier, ctx));
+  const finalSuppliers = dedupedSuppliers;
 
   return {
     connectorVersion: CONNECTOR_VERSION,
