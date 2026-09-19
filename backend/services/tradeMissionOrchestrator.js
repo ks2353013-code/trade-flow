@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const TradeMission = require("../models/TradeMission");
 const { createMissionGatewayPlan } = require("./governmentTradeGateway");
 const { saveProfile, buildOperatingPlan } = require("./exporterOperatingProfile");
