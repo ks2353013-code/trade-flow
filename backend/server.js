@@ -249,13 +249,16 @@ function buildHealthPayload() {
 app.post("/api/trade-integrations/webhooks/:providerKey", express.raw({ type: "*/*", limit: "2mb" }), async (req, res) => {
   try {
     const service = require("./services/tradeIntegrationService");
+    const reconciliation = require("./services/tradeExecutionReconciliationService");
     const workspaceId = req.headers["x-workspace-id"] || req.query.workspaceId;
     const signature = req.headers["x-tradeflow-signature"] || req.headers["x-signature"];
     const rawBody = Buffer.isBuffer(req.body) ? req.body : Buffer.from(req.body || "");
     let payload = {};
     try { payload = JSON.parse(rawBody.toString("utf8") || "{}"); } catch { payload = { raw: rawBody.toString("utf8") }; }
     const result = await service.recordWebhookPublic(req.params.providerKey, workspaceId, rawBody, signature, payload);
-    return res.json({ success: true, ...result });
+    const connection = await require("./models/TradeIntegrationConnection").findOne({ workspaceId, providerKey: req.params.providerKey }).lean();
+    const reconciled = connection ? await reconciliation.reconcilePublic(connection, req.params.providerKey, payload, rawBody.toString("utf8")) : null;
+    return res.json({ success: true, ...result, reconciliation: reconciled });
   } catch (error) {
     return res.status(401).json({ success: false, message: error.message });
   }

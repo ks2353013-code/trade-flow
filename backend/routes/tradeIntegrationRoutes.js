@@ -4,6 +4,7 @@ const service = require("../services/tradeIntegrationService");
 const credentialService = require("../services/tradeIntegrationCredentialService");
 const dgft = require("../services/dgftEbrcAdapter");
 const icegate = require("../services/icegateApiAdapter");
+const reconciliation = require("../services/tradeExecutionReconciliationService");
 
 router.get("/", async (req, res) => {
   try { res.json({ success: true, integrations: await service.listConnections(req) }); }
@@ -47,6 +48,7 @@ router.post("/connections/:providerKey/test", async (req, res) => {
 
 router.post("/connections/:providerKey/execute", async (req, res) => {
   try {
+    if (req.params.providerKey === "icegate" && req.body?.operation === "submit_json") { const credentials=await credentialService.load(req,"icegate"); const connection=(await service.listConnections(req)).find(x=>x.providerKey==="icegate")?.connection; const result=await icegate.submitJsonFile(credentials,connection?.endpoint||"",req.body?.file,req.body?.submitEndpoint); return res.json({success:true,result}); }
     if (req.params.providerKey === "dgft") {
       const credentials = await credentialService.load(req, "dgft");
       const operation = String(req.body?.operation || "");
@@ -60,3 +62,5 @@ router.post("/connections/:providerKey/execute", async (req, res) => {
 });
 
 module.exports = router;
+
+router.post("/events/:providerKey/reconcile", async (req,res)=>{try{res.json({success:true,result:await reconciliation.reconcile(req,req.params.providerKey,req.body||"",JSON.stringify(req.body||{}))})}catch(e){res.status(400).json({success:false,message:e.message})}});
