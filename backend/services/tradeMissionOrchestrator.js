@@ -15,16 +15,28 @@ function context(req) {
 function parseGoal(input = {}) {
   const text = String(input.missionText || input.goal || "").trim();
   const direction = String(input.direction || (/\bimport\b/i.test(text) ? "Import" : "Export"));
-  const product = String(input.product || "").trim() ||
-    (text.match(/(?:export|import)\s+(.+?)\s+(?:to|into|from)\s+/i)?.[1] || "General Product").trim();
-  const market = String(input.country || input.market || "").trim() ||
-    (text.match(/\b(?:to|into)\s+([A-Za-z][A-Za-z .'-]+)$/i)?.[1] || "Global Market").trim();
+  let product = String(input.product || "").trim();
+  let market = String(input.country || input.market || "").trim();
+
+  if (!product) {
+    const match = text.match(/(?:export|import)\s+(.+?)(?:\s+from\s+[A-Za-z][A-Za-z .'-]+)?\s+(?:to|into|from)\s+([A-Za-z][A-Za-z .'-]+)$/i);
+    if (match) {
+      product = match[1].replace(/\s+from\s+[A-Za-z][A-Za-z .'-]+$/i, "").trim();
+      if (!market) market = match[2].trim();
+    } else {
+      product = (text.match(/(?:export|import)\s+(.+)/i)?.[1] || "General Product").trim();
+    }
+  }
+
+  if (!market) {
+    market = (text.match(/\b(?:to|into)\s+([A-Za-z][A-Za-z .'-]+)$/i)?.[1] || "Global Market").trim();
+  }
 
   return {
     missionText: text || `${direction} ${product} to ${market}`,
     direction: direction === "Import" ? "Import" : "Export",
-    product,
-    market
+    product: product || "General Product",
+    market: market || "Global Market"
   };
 }
 
