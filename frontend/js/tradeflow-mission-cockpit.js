@@ -63,10 +63,36 @@
       '</div>';
   }
 
-  async function loadIntegrations() { try { const data = await request("/api/trade-integrations/"); return data.integrations || []; } catch { return []; } }\n\n  function renderIntegrations(items) { const box=document.getElementById("tradeflowMissionIntegrations"); if(!box)return; box.innerHTML=items.map(function(x){const s=x.connection?.status||"not configured"; const cls=s==="active"?"active":s==="error"?"error":""; return '<div class="tf-integration"><div><span class="tf-dot-status '+cls+'"></span><strong>'+esc(x.providerKey.replaceAll("_"," "))+"</strong><div class=\"tf-cockpit-muted\">"+esc(x.mode)+"</div></div><span class=\"tf-badge\">"+esc(s)+"</span></div>";}).join("") || '<div class="tf-cockpit-muted">Integration control becomes available when a workspace is selected.</div>'; }\n\n  async function refresh() {
+  async function loadIntegrations() {
+    try { const data = await request("/api/trade-integrations/"); return data.integrations || []; }
+    catch { return []; }
+  }
+
+  function renderIntegrations(items) {
+    const box = document.getElementById("tradeflowMissionIntegrations");
+    if (!box) return;
+    box.innerHTML = items.map(function (x) {
+      const s = x.connection?.status || "not configured";
+      const cls = s === "active" ? "active" : s === "error" ? "error" : "";
+      return '<div class="tf-integration"><div><span class="tf-dot-status ' + cls + '"></span><strong>' +
+        esc(x.providerKey.replaceAll("_", " ")) + '</strong><div class="tf-cockpit-muted">' +
+        esc(x.mode) + '</div></div><span class="tf-badge">' + esc(s) + '</span></div>';
+    }).join("") || '<div class="tf-cockpit-muted">Integration control becomes available when a workspace is selected.</div>';
+  }\n\n  async function refresh() {
     try {
       const data = await request("/api/trade-executions");
-      if (data.executions && data.executions[0]) render(data.executions[0]);
+      if (data.executions && data.executions[0]) {
+        render(data.executions[0]);
+        const integrations = await loadIntegrations();
+        const cockpit = document.getElementById("tradeflowMissionCockpit");
+        if (cockpit && !document.getElementById("tradeflowMissionIntegrations")) {
+          const card = document.createElement("div");
+          card.className = "tf-cockpit-card";
+          card.innerHTML = '<strong>Connected operating layer</strong><div id="tradeflowMissionIntegrations" class="tf-list"></div>';
+          cockpit.querySelector(".tf-cockpit")?.appendChild(card);
+        }
+        renderIntegrations(integrations);
+      }
     } catch (error) {
       window.TradeFlowMissionCockpit.lastError = error.message;
     }
