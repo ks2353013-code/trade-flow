@@ -469,8 +469,8 @@
       return;
     }
 
-    const tokenValue = token();
-    const workspace = workspaceId();
+    const tokenValue = window.getAuthToken?.() || "";
+    const workspace = window.TradeFlowWorkspace?.getActiveWorkspaceId?.() || "";
     if (!tokenValue || !workspace) {
       go("governmentGatewayPage");
       setTimeout(() => {
@@ -481,13 +481,12 @@
     }
 
     try {
-      const response = await request("/api/missions", {
+      const response = await fetch(`${window.BACKEND_URL || ""}/api/missions`, {
         method: "POST",
-        body: JSON.stringify({
-          goal,
-          direction: type === "import" ? "Import" : "Export"
-        })
-      });
+        credentials: "include",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenValue}`, "x-workspace-id": workspace },
+        body: JSON.stringify({ goal, direction: type === "import" ? "Import" : "Export" })
+      }).then(async res => { const data = await res.json(); if (!res.ok || !data.success) throw new Error(data.message || "Could not create mission."); return data; });
 
       const mission = response.mission || {};
       go("dashboardPage");
