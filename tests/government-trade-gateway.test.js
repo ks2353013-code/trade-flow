@@ -17,9 +17,9 @@ test("does not advertise direct API execution for portal-only systems", () => {
   assert.ok(portalSystems.every((system) => system.connectionMode === "guided_portal"));
 });
 
-test("keeps Trade Connect as an official-data layer", () => {
+test("keeps Trade Connect as an official guided portal layer", () => {
   const tradeConnect = SYSTEM_CATALOG.find((system) => system.systemKey === "trade_connect");
-  assert.equal(tradeConnect.connectionMode, "official_data");
+  assert.equal(tradeConnect.connectionMode, "guided_portal");
   assert.ok(tradeConnect.capabilityKeys.includes("tariff_explorer"));
   assert.ok(tradeConnect.capabilityKeys.includes("trade_agreements"));
 });
