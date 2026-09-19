@@ -1,44 +1,8 @@
-const crypto = require("crypto");
-const https = require("https");
-
-function requestJson(url, options = {}) {
-  return new Promise((resolve, reject) => {
-    const req = https.request(url, { method: options.method || "POST", headers: { "Content-Type": "application/json", Accept: "application/json", ...(options.headers || {}) }, timeout: 15000 }, res => {
-      let body = "";
-      res.setEncoding("utf8");
-      res.on("data", c => { body += c; if (body.length > 5_000_000) req.destroy(new Error("ICEGATE response too large.")); });
-      res.on("end", () => {
-        let data; try { data = JSON.parse(body); } catch { data = body; }
-        if (res.statusCode < 200 || res.statusCode >= 300) { const e = new Error("ICEGATE HTTP " + res.statusCode); e.statusCode = res.statusCode; e.providerBody = data; return reject(e); }
-        resolve(data);
-      });
-    });
-    req.on("timeout", () => req.destroy(new Error("ICEGATE request timed out.")));
-    req.on("error", reject);
-    if (options.body) req.write(options.body);
-    req.end();
-  });
-}
-
-function encryptCredentials(credentials) {
-  if (!credentials?.icegateID || !credentials?.password || !credentials?.publicCertificate) throw new Error("ICEGATE credentials require icegateID, password and publicCertificate.");
-  const aesKey = crypto.randomBytes(16);
-  const encryptedKey = crypto.publicEncrypt({ key: crypto.createPublicKey(credentials.publicCertificate), padding: crypto.constants.RSA_PKCS1_OAEP_PADDING, oaepHash: "sha256" }, aesKey);
-  const cipher = crypto.createCipheriv("aes-128-ecb", aesKey, null);
-  const encrypted = Buffer.concat([cipher.update(Buffer.from(JSON.stringify({ icegateID: credentials.icegateID, password: credentials.password }), "utf8")), cipher.final()]);
-  return Buffer.from(encryptedKey).toString("base64") + ":" + Buffer.from(encrypted).toString("base64");
-}
-
-async function authenticate(credentials, endpoint) {
-  if (!endpoint) throw new Error("ICEGATE authentication endpoint is required; use the endpoint issued in the current ICEGATE API onboarding contract.");
-  const response = await requestJson(endpoint, { body: JSON.stringify({ data: encryptCredentials(credentials) }) });
-  if (String(response?.status || "").toUpperCase() !== "SUCCESS" || !response?.accessToken) throw new Error(response?.message || "ICEGATE authentication failed.");
-  return response;
-}
-
-async function test(credentials, authEndpoint) {
-  const response = await authenticate(credentials, authEndpoint);
-  return { provider: "icegate", status: "active", authenticated: true, tokenExpiresIn: response.tokenExpiresIn || null, accessToken: "redacted" };
-}
-
-module.exports = { encryptCredentials, authenticate, test };
+const crypto=require("crypto"); const https=require("https");
+function request(url,options={}){return new Promise((resolve,reject)=>{const req=https.request(url,{method:options.method||"POST",headers:options.headers||{},timeout:20000},res=>{const chunks=[];res.on("data",c=>chunks.push(c));res.on("end",()=>{const b=Buffer.concat(chunks);let d;try{d=JSON.parse(b.toString("utf8"))}catch{d=b.toString("utf8")}if(res.statusCode<200||res.statusCode>=300){const e=new Error("ICEGATE HTTP "+res.statusCode);e.statusCode=res.statusCode;e.providerBody=d;return reject(e)}resolve(d)})});req.on("timeout",()=>req.destroy(new Error("ICEGATE request timed out.")));req.on("error",reject);if(options.body)req.write(options.body);req.end()})}
+function encryptCredentials(c){if(!c?.icegateID||!c?.password||!c?.publicCertificate)throw new Error("ICEGATE credentials require icegateID, password and publicCertificate.");const aesKey=crypto.randomBytes(16);const encryptedKey=crypto.publicEncrypt({key:crypto.createPublicKey(c.publicCertificate),padding:crypto.constants.RSA_PKCS1_OAEP_PADDING,oaepHash:"sha256"},aesKey);const cipher=crypto.createCipheriv("aes-128-ecb",aesKey,null);const encrypted=Buffer.concat([cipher.update(Buffer.from(JSON.stringify({icegateID:c.icegateID,password:c.password}),"utf8")),cipher.final()]);return Buffer.from(encryptedKey).toString("base64")+":"+Buffer.from(encrypted).toString("base64")}
+async function authenticate(c,endpoint){if(!endpoint)throw new Error("ICEGATE authentication endpoint is required; configure the endpoint issued for your ICEGATE Open API account.");const r=await request(endpoint,{headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({data:encryptCredentials(c)})});if(String(r?.status||"").toUpperCase()!=="SUCCESS"||!r?.accessToken)throw new Error(r?.message||"ICEGATE authentication failed.");return r}
+async function test(c,e){const r=await authenticate(c,e);return{provider:"icegate",status:"active",authenticated:true,tokenExpiresIn:r.tokenExpiresIn||null,accessToken:"redacted"}}
+function multipart(buf,name){const boundary="----TradeFlow"+crypto.randomBytes(12).toString("hex");const head=Buffer.from("--"+boundary+"\r\nContent-Disposition: form-data; name=\"file\"; filename=\""+name+"\"\r\nContent-Type: application/json\r\n\r\n");const tail=Buffer.from("\r\n--"+boundary+"--\r\n");return{body:Buffer.concat([head,buf,tail]),contentType:"multipart/form-data; boundary="+boundary}}
+async function submitJsonFile(c,authEndpoint,fileJson,submitEndpoint="https://cisapi.icegate.gov.in/jsonfiling/v1.0/api/fileSubmit"){const auth=await authenticate(c,authEndpoint);const form=multipart(Buffer.from(typeof fileJson==="string"?fileJson:JSON.stringify(fileJson),"utf8"),"TradeFlow_BE_SB_Json_Signed.json");return request(submitEndpoint,{headers:{"Content-Type":form.contentType,"Content-Length":form.body.length,token:auth.accessToken},body:form.body})}
+module.exports={encryptCredentials,authenticate,test,submitJsonFile};
