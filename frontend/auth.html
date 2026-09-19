@@ -419,7 +419,7 @@ forgotForm.addEventListener("submit", async (e) => {
       throw new Error(data.message || "Password reset request failed");
     }
 
-    showMessage(data.resetUrl ? `Reset link generated: ${data.resetUrl}` : data.message, "success");
+    showMessage("If that email exists, a password reset link has been sent. Check the inbox and spam folder.", "success");
   } catch(err) {
     showMessage(err.message || "Server request failed");
   }
