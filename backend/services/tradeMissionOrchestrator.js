@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const TradeMission = require("../models/TradeMission");
 const { createMissionGatewayPlan } = require("./governmentTradeGateway");
+const { runTradeMission } = require("./tradeflowAgentOrchestrator");
 const { saveProfile } = require("./exporterOperatingProfile");
 
 function context(req) {
@@ -40,7 +41,7 @@ function parseGoal(input = {}) {
   };
 }
 
-function buildActions({ direction, product, market, profile, gateway }) {
+function buildActions({ direction, product, market, profile, gateway, intelligence }) {
   const actions = [
     { key: "setup", title: "Complete trade setup", status: "ready", description: "TradeFlow checks your business, product and market setup." },
     { key: "intelligence", title: "Research market requirements", status: "ready", description: "TradeFlow prepares product, market, tariff and requirement intelligence." },
@@ -51,6 +52,11 @@ function buildActions({ direction, product, market, profile, gateway }) {
   ];
 
   const blockers = profile?.readiness?.blockers || [];
+  const intelligenceActions = Array.isArray(intelligence?.actions) ? intelligence.actions.slice(0, 4) : [];
+  intelligenceActions.forEach((item, index) => {
+    const title = typeof item === "string" ? item : item?.title || item?.action || item?.description;
+    if (title) actions.splice(Math.min(index + 1, actions.length), 0, { key: `intelligence_${index + 1}`, title: String(title), status: "ready", description: "Generated from TradeFlow intelligence for this mission." });
+  });
   if (blockers.length) actions[0].status = "in_progress";
 
   return {
@@ -61,6 +67,8 @@ function buildActions({ direction, product, market, profile, gateway }) {
       market,
       direction,
       readiness: Number(profile?.readiness?.score || 0),
+      opportunityScore: Number(intelligence?.opportunityScore || 0),
+      revenueEstimate: Number(intelligence?.revenueEstimate || 0),
       governmentSystems: Number(gateway?.summary?.totalSystems || 0)
     }
   };
@@ -85,12 +93,23 @@ async function createMission(req, input = {}) {
     direction: goal.direction
   });
 
-  const plan = buildActions({ ...goal, profile, gateway });
+  const intelligence = await runTradeMission(goal.missionText, {
+    ownerEmail: c.ownerEmail,
+    companyId: c.companyId,
+    workspaceId: c.workspaceId
+  });
+  const plan = buildActions({ ...goal, profile, gateway, intelligence });
   const mission = await TradeMission.create({
     ...c,
     ...goal,
     status: "Running",
-    agents: ["research", "buyerDiscovery", "compliance", "crm", "outreach", "revenue"],
+    agents: intelligence.agents || ["research", "buyerDiscovery", "supplierDiscovery", "compliance", "crm", "outreach", "revenue"],
+    agentReports: intelligence.agentReports || {},
+    opportunities: intelligence.opportunities || [],
+    risks: intelligence.risks || [],
+    documents: intelligence.documents || [],
+    revenueEstimate: Number(intelligence.revenueEstimate || 0),
+    opportunityScore: Number(intelligence.opportunityScore || 0),
     actions: plan.actions,
     readiness: {
       score: Number(profile?.readiness?.score || 0),
@@ -104,7 +123,7 @@ async function createMission(req, input = {}) {
         actionKey: action.actionKey,
         title: action.title
       }))),
-    timeline: [{ at: new Date(), event: "Mission created", detail: plan.nextAction }]
+    timeline: [{ at: new Date(), event: "Mission intelligence generated", detail: plan.nextAction }].concat((intelligence.timeline || []).map(item => ({ at: item.at || new Date(), event: item.title || "TradeFlow agent update", detail: item.output || item.status || "" })))
   });
 
   return { mission, profile, gateway, plan };
