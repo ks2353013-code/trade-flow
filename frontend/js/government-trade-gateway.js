@@ -480,8 +480,8 @@
       const missions = data.missions || [];
       host.innerHTML = missions.length ? missions.slice(0,6).map(m => {
         const readiness = Math.max(0, Math.min(100, Number(m.readiness?.score || 0)));
-        const next = m.actions?.find(a => a.status === "ready")?.title || "Continue mission";
-        const nextAction = m.actions?.find(a => a.status !== "completed");
+        const next = m.readiness?.nextActions?.[0] || m.actions?.find(a => a.status === "in_progress")?.title || m.actions?.find(a => a.status === "ready")?.title || "Continue mission";
+        const nextAction = m.actions?.find(a => a.status === "in_progress") || m.actions?.find(a => a.status === "ready");
         const risks = Array.isArray(m.risks) ? m.risks.slice(0, 2) : [];
         const opportunity = Number(m.opportunityScore || 0);
         const revenue = Number(m.revenueEstimate || 0);
@@ -492,6 +492,10 @@
   }
 
   async function runMissionAction(missionId, actionKey) {
+    if (actionKey === "setup") {
+      go("governmentGatewayPage");
+      return;
+    }
     const tokenValue = token();
     const workspace = window.TradeFlowWorkspace?.getActiveWorkspaceId?.() || "";
     if (!tokenValue || !workspace) return;
