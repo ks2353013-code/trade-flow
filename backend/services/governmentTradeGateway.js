@@ -96,7 +96,7 @@ function buildActions(system) {
     description,
     mode: system.connectionMode,
     officialUrl: system.officialUrl,
-    status: "not_started"
+    status: "manual_required"
   }));
 }
 
@@ -109,7 +109,7 @@ function buildSystemDocuments(context) {
     displayName: system.displayName,
     enabled: true,
     connectionMode: system.connectionMode,
-    status: "available",
+    status: "action_required",
     officialUrl: system.officialUrl,
     capabilityKeys: system.capabilityKeys,
     actions: buildActions(system)
@@ -133,7 +133,23 @@ async function ensureWorkspaceGateway(req) {
 
 async function listConnections(req) {
   const context = await ensureWorkspaceGateway(req);
-  return GovernmentConnection.find(context).sort({ displayName: 1 }).lean();
+  const connections = await GovernmentConnection.find(context).sort({ displayName: 1 }).lean();
+  return connections.map((connection) => {
+    if (connection.connectionMode !== "api") {
+      connection.status = "action_required";
+      connection.actions = (connection.actions || []).map((action) => {
+        if (["submitted", "completed"].includes(action.status)) {
+          return {
+            ...action,
+            status: "manual_required",
+            notes: [action.notes, "Legacy completion was not externally verified; TradeFlow will not represent it as completed without a live API confirmation."].filter(Boolean).join(" ")
+          };
+        }
+        return action;
+      });
+    }
+    return connection;
+  });
 }
 
 function inferRelevantSystems({ product = "", country = "", direction = "Export" }) {
@@ -184,6 +200,18 @@ async function updateAction(req, systemKey, actionKey, patch = {}) {
   const allowed = new Set(["not_started", "ready", "in_progress", "submitted", "completed", "blocked", "manual_required"]);
 
   if (patch.status && !allowed.has(patch.status)) throw new Error("Invalid government action status");
+
+  const connectionBeforeUpdate = await GovernmentConnection.findOne({ ...context, systemKey }).lean();
+  if (!connectionBeforeUpdate) throw new Error("Government connection not found");
+
+  if (patch.status && ["submitted", "completed"].includes(patch.status)) {
+    if (connectionBeforeUpdate.connectionMode !== "api") {
+      throw new Error("TradeFlow cannot mark this official action submitted or completed without a live authenticated API integration. Use manual_required/in_progress and complete the step in the official portal.");
+    }
+    if (!patch.externalReference) {
+      throw new Error("External confirmation reference is required for an API-confirmed government action.");
+    }
+  }
 
   const connection = await GovernmentConnection.findOneAndUpdate(
     { ...context, systemKey },

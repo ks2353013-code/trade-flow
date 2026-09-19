@@ -437,7 +437,7 @@ async function discoverBuyers(input = {}) {
 
   return {
     connectorVersion: CONNECTOR_VERSION,
-    sourceMode: process.env.SERP_API_KEY ? "provider" : "mock",
+    sourceMode: "provider",
     product: ctx.product,
     market: ctx.market,
     total: finalBuyers.length,

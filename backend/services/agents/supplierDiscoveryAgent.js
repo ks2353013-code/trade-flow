@@ -128,99 +128,6 @@ function getVerificationStatus(confidenceScore, riskScore) {
   return "Unverified";
 }
 
-function createSupplier(sample) {
-  const confidenceScore = scoreSupplierConfidence(sample);
-  const riskScore = scoreSupplierRisk(sample);
-
-  return {
-    ...sample,
-    confidenceScore,
-    riskScore,
-    verificationStatus: getVerificationStatus(confidenceScore, riskScore)
-  };
-}
-
-function generateSampleSuppliers(ctx, supplierTypes) {
-  const sourceCountry = getSourceCountry(ctx);
-  const productSlug = slugify(ctx.product);
-
-  const [
-    primaryType,
-    secondaryType,
-    tertiaryType,
-    fourthType,
-    fifthType
-  ] = supplierTypes;
-
-  const templates = [
-    {
-      companyName: `${sourceCountry} ${ctx.product} Exporters Collective`,
-      country: sourceCountry,
-      supplierType: secondaryType,
-      productMatch: true,
-      hasWebsite: true,
-      hasEmail: true,
-      hasPhone: true
-    },
-    {
-      companyName: `${sourceCountry} Premium ${ctx.product} Mills`,
-      country: sourceCountry,
-      supplierType: primaryType,
-      productMatch: true,
-      hasWebsite: true,
-      hasEmail: true,
-      hasPhone: true
-    },
-    {
-      companyName: `${sourceCountry} Wholesale ${ctx.product} Hub`,
-      country: sourceCountry,
-      supplierType: tertiaryType,
-      productMatch: true,
-      hasWebsite: true,
-      hasEmail: true,
-      hasPhone: false
-    },
-    {
-      companyName: `${sourceCountry} Trade Supply Partners`,
-      country: sourceCountry,
-      supplierType: fourthType,
-      productMatch: true,
-      hasWebsite: true,
-      hasEmail: false,
-      hasPhone: true
-    },
-    {
-      companyName: "Regional Commodity Source Desk",
-      country: "Unknown",
-      supplierType: fifthType,
-      productMatch: false,
-      hasWebsite: false,
-      hasEmail: true,
-      hasPhone: false
-    }
-  ];
-
-  return templates.map((template, index) => {
-    const companySlug = slugify(template.companyName);
-
-    return createSupplier({
-      companyName: template.companyName,
-      country: template.country,
-      website: template.hasWebsite
-        ? `https://${companySlug}.example`
-        : "",
-      email: template.hasEmail
-        ? `sales.${productSlug}@${companySlug}.example`
-        : "",
-      phone: template.hasPhone
-        ? `+91-80-000-02${index + 1}${productSlug.length % 10}`
-        : "",
-      supplierType: template.supplierType,
-      productMatch: template.productMatch
-    });
-  });
-}
-
 async function getDiscoveredSuppliers(ctx) {
   try {
     const result = await discoverSuppliers(ctx);
@@ -288,10 +195,9 @@ function buildVerificationSummary(verification = {}, discoveredCount = 0) {
 async function run(input = {}) {
   const ctx = normalizeInput(input);
 
-  const estimatedSupplierFitScore =
-    ctx.product !== "General Product"
-      ? 84
-      : 60;
+  const estimatedSupplierFitScore = discoveredSuppliers.length
+    ? Math.round(discoveredSuppliers.reduce((sum, supplier) => sum + Number(supplier.confidenceScore || 0), 0) / discoveredSuppliers.length)
+    : null;
 
   const supplierTypes = SUPPLIER_TYPES;
   const discoveredSuppliers = await getDiscoveredSuppliers(ctx);

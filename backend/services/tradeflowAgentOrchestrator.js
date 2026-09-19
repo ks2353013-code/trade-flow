@@ -37,13 +37,13 @@ function buildTimeline({ direction, buyerDiscovery, supplierDiscovery }) {
   const now = new Date().toISOString();
   const relevantDiscovery = direction === "Export" ? buyerDiscovery : supplierDiscovery;
   const discoveryTitle = direction === "Export"
-    ? "Buyer Discovery Agent Completed"
-    : "Supplier Discovery Agent Completed";
+    ? "Buyer Discovery Agent"
+    : "Supplier Discovery Agent";
 
   return [
     { title: "Mission created", status: "Completed", at: now },
     { title: "Research Agent Completed", status: "Completed", at: now },
-    { title: discoveryTitle, status: relevantDiscovery ? "Completed" : "Skipped", at: now },
+    { title: discoveryTitle, status: relevantDiscovery?.discoveredBuyers?.length || relevantDiscovery?.discoveredSuppliers?.length ? "Completed" : "Source Unavailable", at: now },
     { title: "CRM Agent Completed", status: "Completed", at: now },
     { title: "Compliance Agent Completed", status: "Completed", at: now },
     { title: "Revenue Agent Completed", status: "Completed", at: now },
@@ -105,8 +105,8 @@ async function runTradeMission(missionText = "", context = {}) {
     agents: [
       { name: "Research Agent", status: "Completed", output: research.executiveSummary },
       detected.direction === "Export"
-        ? { name: "Buyer Discovery Agent", status: "Completed", output: buyerDiscovery?.buyerProfile || "No buyer discovery result." }
-        : { name: "Supplier Discovery Agent", status: "Completed", output: supplierDiscovery?.supplierProfile || "No supplier discovery result." },
+        ? { name: "Buyer Discovery Agent", status: buyerDiscovery?.discoveredBuyers?.length ? "Completed" : "Source Unavailable", output: buyerDiscovery?.buyerProfile || "No live buyer discovery result." }
+        : { name: "Supplier Discovery Agent", status: supplierDiscovery?.discoveredSuppliers?.length ? "Completed" : "Source Unavailable", output: supplierDiscovery?.supplierProfile || "No live supplier discovery result." },
       { name: "CRM Agent", status: "Completed", output: crm.dealStrategy },
       { name: "Compliance Agent", status: "Completed", output: "Compliance checklist generated." },
       { name: "Revenue Agent", status: "Completed", output: revenue.executiveSummary },

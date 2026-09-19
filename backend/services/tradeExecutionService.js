@@ -52,7 +52,7 @@ async function createExecution(req,input={}){
   const existing=await TradeExecution.findOne({...c,missionId:mission._id,crmLeadId:lead?._id||null,status:{$in:["active","blocked"]}});
   if(existing) return existing.toObject();
   const execution=await TradeExecution.create({
-    ...c,missionId:mission._id,crmLeadId:lead?._id:null,
+    ...c,missionId:mission._id,crmLeadId:lead ? lead._id : null,
     direction:mission.direction,product:mission.product,market:mission.market,
     stage:lead?"qualification":"deal",
     checklist:checklistFor(lead?"qualification":"deal"),
