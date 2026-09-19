@@ -9,7 +9,7 @@ const integrationSchema = new mongoose.Schema({
   mode: { type: String, enum: ["api", "webhook", "official_portal", "manual"], required: true },
   status: { type: String, enum: ["disconnected", "ready", "active", "error"], default: "disconnected" },
   endpoint: { type: String, default: "" },
-  credentialRef: { type: String, default: "" },
+  credentialRef: { type: String, default: "", select: false },
   capabilities: { type: [String], default: [] },
   lastCheckedAt: { type: Date, default: null },
   lastError: { type: String, default: "" },
