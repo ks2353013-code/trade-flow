@@ -9,6 +9,10 @@ function context(req) {
   };
 }
 
+function mergeArray(existing, incoming) {
+  return Array.isArray(incoming) && incoming.length ? incoming : existing;
+}
+
 function evaluate(profile) {
   const blockers = [];
   const nextActions = [];
@@ -20,8 +24,8 @@ function evaluate(profile) {
     else blockers.push(`Company setup missing: ${field.toUpperCase()}`);
   });
 
-  if (profile.products?.length) points += 15;
-  else { points -= 0; nextActions.push("Add at least one export product and HS code."); }
+  if (profile.products?.length && profile.products.some((product) => product.hsCode)) points += 20;
+  else nextActions.push("Add at least one export product and confirm its HS code.");
 
   if (profile.targetMarkets?.length) points += 10;
   else nextActions.push("Add target countries/markets.");
@@ -31,9 +35,6 @@ function evaluate(profile) {
     if (setup[key]) points += 5;
     else nextActions.push(`Complete ${key.replace(/Ready$/, "").replace(/([A-Z])/g, " $1").trim()} setup.`);
   });
-
-  if (profile.products?.some((p) => p.hsCode)) points += 5;
-  else nextActions.push("Confirm HS classification before using tariff, customs or market intelligence.");
 
   const score = Math.max(0, Math.min(100, points));
   let status = "setup_required";
@@ -60,31 +61,40 @@ async function getOrCreateProfile(req) {
   if (!profile) {
     profile = await ExporterOperatingProfile.create({
       ...ctx,
-      sourceSnapshot: {
-        generatedAt: new Date(),
-        sourceCount: 0,
-        systemsCovered: []
-      }
+      sourceSnapshot: { generatedAt: new Date(), sourceCount: 0, systemsCovered: [] }
     });
   }
 
   return profile;
 }
 
-async function saveProfile(req, patch) {
+async function saveProfile(req, patch = {}) {
   const ctx = context(req);
-  const profile = await ExporterOperatingProfile.findOneAndUpdate(
-    ctx,
-    {
-      $set: {
-        company: patch.company || {},
-        products: Array.isArray(patch.products) ? patch.products : [],
-        targetMarkets: Array.isArray(patch.targetMarkets) ? patch.targetMarkets : [],
-        operatingSetup: patch.operatingSetup || {}
-      }
-    },
-    { new: true, upsert: true, setDefaultsOnInsert: true }
-  );
+  if (!ctx.ownerEmail || !ctx.workspaceId) throw new Error("Authenticated workspace is required");
+
+  let profile = await ExporterOperatingProfile.findOne(ctx);
+  if (!profile) {
+    profile = new ExporterOperatingProfile({
+      ...ctx,
+      company: {},
+      products: [],
+      targetMarkets: [],
+      operatingSetup: {}
+    });
+  }
+
+  if (patch.company && typeof patch.company === "object") {
+    profile.company = { ...(profile.company?.toObject?.() || profile.company || {}), ...patch.company };
+  }
+  if (Array.isArray(patch.products) && patch.products.length) {
+    profile.products = mergeArray(profile.products, patch.products);
+  }
+  if (Array.isArray(patch.targetMarkets) && patch.targetMarkets.length) {
+    profile.targetMarkets = mergeArray(profile.targetMarkets, patch.targetMarkets);
+  }
+  if (patch.operatingSetup && typeof patch.operatingSetup === "object") {
+    profile.operatingSetup = { ...(profile.operatingSetup?.toObject?.() || profile.operatingSetup || {}), ...patch.operatingSetup };
+  }
 
   profile.readiness = evaluate(profile);
   await profile.save();
