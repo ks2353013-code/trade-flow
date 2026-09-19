@@ -114,14 +114,14 @@ async function getDiscoveredBuyers(ctx) {
   try {
     const result = await discoverBuyers(ctx);
 
-    if (Array.isArray(result?.buyers) && result.buyers.length) {
+    if (Array.isArray(result?.buyers)) {
       return result.buyers;
     }
   } catch (error) {
     console.warn("Buyer source connector failed:", error.message);
   }
 
-  return createFallbackBuyers(ctx);
+  return [];
 }
 
 function buildLeaderboard(buyers = []) {
