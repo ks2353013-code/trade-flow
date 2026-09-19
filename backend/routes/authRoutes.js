@@ -1,6 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
+const rateLimit = require("express-rate-limit");
 
 const User = require("../models/User");
 const authMiddleware = require("../middleware/authMiddleware");
@@ -39,15 +40,28 @@ function getFrontendBaseUrl(req) {
   ).replace(/\/$/, "");
 }
 
-function buildResetUrl(req, email, token) {
-  const baseUrl = getFrontendBaseUrl(req);
-  const params = new URLSearchParams({
-    email,
-    resetToken: token
-  });
-
-  return `${baseUrl}/login?${params.toString()}`;
+function getTrustedFrontendBaseUrl() {
+  return (
+    process.env.FRONTEND_URL ||
+    process.env.APP_URL ||
+    "https://tradeflowai.in"
+  ).replace(/\\/$/, "");
 }
+
+function buildResetUrl(token) {
+  return `${getTrustedFrontendBaseUrl()}/login?resetToken=${encodeURIComponent(token)}`;
+}
+
+const passwordResetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: Number(process.env.PASSWORD_RESET_RATE_LIMIT || 5),
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many password reset requests. Please try again later."
+  }
+});
 
 function buildPermissions(role = "Founder") {
   const isAdmin =
@@ -246,7 +260,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.post("/forgot-password", async (req, res) => {
+router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
   try {
     const cleanEmail = normalizeEmail(req.body?.email);
 
@@ -269,7 +283,7 @@ router.post("/forgot-password", async (req, res) => {
     }
 
     const resetToken = crypto.randomBytes(32).toString("hex");
-    const resetUrl = buildResetUrl(req, cleanEmail, resetToken);
+    const resetUrl = buildResetUrl(resetToken);
 
     user.passwordResetTokenHash = hashResetToken(resetToken);
     user.passwordResetExpiresAt = new Date(Date.now() + 60 * 60 * 1000);
@@ -312,7 +326,7 @@ router.post("/reset-password", async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email: cleanEmail }).select("+passwordResetTokenHash");
+    const user = await User.findOne({\n      passwordResetTokenHash: hashResetToken(resetToken)\n    }).select("+passwordResetTokenHash");
 
     if (
       !user ||
