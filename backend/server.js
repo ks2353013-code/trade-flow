@@ -77,6 +77,7 @@ const aiCommandRoutes = require("./routes/aiCommandRoutes");
 const agentRegistryRoutes = require("./routes/agentRegistryRoutes");
 const agentMemoryRoutes = require("./routes/agentMemoryRoutes");
 const betaRoutes = require("./routes/betaRoutes");
+const governmentTradeGatewayRoutes = require("./routes/governmentTradeGatewayRoutes");
 
 const { startWorkflowScheduler } = require("./services/workflowScheduler");
 const { startAIAutonomousScheduler } = require("./services/aiAutonomousScheduler");
@@ -333,6 +334,7 @@ app.use("/api/ai-command", protectedStack, requirePlan("Starter"), aiCommandRout
 app.use("/api/agent-registry", protectedStack, requirePlan("Starter"), agentRegistryRoutes);
 app.use("/api/agent-memory", protectedStack, requirePlan("Starter"), agentMemoryRoutes);
 app.use("/api/beta", protectedStack, betaRoutes);
+app.use("/api/government-gateway", protectedStack, governmentTradeGatewayRoutes);
 
 app.use("/api", (req, res) => {
   res.status(404).json({
