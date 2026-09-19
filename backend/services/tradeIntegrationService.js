@@ -3,8 +3,8 @@ const TradeIntegrationConnection = require("../models/TradeIntegrationConnection
 const TradeComplianceSnapshot = require("../models/TradeComplianceSnapshot");
 
 const PROVIDERS = {
-  dgft: { category: "government", mode: "api", capabilities: ["ebrc_status", "official_api"], officialUrl: "https://www.dgft.gov.in/" },
-  icegate: { category: "government", mode: "api", capabilities: ["shipping_bill", "bill_of_entry", "customs_status"], officialUrl: "https://www.icegate.gov.in/" },
+  dgft: { category: "government", mode: "official_portal", capabilities: ["ebrc_status", "official_api"], officialUrl: "https://www.dgft.gov.in/" },
+  icegate: { category: "government", mode: "official_portal", capabilities: ["shipping_bill", "bill_of_entry", "customs_status"], officialUrl: "https://www.icegate.gov.in/" },
   trade_connect: { category: "government", mode: "official_portal", capabilities: ["market_access", "buyer_discovery"], officialUrl: "https://www.trade.gov.in/" },
   apeda: { category: "government", mode: "official_portal", capabilities: ["agri_export_requirements"], officialUrl: "https://apeda.gov.in/" },
   logistics_webhook: { category: "logistics", mode: "webhook", capabilities: ["shipment_status", "milestones"] },
