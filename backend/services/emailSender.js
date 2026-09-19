@@ -53,18 +53,36 @@ async function sendApprovedEmail({ to, subject, message }) {
 
 async function sendPasswordResetEmail({ to, resetUrl }) {
   if (!to || !resetUrl) {
-    throw new Error("Password reset email and reset URL are required");
+    throw new Error("Password reset recipient and reset URL are required");
   }
 
   const subject = "Reset your TradeFlow password";
-  const message = [
+  const text = [
     "We received a request to reset your TradeFlow password.",
     "",
-    "Open this secure link to set a new password:",
+    "Reset your password:",
     resetUrl,
     "",
-    "This link expires in 1 hour. If you did not request this, you can ignore this email."
-  ].join("\n");
+    "This one-time link expires in 1 hour and becomes invalid after use.",
+    "If you did not request this, you can safely ignore this email.",
+    "",
+    "TradeFlow"
+  ].join("\\n");
+
+  const html = `<!doctype html>
+<html>
+  <body style="margin:0;background:#f8fafc;font-family:Arial,sans-serif;color:#0f172a;">
+    <div style="max-width:620px;margin:40px auto;padding:32px;background:#ffffff;border:1px solid #e2e8f0;border-radius:18px;">
+      <h1 style="margin:0 0 16px;">Reset your TradeFlow password</h1>
+      <p style="line-height:1.6;">We received a request to reset the password for your TradeFlow account.</p>
+      <p style="margin:28px 0;">
+        <a href="${resetUrl}" style="display:inline-block;padding:14px 22px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:700;">Reset My Password</a>
+      </p>
+      <p style="font-size:14px;color:#64748b;line-height:1.6;">This one-time link expires in 1 hour and can only be used once.</p>
+      <p style="font-size:14px;color:#64748b;line-height:1.6;">If you did not request this, you can safely ignore this email.</p>
+    </div>
+  </body>
+</html>`;
 
   if (!isEmailConfigured()) {
     return {
@@ -80,7 +98,8 @@ async function sendPasswordResetEmail({ to, resetUrl }) {
     from: process.env.SMTP_FROM,
     to,
     subject,
-    text: message
+    text,
+    html
   });
 
   return {
