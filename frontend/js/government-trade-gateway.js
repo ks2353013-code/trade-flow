@@ -195,3 +195,291 @@
   window.TradeFlowGovernmentGateway = { refresh, createMissionPlan, updateAction, prepareExporterOS };
   document.addEventListener("tradeflow:bootstrap-complete", () => setTimeout(refresh, 900));
 })();
+
+
+/* =========================================================
+   TRADEFLOW SIMPLE USER EXPERIENCE SHELL
+   Keeps the full feature engine intact while presenting a
+   simple app-like experience. Advanced capabilities remain
+   available from Features and are never required.
+========================================================= */
+(function () {
+  function esc(value) {
+    return String(value || "")
+      .replaceAll("&", "&amp;").replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;").replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function go(page) {
+    if (typeof window.showPage === "function") window.showPage(page);
+    closeFeatures();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  const featureGroups = [
+    {
+      title: "Sales & Buyers",
+      icon: "🤝",
+      items: [
+        ["Find Buyers", "buyerDiscoveryPage", "Find and qualify international buyers"],
+        ["CRM", "crmPage", "Manage buyers, leads and deals"],
+        ["Negotiation", "negotiationPage", "Work through offers and terms"],
+        ["Follow-ups", "tasksPage", "Keep every opportunity moving"]
+      ]
+    },
+    {
+      title: "Outreach",
+      icon: "📨",
+      items: [
+        ["Smart Outreach", "outreachPage", "Create and manage buyer outreach"],
+        ["Email Automation", "outreachPage", "Automate follow-ups when you want"],
+        ["AI Writer", "aiPage", "Create business messages with AI"]
+      ]
+    },
+    {
+      title: "Trade Intelligence",
+      icon: "🧠",
+      items: [
+        ["Market Research", "aiPage", "Research markets, products and countries"],
+        ["Supplier Intelligence", "suppliersPage", "Find and manage suppliers"],
+        ["Trade Risk", "aiPage", "Review trade risks before acting"],
+        ["Analytics", "analyticsPage", "Understand your business activity"]
+      ]
+    },
+    {
+      title: "Compliance & Government",
+      icon: "🏛️",
+      items: [
+        ["Government Tasks", "governmentGatewayPage", "Prepare and track official work"],
+        ["Compliance", "documentsPage", "Keep requirements and documents organized"],
+        ["Export Documents", "documentsPage", "Prepare and manage trade documents"]
+      ]
+    },
+    {
+      title: "Operations",
+      icon: "⚙️",
+      items: [
+        ["Task Automation", "tasksPage", "Automate routine work"],
+        ["Logistics & Shipment", "documentsPage", "Keep execution information together"],
+        ["Revenue", "analyticsPage", "Track commercial progress"],
+        ["Marketing", "marketingPage", "Manage trade marketing"]
+      ]
+    },
+    {
+      title: "Workspace",
+      icon: "🏢",
+      items: [
+        ["Team & Roles", "employeesPage", "Manage people and permissions"],
+        ["Companies", "workspacesPage", "Switch and manage workspaces"],
+        ["Notifications", "notificationsPage", "See important updates"]
+      ]
+    }
+  ];
+
+  function featureMarkup() {
+    return featureGroups.map(group => `
+      <section class="tf-feature-group">
+        <div class="tf-feature-group-title"><span>${group.icon}</span>${esc(group.title)}</div>
+        <div class="tf-feature-grid">
+          ${group.items.map(([label, page, description]) => `
+            <button class="tf-feature-card" data-tf-page="${esc(page)}">
+              <span class="tf-feature-name">${esc(label)}</span>
+              <span class="tf-feature-description">${esc(description)}</span>
+              <span class="tf-feature-arrow">→</span>
+            </button>
+          `).join("")}
+        </div>
+      </section>
+    `).join("");
+  }
+
+  function closeFeatures() {
+    document.getElementById("tfFeaturesPanel")?.classList.remove("is-open");
+    document.getElementById("tfFeaturesBackdrop")?.classList.remove("is-open");
+    document.body.classList.remove("tf-features-open");
+  }
+
+  function openFeatures() {
+    document.getElementById("tfFeaturesPanel")?.classList.add("is-open");
+    document.getElementById("tfFeaturesBackdrop")?.classList.add("is-open");
+    document.body.classList.add("tf-features-open");
+  }
+
+  function injectStyle() {
+    if (document.getElementById("tradeflow-simple-ux-style")) return;
+    const style = document.createElement("style");
+    style.id = "tradeflow-simple-ux-style";
+    style.textContent = `
+      .sidebar{display:none!important}
+      .main{margin-left:0!important;width:100%!important;max-width:none!important}
+      .topbar{position:sticky!important;top:0!important;z-index:900!important;background:rgba(2,6,23,.92)!important;backdrop-filter:blur(18px)!important}
+      .tf-nav{position:sticky;top:78px;z-index:850;display:flex;align-items:center;gap:8px;padding:10px 18px;margin:0 0 18px;background:rgba(2,6,23,.86);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.08)}
+      .tf-brand{font-weight:900;font-size:19px;letter-spacing:-.03em;margin-right:auto;color:#fff}
+      .tf-brand small{display:block;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;opacity:.55;margin-top:2px}
+      .tf-nav-btn{border:0;background:transparent;color:rgba(255,255,255,.72);padding:10px 13px;border-radius:11px;cursor:pointer;font:inherit;font-weight:700}
+      .tf-nav-btn:hover,.tf-nav-btn.active{background:rgba(255,255,255,.08);color:#fff}
+      .tf-primary{background:#fff!important;color:#111827!important}
+      .tf-features-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:1990;opacity:0;pointer-events:none;transition:opacity .2s}
+      .tf-features-backdrop.is-open{opacity:1;pointer-events:auto}
+      .tf-features-panel{position:fixed;top:0;right:0;height:100vh;width:min(760px,96vw);background:#07101f;color:#fff;z-index:2000;transform:translateX(102%);transition:transform .25s ease;box-shadow:-24px 0 70px rgba(0,0,0,.38);overflow:auto;padding:28px}
+      .tf-features-panel.is-open{transform:translateX(0)}
+      .tf-features-head{display:flex;align-items:flex-start;gap:16px;margin-bottom:24px}
+      .tf-features-head h2{font-size:30px;margin:0 0 5px;font-weight:900;letter-spacing:-.04em}
+      .tf-features-head p{margin:0;color:rgba(255,255,255,.62)}
+      .tf-close{margin-left:auto;border:0;background:rgba(255,255,255,.08);color:#fff;border-radius:12px;padding:10px 13px;cursor:pointer;font-size:18px}
+      .tf-feature-group{margin:0 0 26px}
+      .tf-feature-group-title{display:flex;gap:9px;align-items:center;font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.55);margin-bottom:10px}
+      .tf-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+      .tf-feature-card{position:relative;text-align:left;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.045);color:#fff;border-radius:15px;padding:15px 42px 15px 15px;cursor:pointer;min-height:88px}
+      .tf-feature-card:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.16)}
+      .tf-feature-name{display:block;font-weight:850;font-size:15px;margin-bottom:5px}
+      .tf-feature-description{display:block;color:rgba(255,255,255,.55);font-size:12px;line-height:1.45}
+      .tf-feature-arrow{position:absolute;right:14px;top:50%;transform:translateY(-50%);opacity:.55}
+      .tf-welcome{margin-bottom:18px}
+      .tf-welcome h1{font-size:clamp(28px,4vw,48px)!important;letter-spacing:-.05em!important}
+      .tf-quick-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0 22px}
+      .tf-quick-card{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);border-radius:16px;padding:17px;text-align:left;cursor:pointer;color:inherit}
+      .tf-quick-card:hover{background:rgba(255,255,255,.065);transform:translateY(-1px)}
+      .tf-quick-card strong{display:block;margin-top:8px}
+      .tf-quick-card span{display:block;font-size:12px;opacity:.55;margin-top:4px}
+      .tf-simple-hint{font-size:12px;color:rgba(255,255,255,.48);margin-top:6px}
+      @media(max-width:900px){.tf-nav{top:65px;overflow-x:auto}.tf-nav-btn{white-space:nowrap}.tf-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.tf-feature-panel{width:100vw}}
+      @media(max-width:560px){.tf-nav{padding:8px 10px}.tf-brand{display:none}.tf-quick-grid,.tf-feature-grid{grid-template-columns:1fr}.tf-features-panel{padding:20px}.tf-features-head h2{font-size:25px}}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function buildShell() {
+    if (document.getElementById("tfSimpleNav")) return;
+
+    injectStyle();
+
+    const nav = document.createElement("div");
+    nav.id = "tfSimpleNav";
+    nav.className = "tf-nav";
+    nav.innerHTML = `
+      <div class="tf-brand">TradeFlow<small>Global Trade, made simple</small></div>
+      <button class="tf-nav-btn active" data-tf-nav="home">Home</button>
+      <button class="tf-nav-btn" data-tf-nav="missions">My Work</button>
+      <button class="tf-nav-btn" data-tf-nav="features">Features</button>
+      <button class="tf-nav-btn" data-tf-nav="messages">Messages</button>
+      <button class="tf-nav-btn" data-tf-nav="documents">Documents</button>
+      <button class="tf-nav-btn tf-primary" data-tf-nav="start">+ Start New</button>
+    `;
+
+    const topbar = document.querySelector(".topbar");
+    topbar?.after(nav);
+
+    const backdrop = document.createElement("div");
+    backdrop.id = "tfFeaturesBackdrop";
+    backdrop.className = "tf-features-backdrop";
+    backdrop.addEventListener("click", closeFeatures);
+    document.body.appendChild(backdrop);
+
+    const panel = document.createElement("aside");
+    panel.id = "tfFeaturesPanel";
+    panel.className = "tf-features-panel";
+    panel.innerHTML = `
+      <div class="tf-features-head">
+        <div><h2>Features</h2><p>Powerful tools, available when you need them.</p></div>
+        <button class="tf-close" aria-label="Close features">×</button>
+      </div>
+      <div>${featureMarkup()}</div>
+    `;
+    panel.querySelector(".tf-close").addEventListener("click", closeFeatures);
+    panel.querySelectorAll("[data-tf-page]").forEach(button => {
+      button.addEventListener("click", () => go(button.dataset.tfPage));
+    });
+    document.body.appendChild(panel);
+
+    nav.querySelectorAll("[data-tf-nav]").forEach(button => {
+      button.addEventListener("click", () => {
+        const action = button.dataset.tfNav;
+        nav.querySelectorAll(".tf-nav-btn").forEach(b => b.classList.remove("active"));
+        button.classList.add("active");
+        if (action === "features") return openFeatures();
+        if (action === "home") return go("dashboardPage");
+        if (action === "missions") return go("dashboardPage");
+        if (action === "messages") return go("outreachPage");
+        if (action === "documents") return go("documentsPage");
+        if (action === "start") return startMission();
+      });
+    });
+
+    simplifyDashboard();
+  }
+
+  function simplifyDashboard() {
+    const dashboard = document.getElementById("dashboardPage");
+    if (!dashboard || document.getElementById("tfQuickActions")) return;
+
+    const hero = dashboard.querySelector(".dashboard-hero");
+    if (hero) {
+      const kicker = hero.querySelector(".hero-kicker");
+      const title = hero.querySelector(".hero-title");
+      const copy = hero.querySelector(".hero-copy");
+      if (kicker) kicker.textContent = "Your trade workspace";
+      if (title) title.innerHTML = "What would you like to do today?";
+      if (copy) copy.textContent = "TradeFlow keeps the complicated work behind the scenes. Choose a goal and we'll guide the next steps.";
+      hero.classList.add("tf-welcome");
+    }
+
+    const grid = document.createElement("div");
+    grid.id = "tfQuickActions";
+    grid.className = "tf-quick-grid";
+    grid.innerHTML = `
+      <button class="tf-quick-card" data-tf-start="export"><span>🌍</span><strong>Start an Export</strong><span>Set up a product and market</span></button>
+      <button class="tf-quick-card" data-tf-start="buyers"><span>🔎</span><strong>Find Buyers</strong><span>Discover potential customers</span></button>
+      <button class="tf-quick-card" data-tf-start="import"><span>📦</span><strong>Start an Import</strong><span>Plan an import opportunity</span></button>
+      <button class="tf-quick-card" data-tf-start="research"><span>🧠</span><strong>Research a Market</strong><span>Understand a product or country</span></button>
+    `;
+    hero?.after(grid);
+
+    grid.querySelectorAll("[data-tf-start]").forEach(button => {
+      button.addEventListener("click", () => startMission(button.dataset.tfStart));
+    });
+
+    const oldQuickCards = dashboard.querySelectorAll(".quick-card");
+    oldQuickCards.forEach(card => card.closest(".grid")?.classList.add("tf-secondary-content"));
+  }
+
+  function startMission(type = "export") {
+    const product = window.prompt(
+      type === "research" ? "What product or market do you want to research?" : "What do you want to do? Example: Export Basmati Rice to UAE",
+      type === "export" ? "" : ""
+    );
+    if (!product) return;
+
+    if (type === "buyers") {
+      go("buyerDiscoveryPage");
+      setTimeout(() => {
+        const input = document.querySelector("#buyerDiscoveryProduct,#aiProduct");
+        if (input) input.value = product;
+      }, 250);
+      return;
+    }
+
+    if (type === "research") {
+      go("aiPage");
+      setTimeout(() => {
+        const input = document.querySelector("#aiProduct");
+        if (input) input.value = product;
+      }, 250);
+      return;
+    }
+
+    go("governmentGatewayPage");
+    setTimeout(() => {
+      const input = document.getElementById("governmentGatewayProduct");
+      if (input) input.value = product;
+      const direction = document.getElementById("governmentGatewayDirection");
+      if (direction) direction.value = type === "import" ? "Import" : "Export";
+      const exporterProduct = document.getElementById("exporterOsProduct");
+      if (exporterProduct) exporterProduct.value = product;
+    }, 250);
+  }
+
+  document.addEventListener("DOMContentLoaded", buildShell);
+  document.addEventListener("tradeflow:bootstrap-complete", () => setTimeout(buildShell, 50));
+})();
