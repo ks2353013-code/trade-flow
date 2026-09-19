@@ -313,13 +313,13 @@ router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
   }
 });
 
-router.post("/reset-password", async (req, res) => {
+router.post("/reset-password", passwordResetLimiter, async (req, res) => {
   try {
     const cleanEmail = normalizeEmail(req.body?.email);
     const resetToken = String(req.body?.resetToken || "").trim();
     const newPassword = String(req.body?.password || "");
 
-    if (!isValidEmailSyntax(cleanEmail) || !resetToken || newPassword.length < 8) {
+    if (!resetToken || newPassword.length < 8) {
       return res.status(400).json({
         success: false,
         message: "Valid email, reset token and an 8+ character password are required"
