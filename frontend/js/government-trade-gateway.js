@@ -9,6 +9,13 @@
         : "https://trade-flow-lc1k.onrender.com");
   }
 
+  function backendBase() {
+    return window.TRADEFLOW_API_BASE || window.TRADEFLOW_API_BASE_URL || window.BACKEND_URL ||
+      (["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)
+        ? window.location.origin
+        : "https://trade-flow-lc1k.onrender.com");
+  }
+
   function token() {
     try {
       const user = JSON.parse(localStorage.getItem("tradeflowUser") || "null");
@@ -442,14 +449,14 @@
   }
 
   async function createUserMission(goal) {
-    const tokenValue = window.getAuthToken?.() || "";
+    const tokenValue = token();
     const workspace = window.TradeFlowWorkspace?.getActiveWorkspaceId?.() || "";
     if (!tokenValue || !workspace) {
       go("governmentGatewayPage");
       return;
     }
     try {
-      const data = await fetch(`${window.BACKEND_URL || ""}/api/missions`, {
+      const data = await fetch(`${backendBase()}/api/missions`, {
         method: "POST", credentials: "include",
         headers: { "Content-Type":"application/json", Authorization:`Bearer ${tokenValue}`, "x-workspace-id":workspace },
         body: JSON.stringify({ goal })
@@ -465,16 +472,16 @@
   async function refreshMissionCards() {
     const host = document.getElementById("tfActiveMissions");
     if (!host) return;
-    const tokenValue = window.getAuthToken?.() || "";
+    const tokenValue = token();
     const workspace = window.TradeFlowWorkspace?.getActiveWorkspaceId?.() || "";
     if (!tokenValue || !workspace) return;
     try {
-      const data = await fetch(`${window.BACKEND_URL || ""}/api/missions`, { credentials:"include", headers:{Authorization:`Bearer ${tokenValue}`,"x-workspace-id":workspace} }).then(r=>r.json());
+      const data = await fetch(`${backendBase()}/api/missions`, { credentials:"include", headers:{Authorization:`Bearer ${tokenValue}`,"x-workspace-id":workspace} }).then(r=>r.json());
       const missions = data.missions || [];
       host.innerHTML = missions.length ? missions.slice(0,6).map(m => {
         const readiness = Math.max(0, Math.min(100, Number(m.readiness?.score || 0)));
-        const next = m.actions?.find(a => a.status === "ready")?.title || "Continue mission";
-        const nextAction = m.actions?.find(a => a.status !== "completed");
+        const next = m.readiness?.nextActions?.[0] || m.actions?.find(a => a.status === "in_progress")?.title || m.actions?.find(a => a.status === "ready")?.title || "Continue mission";
+        const nextAction = m.actions?.find(a => a.status === "in_progress") || m.actions?.find(a => a.status === "ready");
         const risks = Array.isArray(m.risks) ? m.risks.slice(0, 2) : [];
         const opportunity = Number(m.opportunityScore || 0);
         const revenue = Number(m.revenueEstimate || 0);
@@ -485,12 +492,16 @@
   }
 
   async function runMissionAction(missionId, actionKey) {
-    const tokenValue = window.getAuthToken?.() || "";
+    if (actionKey === "setup") {
+      go("governmentGatewayPage");
+      return;
+    }
+    const tokenValue = token();
     const workspace = window.TradeFlowWorkspace?.getActiveWorkspaceId?.() || "";
     if (!tokenValue || !workspace) return;
     try {
       const headers = { Authorization:`Bearer ${tokenValue}`, "x-workspace-id":workspace, "Content-Type":"application/json" };
-      await fetch(`${window.BACKEND_URL || ""}/api/missions/${encodeURIComponent(missionId)}/actions/${encodeURIComponent(actionKey)}/start`, { method:"POST", credentials:"include", headers });
+      await fetch(`${backendBase()}/api/missions/${encodeURIComponent(missionId)}/actions/${encodeURIComponent(actionKey)}/start`, { method:"POST", credentials:"include", headers });
       await refreshMissionCards();
       notify?.("TradeFlow started the next step.");
     } catch (e) { notify?.(e.message || "Could not start the step."); }

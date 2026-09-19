@@ -17,7 +17,7 @@ const SYSTEM_CATALOG = [
   {
     systemKey: "trade_connect",
     displayName: "Trade Connect",
-    connectionMode: "official_data",
+    connectionMode: "guided_portal",
     officialUrl: "https://www.trade.gov.in/",
     capabilityKeys: ["country_guide", "product_guide", "trade_trends", "trade_agreements", "tariff_explorer", "export_events", "ask_an_expert", "source_from_india"],
     actions: [
