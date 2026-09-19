@@ -354,6 +354,23 @@
     </div>
   </div>
   <div id="governmentGatewayNotice" class="notice" style="margin:12px 0;"></div>
+  <div class="panel" style="margin-bottom:18px;">
+    <h3>Exporter Autopilot Setup</h3>
+    <p class="muted">Enter your core business facts once. TradeFlow uses them to prepare the operating checklist, identify missing setup, and map official-system work.</p>
+    <div class="form-grid">
+      <label>Legal name<input id="exporterOsLegalName" placeholder="Registered company name"></label>
+      <label>GSTIN<input id="exporterOsGstin" placeholder="GSTIN"></label>
+      <label>PAN<input id="exporterOsPan" placeholder="PAN"></label>
+      <label>IEC<input id="exporterOsIec" placeholder="Importer Exporter Code"></label>
+      <label>Product<input id="exporterOsProduct" placeholder="Primary export product"></label>
+      <label>HS code<input id="exporterOsHsCode" placeholder="HS code"></label>
+      <label>Target country<input id="exporterOsCountry" placeholder="Target country"></label>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn" onclick="TradeFlowGovernmentGateway.prepareExporterOS()">Prepare My Export Setup</button>
+    </div>
+    <div id="exporterOsReadiness" style="margin-top:14px;"></div>
+  </div>
   <div id="governmentGatewayStatus" style="margin-bottom:18px;"></div>
   <div class="grid-2">
     <div class="panel">
