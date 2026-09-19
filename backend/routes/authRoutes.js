@@ -45,7 +45,7 @@ function getTrustedFrontendBaseUrl() {
     process.env.FRONTEND_URL ||
     process.env.APP_URL ||
     "https://tradeflowai.in"
-  ).replace(/\\/$/, "");
+  ).replace(/\/$/, "");
 }
 
 function buildResetUrl(token) {
