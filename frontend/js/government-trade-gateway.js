@@ -133,6 +133,65 @@
     } catch (error) { notify(error.message); }
   }
 
-  window.TradeFlowGovernmentGateway = { refresh, createMissionPlan, updateAction };
+
+  async function prepareExporterOS() {
+    const payload = {
+      company: {
+        legalName: document.getElementById("exporterOsLegalName")?.value.trim() || "",
+        gstin: document.getElementById("exporterOsGstin")?.value.trim() || "",
+        pan: document.getElementById("exporterOsPan")?.value.trim() || "",
+        iec: document.getElementById("exporterOsIec")?.value.trim() || ""
+      },
+      products: [{
+        name: document.getElementById("exporterOsProduct")?.value.trim() || "",
+        hsCode: document.getElementById("exporterOsHsCode")?.value.trim() || "",
+        origin: "India"
+      }],
+      targetMarkets: [{
+        country: document.getElementById("exporterOsCountry")?.value.trim() || ""
+      }]
+    };
+
+    if (!payload.company.legalName || !payload.products[0].name || !payload.targetMarkets[0].country) {
+      notify("Legal name, product and target country are required.");
+      return;
+    }
+
+    try {
+      await request("/api/exporter-os/profile", {
+        method: "PUT",
+        body: JSON.stringify(payload)
+      });
+
+      const response = await request("/api/exporter-os/prepare", {
+        method: "POST",
+        body: JSON.stringify({})
+      });
+
+      const profile = response.profile || {};
+      const readiness = profile.readiness || {};
+      const target = document.getElementById("exporterOsReadiness");
+
+      if (target) {
+        target.innerHTML = `
+          <div class="deal">
+            <strong>TradeFlow readiness: ${Number(readiness.score || 0)}%</strong>
+            <span class="muted"> • ${escapeHtml(readiness.status || "setup_required")}</span>
+          </div>
+          <div class="grid-2" style="margin-top:10px;">
+            <div class="deal"><strong>Blockers</strong><div class="muted">${(readiness.blockers || []).slice(0,8).map(escapeHtml).join("<br>") || "No current blockers."}</div></div>
+            <div class="deal"><strong>Next actions</strong><div class="muted">${(readiness.nextActions || []).slice(0,8).map(escapeHtml).join("<br>") || "No immediate setup actions."}</div></div>
+          </div>
+        `;
+      }
+
+      notify("TradeFlow prepared the exporter operating plan and government workflow map.");
+      await refresh();
+    } catch (error) {
+      notify(error.message);
+    }
+  }
+
+  window.TradeFlowGovernmentGateway = { refresh, createMissionPlan, updateAction, prepareExporterOS };
   document.addEventListener("tradeflow:bootstrap-complete", () => setTimeout(refresh, 900));
 })();
