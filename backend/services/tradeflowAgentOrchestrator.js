@@ -61,7 +61,7 @@ async function runTradeMission(missionText = "", context = {}) {
     companyId: context.companyId || null
   };
 
-  const research = researchAgent.run(input);
+  const research = await researchAgent.run(input);
   const buyerDiscovery = detected.direction === "Export"
     ? await buyerDiscoveryAgent.run(input)
     : null;
