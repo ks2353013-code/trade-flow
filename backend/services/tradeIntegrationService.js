@@ -191,6 +191,18 @@ async function executeProvider(req, providerKey, input = {}) {
   return { providerKey, mode: provider.mode, execution: "api", httpStatus: result.statusCode, data: result.data };
 }
 
+async function recordWebhookPublic(providerKey, workspaceId, rawBody, signature, payload) {
+  if (!workspaceId) throw new Error("workspaceId is required.");
+  const connection = await TradeIntegrationConnection.findOne({ workspaceId, providerKey, mode: "webhook" }).lean();
+  if (!connection) throw new Error("Webhook integration is not configured for this workspace.");
+  const secret = resolveSecret(connection);
+  if (!verifyWebhookSignature(rawBody, signature, secret)) throw new Error("Invalid webhook signature.");
+  await TradeIntegrationConnection.updateOne({ _id: connection._id }, {
+    $set: { status: "active", lastCheckedAt: new Date(), lastError: "", "metadata.lastWebhookAt": new Date(), "metadata.lastWebhookType": String(payload?.type || "event") }
+  });
+  return { accepted: true, providerKey, receivedAt: new Date().toISOString(), type: payload?.type || "event" };
+}
+
 async function recordWebhook(req, providerKey, rawBody, signature, payload) {
   const c = ctx(req);
   const connection = await TradeIntegrationConnection.findOne({ ...c, providerKey }).lean();
@@ -203,4 +215,4 @@ async function recordWebhook(req, providerKey, rawBody, signature, payload) {
   return { accepted: true, providerKey, receivedAt: new Date().toISOString(), type: payload?.type || "event" };
 }
 
-module.exports = { PROVIDERS, ctx, catalog, listConnections, upsertConnection, buildComplianceRequirements, createComplianceSnapshot, verifyWebhookSignature, testConnection, executeProvider, recordWebhook };
+module.exports = { PROVIDERS, ctx, catalog, listConnections, upsertConnection, buildComplianceRequirements, createComplianceSnapshot, verifyWebhookSignature, testConnection, executeProvider, recordWebhook, recordWebhookPublic };
