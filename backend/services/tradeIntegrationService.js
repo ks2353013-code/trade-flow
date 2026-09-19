@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 const https = require("https");
-const http = require("http");
+const http = require("http");\nconst dns = require("dns").promises;
 const TradeIntegrationConnection = require("../models/TradeIntegrationConnection");
 
 const PROVIDERS = {
@@ -117,6 +117,41 @@ function resolveSecret(connection) {
   return process.env[envKey] || "";
 }
 
+async function assertSafeIntegrationUrl(url, connection = null, providerKey = "") {
+  const parsed = new URL(url);
+  if (parsed.protocol !== "https:") {
+    throw new Error("Outbound integration calls must use HTTPS.");
+  }
+  if (parsed.username || parsed.password) {
+    throw new Error("Integration URLs must not contain embedded credentials.");
+  }
+
+  const configuredHosts = String(
+    connection?.metadata?.allowedHosts ||
+    process.env.TRADEFLOW_ALLOWED_INTEGRATION_HOSTS ||
+    ""
+  ).split(",").map(x => x.trim().toLowerCase()).filter(Boolean);
+
+  const provider = PROVIDERS[providerKey];
+  const officialHost = provider?.officialUrl ? new URL(provider.officialUrl).hostname.toLowerCase() : "";
+  const allowed = configuredHosts.includes(parsed.hostname.toLowerCase()) ||
+    (officialHost && parsed.hostname.toLowerCase() === officialHost);
+
+  if (!allowed) {
+    throw new Error("Integration endpoint host is not allowlisted for this provider.");
+  }
+
+  const addresses = await dns.lookup(parsed.hostname, { all: true });
+  for (const address of addresses) {
+    const ip = address.address;
+    if (ip === "127.0.0.1" || ip === "::1" || ip.startsWith("10.") || ip.startsWith("192.168.") ||
+        /^172\.(1[6-9]|2\d|3[0-1])\./.test(ip) || ip.startsWith("169.254.") ||
+        ip.startsWith("fc") || ip.startsWith("fd") || ip.startsWith("fe80:")) {
+      throw new Error("Integration endpoint resolves to a private or link-local address.");
+    }
+  }
+}
+
 function requestJson(url, options = {}) {
   return new Promise((resolve, reject) => {
     const parsed = new URL(url);
@@ -183,7 +218,7 @@ async function executeProvider(req, providerKey, input = {}) {
   if (!secret) throw new Error("Credential environment reference is not configured on the server.");
   const body = JSON.stringify(input || {});
   const result = await requestJson(connection.endpoint, {
-    method: input.method || "POST",
+    method: ["GET", "POST", "PUT", "PATCH"].includes(String(input.method || "POST").toUpperCase()) ? String(input.method || "POST").toUpperCase() : "POST",
     headers: { Authorization: "Bearer " + secret, "Content-Type": "application/json" },
     body: input.method === "GET" ? undefined : body
   });
