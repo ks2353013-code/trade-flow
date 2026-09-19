@@ -341,7 +341,7 @@
       .tf-quick-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0 22px}
       .tf-quick-card{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);border-radius:16px;padding:17px;text-align:left;cursor:pointer;color:inherit}
       .tf-quick-card:hover{background:rgba(255,255,255,.065);transform:translateY(-1px)}
-      .tf-mission-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0 24px}.tf-mission-card{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);border-radius:16px;padding:16px}.tf-mission-card h3{margin:0 0 6px;font-size:16px}.tf-mission-meta{font-size:12px;opacity:.55}.tf-mission-bar{height:6px;background:rgba(255,255,255,.08);border-radius:9px;overflow:hidden;margin:12px 0}.tf-mission-bar i{display:block;height:100%;background:#fff;border-radius:9px}.tf-mission-actions{font-size:12px;line-height:1.6;color:rgba(255,255,255,.68)}
+      .tf-mission-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0 24px}.tf-mission-card{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);border-radius:16px;padding:16px}.tf-mission-card h3{margin:0 0 6px;font-size:16px}.tf-mission-meta{font-size:12px;opacity:.55}.tf-mission-bar{height:6px;background:rgba(255,255,255,.08);border-radius:9px;overflow:hidden;margin:12px 0}.tf-mission-bar i{display:block;height:100%;background:#fff;border-radius:9px}.tf-mission-actions{font-size:12px;line-height:1.6;color:rgba(255,255,255,.68)}.tf-mission-action-btn{margin-top:9px;border:0;border-radius:9px;padding:8px 10px;background:#fff;color:#111827;font-weight:800;cursor:pointer}
       .tf-mission-modal{position:fixed;inset:0;z-index:2100;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.62);padding:20px}.tf-mission-modal.open{display:flex}.tf-mission-box{width:min(680px,100%);background:#07101f;color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:26px;box-shadow:0 30px 100px rgba(0,0,0,.45)}.tf-mission-box h2{margin:0 0 8px;font-size:28px}.tf-mission-box p{margin:0 0 18px;color:rgba(255,255,255,.58)}.tf-mission-box textarea{width:100%;min-height:110px;resize:vertical;box-sizing:border-box;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;border-radius:14px;padding:14px;font:inherit}.tf-mission-box .row{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}.tf-mission-box button{border:0;border-radius:12px;padding:11px 16px;cursor:pointer;font-weight:800}.tf-mission-cancel{background:rgba(255,255,255,.08);color:#fff}.tf-mission-run{background:#fff;color:#111827}
       @media(max-width:900px){.tf-mission-list{grid-template-columns:1fr}}
       .tf-quick-card strong{display:block;margin-top:8px}
@@ -474,9 +474,23 @@
       host.innerHTML = missions.length ? missions.slice(0,6).map(m => {
         const readiness = Math.max(0, Math.min(100, Number(m.readiness?.score || 0)));
         const next = m.actions?.find(a => a.status === "ready")?.title || "Continue mission";
-        return `<article class="tf-mission-card"><h3>${esc(m.product)} → ${esc(m.market)}</h3><div class="tf-mission-meta">${esc(m.direction)} · ${esc(m.status)}</div><div class="tf-mission-bar"><i style="width:${readiness}%"></i></div><div class="tf-mission-actions"><strong>Next:</strong> ${esc(next)}</div></article>`;
+        const nextAction = m.actions?.find(a => a.status !== "completed");
+        return `<article class="tf-mission-card"><h3>${esc(m.product)} → ${esc(m.market)}</h3><div class="tf-mission-meta">${esc(m.direction)} · ${esc(m.status)}</div><div class="tf-mission-bar"><i style="width:${readiness}%"></i></div><div class="tf-mission-actions"><strong>Next:</strong> ${esc(next)}${nextAction ? `<br><button class="tf-mission-action-btn" data-mission-id="${esc(m._id)}" data-action-key="${esc(nextAction.key)}">Run next step →</button>` : ""}</div></article>`;
       }).join("") : '<div class="muted">No active missions yet. Start with one goal and TradeFlow will build the workflow.</div>';
+      host.querySelectorAll(".tf-mission-action-btn").forEach(button => button.onclick = () => runMissionAction(button.dataset.missionId, button.dataset.actionKey));
     } catch {}
+  }
+
+  async function runMissionAction(missionId, actionKey) {
+    const tokenValue = window.getAuthToken?.() || "";
+    const workspace = window.TradeFlowWorkspace?.getActiveWorkspaceId?.() || "";
+    if (!tokenValue || !workspace) return;
+    try {
+      const headers = { Authorization:`Bearer ${tokenValue}`, "x-workspace-id":workspace, "Content-Type":"application/json" };
+      await fetch(`${window.BACKEND_URL || ""}/api/missions/${encodeURIComponent(missionId)}/actions/${encodeURIComponent(actionKey)}/start`, { method:"POST", credentials:"include", headers });
+      await refreshMissionCards();
+      notify?.("TradeFlow started the next step.");
+    } catch (e) { notify?.(e.message || "Could not start the step."); }
   }
 
   function simplifyDashboard() {
