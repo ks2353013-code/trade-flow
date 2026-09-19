@@ -96,7 +96,7 @@ function buildActions(system) {
     description,
     mode: system.connectionMode,
     officialUrl: system.officialUrl,
-    status: "not_started"
+    status: "manual_required"
   }));
 }
 
@@ -109,7 +109,7 @@ function buildSystemDocuments(context) {
     displayName: system.displayName,
     enabled: true,
     connectionMode: system.connectionMode,
-    status: "available",
+    status: "action_required",
     officialUrl: system.officialUrl,
     capabilityKeys: system.capabilityKeys,
     actions: buildActions(system)
