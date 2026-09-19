@@ -259,6 +259,26 @@ function enforceLimit(metricType) {
         });
       }
 
+      const UsageMetric = require("../models/UsageMetric");
+      const used = (await UsageMetric.findOne({
+        ownerEmail: email,
+        companyId: req.tenant?.companyId || undefined,
+        workspaceId: req.tenant?.workspaceId || undefined,
+        metricType,
+        period: "monthly"
+      }).lean())?.count || 0;
+
+      if (used >= limit) {
+        return res.status(403).json({
+          success: false,
+          message: "Plan limit reached. Please upgrade your plan.",
+          plan,
+          metricType,
+          used,
+          limit
+        });
+      }
+
       return next();
     } catch (error) {
       res.status(500).json({
@@ -269,7 +289,6 @@ function enforceLimit(metricType) {
     }
   };
 }
-
 module.exports = {
   PLAN_LIMITS,
   getOwnerEmail,
