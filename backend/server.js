@@ -80,6 +80,7 @@ const betaRoutes = require("./routes/betaRoutes");
 const governmentTradeGatewayRoutes = require("./routes/governmentTradeGatewayRoutes");
 const exporterOperatingProfileRoutes = require("./routes/exporterOperatingProfileRoutes");
 const tradeMissionRoutes = require("./routes/tradeMissionRoutes");
+const tradeExecutionRoutes = require("./routes/tradeExecutionRoutes");
 
 const { startWorkflowScheduler } = require("./services/workflowScheduler");
 const { startAIAutonomousScheduler } = require("./services/aiAutonomousScheduler");
@@ -339,6 +340,7 @@ app.use("/api/beta", protectedStack, betaRoutes);
 app.use("/api/government-gateway", protectedStack, governmentTradeGatewayRoutes);
 app.use("/api/exporter-os", protectedStack, exporterOperatingProfileRoutes);
 app.use("/api/missions", protectedStack, tradeMissionRoutes);
+app.use("/api/trade-executions", protectedStack, tradeExecutionRoutes);
 
 app.use("/api", (req, res) => {
   res.status(404).json({
