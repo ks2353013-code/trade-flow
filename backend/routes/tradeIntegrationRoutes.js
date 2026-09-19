@@ -19,4 +19,14 @@ router.post("/compliance/snapshot", async (req, res) => {
 
 router.get("/catalog", (req, res) => res.json({ success: true, providers: service.catalog() }));
 
+router.post("/connections/:providerKey/test", async (req, res) => {
+  try { res.json({ success: true, result: await service.testConnection(req, req.params.providerKey) }); }
+  catch (e) { res.status(400).json({ success: false, message: e.message }); }
+});
+
+router.post("/connections/:providerKey/execute", async (req, res) => {
+  try { res.json({ success: true, result: await service.executeProvider(req, req.params.providerKey, req.body || {}) }); }
+  catch (e) { res.status(400).json({ success: false, message: e.message }); }
+});
+
 module.exports = router;
