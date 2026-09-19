@@ -190,7 +190,7 @@ async function syncQualifiedRecords(req, mission, intelligence) {
   }
 
   if (created) {
-    await trackUsage(req, "crm_push", created, { missionId: String(mission._id), source: "Mission Orchestrator" });
+    await trackUsage(req, "crm_lead_create", created, { missionId: String(mission._id), source: "Mission Orchestrator" });
   }
 
   return { created, skipped: skipped + Math.max(0, records.length - Math.min(records.length, remaining)) };
