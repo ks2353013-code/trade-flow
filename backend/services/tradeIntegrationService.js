@@ -1,6 +1,7 @@
 const crypto = require("crypto");
+const https = require("https");
+const http = require("http");
 const TradeIntegrationConnection = require("../models/TradeIntegrationConnection");
-const TradeComplianceSnapshot = require("../models/TradeComplianceSnapshot");
 
 const PROVIDERS = {
   dgft: { category: "government", mode: "official_portal", capabilities: ["ebrc_status", "official_api"], officialUrl: "https://www.dgft.gov.in/" },
@@ -21,9 +22,7 @@ function ctx(req) {
 }
 
 function catalog() {
-  return Object.entries(PROVIDERS).map(([providerKey, value]) => ({
-    providerKey, ...value, configured: false
-  }));
+  return Object.entries(PROVIDERS).map(([providerKey, value]) => ({ providerKey, ...value, configured: false }));
 }
 
 function redactConnection(doc) {
@@ -43,11 +42,16 @@ async function listConnections(req) {
   }));
 }
 
+function getProvider(providerKey) {
+  const provider = PROVIDERS[providerKey];
+  if (!provider) throw new Error("Unsupported integration provider.");
+  return provider;
+}
+
 async function upsertConnection(req, input = {}) {
   const c = ctx(req);
   if (!c.ownerEmail || !c.workspaceId) throw new Error("Authenticated workspace is required.");
-  const provider = PROVIDERS[input.providerKey];
-  if (!provider) throw new Error("Unsupported integration provider.");
+  const provider = getProvider(input.providerKey);
   const update = {
     ...c, providerKey: input.providerKey, category: provider.category, mode: provider.mode,
     status: input.status || "ready", endpoint: String(input.endpoint || "").trim(),
@@ -79,9 +83,7 @@ function buildComplianceRequirements(input = {}) {
   if (direction === "Export" && /rice|food|agri|spice|fruit|vegetable|jaggery/.test(text)) {
     requirements.push({ key: "agri_export", title: "Agricultural/food export authority requirements", owner: "government", status: "to_verify", officialSource: "https://apeda.gov.in/", reason: "Agricultural and food products may require product-specific registrations, certificates or controls." });
   }
-  if (direction === "Import") {
-    requirements.push({ key: "import_pga", title: "Participating Government Agency / product controls", owner: "government", status: "to_verify", officialSource: "https://www.icegate.gov.in/", reason: "Import controls vary by commodity and may involve partner government agencies." });
-  }
+  if (direction === "Import") requirements.push({ key: "import_pga", title: "Participating Government Agency / product controls", owner: "government", status: "to_verify", officialSource: "https://www.icegate.gov.in/", reason: "Import controls vary by commodity and may involve partner government agencies." });
   return { direction, product, hsCode, origin, destination, requirements };
 }
 
@@ -90,6 +92,7 @@ async function createComplianceSnapshot(req, input = {}) {
   if (!c.ownerEmail || !c.workspaceId) throw new Error("Authenticated workspace is required.");
   if (!input.missionId) throw new Error("missionId is required.");
   const plan = buildComplianceRequirements(input);
+  const TradeComplianceSnapshot = require("../models/TradeComplianceSnapshot");
   const snapshot = await TradeComplianceSnapshot.findOneAndUpdate(
     { ...c, missionId: input.missionId },
     { ...c, missionId: input.missionId, ...plan, transactionType: input.transactionType || "commercial",
@@ -103,7 +106,101 @@ async function createComplianceSnapshot(req, input = {}) {
 function verifyWebhookSignature(rawBody, signature, secret) {
   if (!secret || !signature) return false;
   const expected = crypto.createHmac("sha256", secret).update(rawBody || "").digest("hex");
-  try { return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(String(signature))); } catch { return false; }
+  const provided = String(signature).replace(/^sha256=/i, "").trim();
+  if (!/^[a-f0-9]{64}$/i.test(provided)) return false;
+  return crypto.timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(provided, "hex"));
 }
 
-module.exports = { PROVIDERS, ctx, catalog, listConnections, upsertConnection, buildComplianceRequirements, createComplianceSnapshot, verifyWebhookSignature };
+function resolveSecret(connection) {
+  const envKey = String(connection.metadata?.credentialEnvKey || "").trim();
+  if (!envKey || !/^[A-Z0-9_]+$/.test(envKey)) return "";
+  return process.env[envKey] || "";
+}
+
+function requestJson(url, options = {}) {
+  return new Promise((resolve, reject) => {
+    const parsed = new URL(url);
+    if (!["https:", "http:"].includes(parsed.protocol)) return reject(new Error("Unsupported integration protocol."));
+    const transport = parsed.protocol === "https:" ? https : http;
+    const req = transport.request(parsed, {
+      method: options.method || "GET",
+      headers: { Accept: "application/json", ...(options.headers || {}) },
+      timeout: Number(options.timeoutMs || 12000)
+    }, res => {
+      let body = "";
+      res.setEncoding("utf8");
+      res.on("data", chunk => { body += chunk; if (body.length > 2_000_000) req.destroy(new Error("Integration response too large.")); });
+      res.on("end", () => {
+        let data = body;
+        try { data = JSON.parse(body); } catch {}
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          const error = new Error("Provider returned HTTP " + res.statusCode);
+          error.statusCode = res.statusCode; error.providerBody = data;
+          return reject(error);
+        }
+        resolve({ statusCode: res.statusCode, data });
+      });
+    });
+    req.on("timeout", () => req.destroy(new Error("Provider request timed out.")));
+    req.on("error", reject);
+    if (options.body) req.write(options.body);
+    req.end();
+  });
+}
+
+async function testConnection(req, providerKey) {
+  const c = ctx(req);
+  const provider = getProvider(providerKey);
+  const connection = await TradeIntegrationConnection.findOne({ ...c, providerKey });
+  if (!connection) throw new Error("Integration is not configured.");
+  if (provider.mode !== "api") {
+    return { providerKey, mode: provider.mode, status: "ready", message: "This provider is executed through its official portal or webhook contract; no unsupported API call was attempted." };
+  }
+  if (!connection.endpoint) throw new Error("API endpoint is required.");
+  const secret = resolveSecret(connection);
+  if (!secret) throw new Error("Credential environment reference is not configured on the server.");
+  const headers = { Authorization: "Bearer " + secret };
+  try {
+    const result = await requestJson(connection.endpoint, { headers, timeoutMs: 10000 });
+    await TradeIntegrationConnection.updateOne({ _id: connection._id }, { $set: { status: "active", lastCheckedAt: new Date(), lastError: "" } });
+    return { providerKey, mode: provider.mode, status: "active", httpStatus: result.statusCode };
+  } catch (error) {
+    await TradeIntegrationConnection.updateOne({ _id: connection._id }, { $set: { status: "error", lastCheckedAt: new Date(), lastError: error.message } });
+    throw error;
+  }
+}
+
+async function executeProvider(req, providerKey, input = {}) {
+  const c = ctx(req);
+  const provider = getProvider(providerKey);
+  const connection = await TradeIntegrationConnection.findOne({ ...c, providerKey });
+  if (!connection) throw new Error("Integration is not configured.");
+  if (provider.mode !== "api") {
+    return { providerKey, mode: provider.mode, execution: "manual_or_webhook", message: "TradeFlow prepared the operation but will not impersonate a user or claim an official submission." };
+  }
+  if (!connection.endpoint) throw new Error("API endpoint is required.");
+  const secret = resolveSecret(connection);
+  if (!secret) throw new Error("Credential environment reference is not configured on the server.");
+  const body = JSON.stringify(input || {});
+  const result = await requestJson(connection.endpoint, {
+    method: input.method || "POST",
+    headers: { Authorization: "Bearer " + secret, "Content-Type": "application/json" },
+    body: input.method === "GET" ? undefined : body
+  });
+  await TradeIntegrationConnection.updateOne({ _id: connection._id }, { $set: { status: "active", lastCheckedAt: new Date(), lastError: "" } });
+  return { providerKey, mode: provider.mode, execution: "api", httpStatus: result.statusCode, data: result.data };
+}
+
+async function recordWebhook(req, providerKey, rawBody, signature, payload) {
+  const c = ctx(req);
+  const connection = await TradeIntegrationConnection.findOne({ ...c, providerKey }).lean();
+  if (!connection) throw new Error("Webhook integration is not configured for this workspace.");
+  const secret = resolveSecret(connection);
+  if (!verifyWebhookSignature(rawBody, signature, secret)) throw new Error("Invalid webhook signature.");
+  await TradeIntegrationConnection.updateOne({ _id: connection._id }, {
+    $set: { status: "active", lastCheckedAt: new Date(), lastError: "", "metadata.lastWebhookAt": new Date(), "metadata.lastWebhookType": String(payload?.type || "event") }
+  });
+  return { accepted: true, providerKey, receivedAt: new Date().toISOString(), type: payload?.type || "event" };
+}
+
+module.exports = { PROVIDERS, ctx, catalog, listConnections, upsertConnection, buildComplianceRequirements, createComplianceSnapshot, verifyWebhookSignature, testConnection, executeProvider, recordWebhook };
