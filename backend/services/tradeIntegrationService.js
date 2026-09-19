@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 const https = require("https");
-const http = require("http");\nconst dns = require("dns").promises;
+const dns = require("dns").promises;
 const TradeIntegrationConnection = require("../models/TradeIntegrationConnection");
 
 const PROVIDERS = {
