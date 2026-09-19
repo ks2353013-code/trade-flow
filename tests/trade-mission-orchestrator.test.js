@@ -39,3 +39,14 @@ test("mission execution exports real orchestration entry points", () => {
   assert.equal(typeof source.advanceMission, "function");
   assert.equal(typeof source.completeMissionAction, "function");
 });
+
+
+test("research agent supports live exploration without fabricating results", async () => {
+  const research = require("../backend/services/agents/researchAgent");
+  const result = await research.run({ product: "Basmati Rice", market: "UAE", direction: "Export" });
+  if (!process.env.SERP_API_KEY) {
+    assert.equal(result.status, "Source Unavailable");
+    assert.deepEqual(result.liveResearchResults, []);
+    assert.equal(result.opportunityScore, null);
+  }
+});
