@@ -69,7 +69,7 @@ async function runTradeMission(missionText = "", context = {}) {
     ? await supplierDiscoveryAgent.run(input)
     : null;
   const crm = crmAgent.run(input);
-  const compliance = complianceAgent.run(input);
+  const compliance = await complianceAgent.run(input);
   const revenue = revenueAgent.run(input);
   const outreach = outreachAgent.run(input);
 
@@ -79,11 +79,12 @@ async function runTradeMission(missionText = "", context = {}) {
       : supplierDiscovery?.estimatedSupplierFitScore
   ) || 0;
 
-  const opportunityScore = Math.max(
-    Number(research.opportunityScore || 0),
-    Number(revenue.riskAdjustedScore || 0),
-    discoveryScore
-  );
+  const verifiedDiscoveryCount = detected.direction === "Export"
+    ? Number(buyerDiscovery?.crmReadyVerifiedBuyers?.length || 0)
+    : Number(supplierDiscovery?.networkReadyVerifiedSuppliers?.length || 0);
+  const opportunityScore = (researchCount || discoveryCount)
+    ? Math.min(95, 40 + Math.min(30, researchCount * 3) + Math.min(20, discoveryCount * 2) + Math.min(10, verifiedDiscoveryCount * 5))
+    : null;
 
   const revenueEstimate =
     Number(revenue.revenueScenarioBase || revenue.estimatedDealValue || 0);
@@ -93,9 +94,11 @@ async function runTradeMission(missionText = "", context = {}) {
     ? Number(buyerDiscovery?.discoveredBuyers?.length || 0)
     : Number(supplierDiscovery?.discoveredSuppliers?.length || 0);
   const researchCount = Number(research?.liveResearchResults?.length || 0);
+  const sourceItems = (research?.liveResearchResults || []).slice(0, 5).map((item) => ({ title: item.title, url: item.url, snippet: item.snippet }));
+  const discoveryItems = (detected.direction === "Export" ? buyerDiscovery?.sourceEvidence : supplierDiscovery?.supplierLeaderboard || []).slice(0, 5).map((item) => ({ companyName: item.companyName, url: item.sourceUrl || item.website, country: item.country }));
   const userResponse = researchCount || discoveryCount
-    ? `I explored live sources for ${detected.direction.toLowerCase()}ing ${detected.product} in ${detected.market}. I found ${researchCount} relevant market results and ${discoveryCount} candidate ${detected.direction === "Export" ? "buyers" : "suppliers"}. I have organized the findings into your mission and kept external communication behind human approval.`
-    : `I could not retrieve live external results for ${detected.direction.toLowerCase()}ing ${detected.product} in ${detected.market}. TradeFlow has not invented results. Connect the configured live search/discovery provider and I will explore the market and return applicable findings.`;
+    ? `TradeFlow explored live sources for ${detected.direction.toLowerCase()}ing ${detected.product} in ${detected.market}. It found ${researchCount} market result(s) and ${discoveryCount} candidate ${detected.direction === "Export" ? "buyer(s)" : "supplier(s)"}. The findings are organized below for review; external communication remains approval-gated.`
+    : `TradeFlow could not retrieve live external results for ${detected.direction.toLowerCase()}ing ${detected.product} in ${detected.market}. It has not invented buyers, suppliers, market findings, prices, or official approvals.`;
 
 
   return {
@@ -112,15 +115,16 @@ async function runTradeMission(missionText = "", context = {}) {
       outreach
     },
     agents: [
-      { name: "Research Agent", status: "Completed", output: research.executiveSummary },
+      { name: "Research Agent", status: research.status, output: research.executiveSummary },
       detected.direction === "Export"
-        ? { name: "Buyer Discovery Agent", status: buyerDiscovery?.discoveredBuyers?.length ? "Completed" : "Source Unavailable", output: buyerDiscovery?.buyerProfile || "No live buyer discovery result." }
-        : { name: "Supplier Discovery Agent", status: supplierDiscovery?.discoveredSuppliers?.length ? "Completed" : "Source Unavailable", output: supplierDiscovery?.supplierProfile || "No live supplier discovery result." },
+        ? { name: "Buyer Discovery Agent", status: buyerDiscovery?.status || "Source Unavailable", output: buyerDiscovery?.buyerProfile || "No live buyer discovery result." }
+        : { name: "Supplier Discovery Agent", status: supplierDiscovery?.status || "Source Unavailable", output: supplierDiscovery?.supplierProfile || "No live supplier discovery result." },
       { name: "CRM Agent", status: "Completed", output: crm.dealStrategy },
-      { name: "Compliance Agent", status: "Completed", output: "Compliance checklist generated." },
-      { name: "Revenue Agent", status: "Completed", output: revenue.executiveSummary },
+      { name: "Compliance Agent", status: compliance.status, output: "Preliminary compliance checklist generated from the mission context and official-source exploration where available." },
+      { name: "Revenue Agent", status: revenue.status, output: revenue.executiveSummary },
       { name: "Outreach Agent", status: "Needs Approval", output: "Outreach drafts prepared. Human approval required." }
     ],
+    sourceEvidence: { market: sourceItems, counterparties: discoveryItems, compliance: compliance.officialResearch?.results || [] },
     opportunities: [
       research.executiveSummary,
       discoveryReport?.outreachPriority || discoveryReport?.supplierProfile || "",
