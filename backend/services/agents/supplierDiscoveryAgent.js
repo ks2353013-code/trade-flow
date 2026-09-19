@@ -225,7 +225,7 @@ async function getDiscoveredSuppliers(ctx) {
   try {
     const result = await discoverSuppliers(ctx);
 
-    if (Array.isArray(result?.suppliers) && result.suppliers.length) {
+    if (Array.isArray(result?.suppliers)) {
       return result.suppliers.map((supplier) =>
         normalizeSupplierRecord(supplier, ctx)
       );
@@ -234,7 +234,7 @@ async function getDiscoveredSuppliers(ctx) {
     // Discovery is non-blocking. Mission generation must continue with local samples.
   }
 
-  return generateSampleSuppliers(ctx, SUPPLIER_TYPES);
+  return [];
 }
 
 function buildSupplierLeaderboard(suppliers = []) {
