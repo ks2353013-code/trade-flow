@@ -75,4 +75,4 @@ async function reconcile(req,providerKey,payload,rawBody=""){
   return {accepted:true,processed:true,eventId:n.eventId,executionId:String(execution._id),stage:n.stage,externalReference:n.externalReference};
 }
 
-module.exports={reconcile,normalizeEvent};
+async function reconcilePublic(connection,providerKey,payload,rawBody=""){ return reconcile({ownerEmail:connection.ownerEmail,companyId:connection.companyId,workspaceId:connection.workspaceId},providerKey,payload,rawBody); }\nmodule.exports={reconcile,reconcilePublic,normalizeEvent};
