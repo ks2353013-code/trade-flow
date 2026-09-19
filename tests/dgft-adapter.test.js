@@ -13,7 +13,7 @@ test("DGFT payload envelope has encrypted data, signature and secretVal", () => 
   const pub = publicKey.export({ type: "spki", format: "pem" });
   const priv = privateKey.export({ type: "pkcs8", format: "pem" });
   const encrypted = adapter.encryptPayload({ iecNumber: "1234567890" }, {
-    dgftpublicKey: pub, userprivateKey: priv
+    client_Id: "test", client_secret: "test", "x-Api-Key": "test", iecCode: "1234567890", dgftpublicKey: pub, userprivateKey: priv
   });
   assert.equal(typeof encrypted.body.data, "string");
   assert.equal(typeof encrypted.body.sign, "string");
