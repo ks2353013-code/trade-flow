@@ -360,44 +360,6 @@ function deduplicateBuyers(buyers = []) {
   return Array.from(byKey.values());
 }
 
-function mockBuyerSource(ctx) {
-  const productSlug = ctx.product.toLowerCase().replace(/\s+/g, "-");
-  const marketSlug = ctx.market.toLowerCase().replace(/\s+/g, "-");
-
-  return [
-    {
-      companyName: `${ctx.market} ${ctx.product} Import Network`,
-      country: ctx.market,
-      product: ctx.product,
-      website: `https://${marketSlug}-${productSlug}-import-network.example`,
-      email: `sourcing@${marketSlug}-${productSlug}-import-network.example`,
-      phone: "+971-50-000-1001",
-      buyerType: "Importer",
-      source: "Mock Buyer Source"
-    },
-    {
-      companyName: `${ctx.market} Food Distribution Group`,
-      country: ctx.market,
-      product: ctx.product,
-      website: `https://${marketSlug}-food-distribution.example`,
-      email: `procurement@${marketSlug}-food-distribution.example`,
-      phone: "+971-50-000-1002",
-      buyerType: "Distributor",
-      source: "Mock Buyer Source"
-    },
-    {
-      companyName: `${ctx.market} Wholesale Trade Desk`,
-      country: ctx.market,
-      product: ctx.product,
-      website: `https://${marketSlug}-wholesale-trade.example`,
-      email: "",
-      phone: "+971-50-000-1003",
-      buyerType: "Wholesaler",
-      source: "Mock Buyer Source"
-    }
-  ];
-}
-
 async function serpApiBuyerSource(ctx) {
   if (!process.env.SERP_API_KEY) return [];
 
@@ -443,7 +405,17 @@ async function discoverBuyers(input = {}) {
   }
 
   if (!rawBuyers.length) {
-    rawBuyers = mockBuyerSource(ctx);
+    return {
+      connectorVersion: CONNECTOR_VERSION,
+      sourceMode: "unavailable",
+      product: ctx.product,
+      market: ctx.market,
+      total: 0,
+      buyers: [],
+      crmReadyBuyers: [],
+      humanApprovalRequired: true,
+      note: "No live buyer source is configured. Configure SERP_API_KEY or connect a supported provider before treating discovery as live."
+    };
   }
 
   const buyers = rawBuyers
@@ -461,9 +433,7 @@ async function discoverBuyers(input = {}) {
     .sort((a, b) => b.buyerQualityScore - a.buyerQualityScore);
 
   const dedupedBuyers = deduplicateBuyers(buyers);
-  const finalBuyers = dedupedBuyers.length
-    ? dedupedBuyers
-    : mockBuyerSource(ctx).map((buyer) => normalizeBuyer(buyer, ctx));
+  const finalBuyers = dedupedBuyers;
 
   return {
     connectorVersion: CONNECTOR_VERSION,
