@@ -557,3 +557,18 @@
   document.addEventListener("DOMContentLoaded", buildShell);
   document.addEventListener("tradeflow:bootstrap-complete", () => setTimeout(buildShell, 50));
 })();
+
+/* Unified trade execution API: keeps execution state inside TradeFlow instead of scattering it across modules. */
+(function(){
+  function base(){return window.TRADEFLOW_API_BASE||window.TRADEFLOW_API_BASE_URL||window.BACKEND_URL||(location.hostname==="localhost"||location.hostname==="127.0.0.1"?location.origin:"https://trade-flow-lc1k.onrender.com");}
+  function auth(){try{const u=JSON.parse(localStorage.getItem("tradeflowUser")||"null");return u?.token||u?.accessToken||localStorage.getItem("tradeflowAccessToken")||"";}catch{return localStorage.getItem("tradeflowAccessToken")||"";}}
+  function hdr(){const h={Authorization:`Bearer ${auth()}`,"Content-Type":"application/json"};const w=window.TradeFlowWorkspace?.getActiveWorkspaceId?.();if(w)h["x-workspace-id"]=w;return h;}
+  async function call(path,options={}){const r=await fetch(base()+path,{credentials:"include",...options,headers:{...hdr(),...(options.headers||{})}});const d=await r.json();if(!r.ok||d.success===false)throw new Error(d.message||"Trade execution request failed");return d;}
+  window.TradeFlowExecution={
+    list:()=>call("/api/trade-executions"),
+    create:(missionId,crmLeadId)=>call("/api/trade-executions",{method:"POST",body:JSON.stringify({missionId,crmLeadId})}),
+    get:(id)=>call("/api/trade-executions/"+encodeURIComponent(id)),
+    advance:(id,stage)=>call("/api/trade-executions/"+encodeURIComponent(id)+"/stage",{method:"POST",body:JSON.stringify({stage})}),
+    checklist:(id,key,status,notes)=>call("/api/trade-executions/"+encodeURIComponent(id)+"/checklist/"+encodeURIComponent(key),{method:"POST",body:JSON.stringify({status,notes})})
+  };
+})();
