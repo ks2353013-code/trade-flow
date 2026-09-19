@@ -66,50 +66,6 @@ function getVerificationStatus(score) {
   return "Unverified";
 }
 
-function createFallbackBuyers(ctx) {
-  const buyerTypes = getBuyerTypes(ctx);
-
-  return buyerTypes.slice(0, 5).map((type, index) => {
-    const companyName =
-      index === 0
-        ? `${ctx.market} ${ctx.product} Import Network`
-        : index === 1
-        ? `${ctx.market} Food Distribution Group`
-        : index === 2
-        ? `${ctx.market} Wholesale Trade Desk`
-        : index === 3
-        ? `${ctx.market} Retail Sourcing House`
-        : `${ctx.market} Buying House`;
-
-    const buyer = {
-      companyName,
-      country: ctx.market,
-      website: `https://${companyName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.example`,
-      email:
-        index < 4
-          ? `sourcing.${ctx.product.toLowerCase().replace(/\s+/g, "-")}@${companyName
-              .toLowerCase()
-              .replace(/[^a-z0-9]+/g, "-")}.example`
-          : "",
-      phone: index < 4 ? `+971-50-000-01${index + 10}` : "",
-      buyerType: type,
-      product: ctx.product,
-      source: "Buyer Discovery Agent",
-      sourceUrl: "",
-      outreachAllowed: false,
-      humanApprovalRequired: true
-    };
-
-    const confidenceScore = scoreBuyer(buyer, ctx);
-
-    return {
-      ...buyer,
-      confidenceScore,
-      verificationStatus: getVerificationStatus(confidenceScore)
-    };
-  });
-}
-
 async function getDiscoveredBuyers(ctx) {
   try {
     const result = await discoverBuyers(ctx);
@@ -180,17 +136,9 @@ async function run(input = {}) {
   const buyerLeaderboard = buildLeaderboard(verifiedBuyerLeads);
   const crmReadyBuyers = crmReadyVerifiedBuyers;
 
-  const estimatedBuyerFitScore =
-    discoveredBuyers.length
-      ? Math.round(
-          discoveredBuyers.reduce(
-            (sum, buyer) => sum + Number(buyer.confidenceScore || 0),
-            0
-          ) / discoveredBuyers.length
-        )
-      : ctx.product !== "General Product" && ctx.market !== "Global Market"
-      ? 86
-      : 62;
+  const estimatedBuyerFitScore = discoveredBuyers.length
+    ? Math.round(discoveredBuyers.reduce((sum, buyer) => sum + Number(buyer.confidenceScore || 0), 0) / discoveredBuyers.length)
+    : null;
 
   return {
     agent: "Buyer Discovery Agent",
@@ -218,8 +166,9 @@ async function run(input = {}) {
       "MOQ or buying requirement can be identified"
     ],
 
-    outreachPriority:
-      estimatedBuyerFitScore >= 80
+    outreachPriority: estimatedBuyerFitScore === null
+      ? "Live buyer discovery is unavailable. Connect a live provider before treating buyer results as real."
+      : estimatedBuyerFitScore >= 80
         ? "High priority buyer discovery recommended"
         : "Moderate priority. Improve product and market details first.",
 
