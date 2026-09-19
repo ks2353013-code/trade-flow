@@ -7,6 +7,7 @@ const { runTradeMission } = require("./tradeflowAgentOrchestrator");
 const { saveProfile } = require("./exporterOperatingProfile");
 const { getSubscription, getLimit } = require("../middleware/planLimitMiddleware");
 const { trackUsage } = require("../middleware/usageMiddleware");
+const { createComplianceSnapshot } = require("./tradeIntegrationService");
 
 function context(req) {
   const user = req.user || {};
@@ -310,6 +311,20 @@ async function createMission(req, input = {}) {
       }))),
     timeline: [{ at: new Date(), event: "Mission intelligence generated", detail: "TradeFlow built the initial operating plan." }]
   });
+
+  const compliancePlan = await createComplianceSnapshot(req, {
+    missionId: mission._id,
+    direction: goal.direction,
+    product: goal.product,
+    hsCode: input.hsCode || input.productDetails?.hsCode || "",
+    origin: input.productDetails?.origin || "India",
+    destination: goal.market,
+    transactionType: input.transactionType || "commercial",
+    sourceEvidence: intelligence.sourceEvidence?.compliance || []
+  });
+  mission.compliancePlan = compliancePlan;
+  mission.timeline.push({ at: new Date(), event: "Compliance operating plan prepared", detail: compliancePlan.requirements.length + " requirement(s) mapped." });
+  await mission.save();
 
   const crmSync = await syncQualifiedRecords(req, mission, intelligence);
   const approvalsCreated = await createOutreachApprovals(req, mission, intelligence);
