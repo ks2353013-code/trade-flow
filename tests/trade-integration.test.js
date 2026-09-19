@@ -7,8 +7,8 @@ test("integration catalog is truthful about supported execution modes", () => {
   const dgft = providers.find(x => x.providerKey === "dgft");
   const icegate = providers.find(x => x.providerKey === "icegate");
   const portal = providers.find(x => x.providerKey === "trade_connect");
-  assert.equal(dgft.mode, "api");
-  assert.equal(icegate.mode, "api");
+  assert.equal(dgft.mode, "official_portal");
+  assert.equal(icegate.mode, "official_portal");
   assert.equal(portal.mode, "official_portal");
 });
 
