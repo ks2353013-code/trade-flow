@@ -444,18 +444,18 @@
     oldQuickCards.forEach(card => card.closest(".grid")?.classList.add("tf-secondary-content"));
   }
 
-  function startMission(type = "export") {
-    const product = window.prompt(
-      type === "research" ? "What product or market do you want to research?" : "What do you want to do? Example: Export Basmati Rice to UAE",
-      type === "export" ? "" : ""
-    );
-    if (!product) return;
+  async function startMission(type = "export") {
+    const promptText = type === "research"
+      ? "What product or market do you want to research?"
+      : "Describe your goal. Example: Export Basmati Rice to UAE";
+    const goal = window.prompt(promptText, "");
+    if (!goal) return;
 
     if (type === "buyers") {
       go("buyerDiscoveryPage");
       setTimeout(() => {
         const input = document.querySelector("#buyerDiscoveryProduct,#aiProduct");
-        if (input) input.value = product;
+        if (input) input.value = goal;
       }, 250);
       return;
     }
@@ -464,20 +464,44 @@
       go("aiPage");
       setTimeout(() => {
         const input = document.querySelector("#aiProduct");
-        if (input) input.value = product;
+        if (input) input.value = goal;
       }, 250);
       return;
     }
 
-    go("governmentGatewayPage");
-    setTimeout(() => {
-      const input = document.getElementById("governmentGatewayProduct");
-      if (input) input.value = product;
-      const direction = document.getElementById("governmentGatewayDirection");
-      if (direction) direction.value = type === "import" ? "Import" : "Export";
-      const exporterProduct = document.getElementById("exporterOsProduct");
-      if (exporterProduct) exporterProduct.value = product;
-    }, 250);
+    const tokenValue = token();
+    const workspace = workspaceId();
+    if (!tokenValue || !workspace) {
+      go("governmentGatewayPage");
+      setTimeout(() => {
+        const input = document.getElementById("governmentGatewayProduct");
+        if (input) input.value = goal;
+      }, 200);
+      return;
+    }
+
+    try {
+      const response = await request("/api/missions", {
+        method: "POST",
+        body: JSON.stringify({
+          goal,
+          direction: type === "import" ? "Import" : "Export"
+        })
+      });
+
+      const mission = response.mission || {};
+      go("dashboardPage");
+      setTimeout(() => {
+        const notice = document.getElementById("governmentGatewayNotice");
+        if (notice) notice.innerHTML = `<div class="deal"><strong>Mission created.</strong> ${esc(mission.product || "Your trade goal")} → ${esc(mission.market || "")}<br><span class="muted">${esc(response.plan?.nextAction || "TradeFlow is preparing the next steps.")}</span></div>`;
+      }, 250);
+    } catch (error) {
+      go("governmentGatewayPage");
+      setTimeout(() => {
+        const notice = document.getElementById("governmentGatewayNotice");
+        if (notice) notice.innerHTML = `<div class="deal"><strong>TradeFlow needs one more setup step.</strong><br><span class="muted">${esc(error.message)}</span></div>`;
+      }, 200);
+    }
   }
 
   document.addEventListener("DOMContentLoaded", buildShell);
