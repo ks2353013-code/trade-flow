@@ -116,8 +116,8 @@ function buildActions({ direction, profile, gateway, intelligence, approvalsCrea
       market: intelligence.market,
       direction: intelligence.direction,
       readiness: Number(profile?.readiness?.score || 0),
-      opportunityScore: Number(intelligence?.opportunityScore || 0),
-      revenueEstimate: Number(intelligence?.revenueEstimate || 0),
+      opportunityScore: intelligence?.opportunityScore ?? null,
+      revenueEstimate: intelligence?.revenueEstimate ?? null,
       governmentSystems: Number(gateway?.summary?.totalSystems || 0),
       qualifiedRecords: qualified,
       outreachApprovals: approvalsCreated
@@ -286,13 +286,15 @@ async function createMission(req, input = {}) {
     ...c,
     ...goal,
     status: "Running",
+    userResponse: intelligence.userResponse || "",
+    sourceEvidence: intelligence.sourceEvidence || { market: [], counterparties: [], compliance: [] },
     agents: intelligence.agents || [],
     agentReports: intelligence.agentReports || {},
     opportunities: intelligence.opportunities || [],
     risks: intelligence.risks || [],
     documents: intelligence.documents || [],
-    revenueEstimate: Number(intelligence.revenueEstimate || 0),
-    opportunityScore: Number(intelligence.opportunityScore || 0),
+    revenueEstimate: intelligence.revenueEstimate ?? null,
+    opportunityScore: intelligence.opportunityScore ?? null,
     actions: [],
     readiness: {
       score: Number(profile?.readiness?.score || 0),
@@ -342,6 +344,10 @@ async function advanceMission(req, missionId, actionKey) {
     throw new Error("Trade setup is still blocked. Complete the listed readiness blockers first.");
   }
 
+  const order = ["setup","intelligence","buyers","documents","government","outreach","execution"];
+  const currentIndex = order.indexOf(actionKey);
+  const unfinishedPrior = mission.actions.filter(item => order.indexOf(item.key) >= 0 && order.indexOf(item.key) < currentIndex && item.status !== "completed");
+  if (unfinishedPrior.length) throw new Error(`Complete the previous mission action(s) first: ${unfinishedPrior.map(item => item.title).join(", ")}.`);
   action.status = action.status === "completed" ? "completed" : "in_progress";
   mission.timeline.push({ at: new Date(), event: "Action started", detail: action.title });
   await mission.save();
