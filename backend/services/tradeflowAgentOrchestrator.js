@@ -33,21 +33,18 @@ function detectMission(text = "", context = {}) {
   return { direction, product, market };
 }
 
-function buildTimeline({ direction, buyerDiscovery, supplierDiscovery }) {
+function buildTimeline({ direction, research, buyerDiscovery, supplierDiscovery, compliance, revenue }) {
   const now = new Date().toISOString();
   const relevantDiscovery = direction === "Export" ? buyerDiscovery : supplierDiscovery;
-  const discoveryTitle = direction === "Export"
-    ? "Buyer Discovery Agent"
-    : "Supplier Discovery Agent";
-
+  const discoveryTitle = direction === "Export" ? "Buyer Discovery Agent" : "Supplier Discovery Agent";
   return [
     { title: "Mission created", status: "Completed", at: now },
-    { title: "Research Agent Completed", status: "Completed", at: now },
-    { title: discoveryTitle, status: relevantDiscovery?.discoveredBuyers?.length || relevantDiscovery?.discoveredSuppliers?.length ? "Completed" : "Source Unavailable", at: now },
-    { title: "CRM Agent Completed", status: "Completed", at: now },
-    { title: "Compliance Agent Completed", status: "Completed", at: now },
-    { title: "Revenue Agent Completed", status: "Completed", at: now },
-    { title: "Outreach Agent Drafted Messages", status: "Needs Approval", at: now },
+    { title: "Research Agent", status: research?.status || "Source Unavailable", at: now },
+    { title: discoveryTitle, status: relevantDiscovery?.status || "Source Unavailable", at: now },
+    { title: "CRM Agent", status: "Completed", at: now },
+    { title: "Compliance Agent", status: compliance?.status || "Preliminary", at: now },
+    { title: "Revenue Agent", status: revenue?.status || "Needs Commercial Inputs", at: now },
+    { title: "Outreach Agent", status: "Needs Approval", at: now },
     { title: "Human approval required before external communication", status: "Pending", at: now }
   ];
 }
@@ -73,19 +70,9 @@ async function runTradeMission(missionText = "", context = {}) {
   const revenue = revenueAgent.run(input);
   const outreach = outreachAgent.run(input);
 
-  const discoveryScore = Number(
-    detected.direction === "Export"
-      ? buyerDiscovery?.estimatedBuyerFitScore
-      : supplierDiscovery?.estimatedSupplierFitScore
-  ) || 0;
-
   const verifiedDiscoveryCount = detected.direction === "Export"
     ? Number(buyerDiscovery?.crmReadyVerifiedBuyers?.length || 0)
     : Number(supplierDiscovery?.networkReadyVerifiedSuppliers?.length || 0);
-  const opportunityScore = (researchCount || discoveryCount)
-    ? Math.min(95, 40 + Math.min(30, researchCount * 3) + Math.min(20, discoveryCount * 2) + Math.min(10, verifiedDiscoveryCount * 5))
-    : null;
-
   const revenueEstimate =
     Number(revenue.revenueScenarioBase || revenue.estimatedDealValue || 0);
 
@@ -94,6 +81,9 @@ async function runTradeMission(missionText = "", context = {}) {
     ? Number(buyerDiscovery?.discoveredBuyers?.length || 0)
     : Number(supplierDiscovery?.discoveredSuppliers?.length || 0);
   const researchCount = Number(research?.liveResearchResults?.length || 0);
+  const opportunityScore = (researchCount || discoveryCount)
+    ? Math.min(95, 40 + Math.min(30, researchCount * 3) + Math.min(20, discoveryCount * 2) + Math.min(10, verifiedDiscoveryCount * 5))
+    : null;
   const sourceItems = (research?.liveResearchResults || []).slice(0, 5).map((item) => ({ title: item.title, url: item.url, snippet: item.snippet }));
   const discoveryItems = (detected.direction === "Export" ? buyerDiscovery?.sourceEvidence : supplierDiscovery?.supplierLeaderboard || []).slice(0, 5).map((item) => ({ companyName: item.companyName, url: item.sourceUrl || item.website, country: item.country }));
   const userResponse = researchCount || discoveryCount
@@ -156,8 +146,11 @@ async function runTradeMission(missionText = "", context = {}) {
     opportunityScore,
     timeline: buildTimeline({
       direction: detected.direction,
+      research,
       buyerDiscovery,
-      supplierDiscovery
+      supplierDiscovery,
+      compliance,
+      revenue
     })
   };
 }
