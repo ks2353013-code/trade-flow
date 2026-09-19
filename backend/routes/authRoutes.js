@@ -322,11 +322,13 @@ router.post("/reset-password", passwordResetLimiter, async (req, res) => {
     if (!resetToken || newPassword.length < 8) {
       return res.status(400).json({
         success: false,
-        message: "Valid email, reset token and an 8+ character password are required"
+        message: "Valid reset token and an 8+ character password are required"
       });
     }
 
-    const user = await User.findOne({\n      passwordResetTokenHash: hashResetToken(resetToken)\n    }).select("+passwordResetTokenHash");
+    const user = await User.findOne({
+      passwordResetTokenHash: hashResetToken(resetToken)
+    }).select("+passwordResetTokenHash");
 
     if (
       !user ||
