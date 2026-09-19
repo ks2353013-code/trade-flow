@@ -5,18 +5,15 @@ const tradeMissionSchema = new mongoose.Schema(
     ownerEmail: { type: String, required: true, lowercase: true, trim: true },
     companyId: { type: String, default: null },
     workspaceId: { type: String, default: null },
-
     missionText: { type: String, required: true },
     direction: { type: String, enum: ["Export", "Import"], default: "Export" },
     product: { type: String, default: "General Product" },
     market: { type: String, default: "Global Market" },
-
     status: {
       type: String,
       enum: ["Draft", "Running", "Completed", "Needs Approval", "Failed"],
       default: "Draft"
     },
-
     agents: { type: Array, default: [] },
     agentReports: {
       research: { type: mongoose.Schema.Types.Mixed, default: null },
@@ -32,13 +29,13 @@ const tradeMissionSchema = new mongoose.Schema(
     actions: { type: Array, default: [] },
     documents: { type: Array, default: [] },
     approvalsRequired: { type: Array, default: [] },
-
     revenueEstimate: { type: Number, default: 0 },
     opportunityScore: { type: Number, default: 0 },
-
     timeline: { type: Array, default: [] }
   },
   { timestamps: true }
 );
+
+tradeMissionSchema.index({ ownerEmail: 1, workspaceId: 1, updatedAt: -1 });
 
 module.exports = mongoose.model("TradeMission", tradeMissionSchema);
