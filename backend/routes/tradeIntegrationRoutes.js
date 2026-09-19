@@ -3,6 +3,7 @@ const router = express.Router();
 const service = require("../services/tradeIntegrationService");
 const credentialService = require("../services/tradeIntegrationCredentialService");
 const dgft = require("../services/dgftEbrcAdapter");
+const icegate = require("../services/icegateApiAdapter");
 
 router.get("/", async (req, res) => {
   try { res.json({ success: true, integrations: await service.listConnections(req) }); }
@@ -30,6 +31,12 @@ router.get("/catalog", (req, res) => res.json({ success: true, providers: servic
 
 router.post("/connections/:providerKey/test", async (req, res) => {
   try {
+    if (req.params.providerKey === "icegate" && req.body?.live === true) {
+      const credentials = await credentialService.load(req, "icegate");
+      const connection = await service.listConnections(req);
+      const configured = connection.find(x => x.providerKey === "icegate")?.connection;
+      return res.json({ success: true, result: await icegate.test(credentials, configured?.endpoint || "") });
+    }
     if (req.params.providerKey === "dgft" && req.body?.live === true) {
       const credentials = await credentialService.load(req, "dgft");
       return res.json({ success: true, result: await dgft.test(credentials) });
