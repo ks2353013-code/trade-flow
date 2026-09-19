@@ -4,6 +4,7 @@
   if (window.TradeFlowEnterpriseModuleLoader) return;
 
   const ENTERPRISE_MODULES = {
+    missionCore: ["./js/tradeflow-mission-cockpit.js"],
     premiumUX: [
       "./js/premium-ux-visual.js",
       "./js/premium-experience-engine.js"
@@ -76,6 +77,7 @@
   }
 
   async function loadForPage(page) {
+    await loadGroup("missionCore");
     const plan = getPlan();
 
     if (plan === "Starter") {
