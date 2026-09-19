@@ -1,6 +1,9 @@
-/* TradeFlow Research Agent V1
+/* TradeFlow Research Agent V2
+   Explores live public search results when a provider is configured.
    Analysis only. No external actions.
 */
+
+const axios = require("axios");
 
 function normalizeInput(input = {}) {
   return {
@@ -28,13 +31,45 @@ function scoreOpportunity({ product, market }) {
   return Math.min(score, 95);
 }
 
-function run(input = {}) {
+async function exploreLiveMarket(ctx) {
+  if (!process.env.SERP_API_KEY) {
+    return { sourceMode: "unavailable", results: [] };
+  }
+
+  const query = `${ctx.product} ${ctx.direction === "Export" ? "importers buyers distributors" : "suppliers manufacturers exporters"} ${ctx.market}`;
+  const response = await axios.get("https://serpapi.com/search.json", {
+    params: { engine: "google", q: query, api_key: process.env.SERP_API_KEY, num: 10 },
+    timeout: 15000
+  });
+
+  const results = (response.data?.organic_results || []).map((item) => ({
+    title: item.title || "",
+    url: item.link || "",
+    snippet: item.snippet || ""
+  })).filter((item) => item.url);
+
+  return { sourceMode: "provider", query, results };
+}
+
+async function run(input = {}) {
   const ctx = normalizeInput(input);
-  const opportunityScore = scoreOpportunity(ctx);
+  let liveResearch = { sourceMode: "unavailable", results: [] };
+  try {
+    liveResearch = await exploreLiveMarket(ctx);
+  } catch (error) {
+    console.warn("Live market research failed:", error.message);
+  }
+
+  const opportunityScore = liveResearch.results.length
+    ? scoreOpportunity(ctx)
+    : null;
 
   return {
     agent: "Research Agent",
-    status: "Completed",
+    status: liveResearch.results.length ? "Completed" : "Source Unavailable",
+    sourceMode: liveResearch.sourceMode,
+    searchQuery: liveResearch.query || null,
+    liveResearchResults: liveResearch.results,
     marketOverview: `${ctx.market} is being evaluated as a target market for ${ctx.direction.toLowerCase()} of ${ctx.product}. The opportunity depends on buyer demand, pricing, logistics, compliance requirements, and competitor presence.`,
     demandAnalysis: `Demand should be validated through importer activity, distributor interest, trade directories, inquiry volume, and product-specific buying behavior for ${ctx.product}.`,
     competitorAnalysis: `Main competition may come from established exporters, local distributors, regional suppliers, and price-focused trading companies already serving ${ctx.market}.`,
@@ -48,9 +83,9 @@ function run(input = {}) {
     pricingAnalysis: `Pricing should compare landed cost, export price, logistics cost, margin expectation, buyer MOQ, and competitor pricing for ${ctx.product} in ${ctx.market}.`,
     opportunityScore,
     executiveSummary:
-      opportunityScore >= 80
-        ? `Strong ${ctx.direction.toLowerCase()} opportunity detected for ${ctx.product} in ${ctx.market}. Recommended to proceed with verified lead discovery and controlled outreach.`
-        : `Developing opportunity for ${ctx.product} in ${ctx.market}. More buyer/supplier validation is recommended before aggressive outreach.`,
+      liveResearch.results.length
+        ? `Live market research returned ${liveResearch.results.length} relevant public results for ${ctx.product} in ${ctx.market}. TradeFlow will use these results to guide verified lead discovery and next-step preparation.`
+        : `Live market research is unavailable. Connect a search provider before treating market findings as current external research.`,
     nextActions: [
       "Validate market demand",
       "Find verified buyers/suppliers",
