@@ -6,6 +6,7 @@ const tradeMissionSchema = new mongoose.Schema(
     companyId: { type: String, default: null },
     workspaceId: { type: String, default: null },
     missionText: { type: String, required: true },
+    userResponse: { type: String, default: "" },
     direction: { type: String, enum: ["Export", "Import"], default: "Export" },
     product: { type: String, default: "General Product" },
     market: { type: String, default: "Global Market" },
@@ -25,6 +26,7 @@ const tradeMissionSchema = new mongoose.Schema(
       outreach: { type: mongoose.Schema.Types.Mixed, default: null }
     },
     opportunities: { type: Array, default: [] },
+    sourceEvidence: { type: mongoose.Schema.Types.Mixed, default: { market: [], counterparties: [], compliance: [] } },
     readiness: {
       score: { type: Number, default: 0 },
       status: { type: String, default: "setup_required" },
@@ -35,8 +37,8 @@ const tradeMissionSchema = new mongoose.Schema(
     actions: { type: Array, default: [] },
     documents: { type: Array, default: [] },
     approvalsRequired: { type: Array, default: [] },
-    revenueEstimate: { type: Number, default: 0 },
-    opportunityScore: { type: Number, default: 0 },
+    revenueEstimate: { type: Number, default: null },
+    opportunityScore: { type: Number, default: null },
     timeline: { type: Array, default: [] }
   },
   { timestamps: true }
