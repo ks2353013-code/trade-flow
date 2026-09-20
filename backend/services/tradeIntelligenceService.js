@@ -7,6 +7,7 @@ const REPORTER_INDIA = "699";
 const INDIA_ISO3 = "IND";
 
 const cache = {
+  witsCountries: { value: null, expiresAt: 0 },
   countries: { value: null, expiresAt: 0 },
   hs: { value: null, expiresAt: 0 },
   trade: new Map(),
@@ -65,6 +66,24 @@ async function getCountryCodes() {
   return map;
 }
 
+async function getWitsCountryCodes() {
+  if (cache.witsCountries && cache.witsCountries.expiresAt > Date.now()) return cache.witsCountries.value;
+  const response = await axios.get(
+    `${WITS_BASE}/API/V1/wits/datasource/trn/country/ALL?format=JSON`,
+    { timeout: 20000 }
+  );
+  const rows = Array.isArray(response.data) ? response.data : (response.data?.data || response.data?.countries || []);
+  const map = new Map();
+  for (const row of rows) {
+    const name = row.Name ?? row.name ?? row.CountryName ?? row.countryName;
+    const iso3 = row.ISO3Code ?? row.iso3Code ?? row.ISO3 ?? row.iso3;
+    const code = row.CountryCode ?? row.countryCode ?? row.Code ?? row.code;
+    if (name && iso3 && code) map.set(normaliseCountry(name), { iso3: String(iso3).toUpperCase(), code: String(code) });
+  }
+  cache.witsCountries = { value: map, expiresAt: Date.now() + 24 * 60 * 60 * 1000 };
+  return map;
+}
+
 async function resolveCountry(country) {
   const normalized = normaliseCountry(country);
   const aliases = {
@@ -79,11 +98,35 @@ async function resolveCountry(country) {
   const target = aliases[normalized] || normalized;
   const map = await getCountryCodes();
   const direct = map.get(target);
-  if (direct) return direct;
+  if (direct) {
+    if (direct.iso3) return direct;
+    try {
+      const wits = await getWitsCountryCodes();
+      const witsMatch = wits.get(target);
+      if (witsMatch) return { ...direct, iso3: witsMatch.iso3, witsCode: witsMatch.code };
+    } catch {}
+    return direct;
+  }
 
   for (const [name, value] of map.entries()) {
-    if (name.includes(target) || target.includes(name)) return value;
+    if (name.includes(target) || target.includes(name)) {
+      if (value.iso3) return value;
+      try {
+        const wits = await getWitsCountryCodes();
+        const witsMatch = wits.get(name);
+        if (witsMatch) return { ...value, iso3: witsMatch.iso3, witsCode: witsMatch.code };
+      } catch {}
+      return value;
+    }
   }
+  try {
+    const wits = await getWitsCountryCodes();
+    const directWits = wits.get(target);
+    if (directWits) return { m49: directWits.code, iso3: directWits.iso3, name: target };
+    for (const [name, value] of wits.entries()) {
+      if (name.includes(target) || target.includes(name)) return { m49: value.code, iso3: value.iso3, name };
+    }
+  } catch {}
   return null;
 }
 
