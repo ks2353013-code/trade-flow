@@ -1,22 +1,21 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#05070d">
-<meta name="description" content="TradeFlow is the AI Operating System for Global Trade. Discover opportunities, verify businesses, manage CRM, create AI-assisted outreach and run trade operations in one workspace.">
-<link rel="icon" href="./icons/icon-192.svg" type="image/svg+xml">
+<meta name="description" content="TradeFlow — AI Operating System for Global Trade. Source-backed trade intelligence, buyer discovery, verification, CRM and approval-gated execution.">
 <title>TradeFlow — AI Operating System for Global Trade</title>
 <style>
-:root{--bg:#05070d;--panel:#0b101a;--panel2:#101827;--line:rgba(255,255,255,.10);--text:#f7f9fc;--muted:#9aa8bc;--cyan:#45d6ff;--violet:#8b7cff;--green:#5ee6a8;--max:1180px}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 12% 0%,rgba(69,214,255,.13),transparent 30%),radial-gradient(circle at 90% 12%,rgba(139,124,255,.15),transparent 28%),var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}a{color:inherit;text-decoration:none}.wrap{max-width:var(--max);margin:auto;padding:0 24px}.nav{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.06)}.logo{font-weight:950;font-size:23px;letter-spacing:-.8px}.logo span{color:var(--cyan)}.navlinks{display:flex;gap:26px;color:#b7c1d1;font-size:13px;font-weight:750}.navlinks a:hover{color:white}.actions{display:flex;gap:10px;align-items:center}.btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:13px;font-weight:850;font-size:13px;border:1px solid var(--line);transition:.2s}.btn:hover{transform:translateY(-2px)}.primary{background:linear-gradient(135deg,var(--cyan),var(--violet));border:0;color:#061018;box-shadow:0 12px 35px rgba(69,214,255,.18)}.ghost{background:rgba(255,255,255,.035)}.hero{padding:82px 0 55px;display:grid;grid-template-columns:1.03fr .97fr;gap:55px;align-items:center}.eyebrow{display:inline-flex;padding:8px 12px;border:1px solid rgba(69,214,255,.22);background:rgba(69,214,255,.07);border-radius:999px;color:#8ee7ff;font-size:12px;font-weight:850;letter-spacing:.2px}.hero h1{font-size:clamp(48px,6.2vw,82px);line-height:.94;letter-spacing:-4.8px;margin:20px 0 22px;max-width:760px}.gradient{background:linear-gradient(110deg,#fff 5%,#8ee7ff 42%,#a99fff 80%);-webkit-background-clip:text;background-clip:text;color:transparent}.hero p{font-size:18px;line-height:1.7;color:#b5c0d0;max-width:690px;margin:0}.heroBtns{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}.proof{display:flex;gap:22px;flex-wrap:wrap;margin-top:27px;color:#7f8da2;font-size:12px}.proof b{color:#dce6f3}.terminal{position:relative;background:linear-gradient(145deg,rgba(17,25,39,.95),rgba(6,10,17,.94));border:1px solid rgba(255,255,255,.11);border-radius:26px;padding:17px;box-shadow:0 35px 100px rgba(0,0,0,.42);overflow:hidden}.terminal:before{content:"";position:absolute;width:260px;height:260px;background:rgba(69,214,255,.14);filter:blur(70px);right:-90px;top:-80px}.dots{display:flex;gap:6px;margin-bottom:16px}.dots i{width:7px;height:7px;border-radius:50%;background:#566274}.command{border:1px solid rgba(255,255,255,.08);background:#070b12;border-radius:16px;padding:16px;margin-bottom:12px;position:relative}.label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#75849a;font-weight:900}.value{font-size:15px;font-weight:800;margin-top:7px}.mission{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.mini{border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.025);border-radius:14px;padding:13px}.mini strong{display:block;font-size:13px;margin-top:5px}.mini small{color:#728198}.status{color:var(--green);font-size:11px;font-weight:850}.section{padding:88px 0}.center{text-align:center}.kicker{color:var(--cyan);font-size:11px;text-transform:uppercase;letter-spacing:1.6px;font-weight:900}.section h2{font-size:clamp(34px,4.5vw,55px);letter-spacing:-2.5px;line-height:1.02;margin:12px 0 15px}.lead{color:var(--muted);font-size:16px;line-height:1.7;max-width:760px;margin:0 auto}.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:42px}.step{background:linear-gradient(145deg,rgba(16,24,38,.9),rgba(9,13,21,.9));border:1px solid var(--line);border-radius:20px;padding:22px;min-height:175px}.num{color:#65758c;font-size:11px;font-weight:900}.step h3{margin:20px 0 7px;font-size:18px}.step p{color:#8997aa;font-size:13px;line-height:1.55;margin:0}.agents{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:38px}.agent{padding:22px;border:1px solid var(--line);border-radius:20px;background:rgba(255,255,255,.025)}.agent b{display:block;font-size:15px;margin:9px 0 5px}.agent span{color:#8492a6;font-size:12px;line-height:1.5}.challenge{display:grid;grid-template-columns:.85fr 1.15fr;gap:24px;margin-top:40px}.challengeCard,.resultCard{border:1px solid var(--line);border-radius:24px;background:linear-gradient(145deg,rgba(15,23,36,.9),rgba(8,12,20,.9));padding:25px}.challengeCard h3,.resultCard h3{font-size:23px;margin:0 0 8px}.challengeCard p{color:#8f9db0;font-size:13px;line-height:1.6}.input{width:100%;margin-top:12px;padding:14px 15px;background:#070b12;color:white;border:1px solid rgba(255,255,255,.09);border-radius:12px;outline:none}.input:focus{border-color:rgba(69,214,255,.55)}.resultHead{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-bottom:18px}.badge{padding:7px 10px;border-radius:999px;background:rgba(94,230,168,.08);color:#70edb1;border:1px solid rgba(94,230,168,.16);font-size:10px;font-weight:900}.resultGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.result{padding:14px;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:rgba(255,255,255,.025)}.result small{display:block;color:#738197;text-transform:uppercase;font-size:9px;font-weight:900;letter-spacing:.9px}.result strong{display:block;margin-top:7px;font-size:13px}.note{margin-top:15px;color:#69778c;font-size:11px;line-height:1.5}.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:40px}.plan{padding:26px;border:1px solid var(--line);border-radius:22px;background:rgba(255,255,255,.025)}.plan.featured{border-color:rgba(69,214,255,.35);background:linear-gradient(145deg,rgba(69,214,255,.08),rgba(139,124,255,.06))}.plan h3{margin:0;font-size:19px}.price{font-size:30px;font-weight:950;margin:15px 0 4px}.plan p,.plan li{color:#8694a8;font-size:13px;line-height:1.6}.plan ul{padding-left:18px;min-height:100px}.cta{padding:70px 30px;text-align:center;border:1px solid rgba(69,214,255,.17);border-radius:30px;background:radial-gradient(circle at 50% 0%,rgba(69,214,255,.12),transparent 45%),linear-gradient(145deg,rgba(15,23,36,.95),rgba(6,10,17,.95))}.cta h2{margin:10px auto 15px;max-width:800px}.cta p{color:#94a1b3;max-width:620px;margin:0 auto 25px;line-height:1.7}.footer{border-top:1px solid rgba(255,255,255,.07);padding:28px 0 45px;color:#657389;font-size:12px;display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap}.mobileOnly{display:none}@media(max-width:900px){.navlinks{display:none}.mobileOnly{display:inline-flex}.hero,.challenge{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr}.agents{grid-template-columns:1fr 1fr}.plans{grid-template-columns:1fr}.hero{padding-top:55px}.hero h1{letter-spacing:-3px}}@media(max-width:560px){.wrap{padding:0 17px}.nav{height:68px}.actions .ghost{display:none}.hero h1{font-size:48px}.flow,.agents,.resultGrid{grid-template-columns:1fr}.section{padding:65px 0}.terminal{padding:12px}}
+:root{--bg:#05070d;--panel:#0b101a;--panel2:#101827;--line:rgba(255,255,255,.1);--text:#f7f9fc;--muted:#98a7bb;--cyan:#45d6ff;--violet:#8b7cff;--green:#5ee6a8;--max:1180px}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 10% 0%,rgba(69,214,255,.13),transparent 28%),radial-gradient(circle at 90% 8%,rgba(139,124,255,.14),transparent 28%),var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}a{text-decoration:none;color:inherit}.wrap{max-width:var(--max);margin:auto;padding:0 22px}.nav{height:74px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between}.logo{font-size:22px;font-weight:950;letter-spacing:-.8px}.logo span{color:var(--cyan)}.links{display:flex;gap:24px;color:#aeb9ca;font-size:13px;font-weight:750}.actions{display:flex;gap:9px}.btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 17px;border-radius:12px;border:1px solid var(--line);font-weight:850;font-size:13px}.primary{background:linear-gradient(135deg,var(--cyan),var(--violet));color:#061018;border:0}.ghost{background:rgba(255,255,255,.035)}.hero{padding:80px 0 65px;display:grid;grid-template-columns:1.03fr .97fr;gap:48px;align-items:center}.eyebrow,.tag{display:inline-flex;padding:7px 11px;border-radius:999px;border:1px solid rgba(69,214,255,.2);background:rgba(69,214,255,.06);color:#8ee7ff;font-size:10px;font-weight:900;letter-spacing:1px;text-transform:uppercase}.hero h1{font-size:clamp(48px,6.5vw,82px);line-height:.94;letter-spacing:-5px;margin:20px 0}.gradient{background:linear-gradient(110deg,#fff,#8ee7ff,#a99fff);-webkit-background-clip:text;background-clip:text;color:transparent}.hero p,.lead{color:var(--muted);line-height:1.7;font-size:16px}.hero p{max-width:690px}.heroBtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px}.terminal,.card{border:1px solid var(--line);border-radius:24px;background:linear-gradient(145deg,rgba(16,24,38,.92),rgba(7,11,18,.95));box-shadow:0 30px 80px rgba(0,0,0,.32)}.terminal{padding:18px}.dots{display:flex;gap:6px;margin-bottom:15px}.dots i{width:7px;height:7px;border-radius:50%;background:#5c697c}.cmd{padding:15px;border:1px solid rgba(255,255,255,.07);border-radius:15px;background:#070b12;margin-bottom:10px}.label{font-size:9px;color:#738197;text-transform:uppercase;letter-spacing:1px;font-weight:900}.value{margin-top:7px;font-weight:800;font-size:14px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.mini{padding:13px;border:1px solid rgba(255,255,255,.07);border-radius:13px;background:rgba(255,255,255,.025)}.mini small{color:#718096}.mini b{display:block;margin-top:5px}.active{color:var(--green);font-size:10px;font-weight:900}.section{padding:78px 0}.center{text-align:center}.kicker{color:var(--cyan);font-size:10px;letter-spacing:1.7px;font-weight:900}.section h2{font-size:clamp(34px,4.5vw,54px);line-height:1.02;letter-spacing:-2.5px;margin:11px 0}.lead{max-width:760px;margin:auto}.flow,.agents,.plans{display:grid;gap:12px;margin-top:38px}.flow{grid-template-columns:repeat(5,1fr)}.agents{grid-template-columns:repeat(4,1fr)}.plans{grid-template-columns:repeat(3,1fr)}.card{padding:21px;box-shadow:none}.step h3{margin:18px 0 7px}.step p,.agent span,.plan li,.plan p{color:#8795a9;font-size:12px;line-height:1.55}.challenge{display:grid;grid-template-columns:.78fr 1.22fr;gap:18px;margin-top:36px}.card h3{margin:0 0 8px;font-size:21px}.input{width:100%;padding:13px;margin-top:10px;border-radius:11px;border:1px solid rgba(255,255,255,.09);background:#070b12;color:#fff;outline:0}.input:focus{border-color:rgba(69,214,255,.55)}.hsResults{display:flex;flex-direction:column;gap:6px;margin-top:8px}.hsOption{padding:9px 10px;border:1px solid rgba(255,255,255,.07);border-radius:10px;background:rgba(255,255,255,.025);cursor:pointer;font-size:12px}.hsOption:hover{border-color:rgba(69,214,255,.45)}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.stat{padding:13px;border:1px solid rgba(255,255,255,.07);border-radius:13px;background:rgba(255,255,255,.025)}.stat small{display:block;color:#738197;font-size:9px;text-transform:uppercase;letter-spacing:.8px;font-weight:900}.stat b{display:block;margin-top:7px;font-size:14px}.source{font-size:11px;color:#7e8ba0;line-height:1.5;margin-top:12px}.source a{color:#a7dff0;text-decoration:underline}.badge{padding:6px 9px;border-radius:999px;font-size:9px;font-weight:900;background:rgba(94,230,168,.08);color:#70edb1;border:1px solid rgba(94,230,168,.15)}.resultHead{display:flex;justify-content:space-between;gap:10px;align-items:center}.suppliers{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.supplier{padding:9px;border:1px solid rgba(255,255,255,.06);border-radius:10px;color:#aab6c8;font-size:11px}.plan.featured{border-color:rgba(69,214,255,.35)}.price{font-size:29px;font-weight:950;margin:14px 0 3px}.plan ul{min-height:95px;padding-left:17px}.cta{text-align:center;padding:65px 25px}.footer{border-top:1px solid rgba(255,255,255,.07);padding:27px 0 42px;color:#657389;font-size:11px;display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap}@media(max-width:900px){.links{display:none}.hero,.challenge{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr}.agents{grid-template-columns:1fr 1fr}.plans{grid-template-columns:1fr}}@media(max-width:560px){.hero{padding-top:55px}.hero h1{letter-spacing:-3px}.flow,.agents,.stats,.suppliers,.grid2{grid-template-columns:1fr}.section{padding:60px 0}}
 </style>
 </head>
 <body>
 <div class="wrap">
 <nav class="nav">
-<a class="logo" href="/"><span>Trade</span>Flow<span>™</span></a>
-<div class="navlinks"><a href="#platform">Platform</a><a href="#ai-team">AI Team</a><a href="#challenge">Export Challenge</a><a href="#pricing">Pricing</a></div>
+<a class="logo" href="/"><span>Trade</span>Flow™</a>
+<div class="links"><a href="#platform">Platform</a><a href="#ai-team">AI Team</a><a href="#challenge">Export Challenge</a><a href="#pricing">Pricing</a></div>
 <div class="actions"><a class="btn ghost" href="/login">Login</a><a class="btn primary" href="/signup">Start TradeFlow</a></div>
 </nav>
 
@@ -24,203 +23,118 @@
 <div>
 <div class="eyebrow">AI OPERATING SYSTEM FOR GLOBAL TRADE</div>
 <h1>Find the opportunity.<br><span class="gradient">Make the deal.</span><br>Run the operation.</h1>
-<p>TradeFlow connects trade intelligence, buyer and supplier discovery, verification, CRM, AI-assisted outreach, compliance, documents and team workflows in one intelligent workspace.</p>
-<div class="heroBtns"><a class="btn primary" href="/signup">Start TradeFlow →</a><a class="btn ghost" href="#challenge">Run the Export Challenge</a></div>
-<div class="proof"><span>✓ Buyer & supplier intelligence</span><span>✓ Verification workflow</span><span>✓ CRM + AI outreach</span><span>✓ Team workspaces</span></div>
+<p>TradeFlow connects source-backed trade intelligence, buyer and supplier discovery, evidence-first verification, CRM, AI-assisted outreach, compliance, documents and team workflows in one workspace.</p>
+<div class="heroBtns"><a class="btn primary" href="/signup">Start TradeFlow →</a><a class="btn ghost" href="#challenge">Run Export Challenge</a></div>
 </div>
 <div class="terminal">
 <div class="dots"><i></i><i></i><i></i></div>
-<div class="command"><div class="label">Mission</div><div class="value" id="missionText">Find qualified buyers for Indian specialty food products in the UAE</div></div>
-<div class="mission">
-<div class="mini"><div class="status">● ACTIVE</div><small>Research</small><strong>Market intelligence</strong></div>
-<div class="mini"><div class="status">● ACTIVE</div><small>Discovery</small><strong>Buyer opportunities</strong></div>
-<div class="mini"><div class="status">● READY</div><small>Verification</small><strong>Opportunity context</strong></div>
-<div class="mini"><div class="status">● READY</div><small>CRM</small><strong>Pipeline handoff</strong></div>
+<div class="cmd"><div class="label">Live mission</div><div class="value">Product + market + HS-6 → evidence-backed trade workflow</div></div>
+<div class="grid2">
+<div class="mini"><span class="active">● LIVE</span><small>Trade intelligence</small><b>5-year market series</b></div>
+<div class="mini"><span class="active">● LIVE</span><small>Competition</small><b>Supplier concentration</b></div>
+<div class="mini"><span class="active">● READY</span><small>Verification</small><b>Evidence-gated buyers</b></div>
+<div class="mini"><span class="active">● READY</span><small>Execution</small><b>Approval-controlled outreach</b></div>
 </div>
-<div class="command" style="margin-top:12px;margin-bottom:0"><div class="label">Next action</div><div class="value">Create approved outreach draft →</div></div>
 </div>
 </section>
 
 <section class="section" id="platform">
-<div class="center"><div class="kicker">ONE OPERATING LAYER</div><h2>From trade idea to operating workflow.</h2><p class="lead">TradeFlow keeps the context connected as an opportunity moves through your export process.</p></div>
+<div class="center"><div class="kicker">ONE OPERATING LAYER</div><h2>From trade idea to operating workflow.</h2><p class="lead">TradeFlow keeps the context connected from market intelligence through verified opportunities and human-approved execution.</p></div>
 <div class="flow">
-<div class="step"><div class="num">01</div><h3>Discover</h3><p>Research markets, buyers, suppliers and trade opportunities.</p></div>
-<div class="step"><div class="num">02</div><h3>Verify</h3><p>Turn raw company records into structured opportunity intelligence.</p></div>
-<div class="step"><div class="num">03</div><h3>Manage</h3><p>Move qualified opportunities into CRM and track the pipeline.</p></div>
-<div class="step"><div class="num">04</div><h3>Reach</h3><p>Create contextual outreach drafts with human approval in the loop.</p></div>
-<div class="step"><div class="num">05</div><h3>Operate</h3><p>Coordinate compliance, documents, tasks, teams and analytics.</p></div>
+<div class="card step"><small>01</small><h3>Discover</h3><p>Research markets, buyers, suppliers and trade flows.</p></div>
+<div class="card step"><small>02</small><h3>Verify</h3><p>Require business, contact and independent source evidence.</p></div>
+<div class="card step"><small>03</small><h3>Manage</h3><p>Push qualified opportunities into CRM and missions.</p></div>
+<div class="card step"><small>04</small><h3>Reach</h3><p>Create contextual drafts with approval in the loop.</p></div>
+<div class="card step"><small>05</small><h3>Operate</h3><p>Coordinate compliance, documents, tasks and teams.</p></div>
 </div>
 </section>
 
 <section class="section" id="ai-team">
-<div class="center"><div class="kicker">YOUR AI EXPORT TEAM</div><h2>Seven AI jobs. One workspace.</h2><p class="lead">TradeFlow turns specialized AI capabilities into connected business workflows.</p></div>
+<div class="center"><div class="kicker">AI TRADE TEAM</div><h2>Specialized agents. One context.</h2></div>
 <div class="agents">
-<div class="agent">🧠<b>Research Agent</b><span>Turns trade questions into structured intelligence.</span></div>
-<div class="agent">🔎<b>Buyer Discovery</b><span>Surfaces potential buyer opportunities.</span></div>
-<div class="agent">🏭<b>Supplier Discovery</b><span>Organizes supplier opportunities and intelligence.</span></div>
-<div class="agent">📈<b>CRM Agent</b><span>Keeps commercial opportunities organized.</span></div>
-<div class="agent">🛡️<b>Compliance Agent</b><span>Supports the compliance workflow around trade.</span></div>
-<div class="agent">💰<b>Revenue Agent</b><span>Brings intelligence to pipeline and revenue.</span></div>
-<div class="agent">✉️<b>Outreach Agent</b><span>Creates personalized outreach drafts from context.</span></div>
-<div class="agent">⚡<b>Mission Center</b><span>Coordinates the objective, evidence, actions and next steps.</span></div>
+<div class="card agent"><b>Research Agent</b><span>Live market research and source evidence.</span></div>
+<div class="card agent"><b>Buyer Discovery</b><span>Find candidates and pass them through verification.</span></div>
+<div class="card agent"><b>CRM Agent</b><span>Turn qualified opportunities into pipeline work.</span></div>
+<div class="card agent"><b>Compliance Agent</b><span>Structure trade risks, requirements and document actions.</span></div>
 </div>
 </section>
 
 <section class="section" id="challenge">
-<div class="center"><div class="kicker">TRADEFLOW EXPORT CHALLENGE</div><h2>Give us one product. One market.</h2><p class="lead">See how an export objective becomes a structured TradeFlow mission.</p></div>
+<div class="center"><div class="kicker">REAL DATA</div><h2>Export Challenge</h2><p class="lead">Enter a product, target market and select an HS-6 classification. TradeFlow returns source-backed statistics only — no synthetic opportunity numbers.</p></div>
 <div class="challenge">
-<div class="challengeCard">
-<h3>Start a mission</h3>
-<p>Enter a product and target market. This public experience previews the workflow; your TradeFlow workspace handles the real mission.</p>
-<input class="input" id="product" placeholder="Product — e.g. Indian spices">
-<input class="input" id="country" placeholder="Target market — e.g. UAE">
-<input class="input" id="hsCode" inputmode="numeric" maxlength="6" placeholder="6-digit HS code — e.g. 100630">
-<button class="btn primary" style="width:100%;margin-top:12px" onclick="runChallenge()">Build Trade Mission →</button>
+<div class="card">
+<h3>Build the query</h3>
+<p class="source">HS classification must be selected from the reference results. TradeFlow will not silently guess.</p>
+<input id="product" class="input" placeholder="Product — e.g. oranges">
+<input id="market" class="input" placeholder="Target market — e.g. United Arab Emirates">
+<input id="hsSearch" class="input" placeholder="Search HS code or product description">
+<div id="hsResults" class="hsResults"></div>
+<input id="hsCode" class="input" placeholder="Selected HS-6" readonly>
+<button class="btn primary" style="width:100%;margin-top:12px;cursor:pointer" onclick="runChallenge()">Run live analysis →</button>
+<div id="note" class="source">Official statistical sources are queried server-side. Provider failure returns no replacement numbers.</div>
 </div>
-<div class="resultCard">
-<div class="resultHead"><h3 id="resultTitle">Live TradeFlow intelligence</h3><span class="badge" id="resultBadge">READY</span></div>
-<div class="resultGrid">
-<div class="result"><small>Live sources</small><strong id="r1">—</strong></div>
-<div class="result"><small>Buyers discovered</small><strong id="r2">—</strong></div>
-<div class="result"><small>Buyers verified</small><strong id="r3">—</strong></div>
-<div class="result"><small>CRM-ready</small><strong id="r4">—</strong></div>
-<div class="result"><small>Evidence score</small><strong id="r5">—</strong></div>
-<div class="result"><small>Data status</small><strong id="r6">Waiting for live query</strong></div>
-<div class="result"><small>Market imports</small><strong id="r7">—</strong></div>
-<div class="result"><small>India → market exports</small><strong id="r8">—</strong></div>
-<div class="result"><small>Import YoY</small><strong id="r9">—</strong></div>
-<div class="result"><small>Import value / kg</small><strong id="r10">—</strong></div>
+<div class="card">
+<div class="resultHead"><div><div class="label">Result</div><h3 id="title">Awaiting live query</h3></div><span id="badge" class="badge">READY</span></div>
+<div class="stats">
+<div class="stat"><small>Market imports</small><b id="imports">—</b></div>
+<div class="stat"><small>5Y CAGR</small><b id="cagr">—</b></div>
+<div class="stat"><small>India share</small><b id="indiaShare">—</b></div>
+<div class="stat"><small>Trade balance</small><b id="balance">—</b></div>
+<div class="stat"><small>Unit value</small><b id="unitValue">—</b></div>
+<div class="stat"><small>Opportunity index</small><b id="score">—</b></div>
 </div>
-<div class="note" id="resultNote">Every number above comes from the configured live research/discovery providers. If live data is unavailable, TradeFlow says so instead of inventing a result. Buyer records remain evidence-led and approval-gated.</div>
-<div id="sourceList" style="margin-top:14px"></div>
+<div class="source" id="tariff">Tariff: —</div>
+<div class="source" id="competition">Supplier competition: —</div>
+<div class="suppliers" id="suppliers"></div>
+<div class="source" id="evidence"></div>
 </div>
 </div>
 </section>
 
 <section class="section" id="pricing">
-<div class="center"><div class="kicker">TRADEFLOW PLANS</div><h2>Start focused. Scale into an AI OS.</h2><p class="lead">Plans align with the way an exporter grows from individual workflow to team-wide operations.</p></div>
+<div class="center"><div class="kicker">WORKSPACE PLANS</div><h2>Start with the workflow. Scale with intelligence.</h2></div>
 <div class="plans">
-<div class="plan"><h3>Starter</h3><div class="price">₹1,999<span style="font-size:13px;color:#718097">/mo</span></div><p>For focused exporters building their workflow.</p><ul><li>Core workspace</li><li>CRM and trade workflows</li><li>Starter usage limits</li></ul><a class="btn ghost" style="width:100%" href="/signup">Start Starter</a></div>
-<div class="plan featured"><div class="badge">POPULAR</div><h3 style="margin-top:12px">Pro Exporter</h3><div class="price">₹8,999<span style="font-size:13px;color:#718097">/mo</span></div><p>For active exporters and growing trade teams.</p><ul><li>Advanced AI workflows</li><li>Buyer/supplier intelligence</li><li>CRM, analytics and team workflows</li></ul><a class="btn primary" style="width:100%" href="/signup">Start Pro</a></div>
-<div class="plan"><h3>Enterprise AI OS</h3><div class="price">₹49,999<span style="font-size:13px;color:#718097">/mo</span></div><p>For organizations building a broader AI trade operating layer.</p><ul><li>Enterprise controls</li><li>Expanded workspaces and permissions</li><li>Advanced operating workflows</li></ul><a class="btn ghost" style="width:100%" href="/signup">Explore Enterprise</a></div>
+<div class="card plan"><h3>Starter</h3><div class="price">₹1,999</div><p>/ month</p><ul><li>Trade intelligence</li><li>Buyer & supplier discovery</li><li>CRM workflow</li><li>AI-assisted operations</li></ul><a class="btn ghost" style="width:100%" href="/signup">Start Starter</a></div>
+<div class="card plan featured"><h3>Pro Exporter</h3><div class="price">₹8,999</div><p>/ month</p><ul><li>Advanced trade intelligence</li><li>Verification workflows</li><li>AI outreach & follow-ups</li><li>Advanced analytics</li></ul><a class="btn primary" style="width:100%" href="/signup">Start Pro</a></div>
+<div class="card plan"><h3>Enterprise AI OS</h3><div class="price">₹49,999</div><p>/ month</p><ul><li>Multi-company workspaces</li><li>Enterprise controls</li><li>Advanced operating workflows</li><li>Priority support</li></ul><a class="btn ghost" style="width:100%" href="/signup">Explore Enterprise</a></div>
 </div>
 </section>
 
-<section class="section">
-<div class="cta"><div class="kicker">TRADEFLOW</div><h2>Your next export opportunity deserves an operating system.</h2><p>Bring intelligence, opportunities, pipeline and execution together in one workspace.</p><a class="btn primary" href="/signup">Start TradeFlow →</a></div>
-</section>
-
+<section class="section cta"><div class="card"><div class="kicker">TRADEFLOW</div><h2>Turn trade research into an operating system.</h2><p class="lead">Every important number should have a source, period, classification and calculation method.</p><a class="btn primary" href="/signup">Start TradeFlow →</a></div></section>
 <footer class="footer"><span>© 2026 TradeFlow™ — AI Operating System for Global Trade</span><span>AI-assisted workflows • Human-controlled approvals</span></footer>
 </div>
 <script>
-function runChallenge(){
- const p=document.getElementById('product').value.trim()||'your product';
- const c=document.getElementById('country').value.trim()||'your target market';
- document.getElementById('missionText').textContent='Build an export mission for '+p+' in '+c;
- document.getElementById('resultTitle').textContent=p+' → '+c;
- document.getElementById('resultBadge').textContent='MISSION READY';
- document.getElementById('r1').textContent='Research '+c;
- document.getElementById('r2').textContent='Discover buyer opportunities';
- document.getElementById('r3').textContent='Structure company context';
- document.getElementById('r4').textContent='Prepare CRM pipeline';
- document.getElementById('r5').textContent='Create contextual outreach';
- document.getElementById('r6').textContent='Continue in TradeFlow';
- document.getElementById('challenge').scrollIntoView({behavior:'smooth',block:'center'});
+const $=id=>document.getElementById(id);
+let hsTimer;
+$("hsSearch").addEventListener("input",()=>{clearTimeout(hsTimer);const q=$("hsSearch").value.trim();if(q.length<2){$("hsResults").innerHTML="";return;}hsTimer=setTimeout(()=>searchHs(q),350);});
+async function searchHs(q){
+  $("hsResults").innerHTML='<div class="source">Searching reference classifications…</div>';
+  try{
+    const r=await fetch('/api/public/hs-search?q='+encodeURIComponent(q));
+    const p=await r.json();
+    if(!r.ok||!p.success)throw new Error(p.message||'HS search unavailable');
+    $("hsResults").innerHTML=p.data.results.length?p.data.results.map(x=>'<div class="hsOption" onclick="selectHs(\''+x.code+'\',\''+escapeHtml(x.description)+'\')"><b>'+x.code+'</b> — '+escapeHtml(x.description)+'</div>').join(""):'<div class="source">No reference match found.</div>';
+  }catch(e){$("hsResults").innerHTML='<div class="source">HS reference search unavailable. Entering a code manually is intentionally disabled.</div>';}
 }
-</script>
-</body>
-</html<script>
+function selectHs(code,desc){$("hsCode").value=code;$("hsSearch").value=code+" — "+desc;$("hsResults").innerHTML='<div class="source">Selected HS-6: <b>'+code+'</b> — '+escapeHtml(desc)+'</div>';}
 async function runChallenge(){
- const p=document.getElementById('product').value.trim();
- const m=document.getElementById('country').value.trim();
- const hs=document.getElementById('hsCode').value.trim();
- const badge=document.getElementById('resultBadge');
- if(!p||!m||hs.length!==6){
-   badge.textContent='INPUT REQUIRED';
-   document.getElementById('resultNote').textContent='Enter a product, target market and valid 6-digit HS code. TradeFlow will use official trade statistics; it will not guess the classification.';
-   return;
- }
- document.getElementById('missionText').textContent='Live export mission: '+p+' → '+m;
- document.getElementById('resultTitle').textContent=p+' → '+m;
- badge.textContent='RUNNING';
- ['r1','r2','r3','r4','r5'].forEach(id=>document.getElementById(id).textContent='…');
- document.getElementById('r6').textContent='Querying live sources';
- document.getElementById('sourceList').innerHTML='';
- document.getElementById('challenge').scrollIntoView({behavior:'smooth',block:'center'});
- try{
-   const response=await fetch('/api/public/export-challenge',{
-     method:'POST',
-     headers:{'Content-Type':'application/json'},
-     body:JSON.stringify({product:p,market:m,hsCode:hs})
-   });
-   const payload=await response.json();
-   if(!response.ok||!payload.success) throw new Error(payload.message||'Live query failed');
-   const d=payload.data;
-   const n=d.numbers||{};
-   badge.textContent=d.sourceMode==='live-provider'?'LIVE DATA':'DATA UNAVAILABLE';
-   document.getElementById('r1').textContent=String(n.liveMarketSources??0);
-   document.getElementById('r2').textContent=String(n.buyersDiscovered??0);
-   document.getElementById('r3').textContent=String(n.buyersVerified??0);
-   document.getElementById('r4').textContent=String(n.buyersCrmReady??0);
-   document.getElementById('r5').textContent=d.opportunityScore==null?'Not calculated':String(d.opportunityScore)+'/95';
-   document.getElementById('r6').textContent=d.sourceMode==='live-trade-data'?'Live trade statistics':'Live search only / trade data unavailable';
-   const ti=d.tradeIntelligence?.data;
-   const fmtUsd=v=>v==null?'—':'
-   const sources=Array.isArray(d.sources)?d.sources:[];
-   const buyers=Array.isArray(d.buyerEvidence)?d.buyerEvidence:[];
-   document.getElementById('sourceList').innerHTML=
-     (sources.length?'<div class="label" style="margin-bottom:7px">Source evidence</div>'+sources.slice(0,4).map(s=>'<div class="note" style="margin-top:6px"><a href="'+escapeHtml(s.url)+'" target="_blank" rel="noopener">'+escapeHtml(s.title||s.url)+'</a></div>').join(''):'')+
-     (buyers.length?'<div class="label" style="margin:14px 0 7px">Buyer evidence</div>'+buyers.slice(0,4).map(b=>'<div class="note" style="margin-top:6px">'+escapeHtml(b.companyName||'Unnamed company')+' · '+escapeHtml(b.verificationStatus||'Unverified')+(b.website?' · <a href="'+escapeHtml(b.website)+'" target="_blank" rel="noopener">source</a>':'')+'</div>').join(''):'');
- }catch(error){
-   badge.textContent='NO SYNTHETIC RESULT';
-   ['r1','r2','r3','r4','r5','r7','r8','r9','r10'].forEach(id=>document.getElementById(id).textContent='—');
-   document.getElementById('r6').textContent='Live data unavailable';
-   document.getElementById('resultNote').textContent=error.message||'Live trade intelligence is temporarily unavailable. TradeFlow did not generate replacement numbers.';
- }
+  const product=$("product").value.trim(), market=$("market").value.trim(), hsCode=$("hsCode").value.trim();
+  if(!product||!market||hsCode.length!==6){$("badge").textContent="INPUT REQUIRED";$("note").textContent="Select a valid HS-6 classification before running the live analysis.";return;}
+  $("badge").textContent="RUNNING";$("title").textContent=product+" → "+market;$("note").textContent="Querying live trade statistics, supplier competition, tariff records and buyer evidence…";
+  ["imports","cagr","indiaShare","balance","unitValue","score","tariff","competition","evidence"].forEach(id=>$(id).textContent="…");$("suppliers").innerHTML="";
+  try{
+    const r=await fetch('/api/public/export-challenge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product,market,hsCode})});
+    const p=await r.json();if(!r.ok||!p.success)throw new Error(p.message||"Live analysis failed");
+    const d=p.data, t=d.tradeIntelligence.data, fmt=v=>v==null?"—":"$"+Number(v).toLocaleString(undefined,{maximumFractionDigits:0});
+    $("badge").textContent="LIVE DATA";$("imports").textContent=fmt(t.marketImports.latest?.valueUsd);$("cagr").textContent=t.marketImports.cagrPercent==null?"—":t.marketImports.cagrPercent+"%";$("indiaShare").textContent=t.indiaMarketSharePercent==null?"—":t.indiaMarketSharePercent+"%";$("balance").textContent=fmt(t.tradeBalanceUsd);$("unitValue").textContent=t.averageImportValuePerKgUsd==null?"—":"$"+Number(t.averageImportValuePerKgUsd).toFixed(2)+"/kg";$("score").textContent=d.opportunityScore==null?"—":d.opportunityScore+"/100";
+    const tar=t.tariffIntelligence.latest;$("tariff").textContent="Tariff — MFN: "+(tar?.mfnPercent==null?"—":tar.mfnPercent+"%")+" · Applied: "+(tar?.appliedPercent==null?"—":tar.appliedPercent+"%")+" · Year: "+(tar?.year||"—");
+    const comp=t.supplierCompetition;$("competition").textContent="Supplier concentration — HHI: "+(comp?.hhi==null?"—":comp.hhi)+" · Source: World Bank WITS / UN Comtrade";
+    $("suppliers").innerHTML=(comp?.suppliers||[]).slice(0,6).map(s=>'<div class="supplier"><b>#'+s.rank+" "+escapeHtml(s.country)+'</b><br>'+fmt(s.valueUsd)+' · '+(s.sharePercent==null?"—":s.sharePercent+"% share")+'</div>').join("");
+    $("evidence").innerHTML='HS-6 '+escapeHtml(t.hsCode)+' · '+escapeHtml(t.market)+' · retrieved '+new Date(p.meta.generatedAt).toLocaleString()+"<br>Sources: <a href=\"https://comtradeapi.un.org/\" target=\"_blank\" rel=\"noopener\">UN Comtrade</a> · <a href=\"https://wits.worldbank.org/\" target=\"_blank\" rel=\"noopener\">World Bank WITS</a> · <a href=\"https://eping.wto.org/\" target=\"_blank\" rel=\"noopener\">WTO ePing</a>";
+    $("note").textContent="No synthetic numbers were generated. The opportunity index is a weighted evidence model, not a forecast.";
+  }catch(e){$("badge").textContent="NO SYNTHETIC RESULT";$("note").textContent=e.message||"Live data unavailable. TradeFlow generated no replacement numbers.";["imports","cagr","indiaShare","balance","unitValue","score","tariff","competition","evidence"].forEach(id=>$(id).textContent="—");$("suppliers").innerHTML="";}
 }
-function escapeHtml(value){
- return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
-}
-</script>
-</body>
-</html>+Number(v).toLocaleString(undefined,{maximumFractionDigits:0});
-   document.getElementById('r7').textContent=fmtUsd(ti?.marketImports?.latest?.valueUsd);
-   document.getElementById('r8').textContent=fmtUsd(ti?.indiaExportsToMarket?.latest?.valueUsd);
-   document.getElementById('r9').textContent=ti?.marketImports?.yoyPercent==null?'—':ti.marketImports.yoyPercent+'%';
-   document.getElementById('r10').textContent=ti?.averageImportValuePerKgUsd==null?'—':'
-   const sources=Array.isArray(d.sources)?d.sources:[];
-   const buyers=Array.isArray(d.buyerEvidence)?d.buyerEvidence:[];
-   document.getElementById('sourceList').innerHTML=
-     (sources.length?'<div class="label" style="margin-bottom:7px">Source evidence</div>'+sources.slice(0,4).map(s=>'<div class="note" style="margin-top:6px"><a href="'+escapeHtml(s.url)+'" target="_blank" rel="noopener">'+escapeHtml(s.title||s.url)+'</a></div>').join(''):'')+
-     (buyers.length?'<div class="label" style="margin:14px 0 7px">Buyer evidence</div>'+buyers.slice(0,4).map(b=>'<div class="note" style="margin-top:6px">'+escapeHtml(b.companyName||'Unnamed company')+' · '+escapeHtml(b.verificationStatus||'Unverified')+(b.website?' · <a href="'+escapeHtml(b.website)+'" target="_blank" rel="noopener">source</a>':'')+'</div>').join(''):'');
- }catch(error){
-   badge.textContent='NO SYNTHETIC RESULT';
-   ['r1','r2','r3','r4','r5'].forEach(id=>document.getElementById(id).textContent='—');
-   document.getElementById('r6').textContent='Live data unavailable';
-   document.getElementById('resultNote').textContent=error.message||'Live trade intelligence is temporarily unavailable. TradeFlow did not generate replacement numbers.';
- }
-}
-function escapeHtml(value){
- return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
-}
-</script>
-</body>
-</html>+Number(ti.averageImportValuePerKgUsd).toFixed(2);
-   const sources=Array.isArray(d.sources)?d.sources:[];
-   const buyers=Array.isArray(d.buyerEvidence)?d.buyerEvidence:[];
-   document.getElementById('sourceList').innerHTML=
-     (sources.length?'<div class="label" style="margin-bottom:7px">Source evidence</div>'+sources.slice(0,4).map(s=>'<div class="note" style="margin-top:6px"><a href="'+escapeHtml(s.url)+'" target="_blank" rel="noopener">'+escapeHtml(s.title||s.url)+'</a></div>').join(''):'')+
-     (buyers.length?'<div class="label" style="margin:14px 0 7px">Buyer evidence</div>'+buyers.slice(0,4).map(b=>'<div class="note" style="margin-top:6px">'+escapeHtml(b.companyName||'Unnamed company')+' · '+escapeHtml(b.verificationStatus||'Unverified')+(b.website?' · <a href="'+escapeHtml(b.website)+'" target="_blank" rel="noopener">source</a>':'')+'</div>').join(''):'');
- }catch(error){
-   badge.textContent='NO SYNTHETIC RESULT';
-   ['r1','r2','r3','r4','r5'].forEach(id=>document.getElementById(id).textContent='—');
-   document.getElementById('r6').textContent='Live data unavailable';
-   document.getElementById('resultNote').textContent=error.message||'Live trade intelligence is temporarily unavailable. TradeFlow did not generate replacement numbers.';
- }
-}
-function escapeHtml(value){
- return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
-}
+function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
 </script>
 </body>
 </html>
