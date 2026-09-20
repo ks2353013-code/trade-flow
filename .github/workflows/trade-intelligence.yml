@@ -1,0 +1,26 @@
+name: TradeFlow Production Intelligence Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  trade-intelligence:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: node --check services/tradeIntelligenceService.js
+      - run: node --check routes/publicTradeRoutes.js
+      - run: node --check services/leadVerificationEngine.js
+      - run: node --test ../tests/trade-intelligence-production.test.js
