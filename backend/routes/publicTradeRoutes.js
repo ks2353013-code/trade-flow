@@ -65,9 +65,9 @@ router.post("/export-challenge", async (req, res) => {
         product,
         market,
         status: result.status,
-        sourceMode: research.sourceMode === "provider" || buyers.sourceMode === "provider"
-          ? "live-provider"
-          : "unavailable",
+        sourceMode: tradeIntelligence.status === "Live Data"
+          ? "live-trade-data"
+          : (research.sourceMode === "provider" || buyers.sourceMode === "provider" ? "live-search" : "unavailable"),
         numbers: {
           liveMarketSources: marketSources.length,
           buyersDiscovered: Array.isArray(buyers.discoveredBuyers) ? buyers.discoveredBuyers.length : 0,
