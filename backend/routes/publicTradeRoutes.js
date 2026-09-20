@@ -1,5 +1,6 @@
 const express = require("express");
 const { runTradeMission } = require("../services/tradeflowAgentOrchestrator");
+const { buildTradeIntelligence } = require("../services/tradeIntelligenceService");
 
 const router = express.Router();
 
@@ -11,6 +12,7 @@ router.post("/export-challenge", async (req, res) => {
   try {
     const product = clean(req.body?.product);
     const market = clean(req.body?.market || req.body?.country);
+    const hsCode = clean(req.body?.hsCode, 12);
 
     if (!product || !market) {
       return res.status(400).json({
@@ -18,6 +20,8 @@ router.post("/export-challenge", async (req, res) => {
         message: "Product and target market are required."
       });
     }
+
+    const tradeIntelligence = await buildTradeIntelligence({ product, market, hsCode });
 
     const result = await runTradeMission(
       `Export ${product} to ${market}`,
@@ -61,9 +65,9 @@ router.post("/export-challenge", async (req, res) => {
         product,
         market,
         status: result.status,
-        sourceMode: research.sourceMode === "provider" || buyers.sourceMode === "provider"
-          ? "live-provider"
-          : "unavailable",
+        sourceMode: tradeIntelligence.status === "Live Data"
+          ? "live-trade-data"
+          : (research.sourceMode === "provider" || buyers.sourceMode === "provider" ? "live-search" : "unavailable"),
         numbers: {
           liveMarketSources: marketSources.length,
           buyersDiscovered: Array.isArray(buyers.discoveredBuyers) ? buyers.discoveredBuyers.length : 0,
@@ -72,6 +76,7 @@ router.post("/export-challenge", async (req, res) => {
         },
         opportunityScore: result.opportunityScore ?? null,
         opportunityScoreMethod: research.opportunityScoreMethod || null,
+        tradeIntelligence,
         sources: marketSources,
         buyerEvidence: discoveredBuyers,
         nextStep: "Sign in to run the full TradeFlow mission and continue into CRM and approval-gated outreach."
