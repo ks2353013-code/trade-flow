@@ -82,6 +82,7 @@ const exporterOperatingProfileRoutes = require("./routes/exporterOperatingProfil
 const tradeMissionRoutes = require("./routes/tradeMissionRoutes");
 const tradeExecutionRoutes = require("./routes/tradeExecutionRoutes");
 const tradeIntegrationRoutes = require("./routes/tradeIntegrationRoutes");
+const publicTradeRoutes = require("./routes/publicTradeRoutes");
 
 const { startWorkflowScheduler } = require("./services/workflowScheduler");
 const { startAIAutonomousScheduler } = require("./services/aiAutonomousScheduler");
@@ -292,6 +293,9 @@ app.get("/api/ready", (req, res) => {
 /* Public Auth Routes */
 app.use("/api/auth", requireDatabaseReady, authRoutes);
 app.use("/api/errors", requireDatabaseReady, optionalAuth, clientErrorRoutes);
+
+/* Public, read-only marketing intelligence API */
+app.use("/api/public", publicTradeRoutes);
 
 /* Protected API Routes */
 const protectedStack = [

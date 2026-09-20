@@ -77,16 +77,17 @@
 <button class="btn primary" style="width:100%;margin-top:12px" onclick="runChallenge()">Build Trade Mission →</button>
 </div>
 <div class="resultCard">
-<div class="resultHead"><h3 id="resultTitle">Mission preview</h3><span class="badge" id="resultBadge">READY</span></div>
+<div class="resultHead"><h3 id="resultTitle">Live TradeFlow intelligence</h3><span class="badge" id="resultBadge">READY</span></div>
 <div class="resultGrid">
-<div class="result"><small>Research</small><strong id="r1">Market intelligence</strong></div>
-<div class="result"><small>Discovery</small><strong id="r2">Buyer opportunities</strong></div>
-<div class="result"><small>Verification</small><strong id="r3">Company context</strong></div>
-<div class="result"><small>CRM</small><strong id="r4">Pipeline handoff</strong></div>
-<div class="result"><small>Outreach</small><strong id="r5">AI-assisted draft</strong></div>
-<div class="result"><small>Next action</small><strong id="r6">Create your workspace</strong></div>
+<div class="result"><small>Live sources</small><strong id="r1">—</strong></div>
+<div class="result"><small>Buyers discovered</small><strong id="r2">—</strong></div>
+<div class="result"><small>Buyers verified</small><strong id="r3">—</strong></div>
+<div class="result"><small>CRM-ready</small><strong id="r4">—</strong></div>
+<div class="result"><small>Evidence score</small><strong id="r5">—</strong></div>
+<div class="result"><small>Data status</small><strong id="r6">Waiting for live query</strong></div>
 </div>
-<div class="note">This preview does not claim specific buyers or verification outcomes. Sign in to run the workflow inside TradeFlow.</div>
+<div class="note" id="resultNote">Every number above comes from the configured live research/discovery providers. If live data is unavailable, TradeFlow says so instead of inventing a result. Buyer records remain evidence-led and approval-gated.</div>
+<div id="sourceList" style="margin-top:14px"></div>
 </div>
 </div>
 </section>
@@ -120,6 +121,57 @@ function runChallenge(){
  document.getElementById('r5').textContent='Create contextual outreach';
  document.getElementById('r6').textContent='Continue in TradeFlow';
  document.getElementById('challenge').scrollIntoView({behavior:'smooth',block:'center'});
+}
+</script>
+</body>
+</html<script>
+async function runChallenge(){
+ const p=document.getElementById('product').value.trim();
+ const m=document.getElementById('country').value.trim();
+ const badge=document.getElementById('resultBadge');
+ if(!p||!m){
+   badge.textContent='INPUT REQUIRED';
+   document.getElementById('resultNote').textContent='Enter a product and target market. TradeFlow will query live providers; it will not fabricate missing numbers.';
+   return;
+ }
+ document.getElementById('missionText').textContent='Live export mission: '+p+' → '+m;
+ document.getElementById('resultTitle').textContent=p+' → '+m;
+ badge.textContent='RUNNING';
+ ['r1','r2','r3','r4','r5'].forEach(id=>document.getElementById(id).textContent='…');
+ document.getElementById('r6').textContent='Querying live sources';
+ document.getElementById('sourceList').innerHTML='';
+ document.getElementById('challenge').scrollIntoView({behavior:'smooth',block:'center'});
+ try{
+   const response=await fetch('/api/public/export-challenge',{
+     method:'POST',
+     headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({product:p,market:m})
+   });
+   const payload=await response.json();
+   if(!response.ok||!payload.success) throw new Error(payload.message||'Live query failed');
+   const d=payload.data;
+   const n=d.numbers||{};
+   badge.textContent=d.sourceMode==='live-provider'?'LIVE DATA':'DATA UNAVAILABLE';
+   document.getElementById('r1').textContent=String(n.liveMarketSources??0);
+   document.getElementById('r2').textContent=String(n.buyersDiscovered??0);
+   document.getElementById('r3').textContent=String(n.buyersVerified??0);
+   document.getElementById('r4').textContent=String(n.buyersCrmReady??0);
+   document.getElementById('r5').textContent=d.opportunityScore==null?'Not calculated':String(d.opportunityScore)+'/95';
+   document.getElementById('r6').textContent=d.sourceMode==='live-provider'?'Live provider results returned':'No live provider data';
+   const sources=Array.isArray(d.sources)?d.sources:[];
+   const buyers=Array.isArray(d.buyerEvidence)?d.buyerEvidence:[];
+   document.getElementById('sourceList').innerHTML=
+     (sources.length?'<div class="label" style="margin-bottom:7px">Source evidence</div>'+sources.slice(0,4).map(s=>'<div class="note" style="margin-top:6px"><a href="'+escapeHtml(s.url)+'" target="_blank" rel="noopener">'+escapeHtml(s.title||s.url)+'</a></div>').join(''):'')+
+     (buyers.length?'<div class="label" style="margin:14px 0 7px">Buyer evidence</div>'+buyers.slice(0,4).map(b=>'<div class="note" style="margin-top:6px">'+escapeHtml(b.companyName||'Unnamed company')+' · '+escapeHtml(b.verificationStatus||'Unverified')+(b.website?' · <a href="'+escapeHtml(b.website)+'" target="_blank" rel="noopener">source</a>':'')+'</div>').join(''):'');
+ }catch(error){
+   badge.textContent='NO SYNTHETIC RESULT';
+   ['r1','r2','r3','r4','r5'].forEach(id=>document.getElementById(id).textContent='—');
+   document.getElementById('r6').textContent='Live data unavailable';
+   document.getElementById('resultNote').textContent=error.message||'Live trade intelligence is temporarily unavailable. TradeFlow did not generate replacement numbers.';
+ }
+}
+function escapeHtml(value){
+ return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
 }
 </script>
 </body>
