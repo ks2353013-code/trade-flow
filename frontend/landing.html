@@ -74,6 +74,7 @@
 <p>Enter a product and target market. This public experience previews the workflow; your TradeFlow workspace handles the real mission.</p>
 <input class="input" id="product" placeholder="Product — e.g. Indian spices">
 <input class="input" id="country" placeholder="Target market — e.g. UAE">
+<input class="input" id="hsCode" inputmode="numeric" maxlength="6" placeholder="6-digit HS code — e.g. 100630">
 <button class="btn primary" style="width:100%;margin-top:12px" onclick="runChallenge()">Build Trade Mission →</button>
 </div>
 <div class="resultCard">
@@ -85,6 +86,10 @@
 <div class="result"><small>CRM-ready</small><strong id="r4">—</strong></div>
 <div class="result"><small>Evidence score</small><strong id="r5">—</strong></div>
 <div class="result"><small>Data status</small><strong id="r6">Waiting for live query</strong></div>
+<div class="result"><small>Market imports</small><strong id="r7">—</strong></div>
+<div class="result"><small>India → market exports</small><strong id="r8">—</strong></div>
+<div class="result"><small>Import YoY</small><strong id="r9">—</strong></div>
+<div class="result"><small>Import value / kg</small><strong id="r10">—</strong></div>
 </div>
 <div class="note" id="resultNote">Every number above comes from the configured live research/discovery providers. If live data is unavailable, TradeFlow says so instead of inventing a result. Buyer records remain evidence-led and approval-gated.</div>
 <div id="sourceList" style="margin-top:14px"></div>
@@ -128,10 +133,11 @@ function runChallenge(){
 async function runChallenge(){
  const p=document.getElementById('product').value.trim();
  const m=document.getElementById('country').value.trim();
+ const hs=document.getElementById('hsCode').value.trim();
  const badge=document.getElementById('resultBadge');
- if(!p||!m){
+ if(!p||!m||hs.length!==6){
    badge.textContent='INPUT REQUIRED';
-   document.getElementById('resultNote').textContent='Enter a product and target market. TradeFlow will query live providers; it will not fabricate missing numbers.';
+   document.getElementById('resultNote').textContent='Enter a product, target market and valid 6-digit HS code. TradeFlow will use official trade statistics; it will not guess the classification.';
    return;
  }
  document.getElementById('missionText').textContent='Live export mission: '+p+' → '+m;
@@ -145,7 +151,7 @@ async function runChallenge(){
    const response=await fetch('/api/public/export-challenge',{
      method:'POST',
      headers:{'Content-Type':'application/json'},
-     body:JSON.stringify({product:p,market:m})
+     body:JSON.stringify({product:p,market:m,hsCode:hs})
    });
    const payload=await response.json();
    if(!response.ok||!payload.success) throw new Error(payload.message||'Live query failed');
@@ -157,7 +163,49 @@ async function runChallenge(){
    document.getElementById('r3').textContent=String(n.buyersVerified??0);
    document.getElementById('r4').textContent=String(n.buyersCrmReady??0);
    document.getElementById('r5').textContent=d.opportunityScore==null?'Not calculated':String(d.opportunityScore)+'/95';
-   document.getElementById('r6').textContent=d.sourceMode==='live-provider'?'Live provider results returned':'No live provider data';
+   document.getElementById('r6').textContent=d.sourceMode==='live-trade-data'?'Live trade statistics':'Live search only / trade data unavailable';
+   const ti=d.tradeIntelligence?.data;
+   const fmtUsd=v=>v==null?'—':'
+   const sources=Array.isArray(d.sources)?d.sources:[];
+   const buyers=Array.isArray(d.buyerEvidence)?d.buyerEvidence:[];
+   document.getElementById('sourceList').innerHTML=
+     (sources.length?'<div class="label" style="margin-bottom:7px">Source evidence</div>'+sources.slice(0,4).map(s=>'<div class="note" style="margin-top:6px"><a href="'+escapeHtml(s.url)+'" target="_blank" rel="noopener">'+escapeHtml(s.title||s.url)+'</a></div>').join(''):'')+
+     (buyers.length?'<div class="label" style="margin:14px 0 7px">Buyer evidence</div>'+buyers.slice(0,4).map(b=>'<div class="note" style="margin-top:6px">'+escapeHtml(b.companyName||'Unnamed company')+' · '+escapeHtml(b.verificationStatus||'Unverified')+(b.website?' · <a href="'+escapeHtml(b.website)+'" target="_blank" rel="noopener">source</a>':'')+'</div>').join(''):'');
+ }catch(error){
+   badge.textContent='NO SYNTHETIC RESULT';
+   ['r1','r2','r3','r4','r5','r7','r8','r9','r10'].forEach(id=>document.getElementById(id).textContent='—');
+   document.getElementById('r6').textContent='Live data unavailable';
+   document.getElementById('resultNote').textContent=error.message||'Live trade intelligence is temporarily unavailable. TradeFlow did not generate replacement numbers.';
+ }
+}
+function escapeHtml(value){
+ return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
+}
+</script>
+</body>
+</html>+Number(v).toLocaleString(undefined,{maximumFractionDigits:0});
+   document.getElementById('r7').textContent=fmtUsd(ti?.marketImports?.latest?.valueUsd);
+   document.getElementById('r8').textContent=fmtUsd(ti?.indiaExportsToMarket?.latest?.valueUsd);
+   document.getElementById('r9').textContent=ti?.marketImports?.yoyPercent==null?'—':ti.marketImports.yoyPercent+'%';
+   document.getElementById('r10').textContent=ti?.averageImportValuePerKgUsd==null?'—':'
+   const sources=Array.isArray(d.sources)?d.sources:[];
+   const buyers=Array.isArray(d.buyerEvidence)?d.buyerEvidence:[];
+   document.getElementById('sourceList').innerHTML=
+     (sources.length?'<div class="label" style="margin-bottom:7px">Source evidence</div>'+sources.slice(0,4).map(s=>'<div class="note" style="margin-top:6px"><a href="'+escapeHtml(s.url)+'" target="_blank" rel="noopener">'+escapeHtml(s.title||s.url)+'</a></div>').join(''):'')+
+     (buyers.length?'<div class="label" style="margin:14px 0 7px">Buyer evidence</div>'+buyers.slice(0,4).map(b=>'<div class="note" style="margin-top:6px">'+escapeHtml(b.companyName||'Unnamed company')+' · '+escapeHtml(b.verificationStatus||'Unverified')+(b.website?' · <a href="'+escapeHtml(b.website)+'" target="_blank" rel="noopener">source</a>':'')+'</div>').join(''):'');
+ }catch(error){
+   badge.textContent='NO SYNTHETIC RESULT';
+   ['r1','r2','r3','r4','r5'].forEach(id=>document.getElementById(id).textContent='—');
+   document.getElementById('r6').textContent='Live data unavailable';
+   document.getElementById('resultNote').textContent=error.message||'Live trade intelligence is temporarily unavailable. TradeFlow did not generate replacement numbers.';
+ }
+}
+function escapeHtml(value){
+ return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
+}
+</script>
+</body>
+</html>+Number(ti.averageImportValuePerKgUsd).toFixed(2);
    const sources=Array.isArray(d.sources)?d.sources:[];
    const buyers=Array.isArray(d.buyerEvidence)?d.buyerEvidence:[];
    document.getElementById('sourceList').innerHTML=
