@@ -236,7 +236,9 @@ async function getTariffSeries({ marketIso3, hsCode, partnerIso3 = INDIA_ISO3, y
           mfnPercent: number(cells[1]),
           appliedPercent: number(cells[2]),
           tariffLines: number(cells[3]),
-          traded: cells[4] || null
+          traded: cells[4] || null,
+          preferentialAvailable: number(cells[2]) != null && number(cells[1]) != null && number(cells[2]) < number(cells[1]),
+          preferentialRatePercent: number(cells[2]) != null && number(cells[1]) != null && number(cells[2]) < number(cells[1]) ? number(cells[2]) : null
         };
       }
     });
@@ -394,7 +396,8 @@ async function buildTradeIntelligence({ product, market, hsCode }) {
         changePercentPoints: tariffLatest && tariffPrevious && tariffLatest.mfnPercent != null && tariffPrevious.mfnPercent != null
           ? Number((tariffLatest.mfnPercent - tariffPrevious.mfnPercent).toFixed(2))
           : null,
-        effectiveDateStatus: "Annual validity year is available; an exact implementation date is not inferred from annual WITS tariff records."
+        preferentialMethod: "WITS Applied Tariff includes preferential tariff when it exists for the selected partner; TradeFlow reports the applied rate and flags it as preferential when it is below MFN.",
+        effectiveDateStatus: "Annual validity year is available. TradeFlow does not invent an exact implementation date from an annual tariff record; WTO tariff-action data remains the authoritative source for dated tariff actions."
       },
       provenance: {
         hsCode: cleanHs,
