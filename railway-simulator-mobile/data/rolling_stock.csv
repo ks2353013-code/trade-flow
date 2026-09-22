@@ -1,0 +1,6 @@
+id,type,max_speed_kmh,power_kw,brake_type
+WAP7,WAP-7 Electric Loco,140,6350,Air
+WAP5,WAP-5 Electric Loco,160,6000,Air
+WAG7,WAG-7 Electric Freight Loco,100,5000,Air
+WAG9,WAG-9 Electric Freight Loco,100,6120,Air
+MEMU,MEMU Passenger Unit,110,3500,Air
