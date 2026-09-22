@@ -23,3 +23,5 @@ jobs:
         with:
           name: NorthernRailwaySimulator-debug-apk
           path: railway-simulator-mobile/app/build/outputs/apk/debug/app-debug.apk
+
+# APK build trigger
