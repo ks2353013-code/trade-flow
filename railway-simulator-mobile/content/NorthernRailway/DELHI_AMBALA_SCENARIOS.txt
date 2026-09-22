@@ -1,0 +1,6 @@
+NR-DEL-001 | New Delhi -> Ambala Cantt | Passenger | 06:00 departure | clear
+NR-DEL-002 | New Delhi -> Ambala Cantt | Passenger | 07:10 departure | monsoon rain
+NR-DEL-003 | New Delhi -> Ambala Cantt | Passenger | 05:45 departure | winter fog
+NR-DEL-004 | Ambala Cantt -> New Delhi | Freight | 22:30 departure | night
+
+Scenario implementation must use verified timetable/source data before release; these are build placeholders, not claims of current railway schedules.
