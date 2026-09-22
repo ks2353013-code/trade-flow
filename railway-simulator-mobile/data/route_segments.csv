@@ -1,0 +1,19 @@
+from,to,division,approx_km,route
+New Delhi,Ghaziabad,Delhi,12,Delhi-Ambala
+Ghaziabad,Meerut City,Moradabad,49,Delhi-Ambala
+Meerut City,Muzaffarnagar,Moradabad,48,Delhi-Ambala
+Muzaffarnagar,Saharanpur,Moradabad,42,Delhi-Ambala
+Saharanpur,Ambala Cantt,Ambala,48,Delhi-Ambala
+Ambala Cantt,Ludhiana,Ambala,113,Ambala-Ludhiana
+Ludhiana,Jalandhar,Ambala,62,Ambala-Jalandhar
+Jalandhar,Amritsar,Ambala,67,Amritsar Branch
+Ambala Cantt,Chandigarh,Ambala,47,Chandigarh Branch
+Delhi,Moradabad,Moradabad,167,Delhi-Moradabad
+Moradabad,Bareilly,Moradabad,90,Moradabad-Lucknow
+Bareilly,Lucknow,Moradabad,268,Moradabad-Lucknow
+Delhi,Lucknow,Lucknow,550,Delhi-Lucknow
+Ambala,Jammu Tawi,Firozpur,344,Delhi-Jammu
+Jammu Tawi,Shri Mata Vaishno Devi Katra,Firozpur,78,Jammu-Katra
+Shri Mata Vaishno Devi Katra,Banihal,Firozpur,110,Katra-Banihal
+Banihal,Srinagar,Firozpur,135,Kashmir Valley
+Srinagar,Baramulla,Firozpur,119,Kashmir Valley
