@@ -1,0 +1,39 @@
+name: Northern Railway Simulator - Open Rails Windows
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'railway-simulator-mobile/content/**'
+      - 'railway-simulator-mobile/data/**'
+      - 'railway-simulator-mobile/.github/workflows/openrails-windows.yml'
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout TradeFlow repository
+        uses: actions/checkout@v4
+      - name: Checkout Open Rails engine
+        uses: actions/checkout@v4
+        with:
+          repository: openrails/openrails
+          path: railway-simulator-mobile/engine/openrails
+      - name: Build Open Rails
+        shell: pwsh
+        working-directory: railway-simulator-mobile/engine/openrails
+        run: .\Build.cmd
+      - name: Package Northern Railway content
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force railway-simulator-mobile/dist/NorthernRailway | Out-Null
+          Copy-Item railway-simulator-mobile/content/NorthernRailway railway-simulator-mobile/dist/NorthernRailway/content -Recurse -Force
+          Copy-Item railway-simulator-mobile/data railway-simulator-mobile/dist/NorthernRailway/data -Recurse -Force
+      - name: Archive simulator package
+        shell: pwsh
+        run: Compress-Archive -Path railway-simulator-mobile/dist/NorthernRailway -DestinationPath railway-simulator-mobile/dist/NorthernRailway-Simulator-content.zip -Force
+      - name: Upload simulator artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: NorthernRailway-Simulator-build
+          path: |
+            railway-simulator-mobile/dist/**
+            railway-simulator-mobile/engine/openrails/bin/**
