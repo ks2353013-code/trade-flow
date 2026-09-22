@@ -1,0 +1,8 @@
+station_code,station_name,division,km_from_new_delhi,route
+NDLS,New Delhi,Delhi,0,Delhi-Ambala
+DLI,Delhi,Delhi,5,Delhi-Ambala
+GZB,Ghaziabad,Delhi,12,Delhi-Ambala
+MTC,Meerut City,Moradabad,61,Delhi-Ambala
+MOZ,Muzaffarnagar,Moradabad,109,Delhi-Ambala
+SRE,Saharanpur,Ambala,151,Delhi-Ambala
+UMB,Ambala Cantt,Ambala,199,Delhi-Ambala
