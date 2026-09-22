@@ -1,0 +1,10 @@
+rule,value
+signalling,Indian colour light signalling
+traction,25kV AC overhead electrification where electrified
+braking,air brake with locomotive and train brake controls
+vigilance,driver vigilance acknowledgement required
+speed_control,overspeed protection and route speed limits
+station_working,scheduled stops and platform occupancy
+block_working,section occupancy controls following train movement
+points,interlocked route points
+weather,rain fog night and reduced-visibility operating modes
