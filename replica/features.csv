@@ -1,0 +1,23 @@
+feature,area,priority,original,tradeflow,status,notes
+B2B buyer discovery,Discovery,must,yes,yes,planned,AI-assisted buyer discovery with evidence
+B2B supplier discovery,Discovery,must,yes,yes,planned,AI-assisted supplier discovery with evidence
+Lead verification,Trust,must,partial,yes,planned,Go beyond badges with evidence and confidence
+RFQ-style requirements,Discovery,should,yes,yes,planned,Convert buyer requirements into structured missions
+Intent qualification,AI,must,partial,yes,planned,Score fit intent timing and commercial relevance
+Unified CRM,CRM,must,yes,yes,planned,Trade-specific CRM rather than generic CRM
+Automated outreach,Outreach,must,yes,yes,planned,Approval-gated email/WhatsApp workflows
+Outreach approval queue,Governance,must,no,yes,planned,Human approval before external send
+Email delivery center,Outreach,must,no,yes,planned,Delivery status and dry-run safety
+AI research agent,AI,must,no,yes,planned,Research with evidence
+AI buyer agent,AI,must,no,yes,planned,Discovery and qualification
+AI supplier agent,AI,must,no,yes,planned,Discovery and qualification
+Compliance agent,Compliance,should,no,yes,planned,Trade/compliance checks
+Revenue agent,Revenue,should,no,yes,planned,Revenue opportunities and pipeline actions
+Negotiation desk,Deals,should,no,yes,planned,Structured negotiation workspace
+Mission center,AI,must,no,yes,planned,Run and supervise AI missions
+Mission intelligence dashboard,Analytics,should,no,yes,planned,Outcome and evidence view
+Multi-company workspace,Platform,must,partial,yes,planned,Company isolation and switching
+Role/employee permissions,Platform,must,partial,yes,planned,Granular tenant permissions
+Usage/entitlement controls,Billing,must,partial,yes,planned,AI and workspace limits
+Master admin,Billing,must,no,yes,planned,Subscription and access governance
+Competitive intelligence,Strategy,should,no,yes,planned,Replica-style market gap engine
