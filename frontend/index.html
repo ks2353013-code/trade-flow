@@ -572,6 +572,17 @@
 
       </div>
 
+      <div class="card ai-panel" style="margin-bottom:18px;">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;">
+          <div>
+            <div class="section-title">🧠 TradeFlow Lead Intelligence</div>
+            <p class="muted">Replica-inspired trust layer: verification evidence, data freshness and trade intent ranking.</p>
+          </div>
+          <button class="mini-btn" onclick="TradeFlowLeadIntelligence.refresh()">Refresh Intelligence</button>
+        </div>
+        <div id="tradeflowLeadIntelligenceList" style="margin-top:12px;"></div>
+      </div>
+
       <div class="card">
         <div class="section-title">📈 Drag & Drop CRM Pipeline</div>
         <p class="muted">Drag any deal card into another stage. TradeFlow saves the new stage instantly.</p>
@@ -1170,6 +1181,7 @@ Choose any quick action or use the advanced tools below.</textarea>
 <script src="./js/workflows.js"></script>
 <script src="./js/supplier-intelligence.js"></script>
 <script src="./js/crm-intelligence.js"></script>
+<script src="./js/tradeflow-lead-intelligence.js"></script>
 <script src="./js/dashboard-live-engine.js"></script>
 <script src="./js/access-control-engine.js"></script>
 <script src="./js/ai-subscription-gate.js"></script>
