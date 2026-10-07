@@ -22,7 +22,10 @@ Every lead/contact should carry:
 - company activity signals
 - stale-data warning
 
-Why: Apollo feedback specifically highlights outdated contact information. citeturn1search11
+Why: recent Apollo user feedback highlights outdated contact information.
+
+Source:
+- https://www.capterra.com/p/158696/Apollo/reviews/
 
 ## P1 — Commercial intelligence
 
