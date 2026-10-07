@@ -71,6 +71,7 @@ const realSupplierDiscoveryRoutes = require("./routes/realSupplierDiscoveryRoute
 const buyerDiscoveryRoutes = require("./routes/buyerDiscoveryRoutes");
 const tradeAgentRoutes = require("./routes/tradeAgentRoutes");
 const crmPushRoutes = require("./routes/crmPushRoutes");
+const leadIntelligenceRoutes = require("./routes/leadIntelligenceRoutes");
 const outreachApprovalRoutes = require("./routes/outreachApprovalRoutes");
 const clientErrorRoutes = require("./routes/clientErrorRoutes");
 const aiCommandRoutes = require("./routes/aiCommandRoutes");
@@ -355,6 +356,7 @@ app.use("/api/org-workspaces", protectedStack, workspaceOrgRoutes);
 app.use("/api/ai-memory", protectedStack, aiMemoryRoutes);
 app.use("/api/trade-agent", protectedStack, tradeAgentRoutes);
 app.use("/api/crm", protectedStack, crmPushRoutes);
+app.use("/api/lead-intelligence", protectedStack, leadIntelligenceRoutes);
 app.use("/api/outreach-approvals", protectedStack, outreachApprovalRoutes);
 app.use("/api/email-deliveries", protectedStack, emailDeliveryRoutes);
 app.use("/api/ai-command", protectedStack, requirePlan("Starter"), aiCommandRoutes);

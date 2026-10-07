@@ -8,6 +8,7 @@ const { saveProfile } = require("./exporterOperatingProfile");
 const { getSubscription, getLimit } = require("../middleware/planLimitMiddleware");
 const { trackUsage } = require("../middleware/usageMiddleware");
 const { createComplianceSnapshot } = require("./tradeIntegrationService");
+const { buildLeadIntelligence } = require("./tradeLeadIntelligence");
 
 function context(req) {
   const user = req.user || {};
@@ -168,6 +169,11 @@ async function syncQualifiedRecords(req, mission, intelligence) {
       continue;
     }
 
+    const leadIntelligence = buildLeadIntelligence(record, {
+      product: mission.product,
+      market: mission.market
+    });
+
     await CRMLead.create({
       companyName: record.companyName,
       leadType: mission.direction === "Export" ? "Buyer" : "Supplier",
@@ -179,6 +185,15 @@ async function syncQualifiedRecords(req, mission, intelligence) {
       confidenceScore: Number(record.confidenceScore || 0),
       verificationScore: Number(record.verificationScore || 0),
       verificationStatus: record.verificationStatus || "CRM Ready",
+      freshnessScore: leadIntelligence.freshness.score,
+      freshnessStatus: leadIntelligence.freshness.status,
+      freshnessAgeDays: leadIntelligence.freshness.ageDays,
+      tradeIntentScore: leadIntelligence.intent.score,
+      tradeIntentStatus: leadIntelligence.intent.status,
+      verificationEvidence: leadIntelligence.verification.evidence,
+      verificationWarnings: leadIntelligence.verification.warnings,
+      intelligenceEvidence: leadIntelligence.intent.evidence,
+      intelligenceUpdatedAt: new Date(),
       missionId: mission._id,
       sourceAgent: mission.direction === "Export" ? "Buyer Discovery Agent" : "Supplier Discovery Agent",
       status: "Open",
