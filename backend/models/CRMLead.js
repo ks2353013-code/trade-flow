@@ -63,6 +63,57 @@ const crmLeadSchema = new mongoose.Schema(
       trim: true
     },
 
+    freshnessScore: {
+      type: Number,
+      default: 0
+    },
+
+    freshnessStatus: {
+      type: String,
+      enum: ["Unknown", "Fresh", "Aging", "Stale", "Very Stale"],
+      default: "Unknown"
+    },
+
+    freshnessAgeDays: {
+      type: Number,
+      default: null
+    },
+
+    tradeIntentScore: {
+      type: Number,
+      default: 0,
+      index: true
+    },
+
+    tradeIntentStatus: {
+      type: String,
+      enum: ["Low Intent", "Watch", "Promising", "High Intent"],
+      default: "Watch"
+    },
+
+    verificationEvidence: {
+      type: [{
+        type: { type: String, default: "" },
+        label: { type: String, default: "" },
+        value: { type: String, default: "" }
+      }],
+      default: []
+    },
+
+    verificationWarnings: {
+      type: [String],
+      default: []
+    },
+
+    intelligenceEvidence: {
+      type: [String],
+      default: []
+    },
+
+    intelligenceUpdatedAt: {
+      type: Date,
+      default: null
+    },
     missionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "TradeMission",
