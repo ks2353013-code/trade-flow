@@ -86,3 +86,8 @@
 
   window.TradeFlowLeadIntelligence = { refresh };
 })();
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  window.TradeFlowLeadIntelligence?.refresh?.();
+});
