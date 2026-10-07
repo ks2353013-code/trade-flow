@@ -5,6 +5,7 @@ const TradeMission = require("../models/TradeMission");
 const { writeAuditLog } = require("../utils/auditLogger");
 const { enforceLimit } = require("../middleware/planLimitMiddleware");
 const { usageTracker } = require("../middleware/usageMiddleware");
+const { buildLeadIntelligence } = require("../services/tradeLeadIntelligence");
 
 const router = express.Router();
 
@@ -102,6 +103,10 @@ function getSourceAgent(lead = {}) {
 function buildLeadPayload(req, missionId, lead = {}) {
   const companyName = normalizeText(lead.companyName);
   const verificationScore = Number(lead.verificationScore || 0);
+  const intelligence = buildLeadIntelligence(lead, {
+    product: lead.product || lead.productName || "",
+    market: lead.country || ""
+  });
 
   return {
     companyName,
@@ -114,6 +119,15 @@ function buildLeadPayload(req, missionId, lead = {}) {
     confidenceScore: Number(lead.confidenceScore || 0),
     verificationScore,
     verificationStatus: normalizeText(lead.verificationStatus || "Unverified"),
+    freshnessScore: intelligence.freshness.score,
+    freshnessStatus: intelligence.freshness.status,
+    freshnessAgeDays: intelligence.freshness.ageDays,
+    tradeIntentScore: intelligence.intent.score,
+    tradeIntentStatus: intelligence.intent.status,
+    verificationEvidence: intelligence.verification.evidence,
+    verificationWarnings: intelligence.verification.warnings,
+    intelligenceEvidence: intelligence.intent.evidence,
+    intelligenceUpdatedAt: new Date(),
     missionId,
     sourceAgent: getSourceAgent(lead),
     status: "Open",
