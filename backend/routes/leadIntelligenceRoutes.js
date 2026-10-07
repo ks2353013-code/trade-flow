@@ -22,6 +22,42 @@ function context(req) {
   };
 }
 
+router.get("/", async (req, res) => {
+  try {
+    const leads = await CRMLead.find(tenantFilter(req))
+      .sort({ tradeIntentScore: -1, verificationScore: -1, createdAt: -1 })
+      .limit(50)
+      .lean();
+
+    const enriched = leads.map(lead => ({
+      leadId: String(lead._id),
+      companyName: lead.companyName,
+      leadType: lead.leadType,
+      country: lead.country,
+      verificationScore: lead.verificationScore,
+      verificationStatus: lead.verificationStatus,
+      freshnessScore: lead.freshnessScore,
+      freshnessStatus: lead.freshnessStatus,
+      tradeIntentScore: lead.tradeIntentScore,
+      tradeIntentStatus: lead.tradeIntentStatus,
+      evidence: lead.intelligenceEvidence || [],
+      warnings: lead.verificationWarnings || []
+    }));
+
+    return res.json({
+      success: true,
+      count: enriched.length,
+      leads: enriched
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Lead intelligence listing failed",
+      error: error.message
+    });
+  }
+});
+
 router.get("/:leadId", async (req, res) => {
   try {
     if (!mongoose.isValidObjectId(req.params.leadId)) {
