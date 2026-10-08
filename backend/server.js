@@ -476,3 +476,7 @@ function startServer() {
 }
 
 startServer();
+
+const tradeOpportunityRoutes = require("./routes/tradeOpportunityRoutes");
+app.use("/api/opportunities", authMiddleware, tenantMiddleware, tradeOpportunityRoutes);
+
