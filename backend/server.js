@@ -83,6 +83,7 @@ const tradeMissionRoutes = require("./routes/tradeMissionRoutes");
 const tradeExecutionRoutes = require("./routes/tradeExecutionRoutes");
 const tradeIntegrationRoutes = require("./routes/tradeIntegrationRoutes");
 const publicTradeRoutes = require("./routes/publicTradeRoutes");
+const tradeOpportunityRoutes = require("./routes/tradeOpportunityRoutes");
 
 const { startWorkflowScheduler } = require("./services/workflowScheduler");
 const { startAIAutonomousScheduler } = require("./services/aiAutonomousScheduler");
@@ -366,6 +367,7 @@ app.use("/api/exporter-os", protectedStack, exporterOperatingProfileRoutes);
 app.use("/api/missions", protectedStack, tradeMissionRoutes);
 app.use("/api/trade-executions", protectedStack, tradeExecutionRoutes);
 app.use("/api/trade-integrations", protectedStack, tradeIntegrationRoutes);
+app.use("/api/opportunities", protectedStack, tradeOpportunityRoutes);
 
 app.use("/api", (req, res) => {
   res.status(404).json({
@@ -476,3 +478,5 @@ function startServer() {
 }
 
 startServer();
+
+
