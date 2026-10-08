@@ -55,9 +55,18 @@
     `).join("");
   }
 
+  async function syncLatestMission() {
+    try {
+      const missions = await api("/api/missions");
+      const latest = (missions.missions || [])[0];
+      if (latest?._id) await api(`/api/opportunities/sync-mission/${latest._id}`, { method: "POST", body: "{}" });
+    } catch {}
+  }
+
   async function load(target) {
     if (!workspaceId()) return;
     state.loading = true; render(target);
+    await syncLatestMission();
     try {
       const data = await api("/api/opportunities?limit=50");
       state.opportunities = data.opportunities || [];
@@ -90,7 +99,7 @@
     load(document.getElementById("tradeflowOpportunityList"));
   }
 
-  window.TradeFlowOpportunityLayer = { load, mount, state };
+  window.TradeFlowOpportunityLayer = { load, mount, syncLatestMission, state };
   document.addEventListener("tradeflow:page-change", e => { if (e.detail?.page === "crm") setTimeout(mount, 150); });
   document.addEventListener("tradeflow:bootstrap-complete", () => { if (document.getElementById("crmPage") && !document.getElementById("crmPage").classList.contains("hidden")) setTimeout(mount, 150); });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => setTimeout(mount, 300));
